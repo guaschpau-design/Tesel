@@ -88,6 +88,47 @@ export function taskList(state: GroupState, self: NodeId): TaskList {
   return { pending, done };
 }
 
+/** For whom a part of the list is: this device or its team, someone else by name, or anyone. */
+export type TaskDoer =
+  | { readonly kind: 'you' }
+  | { readonly kind: 'named'; readonly name: string }
+  | { readonly kind: 'anyone' };
+
+/**
+ * The rows by whom they are for, each part in the list's order: this device's first, then each
+ * other member or team by name, then those for anyone; so whoever coordinates sees who has what.
+ */
+export function byDoer(
+  rows: readonly TaskRow[],
+): { readonly doer: TaskDoer; readonly rows: TaskRow[] }[] {
+  const parts = new Map<string, { readonly doer: TaskDoer; readonly rows: TaskRow[] }>();
+  for (const row of rows) {
+    const doer = doerOf(row);
+    const key = doer.kind === 'named' ? `named:${doer.name}` : doer.kind;
+    const part = parts.get(key) ?? { doer, rows: [] };
+    part.rows.push(row);
+    parts.set(key, part);
+  }
+  const rank = (doer: TaskDoer) => ['you', 'named', 'anyone'].indexOf(doer.kind);
+  return [...parts.values()].sort(
+    (a, b) =>
+      rank(a.doer) - rank(b.doer) ||
+      (a.doer.kind === 'named' && b.doer.kind === 'named'
+        ? a.doer.name.localeCompare(b.doer.name)
+        : 0),
+  );
+}
+
+export function doerOf(row: TaskRow): TaskDoer {
+  if (row.mine) return { kind: 'you' };
+  return row.assigneeName === null ? { kind: 'anyone' } : { kind: 'named', name: row.assigneeName };
+}
+
+/** Whether this device moves a task along from the list: its own, or one for anyone. */
+export function canMove(row: TaskRow): boolean {
+  return row.mine || row.fields.assignee === null;
+}
+
 /** A member's tasks still to do, theirs and their team's, in the order of the list. */
 export function pendingFor(state: GroupState, member: NodeId, self: NodeId): TaskRow[] {
   const team = teamOf(state.teams, member)?.team;

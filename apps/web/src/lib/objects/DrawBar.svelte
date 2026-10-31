@@ -7,7 +7,7 @@
 
   import { formatDistance } from '../format.ts';
   import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
-  import Pictogram from '../ui/Pictogram.svelte';
+  import ToolButton from '../ui/ToolButton.svelte';
   import ToolCard from '../ui/ToolCard.svelte';
   import { DRAFT_TITLES, isComplete, type Draft, type DraftKind } from './draft.ts';
   import CoordinateEntry from '../coordinates/CoordinateEntry.svelte';
@@ -66,7 +66,9 @@
 
 <ToolCard
   label={title}
-  undo={{ label: t('undo'), disabled: draft.points.length === 0, run: onundo }}
+  undo={draft.kind === 'marker'
+    ? undefined
+    : { label: t('undo'), disabled: draft.points.length === 0, run: onundo }}
   closeLabel={t('cancel')}
   onclose={oncancel}
   finish={draft.kind === 'marker'
@@ -74,25 +76,21 @@
     : { label: t('finish'), disabled: !isComplete(draft), run: onfinish }}
 >
   {#snippet tools()}
-    <button
-      class="icon"
-      aria-label={t('typeCoordinates')}
-      title={t('typeCoordinates')}
-      aria-expanded={typing}
+    <ToolButton
+      icon="grid"
+      label={t('coordinates')}
+      name={t('typeCoordinates')}
+      expanded={typing}
       onclick={() => (typing = !typing)}
-    >
-      <Pictogram name="grid" size={22} />
-    </button>
+    />
     {#if draft.kind !== 'marker'}
       {@const kind = draft.kind}
-      <button
-        class="icon"
-        aria-label={t('shapeImport')}
-        title={t('shapeImport')}
+      <ToolButton
+        icon="file"
+        label={t('file')}
+        name={t('shapeImport')}
         onclick={() => picker?.click()}
-      >
-        <Pictogram name="file" size={22} />
-      </button>
+      />
       <input
         bind:this={picker}
         type="file"

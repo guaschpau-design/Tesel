@@ -114,10 +114,13 @@ test('a route read from a file is thinned, followed to its end and its task done
   await tasks.getByLabel('Qué hay que hacer').fill('Revisar la ronda');
   await tasks.getByLabel('Para').selectOption({ label: 'Ana (tú)' });
   await tasks.getByRole('button', { name: 'Guardar' }).click();
-  await tasks.getByRole('button', { name: 'Ver en el mapa' }).click();
-  await route.getByRole('button', { name: 'Seguir ruta' }).click();
+  // Starting it is following it, from the task itself.
+  await tasks.getByRole('button', { name: 'Seguir ruta' }).click();
   const card = page.getByRole('region', { name: 'Siguiendo Ronda importada' });
   await expect(card).toContainText('Punto 2 de 3');
+  await page.getByRole('button', { name: 'Tareas' }).click();
+  await expect(tasks.getByRole('listitem')).toContainText('En curso');
+  await tasks.getByRole('button', { name: 'Cerrar' }).click();
 
   // At the end, the task is done with one tap.
   await page.context().setGeolocation({ ...end, accuracy: 5 });

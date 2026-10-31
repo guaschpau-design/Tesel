@@ -27,6 +27,11 @@ test('a task at a point reaches its assignee, who starts and finishes it', async
   await expect(task).toContainText('En curso');
   // Ana, who coordinates, is told without going to look.
   await expect(ana.getByText('Berta ha empezado «Revisar el almacén».')).toBeVisible();
+  // Done by mistake, it goes back in one tap; then done for good.
+  await task.getByRole('button', { name: 'Hecha' }).click();
+  await expect(task).toBeHidden();
+  await berta.getByRole('button', { name: 'Deshacer' }).click();
+  await expect(task).toContainText('En curso');
   await task.getByRole('button', { name: 'Hecha' }).click();
   await expect(task).toBeHidden();
   await expect(berta.getByRole('button', { name: 'Tareas', exact: true })).toBeVisible();

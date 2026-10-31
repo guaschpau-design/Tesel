@@ -56,16 +56,21 @@ test('a sweep is planned, its strips handed out, followed and finished', async (
   await expect(card).toContainText(/\d+ % barrido/);
   await card.getByRole('button', { name: 'Parar' }).click();
 
-  // Ana takes the first strip herself; both finish theirs.
+  // Ana takes the first strip herself: starting it is following it. Both finish theirs.
   await ana.getByRole('button', { name: 'Tareas' }).click();
   const anaTask = ana
     .getByRole('region', { name: 'Tareas' })
     .getByRole('listitem')
     .filter({ hasText: 'Batida «Ladera» · franja 1 de 2' });
-  await anaTask.getByRole('button', { name: 'Empezar' }).click();
+  await anaTask.getByRole('button', { name: 'Seguir franja' }).click();
+  const anaCard = ana.getByRole('region', { name: 'Siguiendo Batida «Ladera» · franja 1 de 2' });
+  await anaCard.getByRole('button', { name: 'Parar' }).click();
+  await ana.getByRole('button', { name: 'Tareas' }).click();
   await anaTask.getByRole('button', { name: 'Hecha' }).click();
   await berta.getByRole('button', { name: /^Tareas/ }).click();
-  await bertaTask.getByRole('button', { name: 'Empezar' }).click();
+  await bertaTask.getByRole('button', { name: 'Seguir franja' }).click();
+  await card.getByRole('button', { name: 'Parar' }).click();
+  await berta.getByRole('button', { name: /^Tareas/ }).click();
   await bertaTask.getByRole('button', { name: 'Hecha' }).click();
 
   // The area is cleared, for everyone.

@@ -148,6 +148,7 @@ export const GLYPHS = {
   settings: glyph(['M4 7h9M17 7h3M4 17h3M11 17h9', 'M15 4.5v5M9 14.5v5']),
   undo: glyph(['M9 5L4.5 9.5 9 14', 'M4.5 9.5H14a5 5 0 0 1 0 10h-3']),
   pencil: glyph(['M5 19l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L9 17.5z', 'M13.5 7l3 3']),
+  close: glyph(['M6.5 6.5l11 11M17.5 6.5l-11 11']),
   /** Opens what lies below, as a list of choices. */
   chevron: glyph(['M7 9.5l5 5 5-5']),
   file: glyph(['M6 3.5h8l4 4v13H6z', 'M14 3.5v4h4', 'M12 17.5v-6M9.5 14l2.5-2.5 2.5 2.5']),

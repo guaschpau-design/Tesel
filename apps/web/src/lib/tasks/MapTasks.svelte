@@ -1,7 +1,7 @@
-<!-- The tasks on the map, and a notice when someone hands one to this device. -->
+<!-- The tasks on the map, and a notice when someone hands one to this device, which opens it. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
-  import type { NodeId } from '@tesel/protocol';
+  import { eventRefKey, type NodeId } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { untrack } from 'svelte';
 
@@ -38,10 +38,19 @@
     if (handed === undefined) return;
     const name = aliasOf({ members }, handed.origin);
     const { assignee, text } = handed;
+    const key = eventRefKey(handed.task);
     notices.show(
       assignee === self || assignee === null
         ? t('taskHandedToYou', { name, text })
         : t('taskHandedToTeam', { name, team: nameOf({ members, teams }, assignee), text }),
+      {
+        action: {
+          label: t('view'),
+          run: () => {
+            editTask(key);
+          },
+        },
+      },
     );
   });
 </script>

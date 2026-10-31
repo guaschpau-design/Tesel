@@ -4,7 +4,7 @@
 // owner withdraws it.
 
 /** Something the user can do from a notice, besides closing it. */
-interface NoticeAction {
+export interface NoticeAction {
   readonly label: string;
   readonly run: () => void;
 }
@@ -31,17 +31,25 @@ class Notices {
   #next = 1;
   readonly #timers = new Map<number, ReturnType<typeof setTimeout>>();
 
-  /** Shows a notice and returns its id, with which it can be withdrawn. */
+  /**
+   * Shows a notice and returns its id, with which it can be withdrawn. The same passing notice
+   * shown again while it is there is not repeated: it takes the new action, if any, and starts its
+   * time again.
+   */
   show(text: string, options: NoticeOptions = {}): number {
-    const id = this.#next++;
     const stays = options.stays === true;
-    this.list = [...this.list, { id, text, action: options.action ?? null, stays }];
-    if (!stays) {
-      const timer = setTimeout(() => {
-        this.withdraw(id);
-      }, PASSING_MS);
-      this.#timers.set(id, timer);
+    const action = options.action ?? null;
+    const same = stays
+      ? undefined
+      : this.list.find((notice) => !notice.stays && notice.text === text);
+    if (same !== undefined) {
+      this.list = this.list.map((notice) => (notice === same ? { ...same, action } : notice));
+      this.#expire(same.id);
+      return same.id;
     }
+    const id = this.#next++;
+    this.list = [...this.list, { id, text, action, stays }];
+    if (!stays) this.#expire(id);
     return id;
   }
 
@@ -49,6 +57,17 @@ class Notices {
     clearTimeout(this.#timers.get(id));
     this.#timers.delete(id);
     this.list = this.list.filter((notice) => notice.id !== id);
+  }
+
+  /** Withdraws a passing notice after its time, counted from now. */
+  #expire(id: number): void {
+    clearTimeout(this.#timers.get(id));
+    this.#timers.set(
+      id,
+      setTimeout(() => {
+        this.withdraw(id);
+      }, PASSING_MS),
+    );
   }
 }
 

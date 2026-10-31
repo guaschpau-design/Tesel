@@ -8,6 +8,13 @@ import type { MessageKey } from '../i18n/index.ts';
 export type DraftKind = 'marker' | 'route' | 'area';
 
 /** What a draft is called while it is drawn and described. */
+/** What each kind is called, in the "Add" menu and once sent. */
+export const DRAFT_NAMES: Readonly<Record<DraftKind, MessageKey>> = {
+  marker: 'drawMarker',
+  route: 'drawRoute',
+  area: 'drawArea',
+};
+
 export const DRAFT_TITLES: Readonly<Record<DraftKind, MessageKey>> = {
   marker: 'newMarker',
   route: 'newRoute',

@@ -75,8 +75,8 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0067](0067-envelope-nonce-from-the-event.md)        | Derive each envelope's nonce from its event                                                 | Accepted                                    |
 | [0068](0068-restorable-copies-and-going-back.md)     | Restore copies under a new identity, and go back across a change of schema                  | Accepted                                    |
 | [0069](0069-who-keeps-in-touch-without-coverage.md)  | Tell who keeps in touch without coverage                                                    | Accepted, amended by 0071, 0078             |
-| [0070](0070-a-simpler-app.md)                        | A simpler app: one place to add, no alerts or roll calls, a way to start                    | Accepted, amended by 0071, 0078             |
-| [0071](0071-panels-read-whole.md)                    | Me and the map layers are read whole, without opening anything                              | Accepted, amended by 0078                   |
+| [0070](0070-a-simpler-app.md)                        | A simpler app: one place to add, no alerts or roll calls, a way to start                    | Accepted, amended by 0071, 0078, 0081       |
+| [0071](0071-panels-read-whole.md)                    | Me and the map layers are read whole, without opening anything                              | Accepted, amended by 0078, 0081             |
 | [0072](0072-practice-as-an-exercise.md)              | Practice as an exercise: a world that changes, people with their own lives, and a director  | Accepted                                    |
 | [0073](0073-exercise-report.md)                      | The report at the end of an exercise                                                        | Accepted                                    |
 | [0074](0074-race-exercise.md)                        | A popular race to keep safe                                                                 | Accepted                                    |
@@ -86,3 +86,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0078](0078-one-look-and-straight-to-the-point.md)   | One look, and straight to the point                                                         | Accepted                                    |
 | [0079](0079-more-equipment-in-groups.md)             | More equipment, offered in groups                                                           | Accepted                                    |
 | [0080](0080-told-without-looking.md)                 | Told without having to look                                                                 | Accepted                                    |
+| [0081](0081-found-in-a-tap-or-two.md)                | Found in a tap or two                                                                       | Accepted                                    |

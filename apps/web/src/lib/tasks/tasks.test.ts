@@ -2,7 +2,15 @@ import { stateOf } from '@tesel/core';
 import type { NodeId, TaskEvent, TeselEvent } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
-import { advance, assignedTo, myPendingCount, newlyAssigned, taskList } from './tasks.ts';
+import {
+  advance,
+  assignedTo,
+  byDoer,
+  canMove,
+  myPendingCount,
+  newlyAssigned,
+  taskList,
+} from './tasks.ts';
 
 const ANA = 'a1b2c3d4' as NodeId;
 const BERTA = '0f1e2d3c' as NodeId;
@@ -68,6 +76,28 @@ describe('task list', () => {
     const { done, pending } = taskList(state, ANA);
     expect(done.map((row) => row.fields.text)).toEqual(['Ya hecha']);
     expect(pending.some((row) => row.fields.text === 'Anulada')).toBe(false);
+  });
+
+  it('shows who has what: this device first, then by name, then those for anyone', () => {
+    const parts = (self: NodeId) =>
+      byDoer(taskList(state, self).pending).map((part) => ({
+        doer: part.doer,
+        texts: part.rows.map((row) => row.fields.text),
+      }));
+    expect(parts(ANA)).toEqual([
+      { doer: { kind: 'named', name: BERTA }, texts: ['Llevar agua'] },
+      { doer: { kind: 'anyone' }, texts: ['Revisar el almacén', 'Cortar la calle'] },
+    ]);
+    expect(parts(BERTA)[0]).toEqual({ doer: { kind: 'you' }, texts: ['Llevar agua'] });
+  });
+
+  it('lets this device move along only its own tasks and those for anyone', () => {
+    const rows = taskList(state, ANA).pending;
+    expect(rows.map((row) => [row.fields.text, canMove(row)])).toEqual([
+      ['Revisar el almacén', true],
+      ['Llevar agua', false],
+      ['Cortar la calle', true],
+    ]);
   });
 
   it('counts the pending tasks of this device', () => {

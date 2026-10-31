@@ -1,6 +1,6 @@
 # 0070. A simpler app: one place to add, no alerts or roll calls, a way to start
 
-- Status: Accepted, amended by [0071](0071-panels-read-whole.md) (Me and the layers unfolded) and [0078](0078-one-look-and-straight-to-the-point.md) (the coordinate format in Settings)
+- Status: Accepted, amended by [0071](0071-panels-read-whole.md) (Me and the layers unfolded), [0078](0078-one-look-and-straight-to-the-point.md) (the coordinate format in Settings) and [0081](0081-found-in-a-tap-or-two.md) (the tasks list)
 - Date: 2026-10-29
 
 ## Context

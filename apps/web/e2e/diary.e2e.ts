@@ -13,6 +13,14 @@ test('the diary tells what happened and downloads as text for the report', async
   await berta.getByRole('button', { name: 'Chat' }).click();
   await berta.getByLabel('Mensaje').fill('Llegamos al puente');
   await berta.getByRole('button', { name: 'Enviar', exact: true }).click();
+  // Ana, with the chat closed, is told, and opens it from the notice.
+  await ana
+    .getByRole('status')
+    .filter({ hasText: 'Berta: «Llegamos al puente»' })
+    .getByRole('button', { name: 'Ver' })
+    .click();
+  await expect(ana.getByRole('region', { name: 'Chat' })).toContainText('Llegamos al puente');
+  await ana.getByRole('button', { name: 'Cerrar' }).click();
 
   await openDiary(ana);
   const diary = ana.getByRole('region', { name: 'Diario de la operación' });

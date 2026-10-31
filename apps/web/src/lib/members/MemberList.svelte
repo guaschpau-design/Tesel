@@ -1,6 +1,7 @@
 <!-- The members of the active group, team by team, each with an initial, a name (and "coordinator"
      for those who coordinate) and two signs: whether their position is on the map, in words when it
-     is not, and whether they have a LoRa radio linked or their news reaches this device by radio. Whoever coordinates
+     is not, and whether they have a LoRa radio linked or their news reaches this device by radio.
+     A member opens with a tap: their card, or Me for this device. Whoever coordinates
      can open each team to change it. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
@@ -20,11 +21,13 @@
     groupState: GroupState;
     heard: Heard;
     self: NodeId;
+    /** Opens a member's card. */
+    onmember: (id: NodeId) => void;
     /** Opens a team to change it; none unless this device coordinates. */
     onteam?: ((team: TeamEvent) => void) | undefined;
   }
 
-  let { t, groupState, heard, self, onteam }: Props = $props();
+  let { t, groupState, heard, self, onmember, onteam }: Props = $props();
 
   const POSITION_LABELS: Readonly<Record<PositionStatus, MessageKey>> = {
     live: 'positionLive',
@@ -40,37 +43,44 @@
 
 {#snippet member(row: MemberRow)}
   <li>
-    <span class="initial {row.position}" aria-hidden="true">
-      {initialOf(row.alias)}
-    </span>
-    <span class="name">
-      <span>
-        {row.alias}{#if row.self}&nbsp;({t('you')}){/if}
-        {#if row.role === 'coordinator'}<span class="hint">· {t(ROLE_LABELS.coordinator)}</span
-          >{/if}
+    <button
+      class="member"
+      onclick={() => {
+        onmember(row.id);
+      }}
+    >
+      <span class="initial {row.position}" aria-hidden="true">
+        {initialOf(row.alias)}
       </span>
-      {#if row.position !== 'live'}
-        <small class:warning={row.position !== 'stale'}>{t(POSITION_LABELS[row.position])}</small>
-      {/if}
-    </span>
-    <span class="signs">
-      {#if row.lora || row.byRadio}
-        {@const label = [row.lora && t('loraSign'), row.byRadio && t('heardByRadio')]
-          .filter(Boolean)
-          .join(' · ')}
-        <span class="radio" class:lora={row.lora} title={label} aria-label={label} role="img">
-          <Pictogram name="mast" size={16} />
+      <span class="name">
+        <span>
+          {row.alias}{#if row.self}&nbsp;({t('you')}){/if}
+          {#if row.role === 'coordinator'}<span class="hint">· {t(ROLE_LABELS.coordinator)}</span
+            >{/if}
         </span>
-      {/if}
-      <span
-        class="where {row.position}"
-        title={t(POSITION_LABELS[row.position])}
-        aria-label={t(POSITION_LABELS[row.position])}
-        role="img"
-      >
-        <Pictogram name="pin" size={16} />
+        {#if row.position !== 'live'}
+          <small class:warning={row.position !== 'stale'}>{t(POSITION_LABELS[row.position])}</small>
+        {/if}
       </span>
-    </span>
+      <span class="signs">
+        {#if row.lora || row.byRadio}
+          {@const label = [row.lora && t('loraSign'), row.byRadio && t('heardByRadio')]
+            .filter(Boolean)
+            .join(' · ')}
+          <span class="radio" class:lora={row.lora} title={label} aria-label={label} role="img">
+            <Pictogram name="mast" size={16} />
+          </span>
+        {/if}
+        <span
+          class="where {row.position}"
+          title={t(POSITION_LABELS[row.position])}
+          aria-label={t(POSITION_LABELS[row.position])}
+          role="img"
+        >
+          <Pictogram name="pin" size={16} />
+        </span>
+      </span>
+    </button>
   </li>
 {/snippet}
 
@@ -144,11 +154,16 @@
     list-style: none;
   }
 
-  li {
+  /* The whole row is the button: it opens the member, as tapping them on the map does. */
+  .member {
     display: grid;
     grid-template-columns: auto 1fr auto;
     gap: 0.6rem;
     align-items: center;
+    width: 100%;
+    padding: 0.3rem 0.35rem;
+    text-align: left;
+    border-color: transparent;
   }
 
   /* The initial is ringed in lime while the member's position is live on the map. */

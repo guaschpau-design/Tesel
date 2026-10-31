@@ -31,7 +31,7 @@
   import SharePrompt from '../position/SharePrompt.svelte';
   import Practice from '../practice/Practice.svelte';
   import TaskPlacePicker from '../tasks/TaskPlacePicker.svelte';
-  import { noticeSent } from '../sync/sent-notice.ts';
+  import { saveTask } from '../tasks/task-actions.ts';
   import { fieldsOf } from '../tasks/tasks.ts';
   import Notices from '../ui/Notices.svelte';
   import { attempt } from '../ui/submission.svelte.ts';
@@ -202,8 +202,7 @@
     self={group?.self ?? null}
     onfinishtask={async (task: TaskEvent) => {
       if (group === null) return;
-      await group.feed.writeTask(task.task, { ...fieldsOf(task), status: 'done' });
-      noticeSent(t, group.feed);
+      await saveTask(group.feed, t, task.task, { ...fieldsOf(task), status: 'done' });
     }}
   />
   {#if group?.practice}

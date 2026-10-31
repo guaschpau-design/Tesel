@@ -1,5 +1,5 @@
-<!-- Adds a task or changes one: only the text is needed, typed or picked from the common ones in
-     a drop-down; who and the place are optional. The place is picked on the map: the form steps
+<!-- Adds a task or changes one: only the text is needed, typed or, under it, picked from the
+     common ones in a drop-down; who and the place are optional. The place is picked on the map: the form steps
      aside meanwhile and comes back as it was left. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
@@ -113,6 +113,12 @@
   }}
 >
   <h3>{existing ? t('editTask') : t('newTask')}</h3>
+  <label>
+    {t('taskText')}
+    <!-- svelte-ignore a11y_autofocus -->
+    <textarea bind:value={text} rows="2" required autofocus={!existing}></textarea>
+  </label>
+  {#if tooLong}<p class="warning">{t('taskTooLong')}</p>{/if}
   {#if !existing}
     <!-- One line, whatever the screen: the phone's own picker lists the common tasks. -->
     <label>
@@ -132,12 +138,6 @@
       </select>
     </label>
   {/if}
-  <label>
-    {t('taskText')}
-    <!-- svelte-ignore a11y_autofocus -->
-    <textarea bind:value={text} rows="2" required autofocus={!existing}></textarea>
-  </label>
-  {#if tooLong}<p class="warning">{t('taskTooLong')}</p>{/if}
   <label>
     {t('taskAssignee')}
     <AssigneeSelect

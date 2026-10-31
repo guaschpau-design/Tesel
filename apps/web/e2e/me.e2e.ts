@@ -102,4 +102,10 @@ test('a member not on the map is told so, and shows themselves in one tap', asyn
   await prompt.getByRole('button', { name: 'Compartir', exact: true }).click();
   await expect(prompt).toBeHidden();
   await expect(row).not.toContainText('aún no comparte posición');
+
+  // Her row opens her card: how far she is and the way there come first.
+  await row.click();
+  const card = ana.getByRole('region', { name: 'Berta' });
+  await expect(card.getByRole('button', { name: 'Guíame' })).toBeVisible();
+  await expect(card).toContainText('Último dato');
 });

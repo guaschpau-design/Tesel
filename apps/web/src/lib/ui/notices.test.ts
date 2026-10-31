@@ -33,6 +33,17 @@ describe('notices', () => {
     expect(notices.list).toEqual([]);
   });
 
+  it('shows the same passing notice once, for longer', () => {
+    notices.show('Enviado');
+    vi.advanceTimersByTime(4000);
+    notices.show('Enviado');
+    expect(notices.list.map((notice) => notice.text)).toEqual(['Enviado']);
+    vi.advanceTimersByTime(4000);
+    expect(notices.list).toHaveLength(1);
+    vi.advanceTimersByTime(1000);
+    expect(notices.list).toEqual([]);
+  });
+
   it('shows notices in the order they came', () => {
     notices.show('Primero');
     notices.show('Segundo', { stays: true });

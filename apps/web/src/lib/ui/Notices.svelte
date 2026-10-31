@@ -11,7 +11,14 @@
     <span>{notice.text}</span>
     {#if notice.action}
       {@const { run, label } = notice.action}
-      <button class="primary" onclick={run}>{label}</button>
+      <!-- Done, a passing notice has said what it had to. -->
+      <button
+        class="primary"
+        onclick={() => {
+          run();
+          if (!notice.stays) notices.withdraw(notice.id);
+        }}>{label}</button
+      >
     {/if}
     {#if notice.stays}
       <button

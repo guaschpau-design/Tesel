@@ -31,10 +31,11 @@
   import MemberLayer from '../members/MemberLayer.svelte';
   import TrailLayer from '../members/TrailLayer.svelte';
   import { navigation } from '../navigation/navigation.svelte.ts';
-  import { draftGeometry, type DraftKind } from '../objects/draft.ts';
+  import { DRAFT_NAMES, draftGeometry, type DraftKind } from '../objects/draft.ts';
   import { Drawing } from '../objects/drawing.svelte.ts';
   import ObjectForm from '../objects/ObjectForm.svelte';
   import ObjectLayer from '../objects/ObjectLayer.svelte';
+  import { operationAreas } from '../objects/operation-areas.ts';
   import { useSweepCompletion } from '../objects/sweep-completion.svelte.ts';
   import { useSelfState } from '../me/self-state.svelte.ts';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
@@ -52,6 +53,7 @@
   import { noticeSent } from '../sync/sent-notice.ts';
   import MapTasks from '../tasks/MapTasks.svelte';
   import { myPendingCount, placePoint, type TaskEditing } from '../tasks/tasks.ts';
+  import ChatNotice from '../chat/ChatNotice.svelte';
   import { fromOthers } from '../chat/unread.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { deviceClock } from '../sync/device-clock.svelte.ts';
@@ -214,7 +216,9 @@
     );
     $effect(() => {
       const fix = deviceLocation.fix?.at ?? null;
-      framing.show(groupPoints(slices.positions, group?.self ?? null, fix, Date.now() / 1000));
+      const areas = operationAreas(slices).map((area) => area.bounds);
+      const now = Date.now() / 1000;
+      framing.show(groupPoints(slices.positions, group?.self ?? null, fix, now, areas));
     });
     return () => {
       framing.remove();
@@ -235,7 +239,7 @@
     if (draft.kind === 'marker' && first) await group.feed.placeMarker(first, code, label);
     else if (geometry) await group.feed.drawShape(geometry, code, label);
     drawing.stop();
-    noticeSent(t, group.feed);
+    noticeSent(t, group.feed, t(DRAFT_NAMES[draft.kind]));
   }
 
   function select(key: string): void {
@@ -298,6 +302,7 @@
     {#if role === 'coordinator'}
       <GroupNews {t} {locale} state={slices} {self} />
     {/if}
+    <ChatNotice {t} chat={slices.chat} members={slices.members} {self} open={isOpen('chat')} />
   {/key}
   <ReportLayer
     {t}

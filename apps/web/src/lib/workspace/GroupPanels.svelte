@@ -18,9 +18,11 @@
   import { noticeSent } from '../sync/sent-notice.ts';
   import { newTask } from '../tasks/task-editor.ts';
   import TasksPanel from '../tasks/TasksPanel.svelte';
-  import type { TaskEditing, TaskFields } from '../tasks/tasks.ts';
+  import { followTask, saveTask } from '../tasks/task-actions.ts';
+  import type { TaskEditing, TaskFields, TaskRow } from '../tasks/tasks.ts';
   import { closePanel, isOpen, openPanel, panels } from '../ui/panels.svelte.ts';
   import Panel from '../ui/Panel.svelte';
+  import { attempt } from '../ui/submission.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -116,7 +118,7 @@
       {locale}
       onsend={async (report: ReportFields) => {
         await feed.sendReport(report);
-        noticeSent(t, feed);
+        noticeSent(t, feed, t('addReport'));
         // Sent, it is pinned with the others.
         openPanel(REPORTS);
       }}
@@ -132,12 +134,12 @@
     groupState={feed.state}
     {self}
     format={preferences.coordinateFormat}
-    onsave={async (task: EventRef | null, fields: TaskFields) => {
-      await feed.writeTask(task, fields);
-      noticeSent(t, feed);
-    }}
+    onsave={(task: EventRef | null, fields: TaskFields) => saveTask(feed, t, task, fields)}
     onpickplace={onpicktaskplace}
     {onplace}
+    onfollow={(row: TaskRow) => {
+      attempt(() => followTask(feed, t, row, self), t('actionFailed'));
+    }}
     onclose={closePanel}
   />
 {/if}

@@ -1,12 +1,12 @@
 <!-- The card at the top of the map while a tool takes the taps on it (drawing, measuring): one short
-     line of what to do or what there is so far, then small buttons with pictograms (undo, what else
-     the tool can do, cancel) and, when the tool ends with something made, the button that finishes
-     it. Short, so the map stays in view. -->
+     line of what to do or what there is so far, then small named buttons (ToolButton: undo, what
+     else the tool can do, cancel) and, when the tool ends with something made, the button that
+     finishes it. Short, so the map stays in view. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
   import MapCard from './MapCard.svelte';
-  import Pictogram from './Pictogram.svelte';
+  import ToolButton from './ToolButton.svelte';
 
   interface Props {
     /** What the card is about, as screen readers name it. */
@@ -19,7 +19,7 @@
     /** The button that ends the tool with what it made; none for a tool that only shows. */
     finish?:
       { readonly label: string; readonly disabled: boolean; readonly run: () => void } | undefined;
-    /** Other small buttons of the tool, between undo and close. */
+    /** Other small buttons of the tool (ToolButton), between undo and close. */
     tools?: Snippet;
     /** The line of what to do or what there is, and any warning. */
     children: Snippet;
@@ -32,18 +32,10 @@
   <div class="text">{@render children()}</div>
   <div class="controls">
     {#if undo}
-      <button
-        class="icon"
-        aria-label={undo.label}
-        title={undo.label}
-        disabled={undo.disabled}
-        onclick={undo.run}
-      >
-        <Pictogram name="undo" size={22} />
-      </button>
+      <ToolButton icon="undo" label={undo.label} disabled={undo.disabled} onclick={undo.run} />
     {/if}
     {@render tools?.()}
-    <button class="icon" aria-label={closeLabel} title={closeLabel} onclick={onclose}>✕</button>
+    <ToolButton icon="close" label={closeLabel} onclick={onclose} />
     {#if finish}
       <button class="primary finish" disabled={finish.disabled} onclick={finish.run}>
         {finish.label}
@@ -62,15 +54,12 @@
     margin: 0;
   }
 
+  /* On a narrow phone the button that finishes goes under the others, at the right. */
   .controls {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.25rem;
     align-items: center;
-  }
-
-  /* Small buttons keep a frame, so they read as buttons on the card. */
-  .controls :global(button.icon) {
-    border-color: var(--border);
   }
 
   .finish {

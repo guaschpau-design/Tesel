@@ -8,7 +8,7 @@
   import CoordinateEntry from '../coordinates/CoordinateEntry.svelte';
   import type { Translate } from '../i18n/index.ts';
   import type { MapTaps } from '../map/taps.ts';
-  import Pictogram from '../ui/Pictogram.svelte';
+  import ToolButton from '../ui/ToolButton.svelte';
   import ToolCard from '../ui/ToolCard.svelte';
   import { openPanel } from '../ui/panels.svelte.ts';
   import type { TaskEditing } from './tasks.ts';
@@ -53,15 +53,13 @@
   }}
 >
   {#snippet tools()}
-    <button
-      class="icon"
-      aria-label={t('typeCoordinates')}
-      title={t('typeCoordinates')}
-      aria-expanded={typing}
+    <ToolButton
+      icon="grid"
+      label={t('coordinates')}
+      name={t('typeCoordinates')}
+      expanded={typing}
       onclick={() => (typing = !typing)}
-    >
-      <Pictogram name="grid" size={22} />
-    </button>
+    />
   {/snippet}
   <p>{t('taskPickPlaceHint')}</p>
   {#if typing}

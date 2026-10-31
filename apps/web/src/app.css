@@ -367,7 +367,9 @@ legend {
   line-height: 1.2;
 }
 
-/* What is chosen, among chips or segments: outlined in the line colour, in bold. */
+/* What is chosen, among chips or segments, or a tool's part shown: outlined in the line colour,
+   in bold. */
+.tool[aria-expanded='true'],
 .chip[aria-pressed='true'],
 .chip[aria-checked='true'],
 .chip:has(input:checked),

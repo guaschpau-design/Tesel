@@ -10,6 +10,7 @@
   import { dissolveTeam, saveTeam } from '../teams/team-actions.ts';
   import TeamForm from '../teams/TeamForm.svelte';
   import Fold from '../ui/Fold.svelte';
+  import { openPanel } from '../ui/panels.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { attempt } from '../ui/submission.svelte.ts';
   import SwitchRow from '../ui/SwitchRow.svelte';
@@ -43,6 +44,9 @@
       groupState={feed.state}
       heard={feed.heard}
       {self}
+      onmember={(id: NodeId) => {
+        openPanel(id === self ? 'me' : { name: 'member', member: id });
+      }}
       onteam={coordinator ? (team: TeamEvent) => (editing = { team }) : undefined}
     />
   {/if}

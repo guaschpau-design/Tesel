@@ -60,10 +60,20 @@ describe('framing the group at start', () => {
       { type: 'position', origin: BERTA, seq: 1, time: T0, ...NEAR, ...fix },
       { type: 'position', origin: CARLA, seq: 1, time: T0 - 3600, ...NEAR, ...fix },
     ]).positions;
-    expect(groupPoints(positions, ANA, VALENCIA, T0 + 60)).toEqual(
+    expect(groupPoints(positions, ANA, VALENCIA, T0 + 60, [])).toEqual(
       new Map([
         ['self', VALENCIA],
         [BERTA, NEAR],
+      ]),
+    );
+  });
+
+  it('brings into view the operation areas, by their corners', () => {
+    const area = { west: -0.4, south: 39.4, east: -0.3, north: 39.5 };
+    expect(groupPoints(new Map(), ANA, null, T0, [area])).toEqual(
+      new Map([
+        ['area-0-sw', { lat: 39.4, lon: -0.4 }],
+        ['area-0-ne', { lat: 39.5, lon: -0.3 }],
       ]),
     );
   });

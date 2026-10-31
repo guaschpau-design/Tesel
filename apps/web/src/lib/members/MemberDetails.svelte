@@ -1,6 +1,6 @@
-<!-- A member of the group, as they tell the team about themselves (MemberSheet): their status,
-     profile, position and the way there, battery, equipment and tasks, and what of theirs has
-     reached this device and how. -->
+<!-- A member of the group: first how far they are and the way there, then what they tell the team
+     about themselves (MemberSheet): status, profile, battery, position, equipment and tasks, and
+     when something of theirs last reached this device, and how. -->
 <script lang="ts">
   import { teamOf, type GroupState } from '@tesel/core';
   import type { NodeId } from '@tesel/protocol';
@@ -51,42 +51,24 @@
   const report = $derived(groupState.positions.get(id));
   const now = clockEvery(15_000);
   const channels = $derived(heard.get(id) ?? {});
-  const ago = (time: number) => formatAgo(time, locale, now.seconds);
+  /** When something of theirs last came, by the server and by radio: "2 min ago by internet". */
+  const lastHeard = $derived(
+    [
+      channels.internet !== undefined &&
+        t('heardInternet', { ago: formatAgo(channels.internet, locale, now.seconds) }),
+      channels.radio !== undefined &&
+        t('heardRadio', { ago: formatAgo(channels.radio, locale, now.seconds) }),
+    ]
+      .filter((part) => part !== false)
+      .join(' · ') || t('heardNothing'),
+  );
 </script>
 
 <Panel title={alias} closeLabel={t('close')} {onclose}>
   <div class="stack section">
     {#if role === 'coordinator'}<p class="hint">{t(ROLE_LABELS[role])}</p>{/if}
-    <MemberSheet
-      {t}
-      {state}
-      team={teamOf(groupState.teams, id)}
-      tasks={pendingFor(groupState, id, self)}
-    >
-      {#snippet position()}
-        {#if report?.type === 'position'}
-          {@const at = { lat: report.lat, lon: report.lon }}
-          <p class="hint">{t('positionAt', { time: formatTime(report.time * 1000, locale) })}</p>
-          <CoordinateLine {t} {at} {format} />
-          <FromHere {t} {locale} {at} />
-        {:else}
-          <p class="hint">{t('memberNoPosition')}</p>
-        {/if}
-      {/snippet}
-      {#snippet more()}
-        <SheetPart title={t('heardTitle')}>
-          <p>
-            {channels.radio === undefined
-              ? t('heardRadioNever')
-              : t('heardRadio', { ago: ago(channels.radio) })}
-          </p>
-          {#if channels.internet !== undefined}
-            <p>{t('heardInternet', { ago: ago(channels.internet) })}</p>
-          {/if}
-        </SheetPart>
-      {/snippet}
-    </MemberSheet>
     {#if report?.type === 'position'}
+      <FromHere {t} {locale} at={{ lat: report.lat, lon: report.lon }} />
       <Actions
         actions={[
           {
@@ -100,5 +82,26 @@
         moreLabel={t('moreActions')}
       />
     {/if}
+    <MemberSheet
+      {t}
+      {state}
+      team={teamOf(groupState.teams, id)}
+      tasks={pendingFor(groupState, id, self)}
+    >
+      {#snippet position()}
+        {#if report?.type === 'position'}
+          {@const at = { lat: report.lat, lon: report.lon }}
+          <p class="hint">{t('positionAt', { time: formatTime(report.time * 1000, locale) })}</p>
+          <CoordinateLine {t} {at} {format} />
+        {:else}
+          <p class="hint">{t('memberNoPosition')}</p>
+        {/if}
+      {/snippet}
+      {#snippet more()}
+        <SheetPart title={t('heardTitle')} inline>
+          <p>{lastHeard}</p>
+        </SheetPart>
+      {/snippet}
+    </MemberSheet>
   </div>
 </Panel>

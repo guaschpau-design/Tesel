@@ -7,7 +7,7 @@
   import type { GlyphName } from '../ui/glyphs.ts';
   import { openPanel } from '../ui/panels.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
-  import type { DraftKind } from './draft.ts';
+  import { DRAFT_NAMES, type DraftKind } from './draft.ts';
 
   interface Props {
     t: Translate;
@@ -21,9 +21,9 @@
   type Thing = DraftKind | 'task' | 'report';
 
   const THINGS: readonly { thing: Thing; icon: GlyphName; label: MessageKey }[] = [
-    { thing: 'marker', icon: 'pin', label: 'drawMarker' },
-    { thing: 'route', icon: 'route', label: 'drawRoute' },
-    { thing: 'area', icon: 'area', label: 'drawArea' },
+    { thing: 'marker', icon: 'pin', label: DRAFT_NAMES.marker },
+    { thing: 'route', icon: 'route', label: DRAFT_NAMES.route },
+    { thing: 'area', icon: 'area', label: DRAFT_NAMES.area },
     { thing: 'task', icon: 'task', label: 'addTask' },
     { thing: 'report', icon: 'pushpin', label: 'addReport' },
   ];

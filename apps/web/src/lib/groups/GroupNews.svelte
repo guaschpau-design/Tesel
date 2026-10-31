@@ -1,14 +1,18 @@
 <!-- Tells whoever coordinates, in a short notice, what is new in the group (group-news.ts): who
      joins, in one notice for those who join together, a situation report, a task started or
-     finished. What the group held when it opened is not news. -->
+     finished; "View" opens the report or the task. What the group held when it opened is not
+     news. -->
 <script lang="ts">
-  import type { NodeId } from '@tesel/protocol';
+  import { eventRefKey, type NodeId } from '@tesel/protocol';
   import { untrack } from 'svelte';
 
   import type { Locale, Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
   import { reportLines } from '../reports/report-summary.ts';
+  import { REPORTS } from '../chat/chat-tabs.ts';
+  import { editTask } from '../tasks/task-editor.ts';
   import { notices } from '../ui/notices.svelte.ts';
+  import { openPanel } from '../ui/panels.svelte.ts';
   import { groupNews, type NewsState } from './group-news.ts';
 
   interface Props {
@@ -39,12 +43,30 @@
       if (item.kind === 'report') {
         const lines = reportLines(item.report, t);
         const report = [lines.incident, lines.casualties].filter(Boolean).join(' · ');
-        notices.show(t('newsReport', { name: aliasOf(now, item.report.origin), report }));
+        notices.show(t('newsReport', { name: aliasOf(now, item.report.origin), report }), {
+          action: {
+            label: t('view'),
+            run: () => {
+              openPanel(REPORTS);
+            },
+          },
+        });
       }
       if (item.kind === 'task') {
         const { origin, status, text } = item.task;
-        const key = status === 'done' ? 'newsTaskDone' : 'newsTaskStarted';
-        notices.show(t(key, { name: aliasOf(now, origin), text }));
+        const key = eventRefKey(item.task.task);
+        const said = t(status === 'done' ? 'newsTaskDone' : 'newsTaskStarted', {
+          name: aliasOf(now, origin),
+          text,
+        });
+        notices.show(said, {
+          action: {
+            label: t('view'),
+            run: () => {
+              editTask(key);
+            },
+          },
+        });
       }
     }
   });

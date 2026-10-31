@@ -1,6 +1,6 @@
 // Brings the group into view while the map still shows the wide view it opens on (ADR-0054). Each
-// time someone new appears — this device's first fix, a member's position, a practice's teammates —
-// the map is framed around everyone there is. The first time the view changes by anything else, a
+// time someone or something new appears — this device's first fix, a member's position, a
+// practice's teammates, an operation area — the map is framed around all there is. The first time the view changes by anything else, a
 // pan, a zoom, a turn or a place shown from a panel, the user has chosen a view: framing stops for
 // good. A view the address gives (#map=…) is chosen already, so framing never starts.
 
@@ -10,7 +10,7 @@ import type { Map as MapLibreMap, MapLibreEvent } from 'maplibre-gl';
 
 import { toPosition } from './geometry.ts';
 import { STALE_AFTER_S } from '../members/member-features.ts';
-import { boundsAround } from './tiles/math.ts';
+import { boundsAround, type Bounds } from './tiles/math.ts';
 
 /** Closer than this the map would show one person's street, not where the group is. */
 const MAX_ZOOM = 15;
@@ -76,18 +76,24 @@ export class StartFraming {
 }
 
 /**
- * Who framing brings into view: this device where it is, if the GPS is on for something else,
- * and the other members whose positions are fresh. An old position says little of where the group
- * is now.
+ * What framing brings into view: this device where it is, if the GPS is on for something else,
+ * the other members whose positions are fresh, and the operation areas, by their corners, so that
+ * a member who has just joined sees where the group works. An old position says little of where
+ * the group is now.
  */
 export function groupPoints(
   positions: GroupState['positions'],
   self: NodeId | null,
   fix: LatLon | null,
   now: number,
+  areas: readonly Bounds[],
 ): Map<string, LatLon> {
   const points = new Map<string, LatLon>();
   if (fix !== null) points.set('self', fix);
+  areas.forEach(({ west, south, east, north }, index) => {
+    points.set(`area-${String(index)}-sw`, { lat: south, lon: west });
+    points.set(`area-${String(index)}-ne`, { lat: north, lon: east });
+  });
   for (const [origin, report] of positions) {
     if (origin === self || report.type !== 'position' || now - report.time > STALE_AFTER_S)
       continue;
