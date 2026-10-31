@@ -14,7 +14,7 @@ The site's guide (`guia/`, `en/guide/`) had grown into a reference manual: about
 - The drawings (`img/guide/*.svg`) are drawn by hand with the app's own pictograms, like the help's, and have no words, so both languages share them. Lime numbers on a drawing match the numbered chips of its plate. They are not screenshots: they stay legible on a phone and do not change with every small change of the app.
 - Button names are written as chips everywhere in the guide, in the moves and in the fine print alike. The pictograms the guide uses are one symbol file (`img/guide/icons.svg`), copied from the app's `glyphs.ts`.
 - The cover's index is a tile per plate, with its pictogram. The help links the plate about working without internet.
-- Printed, each plate keeps together and the fine print and the troubleshooting are left out, as a sheet cannot unfold them: the guide takes eight A4 sheets instead of about twenty.
+- Printed, each plate keeps together and the fine print and the troubleshooting are left out, as a sheet cannot unfold them: the guide takes seven A4 sheets instead of about twenty.
 
 ## Consequences
 
