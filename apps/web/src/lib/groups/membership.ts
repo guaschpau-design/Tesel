@@ -1,9 +1,8 @@
 // Joining, creating and leaving groups: the steps that touch more than one record.
 
-import type { Invitation, Role } from '@tesel/protocol';
+import type { Invitation } from '@tesel/protocol';
 
 import { deleteGroupEvents } from '../events/event-log.ts';
-import type { Situation } from '../practice/situations.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import {
   applyInvitation,
@@ -12,7 +11,14 @@ import {
   type JoinOutcome,
   type StoredGroup,
 } from './group.ts';
-import { deleteGroup, getGroup, saveGroup, setActiveGroupId } from './group-store.ts';
+import {
+  deleteGroup,
+  getGroup,
+  listGroups,
+  saveGroup,
+  setActiveGroupId,
+  takeBeforePractice,
+} from './group-store.ts';
 
 /** Joins (or re-joins) the group of an invitation and makes it the active group. */
 export async function joinGroup(
@@ -41,30 +47,23 @@ export async function startGroup(
 }
 
 /**
- * Creates a practice group and makes it the active group: one without a server, whose other
- * members a practice run simulates on this device.
- */
-export async function startPractice(
-  db: AppDb,
-  name: string,
-  practice: { readonly situation: Situation; readonly role: Role },
-  now: number,
-): Promise<StoredGroup> {
-  const group: StoredGroup = {
-    ...createGroup(name, null, now),
-    role: practice.role,
-    practice: practice.situation,
-  };
-  await saveGroup(db, group);
-  await setActiveGroupId(db, group.id);
-  return group;
-}
-
-/**
  * Forgets a group and everything it left on this device, including its secret: the group first,
  * so that what is stored for it meanwhile is a leftover (`deleteLeftovers`).
  */
 export async function leaveGroup(db: AppDb, id: string): Promise<void> {
   await deleteGroup(db, id);
   await deleteGroupEvents(db, id);
+}
+
+/**
+ * Forgets the groups of the practice the app once had (ADR-0083), if one was left open when the
+ * app changed, and makes the group used before it the active one again.
+ */
+export async function forgetPracticeGroups(db: AppDb): Promise<void> {
+  const practices = (await listGroups(db)).filter((group) => 'practice' in group);
+  for (const practice of practices) await leaveGroup(db, practice.id);
+  const before = await takeBeforePractice(db);
+  if (practices.length > 0 && before !== undefined && (await getGroup(db, before))) {
+    await setActiveGroupId(db, before);
+  }
 }

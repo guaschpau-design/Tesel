@@ -35,21 +35,6 @@ export interface ScenarioMember {
   readonly hidden?: boolean;
 }
 
-/**
- * Whoever plays the scenario on their own device, as the app's practice has it: tasks and teams
- * can name them beside the members. A runner without such a person refuses a scenario that does.
- */
-export const YOU = '@you';
-
-/** Whether a scenario names whoever plays it (`YOU`): in a team, or as whom a task is for. */
-export function namesYou(scenario: Scenario): boolean {
-  return scenario.steps.some(
-    ({ action }) =>
-      (action.type === 'team' && action.members.includes(YOU)) ||
-      (action.type === 'task' && action.assignee === YOU),
-  );
-}
-
 /** Where a task is: a point, or one of the scenario's objects by its `id`. */
 export type ScenarioPlace =
   | { readonly kind: 'point'; readonly at: LatLon }
@@ -57,7 +42,7 @@ export type ScenarioPlace =
 
 /**
  * What a member does at a moment of the scenario. What later steps refer to (objects, SOS calls,
- * teams, tasks) is named by `id`; members by their alias, or `YOU`.
+ * teams, tasks) is named by `id`; members by their alias.
  */
 export type ScenarioAction =
   | { readonly type: 'chat'; readonly text: string }
@@ -87,7 +72,7 @@ export type ScenarioAction =
       readonly battery: number | null;
       readonly equipment: readonly Equipment[];
     }
-  /** A team, or a new version of it: `members` are aliases or `YOU`. */
+  /** A team, or a new version of it: `members` are aliases. */
   | {
       readonly type: 'team';
       readonly id: string;
@@ -95,7 +80,7 @@ export type ScenarioAction =
       readonly colour: TeamColour;
       readonly members: readonly string[];
     }
-  /** A new task, open, for a member or `YOU` (by alias), a team (by `id`) or anyone (null). */
+  /** A new task, open, for a member (by alias), a team (by `id`) or anyone (null). */
   | {
       readonly type: 'task';
       readonly id: string;
@@ -165,15 +150,12 @@ export interface PlannedEvent {
 }
 
 export interface PlanOptions {
-  /**
-   * Seconds between position reports of each member; null for none, when the runner moves the
-   * members itself (the app's practice, where they walk to their tasks).
-   */
-  readonly positionEvery: number | null;
+  /** Seconds between position reports of each member. */
+  readonly positionEvery: number;
 }
 
 /** Walking pace, in metres per second. */
-export const WALKING_SPEED = 1.2;
+const WALKING_SPEED = 1.2;
 
 /**
  * Every event of the scenario in time order. Members announce themselves first, positions follow
@@ -194,17 +176,14 @@ export function plan(scenario: Scenario, options: PlanOptions): PlannedEvent[] {
     by: member.alias,
     action: { type: 'announce', role: member.role ?? 'member' },
   }));
-  const every = options.positionEvery;
-  if (every !== null) {
-    for (const member of scenario.members) {
-      if (member.route === undefined || member.hidden === true) continue;
-      for (let at = 0; at <= scenario.duration; at += every) {
-        planned.push({
-          at,
-          by: member.alias,
-          action: { type: 'position', where: whereAt(member, at) },
-        });
-      }
+  for (const member of scenario.members) {
+    if (member.route === undefined || member.hidden === true) continue;
+    for (let at = 0; at <= scenario.duration; at += options.positionEvery) {
+      planned.push({
+        at,
+        by: member.alias,
+        action: { type: 'position', where: whereAt(member, at) },
+      });
     }
   }
   planned.push(...steps);
@@ -224,7 +203,7 @@ export function whereAt(member: ScenarioMember, seconds: number): LatLon {
 }
 
 /** The point `meters` along a route from its start; its end, past it. */
-export function pointAlong(route: readonly LatLon[], meters: number): LatLon {
+function pointAlong(route: readonly LatLon[], meters: number): LatLon {
   const first = route[0];
   if (first === undefined) throw new Error('a route with no points');
   let left = meters;

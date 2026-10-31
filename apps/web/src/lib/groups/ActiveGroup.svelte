@@ -36,7 +36,7 @@
 <section class="group" aria-label={group.name}>
   <header>
     <strong>{group.name}</strong>
-    <span class="badge role">{t(group.practice ? 'practice' : ROLE_LABELS[group.role])}</span>
+    <span class="badge role">{t(ROLE_LABELS[group.role])}</span>
   </header>
   {#if feed}
     <MemberList

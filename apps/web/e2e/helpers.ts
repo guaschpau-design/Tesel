@@ -152,23 +152,6 @@ export async function tapMapUntil(
   }).toPass({ timeout: 15_000 });
 }
 
-/**
- * Starts a practice from the map's start card, without a group: a situation, by its name, with the
- * user as a member of the team (the practice's own choice) or as its coordinator.
- */
-export async function practise(
-  page: Page,
-  options: { readonly situation?: string; readonly as?: 'Miembro' | 'Coordinador' } = {},
-): Promise<void> {
-  await page
-    .getByRole('region', { name: 'Para empezar' })
-    .getByRole('button', { name: 'Practicar sin nadie' })
-    .click();
-  if (options.situation) await page.getByRole('radio', { name: options.situation }).click();
-  if (options.as) await page.getByRole('radio', { name: new RegExp(`^${options.as}`) }).click();
-  await page.getByRole('button', { name: 'Empezar' }).click();
-}
-
 /** Opens one of the items of the dock's "More" menu. */
 export async function openMore(page: Page, item: string): Promise<void> {
   await page.getByRole('button', { name: 'Más', exact: true }).click();

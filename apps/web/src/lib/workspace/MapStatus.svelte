@@ -1,5 +1,5 @@
 <!-- The top of the map, in order of what needs attention first: the tool in use (drawing,
-     measuring), the incidents, a danger area entered, guidance, a practice, whether the group sees
+     measuring), the incidents, a danger area entered, guidance, whether the group sees
      this device, weather where this device is, the operation area's map, then the app's notices. The stack never runs under the
      dock: past its height it scrolls. -->
 <script lang="ts">
@@ -12,7 +12,7 @@
   import StartCard from '../groups/StartCard.svelte';
   import SosBanners from '../incidents/SosBanners.svelte';
   import CheckInCard from '../me/CheckInCard.svelte';
-  import { mapCentre, showPoint, showPoints } from '../map/geometry.ts';
+  import { showPoint, showPoints } from '../map/geometry.ts';
   import type { MapTaps } from '../map/taps.ts';
   import Measuring from '../measure/Measuring.svelte';
   import Navigation from '../navigation/Navigation.svelte';
@@ -29,7 +29,6 @@
   import OperationAreaOffer from '../offline/OperationAreaOffer.svelte';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import SharePrompt from '../position/SharePrompt.svelte';
-  import Practice from '../practice/Practice.svelte';
   import TaskPlacePicker from '../tasks/TaskPlacePicker.svelte';
   import { saveTask } from '../tasks/task-actions.ts';
   import { fieldsOf } from '../tasks/tasks.ts';
@@ -55,7 +54,6 @@
     weather: WeatherFeed | null;
     offline: OfflineMaps;
     onclosetool: () => void;
-    onendpractice: () => void;
     /** This member is active: only then does the safety check-in ask (protocol §3.17). */
     dutyActive: boolean;
     /** This device is in no group: the ways to start are offered. */
@@ -77,7 +75,6 @@
     onclosetool,
     dutyActive,
     groupless,
-    onendpractice,
   }: Props = $props();
 
   function acknowledge(target: EventRef): void {
@@ -205,22 +202,6 @@
       await saveTask(group.feed, t, task.task, { ...fieldsOf(task), status: 'done' });
     }}
   />
-  {#if group?.practice}
-    {#key group.feed}
-      <Practice
-        {t}
-        {locale}
-        feed={group.feed}
-        self={group.self}
-        role={group.role}
-        situation={group.practice}
-        here={deviceLocation.fix?.at ?? null}
-        mapCentre={mapCentre(map)}
-        {offline}
-        onend={onendpractice}
-      />
-    {/key}
-  {/if}
   <div class="aside" hidden={drawingOrMeasuring}>
     {#if group}
       <SharePrompt {t} sharing={group.sharing} />

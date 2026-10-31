@@ -2,12 +2,12 @@ import type { EventRef, NodeId, TeselEvent } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
 import { ScenarioPerformer, type EventDraft } from './event-draft.ts';
-import { plan, YOU, type Scenario } from './scenario.ts';
+import { plan, type Scenario } from './scenario.ts';
 
 const ANA = 'a1a1a1a1' as NodeId;
 const LUIS = 'b2b2b2b2' as NodeId;
-const ME = 'c3c3c3c3' as NodeId;
-const NODES: Readonly<Record<string, NodeId>> = { Ana: ANA, Luis: LUIS, [YOU]: ME };
+const BERTA = 'c3c3c3c3' as NodeId;
+const NODES: Readonly<Record<string, NodeId>> = { Ana: ANA, Luis: LUIS, Berta: BERTA };
 const HERE = { lat: 39.47, lon: -0.38 };
 
 const SCENARIO: Scenario = {
@@ -23,7 +23,13 @@ const SCENARIO: Scenario = {
     {
       at: 1,
       by: 'Ana',
-      action: { type: 'team', id: 'north', name: 'Norte', colour: 'blue', members: ['Luis', YOU] },
+      action: {
+        type: 'team',
+        id: 'north',
+        name: 'Norte',
+        colour: 'blue',
+        members: ['Luis', 'Berta'],
+      },
     },
     {
       at: 2,
@@ -85,7 +91,7 @@ async function perform(scenario: Scenario): Promise<TeselEvent[]> {
   const sent: TeselEvent[] = [];
   const seqs = new Map<NodeId, number>();
   for (const event of plan(scenario, { positionEvery: 600 })) {
-    const origin = NODES[event.by] ?? ME;
+    const origin = NODES[event.by] ?? BERTA;
     const actor = { alias: event.by, publicKey: new Uint8Array(32) };
     await performer.perform(event, actor, (draft: EventDraft): Promise<EventRef> => {
       const seq = (seqs.get(origin) ?? 0) + 1;
@@ -100,8 +106,8 @@ async function perform(scenario: Scenario): Promise<TeselEvent[]> {
 describe('performing a scenario', () => {
   it('forms a team of members and the user, under an ID of its own', async () => {
     const team = (await perform(SCENARIO)).find((event) => event.type === 'team');
-    expect(team).toMatchObject({ name: 'Norte', colour: 'blue', members: [LUIS, ME] });
-    expect([ANA, LUIS, ME]).not.toContain(team?.type === 'team' && team.team);
+    expect(team).toMatchObject({ name: 'Norte', colour: 'blue', members: [LUIS, BERTA] });
+    expect([ANA, LUIS, BERTA]).not.toContain(team?.type === 'team' && team.team);
   });
 
   it('gives a task to a team by its name in the scenario, and moves it on whole', async () => {

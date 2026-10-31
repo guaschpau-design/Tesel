@@ -22,7 +22,7 @@ export type PlainPanelName =
   | 'report';
 
 /** Where the groups panel opens: its list, or straight on one of the ways to a group. */
-export type GroupsStart = 'home' | 'create' | 'join' | 'practice';
+export type GroupsStart = 'home' | 'create' | 'join';
 
 export type Panel =
   | { readonly name: PlainPanelName }

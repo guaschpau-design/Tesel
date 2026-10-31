@@ -57,9 +57,9 @@ export function satelliteMosaic(): SatelliteMosaic {
 }
 
 /**
- * The user guide on the site served with the app (apps/site), given its path there. The app
- * lives under /app/, so the site is one level up.
+ * A page of the site served with the app (apps/site), such as the help or the guide, given its
+ * path there. The app lives under /app/, so the site is one level up.
  */
-export function guideUrl(path: string): string {
+export function siteUrl(path: string): string {
   return new URL(`${import.meta.env.BASE_URL}../${path}`, window.location.href).href;
 }

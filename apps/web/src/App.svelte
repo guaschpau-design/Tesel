@@ -86,10 +86,8 @@
   /** Official weather warnings from the app's own server, once the database is open. */
   let weather: WeatherFeed | null = $state.raw(null);
   /** How this device reaches its group now (lib/links). */
-  // A practice syncs with nothing: the indicator shows this device's own connection, as without a
-  // group.
   const linkInput = $derived({
-    server: session?.activeGroup?.practice !== undefined ? null : (feed?.status ?? null),
+    server: feed?.status ?? null,
     radio: radioLinkOf(radio),
     browserOnline: connection.online,
   });
@@ -219,9 +217,9 @@
     };
   });
 
-  // The radio follows the active group: its channel, its events. A practice stays on this device.
-  // Derived first, so that reloading the list of groups does not configure the radio again.
-  const radioFeed = $derived(session?.activeGroup?.practice !== undefined ? null : (feed ?? null));
+  // The radio follows the active group: its channel, its events. Derived first, so that reloading
+  // the list of groups does not configure the radio again.
+  const radioFeed = $derived(feed ?? null);
   $effect(() => {
     void radio.useFeed(radioFeed);
   });
@@ -240,7 +238,6 @@
           sharing,
           self: session.identity.nodeId,
           role: session.activeGroup.role,
-          practice: session.activeGroup.practice ?? null,
         }
       : null,
   );
@@ -332,10 +329,6 @@
         {preferences}
         {offline}
         {weather}
-        onendpractice={() => {
-          const current = session;
-          if (current) attempt(() => current.endPractice(), t('actionFailed'));
-        }}
       />
     {/if}
 

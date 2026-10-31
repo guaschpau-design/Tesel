@@ -57,12 +57,6 @@ export function showPoints(map: MapLibreMap, points: readonly LatLon[]): void {
   });
 }
 
-/** The point at the middle of the map's view. */
-export function mapCentre(map: MapLibreMap): LatLon {
-  const centre = map.getCenter();
-  return { lat: centre.lat, lon: centre.lng };
-}
-
 /** What the map's view shows, edge to edge. */
 export function mapBounds(map: MapLibreMap): Bounds {
   const bounds = map.getBounds();

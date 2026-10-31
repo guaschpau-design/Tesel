@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" width="400" height="800">
+  <!-- The app on a phone, drawn plain for the help page (ayuda/, en/help/): the top bar, the map
+       with the group on it, the map's buttons, SOS and the dock. Numbered lime badges point at
+       what the page's legend explains. No words, so both languages share it. -->
+  <defs>
+    <clipPath id="screen">
+      <rect x="30" y="20" width="340" height="760" rx="34" />
+    </clipPath>
+    <g id="mate">
+      <circle r="10" fill="#2a7de1" stroke="#fff" stroke-width="3.5" />
+    </g>
+  </defs>
+
+  <!-- The phone -->
+  <rect x="18" y="8" width="364" height="784" rx="46" fill="#050c12" />
+
+  <g clip-path="url(#screen)">
+    <!-- The map -->
+    <rect x="30" y="20" width="340" height="760" fill="#eeede6" />
+    <path d="M268 372 L352 352 L362 446 L286 462 Z" fill="#cfe3bd" />
+    <path d="M20 650 C110 606 236 700 380 628" fill="none" stroke="#9fd8e8" stroke-width="26" />
+    <g fill="none" stroke="#d9d6cc" stroke-width="16" stroke-linecap="round">
+      <path d="M20 300 C120 324 220 282 380 334" />
+      <path d="M142 70 L182 790" />
+      <path d="M20 528 L380 474" />
+      <path d="M252 70 L300 790" />
+      <path d="M20 410 L142 392" />
+    </g>
+    <g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round">
+      <path d="M20 300 C120 324 220 282 380 334" />
+      <path d="M142 70 L182 790" />
+      <path d="M20 528 L380 474" />
+      <path d="M252 70 L300 790" />
+      <path d="M20 410 L142 392" />
+    </g>
+
+    <!-- A danger zone, with its sign -->
+    <path
+      d="M48 196 L132 178 L150 262 L96 290 L44 262 Z"
+      fill="#d63031"
+      fill-opacity="0.16"
+      stroke="#d63031"
+      stroke-width="3"
+      stroke-dasharray="9 6"
+      stroke-linejoin="round"
+    />
+    <path d="M96 214 L114 246 L78 246 Z" fill="#d63031" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" />
+    <path d="M96 225 V236 M96 240.5 V241" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+
+    <!-- A route the group follows -->
+    <path
+      d="M172 470 C190 420 214 380 222 330 C230 290 236 250 236 212"
+      fill="none"
+      stroke="#5b3fd6"
+      stroke-width="5"
+      stroke-dasharray="2 10"
+      stroke-linecap="round"
+    />
+
+    <!-- A marker -->
+    <path
+      d="M236 214 C236 214 216 192 216 178 A20 20 0 1 1 256 178 C256 192 236 214 236 214 Z"
+      fill="#f0a020"
+      stroke="#fff"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+    <circle cx="236" cy="178" r="7" fill="#fff" />
+
+    <!-- Teammates, and this device: lime, with where it faces -->
+    <use href="#mate" x="226" y="404" />
+    <use href="#mate" x="104" y="566" />
+    <use href="#mate" x="292" y="560" />
+    <path d="M170 470 L150 428 A44 44 0 0 1 190 428 Z" fill="#c8f04a" fill-opacity="0.45" />
+    <circle cx="170" cy="470" r="11" fill="#c8f04a" stroke="#10202c" stroke-width="3.5" />
+
+    <!-- The top bar: the mark, the group, the connection -->
+    <rect x="30" y="20" width="340" height="66" fill="#10202c" />
+    <g fill="#e6ebe8">
+      <path d="M52 41 l6 -3.5 l6 3.5 v7 l-6 3.5 l-6 -3.5 Z" />
+      <path d="M58 52 l6 -3.5 l6 3.5 v7 l-6 3.5 l-6 -3.5 Z" />
+    </g>
+    <path d="M64 41 l6 -3.5 l6 3.5 v7 l-6 3.5 l-6 -3.5 Z" fill="#c8f04a" />
+    <rect x="88" y="33" width="170" height="40" rx="9" fill="none" stroke="#3b6072" stroke-width="2" />
+    <rect x="100" y="42" width="38" height="5" rx="2.5" fill="#93a6ad" />
+    <rect x="100" y="54" width="112" height="9" rx="4.5" fill="#e6ebe8" />
+    <path d="M232 50 l6 6 l6 -6" fill="none" stroke="#e6ebe8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    <rect x="292" y="33" width="66" height="40" rx="9" fill="none" stroke="#3b6072" stroke-width="2" />
+    <circle cx="311" cy="53" r="5.5" fill="#c8f04a" />
+    <g fill="none" stroke="#e6ebe8" stroke-width="2.5" stroke-linecap="round">
+      <path d="M327 50 A14 14 0 0 1 347 50" />
+      <path d="M331 55 A8 8 0 0 1 343 55" />
+    </g>
+    <circle cx="337" cy="60" r="2" fill="#e6ebe8" />
+
+    <!-- The map's buttons: north, centre on me, layers -->
+    <rect x="318" y="104" width="42" height="126" rx="11" fill="#10202c" />
+    <path d="M339 118 l5 13 h-10 Z" fill="#e5484d" />
+    <path d="M334 131 l5 9 l5 -9" fill="none" stroke="#e6ebe8" stroke-width="2" stroke-linejoin="round" />
+    <g fill="none" stroke="#e6ebe8" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="339" cy="167" r="7" />
+      <path d="M339 155 v5 M339 174 v5 M327 167 h5 M346 167 h5" />
+    </g>
+    <circle cx="339" cy="167" r="2.2" fill="#e6ebe8" />
+    <g fill="none" stroke="#e6ebe8" stroke-width="2.2" stroke-linejoin="round">
+      <path d="M339 196 l11 6 l-11 6 l-11 -6 Z" />
+      <path d="M328 208 l11 6 l11 -6" />
+    </g>
+
+    <!-- SOS -->
+    <circle cx="78" cy="728" r="33" fill="#d32f2f" stroke="#fff" stroke-width="4" />
+    <text
+      x="78"
+      y="735"
+      fill="#fff"
+      font-family="Archivo, system-ui, -apple-system, 'Segoe UI', sans-serif"
+      font-size="19"
+      font-weight="800"
+      text-anchor="middle"
+    >SOS</text>
+
+    <!-- The dock: Me, Add, Chat, Tasks, More -->
+    <rect x="124" y="698" width="236" height="60" rx="16" fill="#10202c" />
+    <g fill="none" stroke="#e6ebe8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="148" cy="721" r="5.5" />
+      <path d="M137 738 a11 9 0 0 1 22 0" />
+      <path d="M194 718 v20 M184 728 h20" />
+      <path d="M230 719 h20 a2 2 0 0 1 2 2 v12 a2 2 0 0 1 -2 2 h-12 l-6 5 v-5 h-2 a2 2 0 0 1 -2 -2 v-12 a2 2 0 0 1 2 -2 Z" />
+      <rect x="277" y="718" width="18" height="18" rx="3" />
+      <path d="M281 727 l4 4 l6 -7" />
+    </g>
+    <g fill="#e6ebe8">
+      <circle cx="324" cy="728" r="2.4" />
+      <circle cx="332" cy="728" r="2.4" />
+      <circle cx="340" cy="728" r="2.4" />
+    </g>
+  </g>
+
+  <!-- The numbers the legend explains -->
+  <g font-family="Archivo, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="800" text-anchor="middle">
+    <g transform="translate(258 30)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">1</text></g>
+    <g transform="translate(358 30)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">2</text></g>
+    <g transform="translate(246 384)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">3</text></g>
+    <g transform="translate(104 700)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">4</text></g>
+    <g transform="translate(148 690)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">5</text></g>
+    <g transform="translate(194 690)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">6</text></g>
+    <g transform="translate(240 690)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">7</text></g>
+    <g transform="translate(286 690)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">8</text></g>
+    <g transform="translate(332 690)"><circle r="14" fill="#c8f04a" stroke="#10202c" stroke-width="2.5" /><text y="5.5" fill="#10202c">9</text></g>
+  </g>
+</svg>

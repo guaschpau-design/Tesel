@@ -230,7 +230,7 @@ brand/               Mark, wordmark and lockup (SVG) and the script that builds 
 packages/protocol/   Wire format, crypto, invitations (pure TS)
 packages/core/       Reducer, LoRa scheduler with its bridge rules (pure TS)
 packages/meshcore/   MeshCore radio adapter
-packages/scenario/   Staged operations as data and their plan (pure TS): simulator and practice mode
+packages/scenario/   Staged operations as data and their plan (pure TS), for the simulator
 tools/simulator/     Scenarios played by simulated devices: demos, load tests, screenshots
 docs/                Briefing, protocol spec, decisions
 deploy/              VPS installer and configuration, GitHub Pages redirect

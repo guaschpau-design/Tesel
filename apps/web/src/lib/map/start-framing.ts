@@ -1,8 +1,8 @@
 // Brings the group into view while the map still shows the wide view it opens on (ADR-0054). Each
-// time someone or something new appears — this device's first fix, a member's position, a
-// practice's teammates, an operation area — the map is framed around all there is. The first time the view changes by anything else, a
-// pan, a zoom, a turn or a place shown from a panel, the user has chosen a view: framing stops for
-// good. A view the address gives (#map=…) is chosen already, so framing never starts.
+// time someone or something new appears — this device's first fix, a member's position, an
+// operation area — the map is framed around all there is. The first time the view changes by
+// anything else, a pan, a zoom, a turn or a place shown from a panel, the user has chosen a view:
+// framing stops for good. A view the address gives (#map=…) is chosen already, so framing never starts.
 
 import type { GroupState } from '@tesel/core';
 import type { LatLon, NodeId } from '@tesel/protocol';

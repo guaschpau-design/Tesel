@@ -25,8 +25,8 @@ export interface Actor {
 }
 
 /**
- * Who is who on the group: the node ID of a member by their alias, or of `YOU`. Undefined for a
- * name the runner does not know, which makes the step that uses it an error in the scenario.
+ * Who is who on the group: the node ID of a member by their alias. Undefined for a name the runner
+ * does not know, which makes the step that uses it an error in the scenario.
  */
 export type Cast = (name: string) => NodeId | undefined;
 

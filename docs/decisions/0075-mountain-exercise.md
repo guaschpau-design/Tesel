@@ -1,6 +1,6 @@
 # 0075. A mountain route, played where the map is
 
-- Status: Accepted
+- Status: Superseded by [0083](0083-help-on-one-page.md)
 - Date: 2026-10-30
 
 ## Context

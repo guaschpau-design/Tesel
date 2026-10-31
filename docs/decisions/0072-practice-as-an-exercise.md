@@ -1,6 +1,6 @@
 # 0072. Practice as an exercise: a world that changes, people with their own lives, and a director
 
-- Status: Accepted
+- Status: Superseded by [0083](0083-help-on-one-page.md)
 - Date: 2026-10-30
 
 ## Context

@@ -1,6 +1,6 @@
 # End-to-end fixtures
 
-`test-basemap.pmtiles` is a tiny synthetic basemap (360 tiles around Valencia, zoom 0 to 15: land, sea, a road grid, one place label, a hospital and, at zoom 15 only, a pharmacy; from zoom 14, named streets every 100 m round the centre with a footpath and a motorway, where the practice walks, a stream and a park) in the Protomaps layer schema. It lets the end-to-end tests render a real map without network access to any tile server.
+`test-basemap.pmtiles` is a tiny synthetic basemap (360 tiles around Valencia, zoom 0 to 15: land, sea, a road grid, one place label, a hospital and, at zoom 15 only, a pharmacy; from zoom 14, named streets every 100 m round the centre with a footpath and a motorway, a stream and a park) in the Protomaps layer schema. It lets the end-to-end tests render a real map without network access to any tile server.
 
 It was generated with `make-test-basemap.py`:
 

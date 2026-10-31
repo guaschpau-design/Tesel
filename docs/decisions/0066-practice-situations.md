@@ -1,6 +1,6 @@
 # 0066. Practice situations, on foot along the streets, with a guide
 
-- Status: Accepted, amended by [0070](0070-a-simpler-app.md) (no roll calls or alerts), [0072](0072-practice-as-an-exercise.md) (an exercise with a living world)
+- Status: Superseded by [0083](0083-help-on-one-page.md)
 - Date: 2026-10-28
 
 ## Context

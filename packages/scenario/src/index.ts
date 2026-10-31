@@ -1,10 +1,6 @@
 export { ScenarioPerformer, type Actor, type Cast, type EventDraft } from './event-draft.ts';
 export {
-  namesYou,
   plan,
-  pointAlong,
-  WALKING_SPEED,
-  YOU,
   type PlannedAction,
   type PlannedEvent,
   type PlanOptions,
@@ -14,4 +10,3 @@ export {
   type ScenarioPlace,
   type ScenarioStep,
 } from './scenario.ts';
-export { onFoot, WalkNetwork, type Passable } from './walkways.ts';

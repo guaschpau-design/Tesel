@@ -4,7 +4,7 @@
 
 import type { Locator } from '@playwright/test';
 
-import { device, expect, practise, test } from './helpers.ts';
+import { createGroup, device, expect, test } from './helpers.ts';
 
 test('panels and menus take the focus, close with Escape and give it back', async ({ browser }) => {
   const page = await device(browser, 'Ana');
@@ -68,8 +68,9 @@ async function coversAtOverlap(over: Locator, under: Locator): Promise<boolean> 
 
 test('in a phone held sideways, menus and panels rise over the cards', async ({ browser }) => {
   const page = await device(browser, 'Ana', '/', { viewport: { width: 740, height: 360 } });
-  await practise(page);
-  const card = page.getByRole('region', { name: 'Práctica' });
+  await createGroup(page, 'Rescate');
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+  const card = page.getByRole('region', { name: 'No compartes tu posición' });
   await expect(card).toBeVisible();
 
   await page.getByRole('button', { name: 'Más', exact: true }).click();

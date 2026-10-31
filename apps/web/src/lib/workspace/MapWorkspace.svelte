@@ -87,7 +87,6 @@
     offline: OfflineMaps;
     /** Official weather warnings, when the app's server publishes them. */
     weather: WeatherFeed | null;
-    onendpractice: () => void;
   }
 
   let {
@@ -101,7 +100,6 @@
     preferences,
     offline,
     weather,
-    onendpractice,
   }: Props = $props();
 
   // Kept on when the user asks, and always while guiding to a target.
@@ -409,7 +407,6 @@
   weather={shown.weather ? weather : null}
   {offline}
   onclosetool={() => (tool = null)}
-  {onendpractice}
   dutyActive={preferences.dutyStatus.value === 'active'}
   {groupless}
 />

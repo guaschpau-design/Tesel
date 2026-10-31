@@ -1,6 +1,7 @@
-<!-- The dock's "More" menu: the tools used now and then, with or without a group, and the way to
-     this device's settings. -->
+<!-- The dock's "More" menu: the tools used now and then, with or without a group, the way to this
+     device's settings, and the help, a page of the site that opens beside the app. -->
 <script lang="ts">
+  import { siteUrl } from '../config.ts';
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import DockMenu from '../ui/DockMenu.svelte';
   import type { GlyphName } from '../ui/glyphs.ts';
@@ -58,6 +59,13 @@
       label: 'settings',
       run: () => {
         openPanel('settings');
+      },
+    },
+    {
+      icon: 'help',
+      label: 'help',
+      run: () => {
+        window.open(siteUrl(t('helpPath')), '_blank', 'noopener');
       },
     },
   ];

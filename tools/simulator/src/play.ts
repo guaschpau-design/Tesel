@@ -2,7 +2,7 @@
 // comes, or everything at once for a short scenario that should already have happened.
 
 import { deriveGroupKeys } from '@tesel/protocol';
-import { namesYou, plan, ScenarioPerformer, YOU, type Scenario } from '@tesel/scenario';
+import { plan, ScenarioPerformer, type Scenario } from '@tesel/scenario';
 
 import { SimulatedDevice } from './device.ts';
 
@@ -23,9 +23,6 @@ export interface PlayOptions {
 }
 
 export async function play(scenario: Scenario, options: PlayOptions): Promise<void> {
-  // The simulator plays nobody's part but the members': a scenario that names YOU is refused,
-  // before anything is sent.
-  if (namesYou(scenario)) throw new Error(`${scenario.name} names ${YOU}, whom nobody plays here`);
   const events = plan(scenario, { positionEvery: options.positionEvery });
   const keys = deriveGroupKeys(options.secret);
   const devices = new Map<string, SimulatedDevice>();

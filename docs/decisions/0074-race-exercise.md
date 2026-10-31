@@ -1,6 +1,6 @@
 # 0074. A popular race to keep safe
 
-- Status: Accepted
+- Status: Superseded by [0083](0083-help-on-one-page.md)
 - Date: 2026-10-30
 
 ## Context

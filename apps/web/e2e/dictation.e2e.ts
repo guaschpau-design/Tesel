@@ -1,7 +1,7 @@
 // Dictating a chat message: the browser's speech recognition is stood in for by one that hears a
 // sentence; the text lands in the box, and is sent like a typed one.
 
-import { device, expect, practise, test } from './helpers.ts';
+import { createGroup, device, expect, test } from './helpers.ts';
 
 /** A recognizer that hears one sentence a moment after it starts, then stops when told. */
 function fakeRecognition(): void {
@@ -31,7 +31,8 @@ test('a dictated message is written in the box and sent', async ({ browser }) =>
   const page = await device(browser, 'Ana');
   await page.addInitScript(fakeRecognition);
   await page.reload();
-  await practise(page);
+  await createGroup(page, 'Rescate');
+  await page.getByRole('button', { name: 'Cerrar' }).click();
   await page.getByRole('button', { name: 'Chat' }).click();
 
   const chat = page.getByRole('region', { name: 'Chat' });

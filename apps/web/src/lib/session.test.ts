@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 
 import { describe, expect, it, vi } from 'vitest';
 
+import { createGroup } from './groups/group.ts';
+import { saveGroup, setActiveGroupId } from './groups/group-store.ts';
 import { Session } from './session.svelte.ts';
 import { openAppDb } from './storage/app-db.ts';
 
@@ -10,46 +12,18 @@ vi.mock('./storage/storage-space.svelte.ts', () => ({ keepStorage: () => Promise
 
 let dbCounter = 0;
 
-async function session(): Promise<Session> {
-  const started = await Session.load(await openAppDb(`session-test-${String(dbCounter++)}`));
-  await started.createIdentity('Ana');
-  return started;
-}
-
-describe('a practice in the session', () => {
-  it('ends when another group is used, which stays active', async () => {
-    const ana = await session();
-    const team = await ana.createGroup('Rescate', null);
-    await ana.startPractice('Práctica', 'flood', 'member');
-    expect(ana.activeGroup?.practice).toBe('flood');
-    await ana.activate(team.id);
-    expect(ana.groups.map((group) => group.name)).toEqual(['Rescate']);
-    expect(ana.activeGroupId).toBe(team.id);
-  });
-
-  it('ends when a new group is created', async () => {
-    const ana = await session();
-    await ana.startPractice('Práctica', 'wildfire', 'coordinator');
-    const team = await ana.createGroup('Rescate', null);
-    expect(ana.groups.map((group) => group.name)).toEqual(['Rescate']);
-    expect(ana.activeGroupId).toBe(team.id);
-  });
-
-  it('goes back to the group used before, once ended', async () => {
-    const ana = await session();
-    const team = await ana.createGroup('Rescate', null);
-    await ana.startPractice('Práctica', 'missing-person', 'member');
-    await ana.endPractice();
-    expect(ana.groups.map((group) => group.name)).toEqual(['Rescate']);
-    expect(ana.activeGroupId).toBe(team.id);
-  });
-
-  it('goes back to the group used before when the app is opened again during a practice', async () => {
+describe('a practice left from before', () => {
+  it('is forgotten when the app opens, and the group used before it is in use again', async () => {
     const db = await openAppDb(`session-test-${String(dbCounter++)}`);
     const ana = await Session.load(db);
     await ana.createIdentity('Ana');
     const team = await ana.createGroup('Rescate', null);
-    await ana.startPractice('Práctica', 'flood', 'member');
+    // As the practice left them: its group in use, and the one before remembered.
+    const practice = { ...createGroup('Práctica', null, Date.now()), practice: 'flood' };
+    await saveGroup(db, practice);
+    await setActiveGroupId(db, practice.id);
+    await db.put('settings', team.id, 'beforePractice');
+
     const reopened = await Session.load(db);
     expect(reopened.groups.map((group) => group.name)).toEqual(['Rescate']);
     expect(reopened.activeGroupId).toBe(team.id);

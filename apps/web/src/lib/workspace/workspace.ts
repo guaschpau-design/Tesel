@@ -5,20 +5,14 @@ import type { NodeId, Role } from '@tesel/protocol';
 
 import type { PositionSharing } from '../position/position-sharing.svelte.ts';
 import type { TaskEditing } from '../tasks/tasks.ts';
-import type { Situation } from '../practice/situations.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 
-/**
- * The active group's feed and this device's place in it; for a practice, its other members are
- * simulated here.
- */
+/** The active group's feed and this device's place in it. */
 export interface WorkspaceGroup {
   readonly feed: GroupFeed;
   readonly self: NodeId;
   readonly role: Role;
   readonly sharing: PositionSharing;
-  /** The situation a practice plays; null for a real group. */
-  readonly practice: Situation | null;
 }
 
 /** The name this device goes by, which Me shows and changes. */

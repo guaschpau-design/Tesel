@@ -19,7 +19,7 @@ export interface Network {
 }
 
 export interface LinkInput {
-  /** The active group's sync with its server, or null without a group or in a practice. */
+  /** The active group's sync with its server, or null without a group. */
   readonly server: FeedStatus | null;
   readonly radio: 'off' | 'connecting' | 'linked';
   /** Whether the browser believes it is online; it only matters when `server` is null. */

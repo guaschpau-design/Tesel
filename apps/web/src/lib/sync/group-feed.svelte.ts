@@ -75,8 +75,8 @@ import { checkServerClock } from './server-clock.ts';
 export type FeedStatus = RelayStatus | 'local-only';
 
 /**
- * Where what this device has just sent is: with the group (through the server, or in a practice,
- * whose group is this device), on its way by radio, or waiting on the device for a way out.
+ * Where what this device has just sent is: with the group (through the server), on its way by
+ * radio, or waiting on the device for a way out.
  */
 export type Delivery = 'group' | 'radio' | 'waiting';
 
@@ -88,8 +88,7 @@ export class GroupFeed {
   /** How many chat lines and reports of others this device has shown (chat/unread.ts). */
   chatSeen = $state(0);
   /**
-   * Own events neither stored by a relay nor put on the air, by event reference key. A practice
-   * delivers nothing, as nothing leaves the device, and so has none.
+   * Own events neither stored by a relay nor put on the air, by event reference key.
    */
   get undelivered(): ReadonlySet<string> {
     return this.#undelivered;
@@ -160,13 +159,11 @@ export class GroupFeed {
   ): Promise<GroupFeed> {
     const feed = new GroupFeed(db, group, identity, createSocket);
     await feed.#apply(await loadEvents(db, group.id));
-    if (group.practice === undefined) {
-      // The outbox also holds other members' events this device heard by radio and forwards: those
-      // are not its to deliver.
-      for (const { entry } of await pendingEvents(db, group.id)) {
-        if (entry.origin === identity.nodeId && entry.aired !== true) {
-          feed.#undelivered.add(eventRefKey(entry));
-        }
+    // The outbox also holds other members' events this device heard by radio and forwards: those
+    // are not its to deliver.
+    for (const { entry } of await pendingEvents(db, group.id)) {
+      if (entry.origin === identity.nodeId && entry.aired !== true) {
+        feed.#undelivered.add(eventRefKey(entry));
       }
     }
     // Opening does not depend on announcing: a device whose storage is full still shows the group.
@@ -202,8 +199,7 @@ export class GroupFeed {
    * (`catchUpPackets`).
    */
   async attachRadio(sink: LoraSink | null): Promise<void> {
-    // A practice never reaches the air, whatever the caller does (ADR-0031).
-    this.#lora = this.#group.practice !== undefined ? null : sink;
+    this.#lora = sink;
     if (this.#lora === null) return;
     const pending = await pendingEvents(this.#db, this.#group.id);
     for (const event of standingEvents(this.state)) this.#lora.observe(event);
@@ -229,16 +225,6 @@ export class GroupFeed {
     const heard = loraEventOf(bytes);
     if (heard) this.#lora?.heard(heard);
     this.#hear('radio', [bytes]);
-    await this.#take([bytes]);
-  }
-
-  /**
-   * An event of a simulated member of a practice (lib/practice), taken like any other, as heard
-   * through the channel the practice says it came by; a practice group has no server and no radio,
-   * so it goes nowhere.
-   */
-  async receiveSimulated(bytes: Uint8Array, channel: Channel): Promise<void> {
-    this.#hear(channel, [bytes]);
     await this.#take([bytes]);
   }
 
@@ -280,7 +266,7 @@ export class GroupFeed {
   }
 
   get delivery(): Delivery {
-    if (this.#group.practice !== undefined || this.status === 'synced') return 'group';
+    if (this.status === 'synced') return 'group';
     return this.#lora === null ? 'waiting' : 'radio';
   }
 
@@ -440,7 +426,7 @@ export class GroupFeed {
   async #publish(build: (header: EventHeader) => TeselEvent): Promise<EventRef> {
     const header = { origin: this.#identity.nodeId, time: Math.floor(Date.now() / 1000) };
     const { entry, bytes } = await publishEvent(this.#db, this.#group.id, build, header);
-    if (this.#group.practice === undefined) this.#undelivered.add(eventRefKey(entry));
+    this.#undelivered.add(eventRefKey(entry));
     const [event] = await this.#apply([bytes]);
     this.#push(entry, bytes);
     if (event) this.#lora?.offer({ event, bytes }, 'own');
@@ -448,7 +434,7 @@ export class GroupFeed {
   }
 
   /**
-   * Events that did not come from the group's server (by radio, from a file, from a practice):
+   * Events that did not come from the group's server (by radio or from a file):
    * the new ones are stored, applied and, with a server, passed on to it. Returns how many were new.
    */
   async #take(batch: readonly Uint8Array[]): Promise<number> {

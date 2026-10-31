@@ -1,16 +1,14 @@
-<!-- The groups: the one in use, the others, two big buttons to create or join one, and a practice
-     with a simulated group. With a group in use, the others and the ways to a new one fold under
+<!-- The groups: the one in use, the others, and two big buttons to create or join one. With a group
+     in use, the others and the ways to a new one fold under
      it, and leaving it comes last, apart: both are seldom needed during an operation. Creating,
      joining, inviting and scanning each open in the panel and come back here; the welcome card on
      the map opens it straight on one of them (`start`). -->
 <script lang="ts">
-  import type { Invitation, Role } from '@tesel/protocol';
+  import type { Invitation } from '@tesel/protocol';
 
   import { untrack } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
-  import PracticeSetup from '../practice/PracticeSetup.svelte';
-  import type { Situation } from '../practice/situations.ts';
   import type { Session } from '../session.svelte.ts';
   import type { GroupsStart } from '../ui/panels.svelte.ts';
   import type { GroupFeed } from '../sync/group-feed.svelte.ts';
@@ -35,7 +33,7 @@
     oninvitation: (invitation: Invitation) => void;
     /** A group was left: its channel goes from the radio. */
     onleft: (group: StoredGroup) => void;
-    /** Where the panel opens: its list, or straight on creating, joining or practising. */
+    /** Where the panel opens: its list, or straight on creating or joining. */
     start: GroupsStart;
     onclose: () => void;
   }
@@ -54,21 +52,12 @@
   }
 
   async function leave(group: StoredGroup): Promise<void> {
-    if (group.practice) {
-      attempt(() => session.endPractice(), t('actionFailed'));
-      return;
-    }
     const text = t('confirmLeave', { group: group.name });
     if (!(await confirmations.ask({ text, confirm: t('leave') }))) return;
     attempt(async () => {
       await session.leave(group.id);
       onleft(group);
     }, t('actionFailed'));
-  }
-
-  async function practise(situation: Situation, role: Role): Promise<void> {
-    await session.startPractice(t('practiceGroupName'), situation, role);
-    onclose();
   }
 </script>
 
@@ -94,11 +83,6 @@
       {t('joinGroup')}
     </button>
   </div>
-  {#if !session.groups.some((group) => group.practice)}
-    <button class="practice" onclick={() => (view = { kind: 'practice' })}
-      >{t('startPractice')}</button
-    >
-  {/if}
 {/snippet}
 
 <Panel title={t('groups')} closeLabel={t('close')} {onclose}>
@@ -106,8 +90,6 @@
     <CreateGroupForm {t} {session} onclose={home} />
   {:else if view.kind === 'join'}
     <JoinGroup {t} {oninvitation} onscan={() => (view = { kind: 'scan' })} oncancel={home} />
-  {:else if view.kind === 'practice'}
-    <PracticeSetup {t} onstart={practise} oncancel={home} />
   {:else if view.kind === 'scan'}
     <QrScanner {t} onresult={scanned} oncancel={home} />
   {:else if view.kind === 'invite' && session.identity}
@@ -148,7 +130,7 @@
             void leave(group);
           }}
         >
-          {group.practice ? t('endPractice') : t('leaveGroup')}
+          {t('leaveGroup')}
         </button>
       {/if}
     </div>
@@ -186,12 +168,6 @@
     place-items: center;
     padding: 0.9rem 0.5rem;
     font-weight: 600;
-  }
-
-  .practice {
-    justify-self: center;
-    font-size: var(--text-secondary);
-    border-color: transparent;
   }
 
   .leave {

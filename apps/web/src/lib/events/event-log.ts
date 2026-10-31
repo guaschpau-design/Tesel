@@ -219,7 +219,7 @@ function seqRuns(
 /** Forgets everything a group left on this device. */
 /**
  * Forgets what groups no longer on this device left behind: events stored while one was being
- * left, by a feed or a practice that had not stopped yet.
+ * left, by a feed that had not stopped yet.
  */
 export async function deleteLeftovers(db: AppDb, kept: readonly string[]): Promise<void> {
   const found = new Set<string>();

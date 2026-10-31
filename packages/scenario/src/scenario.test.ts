@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { namesYou, plan, whereAt, YOU, type Scenario } from './scenario.ts';
+import { plan, whereAt, type Scenario } from './scenario.ts';
 
 const PATROL: Scenario = {
   name: 'patrol',
@@ -60,20 +60,6 @@ describe('scenario plan', () => {
       steps: [{ at: 1, by: 'Nobody', action: { type: 'chat', text: 'hola' } }],
     };
     expect(() => plan(broken, { positionEvery: 20 })).toThrow(/Nobody/);
-  });
-
-  it('tells a scenario that names whoever plays it, in a team or for a task', () => {
-    const step = (action: Scenario['steps'][number]['action']) => ({
-      ...PATROL,
-      steps: [{ at: 1, by: 'Walker', action }],
-    });
-    expect(namesYou(PATROL)).toBe(false);
-    expect(
-      namesYou(step({ type: 'team', id: 't', name: 'Norte', colour: 'blue', members: [YOU] })),
-    ).toBe(true);
-    expect(namesYou(step({ type: 'task', id: 't', text: '', assignee: YOU, place: null }))).toBe(
-      true,
-    );
   });
 });
 

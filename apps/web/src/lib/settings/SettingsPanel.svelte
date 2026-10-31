@@ -2,7 +2,7 @@
      keeping the screen on, full screen, the language and how coordinates are written. Each is
      remembered. -->
 <script lang="ts">
-  import { guideUrl } from '../config.ts';
+  import { siteUrl } from '../config.ts';
   import CoordinateFormatSelect from '../coordinates/CoordinateFormatSelect.svelte';
   import type { LocalIdentity } from '../identity/identity.ts';
   import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
@@ -93,7 +93,7 @@
   </div>
   <p class="hint device">
     {#if identity}{identity.alias} · {t('deviceId', { node: identity.nodeId })} ·{/if}
-    <a href={guideUrl(t('guidePath'))} target="_blank" rel="noopener">{t('guide')}</a>
+    <a href={siteUrl(t('guidePath'))} target="_blank" rel="noopener">{t('guide')}</a>
   </p>
 </Panel>
 
