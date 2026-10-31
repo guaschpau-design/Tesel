@@ -89,3 +89,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0081](0081-found-in-a-tap-or-two.md)                | Found in a tap or two                                                                       | Accepted                                          |
 | [0082](0082-correct-and-quiet.md)                    | Mistakes easy to correct, and less noise                                                    | Accepted                                          |
 | [0083](0083-help-on-one-page.md)                     | Help on one page, in place of the practice                                                  | Accepted                                          |
+| [0084](0084-guide-plate-by-plate.md)                 | The guide, plate by plate                                                                   | Accepted                                          |

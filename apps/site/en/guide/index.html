@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tesel guide · Preparation, operation and deployment</title>
+    <title>Tesel guide · Plate by plate</title>
     <meta
       name="description"
-      content="How to prepare a team with Tesel, what to do during an operation, how to stay coordinated without coverage using LoRa radios, and how information is protected."
+      content="Tesel in twelve plates: getting started, the group, the chat, marking the ground, tasks, SOS, finding your way, carrying on without internet with LoRa radios, the diary and security."
     />
     <meta name="theme-color" content="#10202c" />
     <link rel="icon" href="../../app/icons/favicon.svg?v=5f378b66" type="image/svg+xml" />
@@ -40,530 +40,1162 @@
       </div>
     </header>
 
-    <div class="guide-head ink">
+    <div class="guide-cover ink">
       <div class="wrap">
-        <div class="text">
-          <p class="eyebrow">Guide</p>
-          <h1>Preparation, operation and deployment.</h1>
-          <p class="lead">
-            How to prepare the team, what to do during an operation and how to stay coordinated when
-            there is no coverage. No jargon.
-          </p>
-        </div>
-        <figure class="phone">
-          <picture>
-            <source type="image/webp" srcset="../../img/app-phone.webp" />
-            <img
-              src="../../img/app-phone.jpg"
-              width="640"
-              height="1385"
-              alt="Tesel on a phone: a medical SOS acknowledged by a teammate, over the team's map."
-            />
-          </picture>
-        </figure>
+        <p class="eyebrow">Guide</p>
+        <h1>Tesel, plate by plate.</h1>
+        <p class="lead">
+          One idea on each plate: the drawing, the taps and a sentence or two. What you need not
+          know at first is folded under “Details”.
+        </p>
+        <p class="hurry">In a hurry? The <a href="../help/">help</a> tells it on one page.</p>
+        <nav class="plate-index" aria-label="Plates">
+          <ol>
+            <li>
+              <a href="#what"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#layers" /></svg
+                >What Tesel is</a
+              >
+            </li>
+            <li>
+              <a href="#start"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#download" /></svg
+                >Getting started</a
+              >
+            </li>
+            <li>
+              <a href="#group"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#qr" /></svg
+                >The group</a
+              >
+            </li>
+            <li>
+              <a href="#me"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#person" /></svg
+                >Me</a
+              >
+            </li>
+            <li>
+              <a href="#chat"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#chat" /></svg
+                >Chat and reports</a
+              >
+            </li>
+            <li>
+              <a href="#mark"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#pin" /></svg
+                >Marking the ground</a
+              >
+            </li>
+            <li>
+              <a href="#tasks"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#task" /></svg
+                >Tasks and sweeps</a
+              >
+            </li>
+            <li>
+              <a href="#sos"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#warning" /></svg
+                >SOS</a
+              >
+            </li>
+            <li>
+              <a href="#field"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#compass" /></svg
+                >Finding your way</a
+              >
+            </li>
+            <li>
+              <a href="#no-internet"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#mast" /></svg
+                >Without internet</a
+              >
+            </li>
+            <li>
+              <a href="#diary"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#journal" /></svg
+                >The diary</a
+              >
+            </li>
+            <li>
+              <a href="#security"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#shield" /></svg
+                >Security</a
+              >
+            </li>
+            <li class="extra">
+              <a href="#settings"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#settings" /></svg
+                >Settings</a
+              >
+            </li>
+            <li class="extra">
+              <a href="#trouble"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="../../img/guide/icons.svg#help" /></svg
+                >If it fails</a
+              >
+            </li>
+          </ol>
+        </nav>
       </div>
     </div>
-
-    <main class="wrap prose">
-      <nav class="toc" aria-label="Contents">
-        <p class="label">Contents</p>
-        <ol>
-          <li><a href="#what">What Tesel is</a></li>
-          <li><a href="#before">Before: get the team ready</a></li>
-          <li><a href="#during">During an operation</a></li>
-          <li><a href="#field">Finding your way</a></li>
-          <li><a href="#after">Afterwards: the diary</a></li>
-          <li><a href="#no-internet">When there is no internet</a></li>
-          <li><a href="#radios">Radios</a></li>
-          <li><a href="#iphone">If you have an iPhone</a></li>
-          <li><a href="#security">Privacy and security</a></li>
-          <li><a href="#trouble">If something does not work</a></li>
-        </ol>
-      </nav>
-
-      <h2 id="what">What Tesel is</h2>
-      <p>
-        Tesel is a situational awareness tool for teams. It brings together on one shared map every
-        member's position, what has been marked on the ground (sectors, meeting points, hazards),
-        the team's messages, tasks and reports. If someone needs help, they press SOS and the whole
-        team knows at once, with their position.
-      </p>
-      <p>
-        With internet it works like any messaging app. Without internet it keeps working with
-        <strong>pocket radios</strong> that pass messages to each other.
-      </p>
-      <div class="box">
-        <p><strong>Tesel does not replace 112.</strong></p>
-        <p>It helps your team coordinate. If you can call emergency services, always do.</p>
-      </div>
-
-      <h2 id="before">Before: get the team ready</h2>
-      <p>An emergency is no time to learn a new tool. Set aside half an hour on a quiet day.</p>
-      <h3>Everyone</h3>
-      <ol>
-        <li>
-          Open <a href="../../app/">tesel.eu/app</a> in your phone's browser and type your name. No
-          email, phone number or password needed. If you arrive with an invitation, that same step
-          joins you to the group.
-        </li>
-        <li>
-          Add it to your home screen. On Android, with Chrome: menu ⋮ → “Add to Home screen”. On
-          iPhone, with Safari: Share button → “Add to Home Screen”. It then opens like an app and
-          works offline.
-        </li>
-        <li>
-          Download the map of your area: “More” → “Offline maps”, move the map to your area and tap
-          “Download”. Under “Options” you can name it, choose the detail and, in Spain, Portugal,
-          Andorra and southern France, also download the topographic and satellite maps. Do it on
-          Wi-Fi, as it takes space. If a download is cut short, “Resume” carries on where it
-          stopped. Even if you download nothing, Tesel keeps an overview of the map and what you
-          last looked at, so the map is never blank without a connection.
-        </li>
-      </ol>
-      <h3>The coordinator</h3>
-      <ol>
-        <li>
-          Create the group with “Create a group”, on the “To start” card the map shows while you are
-          in no group. Whoever creates it is its coordinator: they invite the others and organise
-          the teams.
-        </li>
-        <li>
-          Tap “Invite” and share the link, or let people scan the QR code. Whoever has the
-          invitation joins the group, so share it only with those who belong.
-        </li>
-        <li>
-          Mark the operation area: “Add” → “Area”, draw it and choose “Operation area”. Each member
-          of the group will be offered “Download” to have its map without a connection.
-        </li>
-        <li>
-          If you are going to use radios, set them up in advance (see <a href="#radios">Radios</a>).
-        </li>
-      </ol>
-      <h3>The whole team</h3>
-      <ul>
-        <li>
-          Agree on a simple plan: a meeting point, who coordinates and what to do without coverage.
-        </li>
-        <li>
-          Run a drill: send a message, send a test SOS and cancel it, and if you have radios, repeat
-          it with phones in airplane mode and Bluetooth on.
-        </li>
-        <li>Repeat the drill now and then, with charged batteries.</li>
-        <li>
-          To see at a glance what each button is and how the usual things are done, open the
-          <a href="../help/">help</a> (in the app: “More” → “Help”). It fits one sheet: print it and
-          take it along.
-        </li>
-      </ul>
-
-      <h2 id="during">During an operation</h2>
-      <figure class="figure">
-        <picture>
-          <source type="image/webp" srcset="../../img/app-sos.webp" />
+    <main class="guide wrap">
+      <section class="plate" id="what" aria-labelledby="what-t">
+        <figure class="plate-art">
           <img
-            src="../../img/app-sos.jpg"
-            width="1400"
-            height="978"
-            loading="lazy"
-            alt="Tesel on a tablet: a medical SOS at the top, and the team, a search sector and the marks on the map."
+            src="../../img/guide/what.svg"
+            width="400"
+            height="300"
+            alt="A shared map: teammates, a marker, a route and a danger area, with the chat, the tasks and an SOS around it."
           />
-        </picture>
-        <figcaption>
-          An SOS received: at the top, who is asking and who has acknowledged it. In the chat, the
-          team's reply and a message from the coordinator.
-        </figcaption>
-      </figure>
-      <p>
-        At the top, next to the logo, is the <strong>group</strong> you are in: tap it to invite,
-        organise or change group. At the bottom are the SOS button and five buttons:
-        <strong>Me</strong>, <strong>Add</strong> (everything new starts here: a marker, a route, a
-        zone, a task or a report), <strong>Chat</strong> (with a number when there are new
-        messages), <strong>Tasks</strong> and <strong>More</strong>. For everything else, touch the
-        map: press and hold a point, or tap a marker or a member, and you will see what you can do
-        there. Whenever you save or send something, a short notice says whether it has reached the
-        group, gone by radio or waits on the phone for a connection.
-      </p>
-      <ul>
-        <li>
-          <strong>Tell the team how you are</strong> in “Me”: at the top, your name (the pencil
-          changes it, and the group sees it at once); your status in one tap (active, resting, off
-          duty) and, all in view, whether you have a LoRa radio, your profile (civil protection,
-          firefighters, police…), your position, battery, what you carry (in four groups: from the
-          first-aid kit and water to a 4×4, a boat or a satellite phone) and your tasks. While you
-          are not sharing your position, a card on the map reminds you, with a button to share it.
-          Under “Position”, a switch shares where you are; off, the team sees where you were, unless
-          you turn on “Hide where I was too”. It also tells your coordinates and how precise your
-          GPS is. Tap a teammate on the map, or their name under “Group”, to see first how far they
-          are and “Guide me”, then the same as in your “Me”; someone resting or off duty shows as an
-          empty ring. An iPhone cannot tell its battery.
-        </li>
-        <li>
-          <strong>Whoever coordinates is told without going to look:</strong> a short notice says
-          when someone joins the group, when a report arrives (with what is happening and the
-          casualties) and when someone starts or finishes a task. The members list says who is not
-          sharing their position.
-        </li>
-        <li>
-          <strong>Teams.</strong> Whoever coordinates opens “Groups” → “Organise” → “New team”: they
-          name it, choose a colour and tick who is in it. Members are listed team by team, and on
-          the map each person wears their team's colour. A task or a strip of a sweep can be for a
-          whole team: it counts as each member's task and tells all of them.
-        </li>
-        <li>
-          <strong>Write to the group</strong> with the “Chat” button. Keep messages short and clear:
-          over radio they cost less and arrive sooner. If you cannot type, tap the microphone in the
-          text box and speak: the message writes itself and you send it once checked. Dictation uses
-          the phone’s speech recognition (Google or Apple) and on most phones needs an internet
-          connection. With the chat closed, a new message shows in a notice with “View”.
-        </li>
-        <li>
-          <strong>Situation reports.</strong> “Add” → “Report”: choose what is happening (fire,
-          collapse, missing person…), and, if you like, count the casualties by triage colour and
-          mark the dangers, how the access is and what is needed. It goes with your position in one
-          message, by radio too. In the chat each takes one line, which opens when tapped; they stay
-          pinned in the “Reports” tab, with the casualties added up, and show on the map.
-        </li>
-        <li>
-          <strong>Mark what matters</strong> with “Add”: a marker (a meeting point, a hazard), a
-          route or a zone (a sector). The whole group sees it at once. If you are given coordinates,
-          press “Coordinates” on the card and type them instead of tapping the map; the same when
-          picking a task's place. A zone can come from a KML or GeoJSON file too, as routes can. To
-          correct something already saved, tap it and choose “Edit” in “⋯”; “Delete” is in the same
-          menu.
-        </li>
-        <li>
-          <strong>Routes.</strong> “Add” → “Route”: tap the map point by point along the way (up to
-          25 points), then “Finish”. If it comes from a GPS or another app, press the file button
-          (beside undo) and pick a GPX, KML or GeoJSON file: the app keeps 25 points and tells you
-          how far, at most, the route strays from the original. Tap the route and press “Follow
-          route”: a card takes you to its start and then from point to point, with what is left, and
-          warns you if you stray. “Task on this route” hands it to someone; at the end, “Task done”
-          closes it in one tap.
-        </li>
-        <li>
-          <strong>Sweeps.</strong> Whoever coordinates draws an area styled “Search area, assigned”,
-          taps it and presses “Plan a sweep”. They choose the terrain (open ground, 25 m between
-          searchers; scrub, 10 m; dense forest, 5 m) or any spacing, how many teams and who leads
-          each; “Turn lanes” changes their direction. The lanes show on the map, one coloured strip
-          per team, before “Create sweep”. Each team gets its strip as a task: “Follow strip” guides
-          it lane by lane and tells how much it has swept from its own trail. The area shows how
-          each strip is going, and once all are done it turns “cleared” by itself.
-        </li>
-        <li>
-          <strong>Share out the work</strong> with “Tasks”: “Check the warehouse”, “Bring water to
-          the meeting point”. Only the text is needed, typed or picked from the common ones (search
-          the area, check a home, treat an injured person…); if you like, say who it is for and give
-          it a place with “Pick on the map” in the task itself. You can also start it from the map:
-          press and hold a point → “Task here”, or tap a marker, a zone or a route, and the task
-          then goes wherever that object goes. The list groups them by who has them, yours first.
-          Each person starts and finishes their own and those for anyone; a task along a route or a
-          strip starts with “Follow route” or “Follow strip”. If you tap “Done” by mistake, “Undo”
-          in the notice brings it back. A number on the button tells you how many are yours. Use
-          them the way that suits your team: for everything, for what matters, or not at all.
-        </li>
-        <li>
-          <strong>If you need help, press SOS</strong>, choose what is happening and send it. It
-          carries your position; if the phone does not know where you are yet, it goes anyway and
-          your position follows as soon as there is one. Sending it closes whatever you had open, so
-          that you see your SOS. When someone sees it they tap “Acknowledge” and you will know.
-          Until it has reached someone, the notice says so; by radio it repeats until someone
-          acknowledges it. If it is no longer needed, cancel it.
-        </li>
-        <li>
-          <strong>If you see someone else's SOS</strong>, tap “Acknowledge” so they know the group
-          has seen it. An SOS makes the phone vibrate and sound, and closes the chat if it was open
-          so that you see it. Its card says how far it is and which way, and “Guide me” takes you
-          there.
-        </li>
-        <li>
-          <strong>“Are you OK?” check.</strong> Whoever coordinates turns it on in “Groups” →
-          “Organise”. Anyone active who has not moved or touched Tesel for 30 minutes feels the
-          phone vibrate and is asked; a tap on the screen answers. With no answer in 2 minutes, an
-          SOS goes out with their last position. It never asks someone resting or off duty. For now
-          it works only with Tesel open on screen.
-        </li>
-        <li>
-          <strong>Danger areas.</strong> When someone draws an area in the “Danger area” style, the
-          phone of each person who walks into it vibrates and says which one. Each phone works it
-          out from its own GPS, offline too; while the group has a danger area, the GPS stays on for
-          this, sharing nothing.
-        </li>
-      </ul>
-
-      <h2 id="field">Finding your way</h2>
-      <p>
-        The tools in this section work on the phone itself, with or without a group, and with no
-        connection.
-      </p>
-      <ul>
-        <li>
-          <strong>Where you are.</strong> At the top right are the compass, which puts north back
-          up, and the target button, which shows you on the map and keeps the map centred on you.
-          Move the map with your finger and it stops following; press it again to centre. The GPS is
-          only used while something needs it: sharing your position, this button or guidance.
-        </li>
-        <li>
-          <strong>Coordinates.</strong> Press and hold a point of the map (right click on a
-          computer): you see how far it is, what you can do there and, below, its coordinates; tap
-          them to copy them. The format (degrees, DMS, UTM or MGRS) is chosen in “More” → “Settings”
-          and remembered. If someone reads you coordinates, type them in “More” → “Go to a
-          coordinate” as you were given them and the app finds them on the map.
-        </li>
-        <li>
-          <strong>Getting somewhere.</strong> A point of the map, a marker or a team member shows
-          how far it is from you and in which direction. With “Guide me”, a card at the top shows
-          the distance and an arrow pointing the way, and a dotted line joins you to the
-          destination. When the destination is a member, it moves with them. While guiding you, the
-          screen stays on.
-        </li>
-        <li>
-          <strong>Measuring.</strong> “More” → “Measure distances”: tap the map point by point to
-          see the total distance and, from three points, the area they enclose. Zones drawn on the
-          map also show their area.
-        </li>
-        <li>
-          <strong>Map type, trails and layers.</strong> With the layers button under the target you
-          choose the map by tapping its picture: streets (streets, buildings and roads), topographic
-          (contour lines, paths and the names of places, ravines and springs) or satellite (aerial
-          photographs). The last two cover Spain, Portugal, Andorra and southern France. From afar
-          the satellite map is one Sentinel‑2 image, alike everywhere; close up, each country’s
-          official aerial photographs. Each member leaves a line behind with where they have been in
-          the last hours. Below, each layer is a button that is lit while it is shown: tap it to
-          hide or show members, markers, tasks, reports, trails, services, weather warnings, relief,
-          cadastre, radar or grid. Your own position and SOS calls are always shown. With “Cadastre”
-          on (online, zoomed in) you see the parcels with their numbers and the polygon, as a plot
-          in the countryside is named. With “Relief” on, the map shades hills and valleys and, next
-          to the distance to a place, you see how much the straight way climbs and descends, and its
-          steepest stretch.
-        </li>
-        <li>
-          <strong>Radar.</strong> In the map layers, “Radar” draws distance rings around you, closer
-          or wider apart with the zoom, and a line to the five nearest teammates with their distance
-          and bearing. While it is on, the GPS stays on.
-        </li>
-        <li>
-          <strong>MGRS grid.</strong> In the map layers you can draw the MGRS grid, the one fire
-          services, the military and ATAK use: lines every 100 km, 10 km, 1 km or 100 m as the zoom
-          allows, with their digits, and the name of each 100 km square.
-        </li>
-        <li>
-          <strong>Services.</strong> The map marks health centres and hospitals, pharmacies, fire
-          stations, police, helipads, town halls and fuel stations with round icons: the large ones
-          from afar, the rest when zoomed in to street level. Tap one for its name and to be guided
-          there. They come from OpenStreetMap with the map, so they are also there offline in areas
-          downloaded with “Streets” detail. In some villages the map may be incomplete.
-        </li>
-        <li>
-          <strong>Weather warnings.</strong> Official yellow, orange and red warnings (AEMET in
-          Spain, IPMA in Portugal, through MeteoAlarm) tint their region on the map. If your
-          location is on and you are inside one, a card at the top says what it warns of and until
-          when; a long press on any point shows the warnings there. The app keeps them, so without
-          coverage you still see the last ones it received. Hide them with “Weather warnings” in the
-          map layers.
-        </li>
-        <li>
-          <strong>Who stays in touch without coverage.</strong> In “Me” and on each member’s card,
-          the “LoRa radio” line says whether one is linked to their app: those with one stay in
-          touch with the group if the mobile network falls; those without are cut off. The app knows
-          by itself, nothing to tick; if you have none, “Connect” takes you to link one. The card
-          also says when something of theirs last reached you by radio or through the server. In the
-          group’s list of members, a mast marks those with a LoRa radio or who reach you by radio.
-        </li>
-        <li>
-          <strong>Screen on.</strong> In “More” → “Settings” → “Screen always on”: with the switch
-          green, the screen does not turn off while Tesel is open. It uses more battery.
-        </li>
-        <li>
-          <strong>Full screen.</strong> In Chrome and similar browsers, on Android and on a
-          computer, Tesel fills the whole screen, without the browser’s bars, from the first tap.
-          The back gesture or the Esc key leave it until Tesel next opens; to never use it, “More” →
-          “Settings” → “Full screen”.
-        </li>
-        <li>
-          <strong>Alarm.</strong> “More” → “Settings” → “Alarm sound” turns the beep of SOS calls
-          off or on; the vibration stays. With “More” → “Settings” → “Notifications”, the alarm also
-          arrives with Tesel in the background, where the browser allows it; tapping it opens Tesel.
-        </li>
-        <li>
-          <strong>Language.</strong> Tesel speaks the browser’s language, Spanish or English. It is
-          changed in “More” → “Settings” → “Language”, and remembered.
-        </li>
-      </ul>
-
-      <h2 id="after">Afterwards: the diary</h2>
-      <p>
-        “More” → “Operation diary” tells everything that has happened in the group, in order: who
-        joined, the messages and SOS calls, who received them, and every marker or zone added,
-        changed or deleted. “Download” gives it to you as a text file for the report, with
-        coordinates in your format.
-      </p>
-      <p>
-        In the same panel, under “Encrypted log”, you can
-        <strong>save a copy of the group’s log</strong>: all its events, encrypted, readable only by
-        members. Loaded on another device of the group, it brings that device whatever it is
-        missing. Use it as a backup, or to hand the coordinator, on a memory stick, what a phone
-        lived through by radio only.
-      </p>
-
-      <h2 id="no-internet">When there is no internet</h2>
-      <p>
-        First of all: <strong>you do not need to change anything in the app.</strong> Tesel uses
-        whatever link there is. What you write offline is kept and goes out as soon as there is one.
-      </p>
-      <p>
-        At the top right, Tesel always says what it is connected through: “WiFi”, “4G/5G” or “LoRa”,
-        or several at once (“WiFi · LoRa”), with a green dot; “Connecting…” with an orange dot, or
-        “No connection” with a red one. Where the phone does not say whether it uses Wi-Fi or mobile
-        data (on iPhone, for instance), it shows “WiFi/5G”. Tap it for a card per connection.
-      </p>
-      <figure class="figure">
-        <div class="diagram">
-          <div class="routes">
-            <div class="route">
+        </figure>
+        <div class="plate-text">
+          <h2 id="what-t">What Tesel is</h2>
+          <p class="lead">
+            One map for the team: where everyone is, what has been marked on the ground, the
+            messages, the tasks and the reports. If someone presses SOS, everyone knows at once,
+            with their position.
+          </p>
+          <ul class="moves">
+            <li>
               <h3>With internet</h3>
-              <div class="path" aria-hidden="true">
-                <span class="node">Your phone</span><span class="line"></span>
-                <span class="node hub">Server</span><span class="line"></span>
-                <span class="node">Team</span>
-              </div>
-            </div>
-            <div class="route">
-              <h3>With a radio</h3>
-              <div class="path" aria-hidden="true">
-                <span class="node">Your phone</span><span class="line"></span>
-                <span class="node hub">Radio</span><span class="line air"></span>
-                <span class="node">Mesh</span>
-              </div>
-            </div>
-            <div class="route">
-              <h3>With a bridge</h3>
-              <div class="path" aria-hidden="true">
-                <span class="node">Your phone</span><span class="line air"></span>
-                <span class="node hub">Bridge</span><span class="line"></span>
-                <span class="node">Server</span>
-              </div>
-            </div>
+              <p>It works like any messaging app.</p>
+            </li>
+            <li>
+              <h3>Without internet</h3>
+              <p>
+                It keeps working with <strong>pocket radios</strong> that pass messages on to each
+                other.
+              </p>
+            </li>
+          </ul>
+          <div class="box">
+            <p><strong>Tesel does not replace the emergency number.</strong></p>
+            <p>It helps the team coordinate. If you can call emergency services, always call.</p>
           </div>
         </div>
-        <figcaption>
-          The three paths. The dotted line is radio. The bridge is a teammate's phone with both a
-          radio and coverage.
-        </figcaption>
-      </figure>
-      <h3>If you have a radio</h3>
-      <p>
-        Tap the connection indicator at the top, and in “Connections” tap “Connect radio”. From then
-        on your messages, position and SOS go out by radio and the group's reach you, and the
-        indicator says “LoRa”. The radio does not need to be in sight: it can stay in your backpack.
-        What you wrote without the radio goes out as soon as you connect it, and if the connection
-        drops, Tesel brings it back by itself.
-      </p>
-      <h3>If someone has a radio and coverage</h3>
-      <p>
-        Their phone acts as a bridge without them doing anything: what arrives by radio goes up to
-        the server, and what the server has goes out by radio. Whoever has a radio but no coverage
-        keeps up with what the others write, and the other way round.
-      </p>
-      <h3>If you have neither</h3>
-      <p>
-        The downloaded map keeps working and you can write: messages go out by themselves when the
-        connection returns. If someone in your group has a radio, stay close to them.
-      </p>
-
-      <h2 id="radios">Radios</h2>
-      <p>
-        Tesel uses <strong>MeshCore</strong> radios: small devices that connect to your phone by
-        Bluetooth and send messages to each other over LoRa, a radio signal that travels very far on
-        very little power. In Europe they use the licence-free 868 MHz band.
-      </p>
-      <ul>
-        <li>
-          <strong>Which models:</strong> we are validating radios in the field and will publish
-          recommended models here once testing is done.
-        </li>
-        <li>
-          <strong>Setting it up:</strong> done once, from a computer with Chrome, with the official
-          MeshCore web flasher and the “Companion Bluetooth” firmware.
-        </li>
-        <li>
-          <strong>Range:</strong> from about a kilometre in a city to tens of kilometres between
-          high places. Radios repeat each other's messages, so the more there are, the further
-          messages travel. A radio on a high balcony or by a window helps the whole team.
-        </li>
-        <li>
-          <strong>Why it is slower:</strong> the radio sends very little data, and the law limits
-          how long it may transmit. Tesel puts urgent things first: SOS calls, then messages and
-          finally positions.
-        </li>
-        <li>
-          <strong>MeshCore messages:</strong> if someone nearby uses the MeshCore app, their
-          messages appear in the chat's “MeshCore” tab so they are not lost. To answer, use the
-          MeshCore app.
-        </li>
-      </ul>
-
-      <h2 id="iphone">If you have an iPhone</h2>
-      <p>
-        Over the internet Tesel works the same on iPhone. What Safari does not allow is connecting a
-        radio by Bluetooth. Until the native app arrives, use the Bluefy browser, which does allow
-        it. It is a stopgap we are still checking.
-      </p>
-
-      <h2 id="security">Privacy and security</h2>
-      <ul>
-        <li>
-          Everything in the group is encrypted with a key only its members have. The server cannot
-          read the messages.
-        </li>
-        <li>
-          <strong>The invitation is the key to the group.</strong> Whoever has it gets in. If it was
-          shared with the wrong person, the coordinator can create a new group and invite everyone
-          again. Inside the group everyone is trusted: the app does not check who wrote each
-          message, so a member could pass for another.
-        </li>
-        <li>
-          The group's keys are stored on your phone. Protect it with a screen lock. Leaving a group
-          deletes it from the phone.
-        </li>
-        <li>
-          Over radio the encryption is simpler: it keeps out casual listeners, not someone with
-          means and determination. Do not send by radio what you would not say aloud in a public
-          place.
-        </li>
-        <li>Your position is shared only when you choose.</li>
-      </ul>
-
-      <h2 id="trouble">If something does not work</h2>
-      <details>
-        <summary>The top bar says “Offline”</summary>
-        <p>
-          Your phone has no internet. What you write is kept and goes out later. If you have a
-          radio, connect it.
+      </section>
+      <section class="plate" id="start" aria-labelledby="start-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/start.svg"
+            width="400"
+            height="300"
+            alt="Three phones: the welcome with the name, Tesel on the home screen and a map downloading."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="start-t">Getting started in three steps</h2>
+          <p class="lead">
+            Each person, once, on wifi and on a quiet day: an emergency is not the time to learn a
+            tool.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>1. Open the app and type your name</h3>
+              <p class="taps"><a href="../../app/">tesel.eu/app</a></p>
+              <p>
+                No email, phone number or password. If you arrive with an invitation, this step
+                already joins you to the group.
+              </p>
+            </li>
+            <li>
+              <h3>2. Put it on the home screen</h3>
+              <p class="taps">
+                Android, Chrome: <b>⋮</b> → <b>Add to Home screen</b><br />iPhone, Safari:
+                <b>Share</b> → <b>Add to Home Screen</b>
+              </p>
+              <p>It opens like an app and works offline.</p>
+            </li>
+            <li>
+              <h3>3. Download the map of your area</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                  >More</b
+                >
+                → <b>Offline maps</b> → <b>Download</b>
+              </p>
+              <p>Move the map to your area first. It takes space: better on wifi.</p>
+            </li>
+          </ul>
+          <div class="box">
+            <p>
+              <strong>With the team:</strong> agree on a meeting point, who coordinates and what to
+              do without coverage. Run a drill: a message, a test SOS you then cancel and, with
+              radios, the same with phones in airplane mode and Bluetooth on. Repeat it now and
+              then, with charged batteries.
+            </p>
+          </div>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                Under <b>Options</b>, when downloading, you can name it, choose the detail
+                (“Streets”, “Town”, “Region”) and, in Spain, Portugal, Andorra and southern France,
+                also get the topographic and the satellite map.
+              </li>
+              <li>If the download is cut, <b>Resume</b> carries on where it stopped.</li>
+              <li>
+                Even if you download nothing, Tesel keeps an overview of the map and the last places
+                you looked at, so it is never blank offline.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="group" aria-labelledby="group-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/group.svg"
+            width="400"
+            height="300"
+            alt="A phone with the invitation’s QR code, and four people joining, in two coloured teams."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="group-t">The group</h2>
+          <p class="lead">
+            Whoever creates the group coordinates it: they invite the others, mark where the work is
+            and organise the teams.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Create the group</h3>
+              <p class="taps">
+                <b>To start</b> →
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Create a group</b
+                >
+              </p>
+              <p>The “To start” card shows on the map while you are in no group.</p>
+            </li>
+            <li>
+              <h3>Invite</h3>
+              <p class="taps"><b>Group</b> → <b>Invite</b></p>
+              <p>
+                Share the link or let them scan the QR.
+                <strong>The invitation is the key:</strong> whoever has it gets in.
+              </p>
+            </li>
+            <li>
+              <h3>Mark the operation area</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Add</b
+                >
+                → <b>Area</b> → draw it → <b>Operation area</b>
+              </p>
+              <p>Every member will see “Download” to have that map offline.</p>
+            </li>
+            <li>
+              <h3>Form teams</h3>
+              <p class="taps"><b>Group</b> → <b>Organise</b> → <b>New team</b></p>
+              <p>
+                A name, a colour and who is in it. On the map each person wears their team’s colour.
+              </p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                To join a group without the link: <b>To start</b> → <b>Join a group</b> and scan the
+                QR.
+              </li>
+              <li>
+                Whoever coordinates is told without looking: a short notice says when someone joins,
+                when a report arrives (what is happening and the casualties) and when someone starts
+                or finishes a task.
+              </li>
+              <li>
+                The members list says who does not share their position; an antenna marks whoever
+                has a LoRa radio or reaches you by radio.
+              </li>
+              <li>
+                A task or a sweep strip can be for a whole team: it counts as a task of each of its
+                members and tells all of them.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="me" aria-labelledby="me-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/me.svg"
+            width="400"
+            height="300"
+            alt="The Me panel: the name with a pencil (1), the state in three buttons (2), the position switch (3) and what you carry."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="me-t">Tell the team how you are</h2>
+          <p class="lead">
+            Me holds what is yours: your name, your state, whether you share your position and what
+            you carry. The team sees it on your card.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Your name</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#person" /></svg
+                  >Me</b
+                >
+                → <b><i>1</i>pencil</b>
+              </p>
+              <p>The group sees it changed at once.</p>
+            </li>
+            <li>
+              <h3>Your state</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#person" /></svg
+                  >Me</b
+                >
+                → <b><i>2</i>Active</b> · <b>Resting</b> · <b>Off duty</b>
+              </p>
+              <p>Whoever is resting or off duty shows on the map as an empty circle.</p>
+            </li>
+            <li>
+              <h3>Your position</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#person" /></svg
+                  >Me</b
+                >
+                → <b><i>3</i>Share my position</b>
+              </p>
+              <p>
+                While you do not share it, a card on the map reminds you, with a button to do it.
+              </p>
+            </li>
+            <li>
+              <h3>A teammate’s card</h3>
+              <p class="taps">tap them on the map or in the list → <b>Guide me</b></p>
+              <p>At the top, how far they are; below, the same as in their Me.</p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                Me also shows, if you have a LoRa radio, your profile (Civil Protection,
+                Firefighters, Police…), your battery, your coordinates and how precise your GPS is,
+                what you carry (in four groups: from the first-aid kit and water to the 4×4, the
+                boat or the satellite phone) and your tasks.
+              </li>
+              <li>
+                With your position off, the team sees where you were, unless you turn on
+                <b>Hide where I was too</b>.
+              </li>
+              <li>The battery cannot be read on an iPhone.</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="chat" aria-labelledby="chat-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/chat.svg"
+            width="400"
+            height="300"
+            alt="The chat: a report pinned at the top with casualties by colour (1), messages, and the text box with the microphone (2)."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="chat-t">Talking: chat and reports</h2>
+          <p class="lead">
+            The chat to talk; the report to tell what is happening in one message that stays pinned.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Write</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#chat" /></svg
+                  >Chat</b
+                >
+              </p>
+              <p>
+                Short, clear messages: by radio they cost less and arrive sooner. With the chat
+                closed, a new one shows in a notice with “View”.
+              </p>
+            </li>
+            <li>
+              <h3>Dictate</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#chat" /></svg
+                  >Chat</b
+                >
+                → <b><i>2</i>Dictate</b>
+              </p>
+              <p>Speak, check the text and send it.</p>
+            </li>
+            <li>
+              <h3>Send a report</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Add</b
+                >
+                → <b>Report</b> → what is happening
+              </p>
+              <p>
+                It goes with your position in one message, by radio too, and stays pinned under
+                <b><i>1</i>Reports</b>.
+              </p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                In a report you can tell, if you wish, the casualties by triage colour, the hazards,
+                how the access is and what is needed.
+              </li>
+              <li>
+                In the chat a report takes one line, which opens when tapped. The “Reports” tab
+                keeps them all, with the casualties added up, and they show on the map.
+              </li>
+              <li>
+                Dictation uses the phone’s speech recognition (Google or Apple) and on most phones
+                needs internet.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="mark" aria-labelledby="mark-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/mark.svg"
+            width="400"
+            height="300"
+            alt="A map with a danger area, a marker and a route; the marker tapped, with its card and the menu to edit or delete it."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="mark-t">Marking the ground</h2>
+          <p class="lead">Everything new starts in Add, and the whole team sees it at once.</p>
+          <ul class="moves">
+            <li>
+              <h3>A point</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Add</b
+                >
+                → <b>Marker</b> → tap the place
+              </p>
+              <p>A meeting point, a hazard, an injured person.</p>
+            </li>
+            <li>
+              <h3>A route</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Add</b
+                >
+                → <b>Route</b> → point by point → <b>Finish</b>
+              </p>
+              <p>Tap it later and press <b>Follow route</b>: it guides you along it.</p>
+            </li>
+            <li>
+              <h3>An area</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#plus" /></svg
+                  >Add</b
+                >
+                → <b>Area</b> → draw it → choose its style
+              </p>
+              <p>With “Danger area”, the phone of whoever walks into it vibrates and warns them.</p>
+            </li>
+            <li>
+              <h3>Correct or delete</h3>
+              <p class="taps">
+                tap it →
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                ></b>
+                →
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#pencil" /></svg
+                  >Edit</b
+                >
+              </p>
+              <p>“Delete” is in the same menu.</p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                If someone reads you coordinates, press <b>Coordinates</b> on the card and type them
+                instead of tapping the map.
+              </li>
+              <li>
+                A route has up to 25 points. <b>File</b> reads one from a GPX, KML or GeoJSON file:
+                the app thins it to 25 points and says how far at most it strays from the original.
+                An area can come from a KML or GeoJSON file too.
+              </li>
+              <li>
+                <b>Follow route</b> takes you to its start and then point by point, with what is
+                left, and warns you if you stray. <b>Task on this route</b> hands it to someone; at
+                the end, <b>Task done</b> closes it.
+              </li>
+              <li>
+                Each phone watches the danger areas with its own GPS, offline too; while there is
+                one, the GPS stays on for this, sharing nothing. Areas also say how large they are.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="tasks" aria-labelledby="tasks-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/tasks.svg"
+            width="400"
+            height="300"
+            alt="On the left, a list of tasks by person: done, under way and open. On the right, an area split into three coloured strips, one per team."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="tasks-t">Tasks and sweeps</h2>
+          <p class="lead">
+            Share out the work and let everyone see who does what. Use them for everything, for what
+            matters or for nothing: whatever suits your team.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Give a task</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#task" /></svg
+                  >Tasks</b
+                >
+                → <b>New task</b>
+              </p>
+              <p>
+                Only the text is needed: type it or pick a common one. If you wish, who it is for
+                and where.
+              </p>
+            </li>
+            <li>
+              <h3>From the map</h3>
+              <p class="taps">hold a point → <b>Task here</b></p>
+              <p>Or tap a marker, an area or a route: the task goes wherever that object goes.</p>
+            </li>
+            <li>
+              <h3>Do it</h3>
+              <p class="taps"><b>Start</b> → <b>Done</b></p>
+              <p>
+                If you mark it done by mistake,
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#undo" /></svg
+                  >Undo</b
+                >
+                in the notice brings it back.
+              </p>
+            </li>
+            <li>
+              <h3>A sweep</h3>
+              <p class="taps">tap the search area → <b>Plan a sweep</b> → <b>Create sweep</b></p>
+              <p>Each team gets its strip as a task; <b>Follow strip</b> guides it lane by lane.</p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                The common ones: search the area, check a home, treat an injured person… The place
+                is picked with <b>Pick on the map</b> in the task itself.
+              </li>
+              <li>
+                The list groups them by who has them, yours first. Each person moves on their own
+                and those for anyone; a number on the button says how many you have.
+              </li>
+              <li>
+                For a sweep, the area is drawn with the style “Search area, assigned”. Choose the
+                terrain (open, 25 m between people; scrub, 10 m; dense forest, 5 m) or the spacing,
+                how many teams and who leads each; <b>Turn lanes</b> changes their direction. The
+                lanes show before you create it.
+              </li>
+              <li>
+                The area shows how each strip is going, and <b>Follow strip</b> says how much each
+                team has swept. When all are done, the area turns to “Search area, cleared” by
+                itself.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="sos" aria-labelledby="sos-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/sos.svg"
+            width="400"
+            height="300"
+            alt="The SOS button pressed (1) and, on another phone that vibrates, the SOS card with “Acknowledge” and “Guide me” (2) and the line to whoever calls."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="sos-t">SOS and “Are you OK?”</h2>
+          <p class="lead">
+            An SOS reaches the whole group with your position, makes phones vibrate and ring, and is
+            not lost: it is repeated until someone receives it.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Call for help</h3>
+              <p class="taps">
+                <b><i>1</i>SOS</b> → what is happening → <b>Send SOS</b>
+              </p>
+              <p>
+                When someone sees it they press “Acknowledge”, and you will know. If it is no longer
+                needed: <b>Cancel SOS</b>.
+              </p>
+            </li>
+            <li>
+              <h3>Answer an SOS</h3>
+              <p class="taps">
+                <b><i>2</i>Acknowledge</b> → <b>Guide me</b>
+              </p>
+              <p>
+                The card says how far and in which direction they are; “Guide me” takes you there.
+              </p>
+            </li>
+            <li>
+              <h3>“Are you OK?”</h3>
+              <p class="taps"><b>Group</b> → <b>Organise</b> → <b>“Are you OK?” check</b></p>
+              <p>
+                Whoever has been active and still for 30 minutes is asked by their phone. With no
+                answer in 2 minutes, an SOS goes out with their last position.
+              </p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                If the phone does not know where you are yet, the SOS goes anyway and the position
+                follows as soon as it has one.
+              </li>
+              <li>
+                Sending it closes whatever you had open, so you see your SOS. Until it has reached
+                someone, the notice says so; by radio it is repeated until someone receives it.
+              </li>
+              <li>An SOS received closes the chat if you had it open, so you see it.</li>
+              <li>
+                The coordinator turns on “Are you OK?”. A tap on the screen answers it. It never
+                asks whoever is resting or off duty, and for now it only works with Tesel open on
+                screen.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="field" aria-labelledby="field-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/orient.svg"
+            width="400"
+            height="300"
+            alt="A map with the card that guides with an arrow, the radar rings, the grid, the compass, centre and layers buttons, and the coordinates of a point."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="field-t">Finding your way</h2>
+          <p class="lead">
+            All of this works on your phone: with or without a group, with or without a connection.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Where you are</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#locate" /></svg
+                  >target</b
+                >
+              </p>
+              <p>
+                Shows you and keeps the map centred on you. The compass above puts north back at the
+                top.
+              </p>
+            </li>
+            <li>
+              <h3>Go to a place</h3>
+              <p class="taps">tap it → <b>Guide me</b></p>
+              <p>
+                An arrow, the distance and a dotted line to the target. If it is a teammate, the
+                target moves with them.
+              </p>
+            </li>
+            <li>
+              <h3>Coordinates</h3>
+              <p class="taps">
+                hold a point ·
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                  >More</b
+                >
+                → <b>Go to a coordinate</b>
+              </p>
+              <p>
+                Tap them to copy them. If someone reads you some, type them as given and the app
+                places them.
+              </p>
+            </li>
+            <li>
+              <h3>Map and layers</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#layers" /></svg
+                  >layers</b
+                >
+                → streets · topographic · satellite
+              </p>
+              <p>Below, each layer is a button: tap it to hide or show it.</p>
+            </li>
+            <li>
+              <h3>Measure</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                  >More</b
+                >
+                →
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#ruler" /></svg
+                  >Measure distances</b
+                >
+              </p>
+              <p>Tap point by point: the distance and, from three points, the area.</p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                If you move the map with your finger, it stops following you: press the target
+                again. The GPS is only used while something needs it: sharing your position, the
+                target or a guide. While guiding, the screen stays on.
+              </li>
+              <li>
+                The coordinate format (degrees, DMS, UTM or MGRS) is chosen in
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                  >More</b
+                >
+                → <b>Settings</b>. On a computer, the right button stands for holding.
+              </li>
+              <li>
+                The topographic and satellite maps cover Spain, Portugal, Andorra and southern
+                France. From afar the satellite is a single Sentinel‑2 image, the same for everyone;
+                close up, each country’s official aerial photos.
+              </li>
+              <li>
+                Layers: members, markers, tasks, reports, trails (the line of each person’s last
+                hours), services, weather warnings, relief, cadastre, radar and grid. Your position
+                and SOS calls always show.
+              </li>
+              <li>
+                <strong>Relief</strong> shades hills and valleys and, beside the distance to a
+                place, says how much the straight way climbs and descends and its steepest stretch.
+                <strong>Cadastre</strong> (online and close up) shows the parcels with their number
+                and polygon.
+              </li>
+              <li>
+                <strong>Radar</strong> draws distance rings around you and a line to the five
+                nearest teammates; while it is on, the GPS stays on. <strong>MGRS grid</strong>, the
+                one firefighters, the UME and ATAK use: lines every 100 km, 10 km, 1 km or 100 m as
+                the zoom allows.
+              </li>
+              <li>
+                <strong>Services</strong>: health centres and hospitals, pharmacies, fire stations,
+                police, helipads, town halls and fuel stations, from OpenStreetMap; offline, in
+                areas downloaded with “Streets” detail. In some villages the map may be incomplete.
+              </li>
+              <li>
+                <strong>Weather warnings</strong>: the official yellow, orange and red ones (AEMET,
+                IPMA, through MeteoAlarm) tint their area. If you are inside one, a card says what
+                it warns of and until when; they are kept to be seen without coverage.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="no-internet" aria-labelledby="no-internet-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/offline.svg"
+            width="400"
+            height="300"
+            alt="No coverage on the hills: three pocket radios pass messages from one to the next, with a phone linked at each end."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="no-internet-t">Without internet</h2>
+          <p class="lead">
+            <strong>You do not have to change anything.</strong> Tesel uses whatever link there is,
+            and what you write offline goes out as soon as there is one.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>See how you are connected</h3>
+              <p class="taps">top right: WiFi · 4G/5G · LoRa</p>
+              <p>
+                Green dot: connected. Orange: connecting. Red: offline. Each time you send
+                something, a notice says whether it arrived, went by radio or is waiting.
+              </p>
+            </li>
+            <li>
+              <h3>With a radio</h3>
+              <p class="taps">connection → <b>Connect radio</b></p>
+              <p>
+                Your messages, your position and your SOS go by radio and the team’s reach you. It
+                can stay in your backpack.
+              </p>
+            </li>
+            <li>
+              <h3>With a radio and coverage</h3>
+              <p>
+                Your phone acts as a <strong>bridge</strong> without you doing anything: what comes
+                by radio goes up to the server, and the other way round.
+              </p>
+            </li>
+            <li>
+              <h3>With neither</h3>
+              <p>
+                The downloaded map keeps working and you can write. If someone in the team has a
+                radio, stay close to them.
+              </p>
+            </li>
+          </ul>
+          <div class="box">
+            <p>
+              <strong>iPhone?</strong> Safari cannot connect a radio over Bluetooth. Until the
+              native app arrives, use the Bluefy browser (a stopgap we are still testing). Over the
+              internet, Tesel works the same.
+            </p>
+          </div>
+          <figure class="routes-figure">
+            <div class="diagram">
+              <div class="routes">
+                <div class="route">
+                  <h3>With internet</h3>
+                  <div class="path" aria-hidden="true">
+                    <span class="node">Your phone</span><span class="line"></span>
+                    <span class="node hub">Server</span><span class="line"></span>
+                    <span class="node">Team</span>
+                  </div>
+                </div>
+                <div class="route">
+                  <h3>With a radio</h3>
+                  <div class="path" aria-hidden="true">
+                    <span class="node">Your phone</span><span class="line"></span>
+                    <span class="node hub">Radio</span><span class="line air"></span>
+                    <span class="node">Mesh</span>
+                  </div>
+                </div>
+                <div class="route">
+                  <h3>Through a bridge</h3>
+                  <div class="path" aria-hidden="true">
+                    <span class="node">Your phone</span><span class="line air"></span>
+                    <span class="node hub">Bridge</span><span class="line"></span>
+                    <span class="node">Server</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              The three paths. The dotted line is radio. The bridge is the phone of a teammate who
+              has a radio and coverage at once.
+            </figcaption>
+          </figure>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                <span id="radios"></span>Tesel uses <strong>MeshCore</strong> radios: small devices
+                that connect to the phone over Bluetooth and send messages to each other with LoRa,
+                a signal that goes very far on very little power. In Europe they use the free 868
+                MHz band: no licence needed.
+              </li>
+              <li>
+                We will publish the recommended models here when the field tests end. Each radio is
+                set up once, from a computer with Chrome, with MeshCore’s official web flasher and
+                the “Companion Bluetooth” firmware.
+              </li>
+              <li>
+                Range: from a kilometre in a city to tens of kilometres between high places. Each
+                radio repeats the others’ messages: the more there are, the further they reach. A
+                radio on a high balcony or at a window helps the whole team.
+              </li>
+              <li>
+                A radio sends very little data and the law limits how long it may transmit, so it is
+                slower. Tesel puts the urgent first: SOS calls, then messages, and positions last.
+              </li>
+              <li>
+                What you wrote without a radio goes out when you connect it, and if the link drops,
+                Tesel gets it back by itself. Pressing the indicator shows a card per link; where
+                the phone does not say whether it uses wifi or data (on an iPhone, for instance), it
+                shows “WiFi/5G”.
+              </li>
+              <li>
+                In Me and on each member’s card, the “LoRa radio” line says who has one connected:
+                whoever has one stays in touch even if the network falls; whoever does not is cut
+                off. The card also says when something of theirs last reached you by radio or by the
+                server.
+              </li>
+              <li>
+                If someone nearby uses the MeshCore app, their messages appear in the chat’s
+                “MeshCore” tab. To answer, use the MeshCore app.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="diary" aria-labelledby="diary-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/diary.svg"
+            width="400"
+            height="300"
+            alt="The operation diary, line by line, coming out as a text file and as an encrypted copy on a USB stick."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="diary-t">Afterwards: the diary</h2>
+          <p class="lead">
+            Everything that happened in the group, in order: who joined, the messages and SOS calls,
+            who acknowledged them, and every marker or area added, changed or deleted.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>Read it</h3>
+              <p class="taps">
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#more" /></svg
+                  >More</b
+                >
+                →
+                <b
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="../../img/guide/icons.svg#journal" /></svg
+                  >Operation diary</b
+                >
+              </p>
+            </li>
+            <li>
+              <h3>For the report</h3>
+              <p class="taps"><b>Operation diary</b> → <b>Download</b></p>
+              <p>A text file, with the coordinates in your format.</p>
+            </li>
+            <li>
+              <h3>An encrypted copy</h3>
+              <p class="taps"><b>Encrypted log</b> → <b>Save a copy</b></p>
+              <p>
+                All the group’s events, which only its members can read. <b>Load a copy</b> on
+                another phone of the group gives it whatever it lacks.
+              </p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                The copy works as a backup, or to hand the coordinator, on a USB stick, what a phone
+                lived through by radio alone.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="plate" id="security" aria-labelledby="security-t">
+        <figure class="plate-art">
+          <img
+            src="../../img/guide/security.svg"
+            width="400"
+            height="300"
+            alt="A key made of a QR code, a closed padlock and a server that keeps what it cannot read."
+          />
+        </figure>
+        <div class="plate-text">
+          <h2 id="security-t">Privacy and security</h2>
+          <p class="lead">
+            Everything in the group is encrypted with a key only its members have: the server cannot
+            read the messages.
+          </p>
+          <ul class="moves">
+            <li>
+              <h3>The invitation is the key</h3>
+              <p>
+                Whoever has it gets in. If it went to the wrong people, the coordinator can create a
+                new group and invite again.
+              </p>
+            </li>
+            <li>
+              <h3>Lock your phone</h3>
+              <p>The group’s keys are kept on it. Leaving a group deletes it from the phone.</p>
+            </li>
+            <li>
+              <h3>Your position is yours</h3>
+              <p>It is only shared when you choose.</p>
+            </li>
+          </ul>
+          <details>
+            <summary>Details</summary>
+            <ul>
+              <li>
+                Within the group everyone is trusted: the app does not check who writes each
+                message, so a member could pass for another.
+              </li>
+              <li>
+                By radio the encryption is simpler: it keeps out curious eyes, not someone with
+                means and will. Do not send by radio what you would not say aloud in a public place.
+              </li>
+            </ul>
+          </details>
+        </div>
+      </section>
+      <section class="guide-extra" id="settings" aria-labelledby="settings-t">
+        <h2 id="settings-t">
+          <svg class="icon" aria-hidden="true">
+            <use href="../../img/guide/icons.svg#settings" /></svg
+          >Settings
+        </h2>
+        <p class="taps">
+          <b
+            ><svg class="icon" aria-hidden="true"><use href="../../img/guide/icons.svg#more" /></svg
+            >More</b
+          >
+          →
+          <b
+            ><svg class="icon" aria-hidden="true">
+              <use href="../../img/guide/icons.svg#settings" /></svg
+            >Settings</b
+          >
         </p>
-      </details>
-      <details>
-        <summary>The map is blank</summary>
-        <p>
-          Without internet only areas downloaded beforehand show. Download your area in “Offline
-          maps” next time you have Wi-Fi.
-        </p>
-      </details>
-      <details>
-        <summary>The radio does not show up when connecting</summary>
-        <p>
-          Check that it is on, charged and running the “Companion Bluetooth” firmware, and that you
-          use Chrome or Edge. If it was connected to the MeshCore app, disconnect it there first.
-        </p>
-      </details>
-      <details>
-        <summary>The radio says it has no free channel</summary>
-        <p>
-          Open the MeshCore app, delete a channel you do not use and connect again from Tesel. Tesel
-          never deletes channels by itself.
-        </p>
-      </details>
+        <dl class="settings-list">
+          <div>
+            <dt>Coordinate format</dt>
+            <dd>Degrees, DMS, UTM or MGRS. Remembered.</dd>
+          </div>
+          <div>
+            <dt>Screen always on</dt>
+            <dd>The screen does not turn off while Tesel is open. It uses more battery.</dd>
+          </div>
+          <div>
+            <dt>Full screen</dt>
+            <dd>
+              In Chrome and similar browsers, on Android and on a computer, Tesel fills the screen
+              from the first tap. The back gesture or Esc leaves it until next time; here, for good.
+            </dd>
+          </div>
+          <div>
+            <dt>Alarm sound</dt>
+            <dd>Turns the SOS beep off or on. The vibration stays.</dd>
+          </div>
+          <div>
+            <dt>Notifications</dt>
+            <dd>
+              An SOS notice arrives also with Tesel in the background, if the browser allows it.
+              Tapping it opens Tesel.
+            </dd>
+          </div>
+          <div>
+            <dt>Language</dt>
+            <dd>Spanish or English. At first, the browser’s.</dd>
+          </div>
+        </dl>
+      </section>
+      <section class="guide-extra trouble" id="trouble" aria-labelledby="trouble-t">
+        <h2 id="trouble-t">
+          <svg class="icon" aria-hidden="true"><use href="../../img/guide/icons.svg#help" /></svg>If
+          something does not work
+        </h2>
+        <details>
+          <summary>The top says “No connection”</summary>
+          <p>
+            Your phone has no internet. What you write is kept and will go out later. If you have a
+            radio, connect it.
+          </p>
+        </details>
+        <details>
+          <summary>The map is blank</summary>
+          <p>
+            Without internet only the areas downloaded beforehand show. Download your area in
+            “Offline maps” next time you have wifi.
+          </p>
+        </details>
+        <details>
+          <summary>I cannot see a teammate on the map</summary>
+          <p>
+            They are most likely not sharing their position: the group’s members list says so. Ask
+            them to share it in Me.
+          </p>
+        </details>
+        <details>
+          <summary>I cannot find the radio when connecting</summary>
+          <p>
+            Check it is on, charged and set up with the “Companion Bluetooth” firmware, and that you
+            use Chrome or Edge (on an iPhone, Bluefy). If it was connected to the MeshCore app,
+            disconnect it there first.
+          </p>
+        </details>
+        <details>
+          <summary>The radio says it has no free channels</summary>
+          <p>
+            Open the MeshCore app, delete a channel you do not use and connect again from Tesel.
+            Tesel never deletes channels by itself.
+          </p>
+        </details>
+      </section>
     </main>
-
     <footer class="ink">
       <div class="wrap">
         <img src="../../img/lockup-pale.svg" width="622" height="150" alt="Tesel" />

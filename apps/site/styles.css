@@ -304,8 +304,7 @@ h3 {
   background: rgb(255 255 255 / 8%);
 }
 
-.paper .button.quiet:hover,
-.prose .button.quiet:hover {
+.paper .button.quiet:hover {
   background: rgb(0 0 0 / 5%);
 }
 
@@ -646,23 +645,23 @@ section.paper + section.paper > .wrap {
 }
 
 /* The same diagram, on paper (in the guide). */
-.prose .path .node {
+.diagram .path .node {
   color: var(--paper-text);
   background: #fff;
   border-color: var(--rule);
 }
 
-.prose .path .node.hub {
+.diagram .path .node.hub {
   color: var(--paper-text);
   background: #fff;
   border-color: var(--signal-deep);
 }
 
-.prose .path .line {
+.diagram .path .line {
   border-top-color: var(--paper-text);
 }
 
-.prose .path .line.air {
+.diagram .path .line.air {
   border-top-color: var(--signal-deep);
 }
 
@@ -927,175 +926,442 @@ footer nav {
   gap: 1.5rem;
 }
 
-/* Guide: an ink header with the app, a map of the contents, then long-form reading on paper */
+/* Printing, any page: A4, white, without the top bar or the footer. */
+@media print {
+  @page {
+    size: A4;
+    margin: 11mm 12mm;
+  }
 
-.guide-head {
-  padding: 4.5rem 0 0;
-  overflow: hidden;
+  :root {
+    font-size: 9.5pt;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .top,
+  footer {
+    display: none;
+  }
 }
 
-.guide-head .wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 3rem;
-  align-items: end;
+/* Guide: plate by plate (ADR-0084). An ink cover whose index is a tile per plate, each with the
+   app's pictogram; then one plate per idea: the drawing beside its number and title, a lead, the
+   moves as the taps they take, and the fine print folded under "Details". */
+
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.15em;
 }
 
-.guide-head .text {
-  align-self: center;
-  padding-bottom: 4rem;
+.guide-cover {
+  padding: 3.5rem 0 3rem;
 }
 
-.guide-head h1 {
+.guide-cover h1 {
   font-size: clamp(2.4rem, 1.6rem + 3vw, 3.8rem);
-  max-width: 14ch;
+  max-width: 16ch;
 }
 
-.guide-head .lead {
-  margin: 1.3rem 0 0;
-  font-size: 1.2rem;
-  max-width: 40ch;
+.guide-cover .lead {
+  margin: 1.1rem 0 0;
+  font-size: 1.15rem;
+  max-width: 48ch;
   color: var(--ink-muted);
 }
 
-/* A phone, cut by the bottom of the band. */
-.phone {
-  justify-self: center;
-  width: min(19rem, 100%);
-  margin: 0;
-  padding: 0.55rem 0.55rem 0;
-  background: #050c12;
-  border-radius: 2.4rem 2.4rem 0 0;
-  box-shadow: 0 0 0 1px var(--contour);
+.guide-cover .hurry {
+  margin: 0.8rem 0 0;
 }
 
-.phone img {
-  display: block;
-  width: 100%;
-  height: 26rem;
-  object-fit: cover;
-  object-position: top;
-  border-radius: 1.9rem 1.9rem 0 0;
+.guide-cover .hurry a {
+  color: var(--signal);
 }
 
-@media (max-width: 46rem) {
-  .guide-head {
-    padding-top: 3rem;
-  }
-
-  .guide-head .wrap {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .guide-head .text {
-    padding-bottom: 2.5rem;
-  }
-
-  .phone {
-    width: 15rem;
-  }
-
-  .phone img {
-    height: 17rem;
-  }
-}
-
-.prose {
-  max-width: 46rem;
-  padding: 3.5rem 0 5rem;
-  counter-reset: chapter;
-}
-
-.prose h2 {
-  margin: 4rem 0 1.1rem;
-  padding-top: 2rem;
-  font-size: 1.8rem;
-  max-width: none;
-  border-top: 1px solid var(--rule);
-  counter-increment: chapter;
-}
-
-.prose h2::before {
-  display: block;
-  margin-bottom: 0.7rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  content: counter(chapter, decimal-leading-zero);
-  color: var(--signal-deep);
-}
-
-.prose h3 {
-  margin: 2rem 0 0.5rem;
-}
-
-.prose li + li {
-  margin-top: 0.45rem;
-}
-
-/* Contents: a grid of numbered cards. */
-.toc {
-  margin: 0;
-}
-
-.toc .label {
-  margin: 0 0 1rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--paper-muted);
-}
-
-.toc ol {
+.plate-index ol {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 2.2rem 0 0;
   padding: 0;
   list-style: none;
-  counter-reset: toc;
+  counter-reset: plate;
 }
 
-.toc li {
+.plate-index li {
   margin: 0;
-  counter-increment: toc;
+  counter-increment: plate;
 }
 
-.toc li + li {
-  margin: 0;
+.plate-index li.extra {
+  counter-increment: none;
 }
 
-.toc a {
-  display: block;
+.plate-index a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.3rem 0.6rem;
+  align-items: center;
   height: 100%;
-  padding: 0.85rem 1rem 0.9rem;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.95rem;
   font-weight: 560;
-  line-height: 1.3;
+  line-height: 1.25;
   text-decoration: none;
-  background: #fff;
-  border: 1px solid var(--rule);
+  color: var(--ink-text);
+  background: var(--ink-raised);
+  border: 1px solid var(--contour);
   border-radius: 0.6rem;
 }
 
-.toc a::before {
-  display: block;
-  margin-bottom: 0.3rem;
-  font-size: 0.78rem;
+.plate-index a::before {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.1em;
-  content: counter(toc, decimal-leading-zero);
+  content: counter(plate, decimal-leading-zero);
+  color: var(--signal);
+}
+
+.plate-index .extra a::before {
+  content: '\2014';
+  color: var(--ink-muted);
+}
+
+.plate-index a:hover {
+  border-color: var(--signal);
+}
+
+.plate-index .icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--signal);
+}
+
+.guide {
+  padding: 1rem 0 4.5rem;
+  counter-reset: plate;
+}
+
+.guide section {
+  padding: 0;
+}
+
+.plate {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+  padding: 3rem 0 !important;
+  border-top: 1px solid var(--rule);
+  counter-increment: plate;
+}
+
+.plate:first-child {
+  border-top: none;
+}
+
+/* Every other plate has its drawing on the right, so the page reads as a zigzag. */
+.plate:nth-child(even) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+}
+
+.plate:nth-child(even) .plate-art {
+  order: 2;
+}
+
+/* The drawing stays in view while its fine print is read. */
+.plate-art {
+  position: sticky;
+  top: 5rem;
+  margin: 0;
+}
+
+.plate-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plate h2 {
+  font-size: 1.9rem;
+  max-width: none;
+}
+
+.plate h2::before {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  content: counter(plate, decimal-leading-zero);
   color: var(--signal-deep);
 }
 
-.toc a:hover {
-  border-color: var(--paper-text);
+.plate .lead {
+  margin: 0.8rem 0 0;
+  font-size: 1.12rem;
 }
 
-@media (max-width: 40rem) {
-  .toc ol {
+.moves {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.6rem;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moves li {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 0.7rem;
+}
+
+.moves h3 {
+  font-size: 1rem;
+}
+
+.moves p {
+  margin: 0.25rem 0 0;
+  font-size: 0.97rem;
+  color: var(--paper-muted);
+}
+
+.moves .taps {
+  margin-top: 0.35rem;
+  line-height: 2.1;
+}
+
+.taps b .icon,
+.plate b .icon,
+.guide-extra b .icon {
+  width: 1em;
+  height: 1em;
+  color: var(--signal);
+}
+
+.taps a {
+  font-weight: 600;
+  color: var(--signal-deep);
+}
+
+.plate .box {
+  margin: 1rem 0 0;
+}
+
+.plate details {
+  margin-top: 0.8rem;
+  border: none;
+}
+
+.plate summary {
+  display: inline-block;
+  padding: 0.5rem 1.8rem 0.5rem 0;
+  font-size: 1rem;
+  color: var(--signal-deep);
+}
+
+.plate summary::after {
+  top: 0.5rem;
+  color: var(--signal-deep);
+}
+
+.plate details ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.95rem;
+  color: var(--paper-muted);
+}
+
+.plate details li + li {
+  margin-top: 0.5rem;
+}
+
+.routes-figure {
+  margin: 1.2rem 0 0;
+}
+
+.routes-figure figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  color: var(--paper-muted);
+}
+
+/* After the plates: the settings, and what to do when something fails. */
+.guide-extra {
+  max-width: 46rem;
+  padding-top: 3.5rem !important;
+  border-top: 1px solid var(--rule);
+}
+
+.guide-extra h2 {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 1.9rem;
+  max-width: none;
+}
+
+.guide-extra h2 .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--signal-deep);
+}
+
+.guide-extra h2 + details,
+.guide-extra .taps {
+  margin-top: 1.2rem;
+}
+
+.settings-list {
+  margin: 1rem 0 0;
+}
+
+.settings-list div {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.settings-list dt {
+  font-weight: 600;
+}
+
+.settings-list dd {
+  margin: 0;
+  color: var(--paper-muted);
+}
+
+@media (max-width: 46rem) {
+  .guide-cover {
+    padding: 2.5rem 0 2rem;
+  }
+
+  .plate-index ol {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plate,
+  .plate:nth-child(even) {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+    padding: 2.5rem 0 !important;
+  }
+
+  .plate:nth-child(even) .plate-art {
+    order: 0;
+  }
+
+  .plate-art {
+    position: static;
+    justify-self: center;
+    width: min(22rem, 100%);
+  }
+
+  .settings-list div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+
+@media print {
+  .guide-cover {
+    padding: 0 0 4mm;
+    color: var(--paper-text);
+    background: none;
+  }
+
+  .guide-cover .lead {
+    color: var(--paper-muted);
+  }
+
+  .guide-cover .eyebrow {
+    color: var(--signal-deep);
+  }
+
+  /* The answers to what fails are folded, and a sheet cannot unfold them. */
+  .guide-cover .hurry,
+  .plate-index,
+  .trouble {
+    display: none;
+  }
+
+  .guide {
+    width: auto;
+    padding: 0;
+  }
+
+  .plate,
+  .plate:nth-child(even) {
+    grid-template-columns: 46mm minmax(0, 1fr);
+    gap: 6mm;
+    padding: 4mm 0 !important;
+    break-inside: avoid;
+  }
+
+  .plate h2,
+  .guide-extra h2 {
+    font-size: 14pt;
+  }
+
+  .plate .lead {
+    margin-top: 1.5mm;
+    font-size: 10pt;
+  }
+
+  .moves {
+    gap: 1.5mm;
+    margin-top: 2.5mm;
+  }
+
+  .moves p,
+  .plate .box p {
+    font-size: 8.5pt;
+  }
+
+  .moves .taps {
+    line-height: 1.9;
+  }
+
+  .plate .box {
+    margin-top: 2mm;
+    padding: 2mm 3mm;
+  }
+
+  .plate details,
+  .routes-figure figcaption {
+    display: none;
+  }
+
+  .routes-figure {
+    margin-top: 2mm;
+  }
+
+  .plate:nth-child(even) .plate-art {
+    order: 0;
+  }
+
+  .plate-art {
+    position: static;
+  }
+
+  .moves li {
+    padding: 1.6mm 2.5mm;
+    break-inside: avoid;
+  }
+
+  .guide-extra {
+    break-inside: avoid;
   }
 }
 
@@ -1115,39 +1381,11 @@ footer nav {
   margin-top: 0;
 }
 
-/* Figures in the guide: screenshots and diagrams, with a caption under them. */
-.figure {
-  margin: 2rem 0;
-}
-
-.figure img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0.7rem;
-  box-shadow:
-    0 0 0 1px rgb(16 32 44 / 12%),
-    0 18px 40px -18px rgb(16 32 44 / 40%);
-}
-
-.figure figcaption {
-  margin-top: 0.8rem;
-  font-size: 0.9rem;
-  color: var(--paper-muted);
-}
-
 .diagram {
   padding: 1.5rem;
   background: #fff;
   border: 1px solid var(--rule);
   border-radius: 0.8rem;
-}
-
-.diagram svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  font-family: inherit;
 }
 
 .diagram .routes {
@@ -1179,15 +1417,6 @@ footer nav {
     grid-template-columns: 1fr;
     gap: 0.6rem;
   }
-}
-
-.prose details {
-  border: none;
-  border-top: 1px solid var(--rule);
-}
-
-.prose details:last-of-type {
-  border-bottom: 1px solid var(--rule);
 }
 
 [id] {
@@ -1253,7 +1482,8 @@ footer nav {
 
 /* The same lime badge as on the drawing. */
 .legend li::before,
-.taps i {
+.taps i,
+.plate b i {
   display: inline-grid;
   place-items: center;
   font-style: normal;
@@ -1318,8 +1548,11 @@ footer nav {
   color: var(--paper-muted);
 }
 
-/* A button of the app, as a chip; with the number it has on the drawing. */
-.taps b {
+/* A button of the app, as a chip; with the number it has on the drawing. The guide writes every
+   button name this way, in its lines and its fine print alike. */
+.taps b,
+.plate b,
+.guide-extra b {
   display: inline-flex;
   gap: 0.4rem;
   align-items: center;
@@ -1335,7 +1568,8 @@ footer nav {
   -webkit-print-color-adjust: exact;
 }
 
-.taps i {
+.taps i,
+.plate b i {
   width: 1.3rem;
   height: 1.3rem;
   margin-left: -0.3rem;
@@ -1383,24 +1617,6 @@ footer nav {
 }
 
 @media print {
-  @page {
-    size: A4;
-    margin: 11mm 12mm;
-  }
-
-  :root {
-    font-size: 9.5pt;
-  }
-
-  body {
-    background: #fff;
-  }
-
-  .top,
-  footer {
-    display: none;
-  }
-
   .help {
     width: auto;
     padding: 0;
