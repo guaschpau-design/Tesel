@@ -24,6 +24,7 @@ import {
   type EventRef,
   type GroupKeys,
   type LatLon,
+  type MarkerEvent,
   type MemberStateEvent,
   type ObjectRef,
   type ReportEvent,
@@ -344,6 +345,15 @@ export class GroupFeed {
       strip,
       strips,
     }));
+  }
+
+  /** Changes the label and the symbol or style of a marker or a shape, keeping where it is. */
+  async editObject(record: MarkerEvent | ShapeEvent, code: number, label: string): Promise<void> {
+    await this.#publish((header) =>
+      record.type === 'marker'
+        ? { ...record, ...header, symbol: code, label }
+        : { ...record, ...header, style: code, label },
+    );
   }
 
   async deleteObject(object: ObjectRef): Promise<void> {

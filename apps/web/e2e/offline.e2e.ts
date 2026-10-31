@@ -20,6 +20,9 @@ test('a downloaded area keeps working after going offline and reloading', async 
     .toBe(true);
 
   await openMore(page, 'Mapas sin conexión');
+  // The size and the button come first; the name waits under the options.
+  await expect(page.getByText(/^Unos \d/)).toBeVisible();
+  await page.getByText('Opciones', { exact: true }).click();
   await page.getByLabel('Nombre').fill('Valencia centro');
   await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   await expect(page.getByText('Valencia centro')).toBeVisible();

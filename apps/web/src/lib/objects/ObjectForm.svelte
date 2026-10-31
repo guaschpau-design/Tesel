@@ -1,6 +1,8 @@
 <!-- Describes a drawn object (label, and symbol or style; a route is always a route) before it is
      shared with the group: a step of the drawing that must end, saved or cancelled, before
-     anything else is done. -->
+     anything else is done. Opened on an object of the map, it changes them. A search area cleared
+     by its sweep is not drawn so: it is offered only to an area that is one already. The operation
+     area says what choosing it does. -->
 <script lang="ts">
   import {
     MARKER_LABEL_MAX_BYTES,
@@ -23,6 +25,10 @@
     kind: DraftKind;
     /** The label to start from, such as a route's name in the file it came from. */
     label: string;
+    /** The symbol or style to start from, when changing an object; none for a new one. */
+    code?: number | undefined;
+    /** What the dialog says it does: by default, that a new object of `kind` is described. */
+    title?: string | undefined;
     /** This device coordinates: its areas can mark the operation area. */
     coordinator: boolean;
     /** Saves the object; rejects if it does not fit in a radio message. */
@@ -30,18 +36,34 @@
     oncancel: () => void;
   }
 
-  let { t, kind, label: initialLabel, coordinator, onsave, oncancel }: Props = $props();
+  let {
+    t,
+    kind,
+    label: initialLabel,
+    code: initialCode,
+    title,
+    coordinator,
+    onsave,
+    oncancel,
+  }: Props = $props();
 
   const isMarker = $derived(kind === 'marker');
   const maxBytes = $derived(isMarker ? MARKER_LABEL_MAX_BYTES : SHAPE_LABEL_MAX_BYTES);
 
-  let code = $state(untrack(() => (kind === 'route' ? ShapeStyleCode.ROUTE : 0)));
+  const startCode = untrack(() => initialCode ?? (kind === 'route' ? ShapeStyleCode.ROUTE : 0));
+  let code = $state(startCode);
+  const styles = $derived(
+    areaStyles(coordinator).filter(
+      (style) =>
+        style.code !== ShapeStyleCode.SEARCH_CLEARED || startCode === ShapeStyleCode.SEARCH_CLEARED,
+    ),
+  );
   let label = $state(untrack(() => initialLabel));
   const submission = new Submission();
   const tooLong = $derived(utf8ByteLength(label.trim()) > maxBytes);
 </script>
 
-<Dialog title={t(DRAFT_TITLES[kind])} {oncancel}>
+<Dialog title={title ?? t(DRAFT_TITLES[kind])} {oncancel}>
   <form
     class="stack"
     onsubmit={(event) => {
@@ -62,7 +84,7 @@
               </label>
             {/each}
           {:else}
-            {#each areaStyles(coordinator) as style (style.code)}
+            {#each styles as style (style.code)}
               <label class="choice">
                 <input type="radio" name="code" value={style.code} bind:group={code} />
                 <span class="swatch" style:--swatch="var(--tone-{style.tone})"></span>
@@ -72,6 +94,9 @@
           {/if}
         </div>
       </fieldset>
+      {#if code === ShapeStyleCode.OPERATION_AREA}
+        <p class="hint">{t('operationAreaHint')}</p>
+      {/if}
     {/if}
     <label>
       {t('objectLabel')}

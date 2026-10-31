@@ -1,5 +1,6 @@
 <!-- Shows a coordinator the invitation to a group: whether the person joins as member or
-     coordinator, the QR code to scan, and its link to copy or share. -->
+     coordinator, the QR code to scan, and its link to share, first where the phone can (a
+     messaging app is how people pass it on), or to copy. -->
 <script lang="ts">
   import type { NodeId, Role } from '@tesel/protocol';
 
@@ -69,15 +70,15 @@
       }}
     />
     <div class="row">
+      {#if canShare}
+        <button class="primary" onclick={() => share(link.value)}>{t('share')}</button>
+      {/if}
       <CopyButton
         text={link.value}
         label={t('copyLink')}
         copiedLabel={t('copied')}
         failedLabel={t('copyFailed')}
       />
-      {#if canShare}
-        <button onclick={() => share(link.value)}>{t('share')}</button>
-      {/if}
       <button onclick={onclose}>{t('done')}</button>
     </div>
   {:else}

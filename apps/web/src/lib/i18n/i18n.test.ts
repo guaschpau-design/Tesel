@@ -46,9 +46,7 @@ describe('translations', () => {
 
   it('falls back to the "other" form for a category a text does not give', () => {
     // Spanish puts a million in "many".
-    expect(translator('es')('estimate', { count: 1_000_000, size: '1 GB' })).toBe(
-      '1.000.000 teselas, unos 1 GB',
-    );
+    expect(translator('es')('drawPointsCount', { count: 1_000_000 })).toBe('1.000.000 puntos');
   });
 
   it('uses the same placeholders in every language and plural form', () => {

@@ -34,7 +34,7 @@
     bind:value={typed}
     oninput={() => (unreadable = false)}
     aria-label={t('coordinates')}
-    placeholder="30S 725695 4372210"
+    placeholder="39.47, -0.37 · 30S 725695 4372210"
     autocomplete="off"
     autocapitalize="characters"
     spellcheck="false"

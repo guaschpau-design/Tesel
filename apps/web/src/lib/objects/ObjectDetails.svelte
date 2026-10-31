@@ -1,5 +1,5 @@
-<!-- What a map object is, who last changed it, guidance there or along it, a task at it, and
-     deleting it for the whole group. A search area tells how its sweep goes, and lets whoever
+<!-- What a map object is, who last changed it, guidance there or along it, a task at it, changing
+     its label and kind, and deleting it for the whole group. A search area tells how its sweep goes, and lets whoever
      coordinates plan one or remove it; a strip of a sweep, how far it is swept. -->
 <script lang="ts">
   import { areaSquareMeters, lanesLength, pathMeters, type GroupState } from '@tesel/core';
@@ -36,6 +36,8 @@
     onnavigate: (name: string) => void;
     /** Starts a task at the object. */
     ontask: (place: Place) => void;
+    /** Changes its label and its symbol or style. */
+    onedit: () => void;
     /** Starts planning a sweep of this area. */
     onplansweep: () => void;
     /** Removes the sweep of this area: its strips, by key, and what is left of their tasks. */
@@ -53,6 +55,7 @@
     coordinator,
     onnavigate,
     ontask,
+    onedit,
     onplansweep,
     onremovesweep,
     ondelete,
@@ -159,10 +162,17 @@
         ontask(place);
       },
     });
+    // A strip is made by its sweep, not drawn: it is changed by planning the sweep again.
+    if (object.type !== 'sweep') list.push({ icon: 'pencil', label: t('edit'), run: onedit });
     if (coordinator && strips.length > 0) {
-      list.push({ icon: 'sweep', label: t('sweepRemove'), run: () => void removeSweep() });
+      list.push({
+        icon: 'sweep',
+        label: t('sweepRemove'),
+        run: () => void removeSweep(),
+        folded: true,
+      });
     }
-    list.push({ icon: 'trash', label: t('delete'), run: () => void remove() });
+    list.push({ icon: 'trash', label: t('delete'), run: () => void remove(), folded: true });
     return list;
   });
 </script>

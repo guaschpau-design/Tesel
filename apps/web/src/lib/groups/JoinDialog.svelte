@@ -26,7 +26,6 @@
       <p>
         {t('joinQuestion', { group: invitation.groupName, role: t(ROLE_LABELS[invitation.role]) })}
       </p>
-      <p class="hint">{t('invitedBy', { node: invitation.issuer })}</p>
       <p class="hint">{t('joinWarning')}</p>
       <div class="row">
         <button

@@ -1,6 +1,12 @@
 // A map object being drawn: the points tapped so far and what they will become.
 
-import { SHAPE_MAX_POINTS, type LatLon, type ShapeGeometry } from '@tesel/protocol';
+import {
+  SHAPE_MAX_POINTS,
+  type LatLon,
+  type MarkerEvent,
+  type ShapeEvent,
+  type ShapeGeometry,
+} from '@tesel/protocol';
 
 import type { MessageKey } from '../i18n/index.ts';
 
@@ -8,6 +14,12 @@ import type { MessageKey } from '../i18n/index.ts';
 export type DraftKind = 'marker' | 'route' | 'area';
 
 /** What a draft is called while it is drawn and described. */
+/** What kind of drawing a marker or a shape of the map is, to change it as it was drawn. */
+export function draftKindOf(object: MarkerEvent | ShapeEvent): DraftKind {
+  if (object.type === 'marker') return 'marker';
+  return object.geometry.kind === 'polyline' ? 'route' : 'area';
+}
+
 /** What each kind is called, in the "Add" menu and once sent. */
 export const DRAFT_NAMES: Readonly<Record<DraftKind, MessageKey>> = {
   marker: 'drawMarker',

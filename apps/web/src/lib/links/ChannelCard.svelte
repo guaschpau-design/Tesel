@@ -1,5 +1,5 @@
 <!-- One way of reaching the group in the connections panel: its sign and name, a coloured dot with
-     how it is doing, and what can be done with it. -->
+     how it is doing (a grey ring when it is not in use), and what can be done with it. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
@@ -11,7 +11,8 @@
   interface Props {
     icon: GlyphName;
     name: string;
-    level: Link['level'];
+    /** How it is doing; `off` when it is simply not in use, as a radio not linked. */
+    level: Link['level'] | 'off';
     status: string;
     children?: Snippet;
   }
@@ -23,7 +24,9 @@
   <span class="sign"><Pictogram name={icon} size={28} /></span>
   <div class="body">
     <strong>{name}</strong>
-    <span class="status"><StatusDot tone={LEVEL_TONES[level]} />{status}</span>
+    <span class="status"
+      ><StatusDot tone={level === 'off' ? 'off' : LEVEL_TONES[level]} />{status}</span
+    >
     {@render children?.()}
   </div>
 </section>

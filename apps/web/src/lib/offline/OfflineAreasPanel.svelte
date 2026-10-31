@@ -1,6 +1,7 @@
-<!-- The maps downloaded for use without a connection: downloading the visible area, with the
-     street map and, if wanted, the topographic map, the satellite map and the relief; and the list
-     of areas, to show or delete them. -->
+<!-- The maps downloaded for use without a connection: downloading the visible area, its size and
+     the button first, and folded under "Options" its name, its detail and, if wanted, the
+     topographic map, the satellite map and the relief; then the list of areas, to show or delete
+     them. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount, untrack } from 'svelte';
@@ -13,6 +14,7 @@
   import type { Bounds } from '../map/tiles/math.ts';
   import type { OfflineArea } from '../map/tiles/store-schema.ts';
   import { confirmations } from '../ui/confirmations.svelte.ts';
+  import Fold from '../ui/Fold.svelte';
   import Panel from '../ui/Panel.svelte';
   import { DownloadJob } from './download-job.svelte.ts';
   import {
@@ -59,6 +61,9 @@
   const tileCount = $derived(countAreaTiles(bounds, layers));
   const bytes = $derived(estimatedBytes(bounds, layers));
   const tooLarge = $derived(tileCount > MAX_AREA_TILES);
+  const detailLabel = $derived(
+    detailOptions.find((option) => option.zoom === maxZoom)?.label ?? 'detailStreets',
+  );
 
   async function refresh(): Promise<void> {
     areas = await offline.store.listAreas();
@@ -125,30 +130,6 @@
     }}
   >
     <h3>{t('downloadVisible')}</h3>
-    <label>
-      {t('areaName')}
-      <input bind:value={name} maxlength="40" disabled={job.running} />
-    </label>
-    <label>
-      {t('detail')}
-      <select bind:value={maxZoom} disabled={job.running}>
-        {#each detailOptions as option (option.zoom)}
-          <option value={option.zoom}>{t(option.label, { zoom: option.zoom })}</option>
-        {/each}
-      </select>
-    </label>
-
-    <fieldset class="extras" disabled={job.running}>
-      <legend>{t('downloadAlso')}</legend>
-      {#each EXTRAS as extra (extra)}
-        <label class="check">
-          <input type="checkbox" value={extra} bind:group={extras} />
-          {t(EXTRA_NAMES[extra])}
-        </label>
-      {/each}
-      <p class="hint">{t('downloadAlsoHint')}</p>
-    </fieldset>
-
     {#if job.progress}
       <progress max={job.progress.total} value={job.progress.done}></progress>
       <p class="hint">
@@ -163,15 +144,36 @@
     {:else if tooLarge}
       <p class="warning">{t('areaTooLarge')}</p>
     {:else}
-      <p class="hint">
-        {t('estimate', {
-          count: tileCount,
-          size: formatBytes(bytes, locale),
-        })}
-      </p>
-      <button type="submit" class="primary">{t('download')}</button>
+      <div class="go">
+        <button type="submit" class="primary">{t('download')}</button>
+        <span class="hint">{t('estimate', { size: formatBytes(bytes, locale) })}</span>
+      </div>
     {/if}
     {#if job.failure}<p class="warning">{failureText(job.failure, t, locale)}</p>{/if}
+    <Fold title={t('downloadOptions')} summary={t(detailLabel)}>
+      <label>
+        {t('areaName')}
+        <input bind:value={name} maxlength="40" disabled={job.running} />
+      </label>
+      <label>
+        {t('detail')}
+        <select bind:value={maxZoom} disabled={job.running}>
+          {#each detailOptions as option (option.zoom)}
+            <option value={option.zoom}>{t(option.label)}</option>
+          {/each}
+        </select>
+      </label>
+      <fieldset class="extras" disabled={job.running}>
+        <legend>{t('downloadAlso')}</legend>
+        {#each EXTRAS as extra (extra)}
+          <label class="check">
+            <input type="checkbox" value={extra} bind:group={extras} />
+            {t(EXTRA_NAMES[extra])}
+          </label>
+        {/each}
+        <p class="hint">{t('downloadAlsoHint')}</p>
+      </fieldset>
+    </Fold>
   </form>
 
   {#if areas.length === 0}
@@ -238,6 +240,13 @@
 
   progress {
     width: 100%;
+  }
+
+  .go {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
   }
 
   .extras {

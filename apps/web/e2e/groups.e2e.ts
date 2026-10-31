@@ -25,15 +25,14 @@ test('a second device joins a group through its invitation link', async ({ brows
   const member = await (await browser.newContext()).newPage();
   await member.goto(memberLink);
   await expect(
-    member.getByText('Te han invitado a «Rescate Valencia».', { exact: false }),
+    member.getByText('Te han invitado a «Rescate Valencia» como miembro.'),
   ).toBeVisible();
-  await chooseAlias(member, 'Berta');
   // The secret must not stay in the address bar or the history.
   expect(member.url()).not.toContain('join');
-
-  const joinDialog = member.getByRole('dialog', { name: 'Unirse a un grupo' });
-  await expect(joinDialog.getByText('¿Unirte a «Rescate Valencia» como miembro?')).toBeVisible();
-  await joinDialog.getByRole('button', { name: 'Unirme' }).click();
+  // Naming oneself joins, in one step.
+  const welcome = member.getByRole('dialog', { name: 'Te damos la bienvenida a Tesel' });
+  await welcome.getByLabel('Tu nombre en el grupo').fill('Berta');
+  await welcome.getByRole('button', { name: 'Entrar en «Rescate Valencia»' }).click();
   await expect(member.getByText('Te has unido a «Rescate Valencia».')).toBeVisible();
 
   // Membership survives a restart, and members do not invite.

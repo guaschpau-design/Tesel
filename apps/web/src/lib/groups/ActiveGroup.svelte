@@ -61,7 +61,10 @@
 {#if feed && coordinator}
   {@const current = feed}
   {@const checkIn = (current.state.checkIn?.minutes ?? 0) > 0}
-  <Fold title={t('organize')} summary={t('organizeSummary')}>
+  <Fold
+    title={t('organize')}
+    summary={checkIn ? t('organizeSummaryCheckIn') : t('organizeSummary')}
+  >
     <button class="new-team" onclick={() => (editing = { team: null })}>{t('teamNew')}</button>
     <SwitchRow
       icon="person"

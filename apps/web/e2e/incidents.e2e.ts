@@ -20,15 +20,26 @@ test('a marker drawn by one member can be opened and deleted by another', async 
   await tapMapUntil(berta, {}, () => expect(details).toBeVisible({ timeout: 2000 }));
   await expect(details).toContainText('Último cambio de Ana');
 
-  await details.getByRole('button', { name: 'Borrar' }).click();
+  // Berta corrects its label: changing and deleting wait in the "⋯" menu.
+  await details.getByRole('button', { name: 'Más acciones' }).click();
+  await berta.getByRole('menuitem', { name: 'Editar' }).click();
+  const change = berta.getByRole('dialog', { name: 'Editar Foco norte' });
+  await expect(change.getByRole('radio', { name: 'Fuego' })).toBeChecked();
+  await change.getByLabel('Etiqueta (opcional)').fill('Foco sur');
+  await change.getByRole('button', { name: 'Guardar' }).click();
+  const renamed = berta.getByRole('region', { name: 'Foco sur' });
+  await expect(renamed).toBeVisible();
+
+  await renamed.getByRole('button', { name: 'Más acciones' }).click();
+  await berta.getByRole('menuitem', { name: 'Borrar' }).click();
   await berta
-    .getByRole('dialog', { name: /Borrar «Foco norte»/ })
+    .getByRole('dialog', { name: /Borrar «Foco sur»/ })
     .getByRole('button', { name: 'Borrar' })
     .click();
-  await expect(details).toBeHidden();
+  await expect(renamed).toBeHidden();
   // Ana taps the same spot until the deletion has arrived and the marker opens no more.
   await tapMapUntil(ana, {}, () =>
-    expect(ana.getByRole('region', { name: 'Foco norte' })).toBeHidden({ timeout: 2000 }),
+    expect(ana.getByRole('region', { name: 'Foco sur' })).toBeHidden({ timeout: 2000 }),
   );
 });
 

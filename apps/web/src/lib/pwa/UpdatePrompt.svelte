@@ -1,12 +1,13 @@
 <!-- Offers a new version of the app, which waits for the user: reloading by surprise in the middle
      of an incident is worse than running a slightly older version. While an own SOS is open the
-     offer waits; with a radio linked it warns that reloading drops the radio. -->
+     offer waits; with a radio linked it warns that reloading drops the radio. That the app works
+     offline once installed goes unsaid: on a first launch it is noise. -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { registerSW } from 'virtual:pwa-register';
 
   import type { Translate } from '../i18n/index.ts';
-  import { notices, useStandingNotice } from '../ui/notices.svelte.ts';
+  import { useStandingNotice } from '../ui/notices.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -24,7 +25,6 @@
   onMount(() => {
     updateServiceWorker = registerSW({
       onNeedRefresh: () => (needRefresh = true),
-      onOfflineReady: () => notices.show(t('readyOffline')),
     });
   });
 

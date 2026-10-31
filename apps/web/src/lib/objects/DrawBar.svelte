@@ -56,12 +56,16 @@
   }
 
   const title = $derived(t(DRAFT_TITLES[draft.kind]));
+  /** Near the most points a shape may have, the count says how many there may be. */
+  const NEAR_MAX = 5;
   /** A marker is one tap: it needs no count. */
-  const progress = $derived(
-    draft.kind === 'marker' || draft.points.length === 0
-      ? t(HINTS[draft.kind])
-      : t('drawPoints', { count: draft.points.length, max: SHAPE_MAX_POINTS }),
-  );
+  const progress = $derived.by(() => {
+    const count = draft.points.length;
+    if (draft.kind === 'marker' || count === 0) return t(HINTS[draft.kind]);
+    return count < SHAPE_MAX_POINTS - NEAR_MAX
+      ? t('drawPointsCount', { count })
+      : t('drawPoints', { count, max: SHAPE_MAX_POINTS });
+  });
 </script>
 
 <ToolCard

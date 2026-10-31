@@ -1,6 +1,6 @@
 # 0065. Give the room to what is read; what is used now and then waits in a menu
 
-- Status: Accepted, amended by [0070](0070-a-simpler-app.md) (one place to add, no chat menu)
+- Status: Accepted, amended by [0070](0070-a-simpler-app.md) (one place to add, no chat menu) and [0082](0082-correct-and-quiet.md) (folded deleting, the offline maps panel)
 - Date: 2026-10-28
 
 ## Context

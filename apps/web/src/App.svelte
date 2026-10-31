@@ -245,8 +245,10 @@
       : null,
   );
 
+  /** The first launch; arriving through an invitation, it joins its group in the same step. */
   async function createIdentity(alias: string): Promise<void> {
     await session?.createIdentity(alias);
+    if (incoming?.ok) await join(incoming.value);
   }
 
   async function rename(alias: string): Promise<void> {
@@ -372,11 +374,7 @@
     {/if}
 
     {#if session && !session.identity}
-      <Onboarding
-        {t}
-        invitedTo={incoming?.ok ? incoming.value.groupName : null}
-        oncreate={createIdentity}
-      />
+      <Onboarding {t} invitation={incoming?.ok ? incoming.value : null} oncreate={createIdentity} />
     {:else if session && incoming}
       <JoinDialog
         {t}

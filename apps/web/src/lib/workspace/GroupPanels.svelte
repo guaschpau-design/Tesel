@@ -9,7 +9,10 @@
   import MemberDetails from '../members/MemberDetails.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { navigateTo } from '../navigation/navigation.svelte.ts';
+  import { DRAFT_NAMES, draftKindOf } from '../objects/draft.ts';
   import ObjectDetails from '../objects/ObjectDetails.svelte';
+  import ObjectForm from '../objects/ObjectForm.svelte';
+  import { objectTitle } from '../objects/object-names.ts';
   import { removeSweep } from '../objects/sweep-actions.ts';
   import { radio } from '../radio/radio.svelte.ts';
   import ReportForm from '../reports/ReportForm.svelte';
@@ -41,6 +44,9 @@
 
   let { t, locale, feed, self, role, preferences, onplace, onplansweep, onpicktaskplace }: Props =
     $props();
+
+  /** The marker or shape whose label and kind are being changed, by its key. */
+  let changing: string | null = $state(null);
 </script>
 
 {#if panels.open?.name === 'object'}
@@ -56,6 +62,7 @@
     }}
     coordinator={role === 'coordinator'}
     ontask={newTask}
+    onedit={() => (changing = key)}
     onplansweep={() => {
       onplansweep(key);
     }}
@@ -66,6 +73,27 @@
     }}
     onclose={closePanel}
   />
+{/if}
+
+{#if changing !== null}
+  {@const record = feed.state.objects.get(changing)}
+  {#if record?.type === 'marker' || record?.type === 'shape'}
+    {@const kind = draftKindOf(record)}
+    <ObjectForm
+      {t}
+      {kind}
+      label={record.label}
+      code={record.type === 'marker' ? record.symbol : record.style}
+      title={t('editObject', { name: objectTitle(record, feed.state.objects, t) })}
+      coordinator={role === 'coordinator'}
+      onsave={async (code: number, label: string) => {
+        await feed.editObject(record, code, label);
+        changing = null;
+        noticeSent(t, feed, t(DRAFT_NAMES[kind]));
+      }}
+      oncancel={() => (changing = null)}
+    />
+  {/if}
 {/if}
 
 {#if panels.open?.name === 'member'}

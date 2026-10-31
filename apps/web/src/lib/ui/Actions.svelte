@@ -1,6 +1,7 @@
 <!-- What can be done with the thing a panel shows, as a row of equal tiles, a pictogram over a
      verb. Up to three fit a phone's width and all show; with more, the first two show and the rest
-     wait in a "⋯" menu at the end of the row (ADR-0065). So list them most used first. -->
+     wait in a "⋯" menu at the end of the row (ADR-0065). So list them most used first. An action
+     marked folded, as deleting, always waits in the menu. -->
 <script lang="ts">
   import type { Action } from './action.ts';
   import Menu from './Menu.svelte';
@@ -16,8 +17,11 @@
 
   /** As many as fit a phone's width; past it, one place goes to the menu's button. */
   const FIT = 3;
-  const shown = $derived(actions.length <= FIT ? actions : actions.slice(0, FIT - 1));
-  const folded = $derived(actions.slice(shown.length));
+  const main = $derived(actions.filter((action) => action.folded !== true));
+  const shown = $derived(
+    main.length <= FIT && main.length === actions.length ? main : main.slice(0, FIT - 1),
+  );
+  const folded = $derived(actions.filter((action) => !shown.includes(action)));
 </script>
 
 <div class="actions">

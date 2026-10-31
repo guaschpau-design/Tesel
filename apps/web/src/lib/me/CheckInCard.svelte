@@ -27,6 +27,11 @@
   let step: CheckInStep = $state('quiet');
   let left = $state(0);
 
+  /** The time left, as it is read at a glance: "2 minutes", then the last seconds. */
+  const timeLeft = $derived(
+    left > 60 ? t('inMinutes', { count: Math.ceil(left / 60) }) : t('inSeconds', { count: left }),
+  );
+
   function activity(): void {
     check.activity(Date.now());
     step = check.step;
@@ -75,7 +80,7 @@
   <MapCard label={t('checkInTitle')} edge="var(--warning)">
     <p class="question">{t('checkInTitle')}</p>
     <p class="hint">
-      {step === 'asking' ? t('checkInAsking', { seconds: left }) : t('checkInCalled')}
+      {step === 'asking' ? t('checkInAsking', { when: timeLeft }) : t('checkInCalled')}
     </p>
     <div class="row">
       <button class="primary" onclick={activity}>{t('checkInFine')}</button>

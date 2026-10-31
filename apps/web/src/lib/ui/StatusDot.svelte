@@ -1,11 +1,12 @@
-<!-- A small coloured dot that says how something is doing: green good, orange fair, red poor. Only
-     the look; the words beside it say the same for screen readers. On a dark background, set
+<!-- A small coloured dot that says how something is doing: green good, orange fair, red poor, and a
+     grey ring for what is simply not in use, which is no fault. Only the look; the words beside it
+     say the same for screen readers. On a dark background, set
      `--status-good` to a lighter green (the header uses the signal lime). -->
 <script lang="ts">
   import type { StatusTone } from './status-tone.ts';
 
   interface Props {
-    tone: StatusTone;
+    tone: StatusTone | 'off';
   }
 
   let { tone }: Props = $props();
@@ -31,5 +32,9 @@
 
   .poor {
     background: var(--danger);
+  }
+
+  .off {
+    border: 2px solid var(--control-line);
   }
 </style>

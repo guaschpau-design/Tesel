@@ -26,10 +26,10 @@
   };
 
   /** How the radio is doing: paired and on the group's channel, waiting for a group, or not yet. */
-  const card = $derived.by((): { level: Link['level']; status: string } => {
+  const card = $derived.by((): { level: Link['level'] | 'off'; status: string } => {
     const name = radio.name ?? t('radioUnnamed');
-    if (!supported) return { level: 'none', status: t('radioUnsupported') };
-    if (radio.state === 'disconnected') return { level: 'none', status: t('radioOff') };
+    if (!supported) return { level: 'off', status: t('radioUnsupported') };
+    if (radio.state === 'disconnected') return { level: 'off', status: t('radioOff') };
     if (radio.state === 'ready' && !groupName) {
       return { level: 'connecting', status: t('radioWaiting', { name }) };
     }
