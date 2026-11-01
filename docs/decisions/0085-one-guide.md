@@ -1,6 +1,6 @@
 # 0085. One guide: the help and the guide become one page
 
-- Status: Accepted
+- Status: Superseded by [0086](0086-no-guide.md)
 - Date: 2026-11-01
 
 ## Context

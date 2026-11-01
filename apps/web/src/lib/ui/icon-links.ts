@@ -8,8 +8,6 @@ export const PAGES_WITH_ICONS = [
   'apps/web/index.html',
   'apps/site/index.html',
   'apps/site/en/index.html',
-  'apps/site/guia/index.html',
-  'apps/site/en/guide/index.html',
 ] as const;
 
 const ICON_LINK =

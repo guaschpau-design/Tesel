@@ -1,8 +1,6 @@
 <!-- On the map while this device is in no group: the two ways to start, each opening the groups
-     panel on it, and the guide, which shows how the app works. Gone as soon as there is
-     a group. -->
+     panel on it. Gone as soon as there is a group. -->
 <script lang="ts">
-  import { siteUrl } from '../config.ts';
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import type { GlyphName } from '../ui/glyphs.ts';
   import MapCard from '../ui/MapCard.svelte';
@@ -34,35 +32,23 @@
         {t(way.label)}
       </button>
     {/each}
-    <a href={siteUrl(t('guidePath'))} target="_blank" rel="noopener">
-      <Pictogram name="help" size={24} />
-      {t('howItWorks')}
-    </a>
   </div>
 </MapCard>
 
 <style>
   .ways {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.4rem;
   }
 
-  /* The guide is a link, to a page of the site, laid out like the buttons beside it. */
-  .ways button,
-  .ways a {
+  .ways button {
     display: grid;
     gap: 0.3rem;
     place-items: center;
-    min-height: var(--control-size);
     padding: 0.6rem 0.3rem;
-    color: inherit;
     font-size: var(--text-secondary);
     font-weight: 600;
     line-height: 1.2;
-    text-align: center;
-    text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
   }
 </style>

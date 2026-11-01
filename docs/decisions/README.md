@@ -88,6 +88,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0080](0080-told-without-looking.md)                 | Told without having to look                                                                 | Accepted                                          |
 | [0081](0081-found-in-a-tap-or-two.md)                | Found in a tap or two                                                                       | Accepted                                          |
 | [0082](0082-correct-and-quiet.md)                    | Mistakes easy to correct, and less noise                                                    | Accepted                                          |
-| [0083](0083-help-on-one-page.md)                     | Help on one page, in place of the practice                                                  | Accepted, amended by 0085                         |
-| [0084](0084-guide-plate-by-plate.md)                 | The guide, plate by plate                                                                   | Accepted, amended by 0085                         |
-| [0085](0085-one-guide.md)                            | One guide: the help and the guide become one page                                           | Accepted                                          |
+| [0083](0083-help-on-one-page.md)                     | Help on one page, in place of the practice                                                  | Superseded by 0086                                |
+| [0084](0084-guide-plate-by-plate.md)                 | The guide, plate by plate                                                                   | Superseded by 0086                                |
+| [0085](0085-one-guide.md)                            | One guide: the help and the guide become one page                                           | Superseded by 0086                                |
+| [0086](0086-no-guide.md)                             | No user guide: the app explains itself                                                      | Accepted                                          |
