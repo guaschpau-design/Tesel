@@ -483,7 +483,15 @@ export const en = {
     'The radio has no free channel. Delete one in the MeshCore app and try again.',
   radioNoAnswer:
     'The radio does not answer. Check that it runs MeshCore Companion Bluetooth firmware v1.18 or later.',
-  radioFailed: 'Could not connect to the radio. Try again.',
+  radioFailed:
+    'Could not connect to the radio. Check that it is on and nearby, and that no other app is using it.',
+  radioNotPaired: 'This device is not paired with the radio yet. Do it once:',
+  radioPairStep1:
+    "In the device's Bluetooth settings, pair the radio with its PIN: 123456 unless you changed it.",
+  radioPairStep2: 'Turn the radio off or unplug it, and turn it on again.',
+  radioPairStep3: 'Come back here and tap “Connect radio”.',
+  radioConnectHint:
+    'If it asks for a PIN, the factory one is 123456. Radio not listed? Turn it off and on again.',
   chatGroup: 'Group',
   chatMeshcore: 'MeshCore',
   meshcoreIntro: 'Messages from MeshCore radios nearby. Reply from the MeshCore app.',

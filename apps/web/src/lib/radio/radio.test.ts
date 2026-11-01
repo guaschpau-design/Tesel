@@ -2,12 +2,13 @@ import { encodeEvent, type NodeId, type TeselEvent } from '@tesel/protocol';
 import type { LoraEvent } from '@tesel/core';
 import 'fake-indexeddb/auto';
 
-import type {
-  RadioLink,
-  RadioLinkState,
-  RadioText,
-  ReceivedFrame,
-  SendOutcome,
+import {
+  RadioError,
+  type RadioLink,
+  type RadioLinkState,
+  type RadioText,
+  type ReceivedFrame,
+  type SendOutcome,
 } from '@tesel/meshcore/link';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -269,6 +270,17 @@ describe('radio session', () => {
     await radio.connect();
     await radio.useFeed(new FakeFeed());
     expect(link.forgotten).toEqual([left.secret]);
+  });
+
+  it('says when this device is not paired with the radio, and when the picker was just closed', async () => {
+    const link = new FakeLink();
+    const radio = new RadioSession(() => Promise.resolve(link));
+    link.connect = () => Promise.reject(new RadioError('not-paired', 'pairing failed'));
+    await radio.connect();
+    expect(radio.problem).toBe('not-paired');
+    link.connect = () => Promise.reject(new DOMException('User cancelled', 'NotFoundError'));
+    await radio.connect();
+    expect(radio.problem).toBeNull();
   });
 
   it('unlinks the feed when the radio goes away', async () => {

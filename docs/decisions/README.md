@@ -95,3 +95,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0087](0087-explained-where-used.md)                 | The app explains itself where it is used                                                    | Accepted                                                |
 | [0088](0088-home-page-radio-second-way.md)           | The home page: situational awareness, and the radio as a second way                         | Accepted                                                |
 | [0089](0089-legal-notice.md)                         | A legal notice and terms of use on the site                                                 | Accepted                                                |
+| [0090](0090-pairing-a-radio-from-the-app.md)         | Pairing a radio from the app, and saying why a connection failed                            | Accepted                                                |

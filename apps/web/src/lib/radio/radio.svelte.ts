@@ -27,7 +27,8 @@ export type RadioFeed = Pick<
   'groupId' | 'attachRadio' | 'receiveFromRadio' | 'radioSent' | 'radioChannel'
 >;
 
-export type RadioProblem = 'unsupported' | 'no-free-channel' | 'no-answer' | 'failed';
+export type RadioProblem =
+  'unsupported' | 'no-free-channel' | 'no-answer' | 'not-paired' | 'failed';
 
 /** How often the scheduler is asked for the next packet, and frames not yet stored retried. */
 const PUMP_MS = 1000;
@@ -137,7 +138,7 @@ export class RadioSession {
       // Closing the browser's picker is not a problem worth reporting.
       if (!(error instanceof DOMException && error.name === 'NotFoundError')) {
         console.warn('Radio connection failed', error);
-        this.problem = 'failed';
+        this.problem = problemOf(error);
       }
       return;
     }
@@ -287,6 +288,7 @@ function problemOf(error: unknown): RadioProblem {
   if (error instanceof RadioError) {
     if (error.code === 'no-free-channel') return 'no-free-channel';
     if (error.code === 'timeout') return 'no-answer';
+    if (error.code === 'not-paired') return 'not-paired';
   }
   return 'failed';
 }

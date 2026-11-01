@@ -217,8 +217,9 @@ export class MeshCoreRadio implements RadioLink {
       try {
         channels.push(await this.#command(() => connection.getChannel(index)));
       } catch (error) {
-        if (error instanceof RadioError && error.code === 'timeout') throw error;
-        break; // An error answer marks the end of the slots.
+        // The radio's error answer marks the end of the slots; anything else is a real failure.
+        if (error instanceof RadioError && error.code === 'refused') break;
+        throw error;
       }
     }
     return channels;

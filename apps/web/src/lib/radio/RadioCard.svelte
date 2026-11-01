@@ -22,6 +22,7 @@
     unsupported: 'radioUnsupported',
     'no-free-channel': 'radioNoFreeChannel',
     'no-answer': 'radioNoAnswer',
+    'not-paired': 'radioNotPaired',
     failed: 'radioFailed',
   };
 
@@ -48,10 +49,19 @@
     </span>
   {/if}
   {#if radio.problem}<p class="warning">{t(PROBLEMS[radio.problem])}</p>{/if}
+  {#if radio.problem === 'not-paired'}
+    <!-- The one case the user must act on outside Tesel: pairing in the system's settings. -->
+    <ol class="steps">
+      <li>{t('radioPairStep1')}</li>
+      <li>{t('radioPairStep2')}</li>
+      <li>{t('radioPairStep3')}</li>
+    </ol>
+  {/if}
   {#if supported && radio.state === 'disconnected'}
     <div class="row">
       <button class="primary" onclick={() => radio.connect()}>{t('radioConnect')}</button>
     </div>
+    <p class="hint">{t('radioConnectHint')}</p>
   {:else if supported && radio.state === 'ready'}
     <div class="row">
       <button onclick={() => radio.disconnect()}>{t('radioDisconnect')}</button>
@@ -62,5 +72,10 @@
 <style>
   p {
     margin: 0;
+  }
+
+  .steps {
+    margin: 0;
+    padding-left: 1.3rem;
   }
 </style>

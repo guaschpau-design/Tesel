@@ -483,7 +483,15 @@ export const es: Messages = {
     'La radio no tiene ningún canal libre. Borra uno en la app de MeshCore y vuelve a intentarlo.',
   radioNoAnswer:
     'La radio no responde. Comprueba que lleva el firmware MeshCore Companion Bluetooth v1.18 o posterior.',
-  radioFailed: 'No se pudo conectar con la radio. Inténtalo de nuevo.',
+  radioFailed:
+    'No se pudo conectar con la radio. Comprueba que está encendida y cerca, y que ninguna otra app la está usando.',
+  radioNotPaired: 'Este dispositivo aún no está emparejado con la radio. Hazlo una sola vez:',
+  radioPairStep1:
+    'En los ajustes de Bluetooth del dispositivo, vincula la radio con su PIN: 123456 si no lo has cambiado.',
+  radioPairStep2: 'Apaga la radio o desenchúfala, y vuelve a encenderla.',
+  radioPairStep3: 'Vuelve aquí y pulsa «Conectar radio».',
+  radioConnectHint:
+    'Si te pide un PIN, el de fábrica es 123456. ¿No aparece tu radio? Apágala y vuelve a encenderla.',
   chatGroup: 'Grupo',
   chatMeshcore: 'MeshCore',
   meshcoreIntro: 'Mensajes de radios MeshCore cercanas. Se responden desde la app MeshCore.',

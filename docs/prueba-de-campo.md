@@ -4,7 +4,7 @@ Lista para probar Tesel en condiciones reales antes de publicar la v0.1. Las pru
 
 ## Antes de salir
 
-- [ ] Radios preparadas con MeshCore Companion Bluetooth v1.18 o superior, región EU/UK Narrow ([`hardware.md`](hardware.md)), y cargadas.
+- [ ] Radios preparadas con MeshCore Companion Bluetooth v1.18 o superior, todas con el mismo ajuste de radio (EU/UK Narrow, o Portugal 868), y cargadas ([`hardware.md`](hardware.md)). La app MeshCore, cerrada.
 - [ ] En cada móvil: Tesel abierta desde `https://tesel.eu/app/`, añadida a la pantalla de inicio, con nombre elegido.
 - [ ] Mapa de la zona de la prueba descargado en cada móvil («Más» → «Mapas sin conexión»).
 - [ ] Un grupo creado por quien coordina y todos unidos con el QR.
@@ -23,8 +23,9 @@ Lista para probar Tesel en condiciones reales antes de publicar la v0.1. Las pru
 
 ## 2. Sin internet, con radios (30 minutos)
 
-Todos con datos móviles y wifi desactivados, Bluetooth encendido, radio conectada desde «Conexiones» (el indicador de arriba debe decir «LoRa» con un punto verde).
+Todos con datos móviles y wifi desactivados, Bluetooth encendido, radio conectada desde la palabra de conexión de arriba → «Conectar radio» (arriba debe poner «Por radio»).
 
+- [ ] La primera vez, el sistema pide el PIN de la radio (123456 si no se ha cambiado). Si no lo pide, Tesel lo dice en pocos segundos y muestra cómo emparejarla: apunta qué dispositivo y qué navegador.
 - [ ] Al conectar, el panel muestra el nombre de la radio y el canal del grupo. La app de MeshCore muestra un canal nuevo con el nombre del grupo, sin haber tocado los otros.
 - [ ] El chat llega por radio. Apunta cuánto tarda.
 - [ ] Las posiciones se actualizan por radio (cada pocos minutos, no al momento).

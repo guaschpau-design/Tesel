@@ -10,9 +10,12 @@ export function isWebBluetoothAvailable(): boolean {
   return typeof navigator !== 'undefined' && 'bluetooth' in navigator;
 }
 
-/** Why a link refused a command. */
+/**
+ * Why a link failed: no free channel slot, not connected, no answer in time, a command the radio
+ * refused, or a radio this device has not paired with (its PIN was never given).
+ */
 export class RadioError extends Error {
-  readonly code: 'no-free-channel' | 'not-ready' | 'timeout' | 'refused';
+  readonly code: 'no-free-channel' | 'not-ready' | 'timeout' | 'refused' | 'not-paired';
 
   constructor(code: RadioError['code'], message: string) {
     super(message);

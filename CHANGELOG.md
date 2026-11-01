@@ -88,6 +88,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Each device keeps its own events in order even if its clock goes back, and says when its clock differs from the server's by more than two minutes ([ADR-0044](docs/decisions/0044-clocks-and-damaged-events.md)).
 - MeshCore LoRa through a companion radio over Web Bluetooth (protocol §7), with priorities, a legal airtime budget, position thinning, SOS repeats and bridging between radio and internet by any member who has both ([ADR-0015](docs/decisions/0015-lora-airtime-policy.md)). What was written without a radio goes on the air once one is linked; an SOS repeats until it is acknowledged or cancelled, also after the radio refuses a repeat, and one answered while there was no radio is not sent again; a position never goes out after a newer one or a hiding; a damaged frame never stands in for the event it claims to be; open SOS calls are bridged however old; answers to them go first; a lost Bluetooth link comes back by itself; frames of the device's other groups are kept for them; and leaving a group frees its channel in the radio ([ADR-0043](docs/decisions/0043-radio-delivery.md)).
 - Text messages of other MeshCore apps are kept, read-only, in a chat tab.
+- Connecting a radio asks for its PIN inside the connection, by reading what the radio protects, where Chrome on Android never asked; a connection that fails says why within seconds, and a radio not paired yet shows the three steps to pair it in the system's settings ([ADR-0090](docs/decisions/0090-pairing-a-radio-from-the-app.md)).
 - The top bar names what the device reaches its group through — WiFi, 4G/5G, LoRa, several at once — with a green, orange or red dot, and opens a panel with one card per connection. Browsers that do not say whether they use Wi-Fi or mobile data show "WiFi/5G".
 
 ### Deployment
@@ -108,7 +109,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.
-- iPhones cannot pair a radio from Safari; they use the internet, and reach the radios through any member who bridges both.
+- iPhones cannot pair a radio from Safari: they pair one from the Bluefy browser, or use the internet and reach the radios through any member who bridges both.
 - Members are trusted: the app does not prove who wrote an event, so a member could write as another ([ADR-0052](docs/decisions/0052-authorship-is-not-proven.md)).
 - Over LoRa, members can impersonate each other and channel encryption is weak ([ADR-0010](docs/decisions/0010-lora-link-security.md)).
 - MeshCore `data_type` 0xFF4D is in the development range until registered.
