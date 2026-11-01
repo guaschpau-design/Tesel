@@ -17,9 +17,7 @@ import { iconVersion, PAGES_WITH_ICONS, stampIconLinks } from '../src/lib/ui/ico
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..', '..');
 
-const { ink: INK, pale: PALE } = JSON.parse(
-  readFileSync(join(root, 'brand', 'colors.json'), 'utf8'),
-);
+const { ink: INK } = JSON.parse(readFileSync(join(root, 'brand', 'colors.json'), 'utf8'));
 const mark = readFileSync(join(root, 'brand', 'mark.svg'), 'utf8');
 const out = join(here, '..', 'public', 'icons');
 
@@ -33,12 +31,13 @@ function page(size, scale, radius) {
     </div></body>`;
 }
 
+// The mark fills its own box, so these scales are its share of the icon.
 const icons = [
-  { file: 'icon-192.png', size: 192, scale: 0.82, radius: 0 },
-  { file: 'icon-512.png', size: 512, scale: 0.82, radius: 0 },
-  { file: 'maskable-512.png', size: 512, scale: 0.64, radius: 0 },
-  { file: 'apple-touch-icon.png', size: 180, scale: 0.82, radius: 0 },
-  { file: 'favicon-64.png', size: 64, scale: 0.9, radius: 12 },
+  { file: 'icon-192.png', size: 192, scale: 0.68, radius: 0 },
+  { file: 'icon-512.png', size: 512, scale: 0.68, radius: 0 },
+  { file: 'maskable-512.png', size: 512, scale: 0.52, radius: 0 },
+  { file: 'apple-touch-icon.png', size: 180, scale: 0.68, radius: 0 },
+  { file: 'favicon-64.png', size: 64, scale: 0.76, radius: 12 },
 ];
 
 await (async () => {
@@ -51,8 +50,9 @@ await (async () => {
     await tab.close();
   }
   await browser.close();
-  // The SVG favicon: the mark on a rounded ink square, crisp at any size.
-  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/><g transform="translate(5 5) scale(0.9)" color="${PALE}">${mark.replace(/<svg[^>]*>|<\/svg>/g, '')}</g></svg>`;
+  // The SVG favicon: the mark on a rounded ink square, crisp at any size. The mark keeps its own
+  // box (viewBox) inside, pale as the file has it.
+  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/>${mark.trim().replace('<svg ', '<svg x="12" y="12" width="76" height="76" ')}</svg>`;
   writeFileSync(join(out, 'favicon.svg'), favicon);
   const version = iconVersion(favicon);
   for (const page of PAGES_WITH_ICONS) {

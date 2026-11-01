@@ -2,95 +2,157 @@
 #
 #   python3 brand/build.py
 #
-# The mark is three hexagonal tiles: a tessellation, the cells of a map grid and the nodes of a
-# mesh at once. One tile is lit, in signal lime. The wordmark is Archivo, expanded (width 118)
-# at weight 700, converted to outlines so it needs no font. Needs fonttools, brotli and uharfbuzz
-# (pip install fonttools brotli uharfbuzz).
-import io
+# The mark is two square tiles that interlock at a corner, held by a lime key: two pieces of a
+# tessellation, two places on a map, two radios linked. The wordmark is drawn here from straight
+# lines and arcs, with no font. Both come from the design of 1 November 2026 (ADR-0091); only the
+# Python standard library is needed.
 import json
 import math
 import os
 
-import uharfbuzz as hb
-from fontTools.pens.svgPathPen import SVGPathPen
-from fontTools.pens.transformPen import TransformPen
-from fontTools.ttLib import TTFont
-from fontTools.varLib.instancer import instantiateVariableFont
-
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT = os.path.join(HERE, '..', 'apps', 'site', 'fonts', 'archivo-latin-standard-normal.woff2')
 # The brand's colours, shared with the app and the site (a test keeps them in step).
 with open(os.path.join(HERE, 'colors.json')) as colors_file:
     COLORS = json.load(colors_file)
 INK, PALE, SIGNAL = COLORS['ink'], COLORS['pale'], COLORS['signal']
-WIDTH, WEIGHT, TRACKING = 118, 700, -0.025
 
-# The mark, in a 100 x 100 box: three pointy-top hexagons in a triangle, with grout between them.
-HEX_RADIUS = 23.5
-GROUT = 3.5
-CORNER = 3  # rounding of the tiles' corners, as a stroke of the same colour
+# ---------------------------------------------------------------------------------------------
+# The mark, in a 150 x 150 box: two 100-unit tiles, the second moved 50 down and 50 right.
+
+TILE, SHIFT = 100, 50
+FRAME = 24  # the width of each tile's frame
+CORNER = 10  # the rounding of the tiles' outer corners
+SLOT = 18  # half the width of the diagonal slot where the tiles meet
+KEY_LENGTH, KEY_WIDTH = 42, 23  # the lime key in the slot, along and across it
+JOINT = (TILE + SHIFT) / 2  # where the two tiles' holes touch, on both axes
 
 
-def hexagon(cx, cy):
-    r = HEX_RADIUS - CORNER / 2
-    return [(cx + r * math.cos(math.radians(60 * k - 30)), cy + r * math.sin(math.radians(60 * k - 30))) for k in range(6)]
+def mark_tiles():
+    """The two tiles as one shape: their outline, less both holes and the slot between them."""
+    a, b, r, t = TILE, TILE + SHIFT, CORNER, FRAME
+    outline = (
+        f'M{r} 0 H{a - r} A{r} {r} 0 0 1 {a} {r} V{SHIFT} H{b - r} A{r} {r} 0 0 1 {b} {SHIFT + r} '
+        f'V{b - r} A{r} {r} 0 0 1 {b - r} {b} H{SHIFT + r} A{r} {r} 0 0 1 {SHIFT} {b - r} '
+        f'V{a} H{r} A{r} {r} 0 0 1 0 {a - r} V{r} A{r} {r} 0 0 1 {r} 0 Z'
+    )
+    # The slot's sides are the lines x - y = ±d; each meets the holes' edges.
+    d = SLOT * math.sqrt(2)
+    hole_a, hole_b = (t, a - t), (SHIFT + t, b - t)
+    opening = (
+        f'M{hole_a[0]} {hole_a[0]} H{hole_a[1]} V{fmt(hole_a[1] - d)} '
+        f'L{fmt(hole_b[0] + d)} {hole_b[0]} H{hole_b[1]} V{hole_b[1]} H{hole_b[0]} '
+        f'V{fmt(hole_b[0] + d)} L{fmt(hole_a[1] - d)} {hole_a[1]} H{hole_a[0]} Z'
+    )
+    return f'<path d="{outline} {opening}" fill="currentColor" fill-rule="evenodd"/>'
 
 
-def tile(points, fill):
-    d = 'M' + ' L'.join(f'{x:.2f} {y:.2f}' for x, y in points) + ' Z'
-    return f'<path d="{d}" fill="{fill}" stroke="{fill}" stroke-width="{CORNER}" stroke-linejoin="round"/>'
+def mark_key():
+    """The lime key: a rectangle along the slot, centred where the tiles meet."""
+    along = (1 / math.sqrt(2), 1 / math.sqrt(2))
+    across = (1 / math.sqrt(2), -1 / math.sqrt(2))
+    corners = [
+        (JOINT + sa * KEY_LENGTH / 2 * along[0] + sc * KEY_WIDTH / 2 * across[0],
+         JOINT + sa * KEY_LENGTH / 2 * along[1] + sc * KEY_WIDTH / 2 * across[1])
+        for sa, sc in ((-1, -1), (-1, 1), (1, 1), (1, -1))
+    ]
+    d = 'M' + ' L'.join(f'{fmt(x)} {fmt(y)}' for x, y in corners) + ' Z'
+    return f'<path d="{d}" fill="{SIGNAL}"/>'
 
 
 def mark():
-    dx = HEX_RADIUS * math.sqrt(3) + GROUT
-    dy = dx * math.sqrt(3) / 2
-    top = 50 - dy / 2
-    return ''.join([
-        tile(hexagon(50 - dx / 2, top), 'currentColor'),
-        tile(hexagon(50 + dx / 2, top), SIGNAL),
-        tile(hexagon(50, top + dy), 'currentColor'),
-    ])
+    return mark_tiles() + mark_key()
 
 
-def wordmark(text='Tesel'):
-    font = instantiateVariableFont(TTFont(FONT), {'wght': WEIGHT, 'wdth': WIDTH})
-    font.flavor = None
-    upem = font['head'].unitsPerEm
-    buffer = io.BytesIO()
-    font.save(buffer)
-    shaper = hb.Font(hb.Face(buffer.getvalue()))
-    glyphs = hb.Buffer()
-    glyphs.add_str(text)
-    glyphs.guess_segment_properties()
-    hb.shape(shaper, glyphs, {'kern': True, 'liga': True})
-    order, glyphset = font.getGlyphOrder(), font.getGlyphSet()
-    x, paths = 0, []
-    for info, pos in zip(glyphs.glyph_infos, glyphs.glyph_positions):
-        pen = SVGPathPen(glyphset)
-        glyphset[order[info.codepoint]].draw(TransformPen(pen, (1, 0, 0, -1, x + pos.x_offset, 0)))
-        if pen.getCommands():
-            paths.append(pen.getCommands())
-        x += pos.x_advance + TRACKING * upem
-    width = x - TRACKING * upem
-    cap = font['OS/2'].sCapHeight
-    return ' '.join(paths), width, cap
+# ---------------------------------------------------------------------------------------------
+# The wordmark, with the capitals 100 units tall: square letters with rounded shoulders.
+
+CAP, X_HEIGHT = 100, 72
+STEM, BAR = 17, 14  # vertical and horizontal strokes
+ROUND, INNER, END = 21, 5, 3  # outer shoulders, inside corners, ends of strokes
+MIDDLE = X_HEIGHT / 2  # the centre of the middle bar of e and s
+
+
+def letter_t(x):
+    width = 83
+    stem = (width - STEM) / 2
+    return (f'M{x} 0 H{x + width} V{BAR} H{fmt(x + stem + STEM)} V{CAP} H{fmt(x + stem)} '
+            f'V{BAR} H{x} Z')
+
+
+def letter_e(x):
+    """A bowl, closed above the middle bar and open below it, its lower bar running to the edge."""
+    w, top = 77, CAP - X_HEIGHT
+    s, b, R, r, e = STEM, BAR, ROUND, INNER, END
+    mid_top, mid_bottom, low_top = top + MIDDLE - b / 2, top + MIDDLE + b / 2, CAP - b
+    outer = (
+        f'M{x + R} {top} H{x + w - R} A{R} {R} 0 0 1 {x + w} {top + R} V{mid_bottom - e} '
+        f'A{e} {e} 0 0 1 {x + w - e} {mid_bottom} H{x + s + r} A{r} {r} 0 0 0 {x + s} {mid_bottom + r} '
+        f'V{low_top - r} A{r} {r} 0 0 0 {x + s + r} {low_top} H{x + w - e} '
+        f'A{e} {e} 0 0 1 {x + w} {low_top + e} V{CAP - e} A{e} {e} 0 0 1 {x + w - e} {CAP} '
+        f'H{x + R} A{R} {R} 0 0 1 {x} {CAP - R} V{top + R} A{R} {R} 0 0 1 {x + R} {top} Z'
+    )
+    counter = rounded_rect(x + s, top + b, x + w - s, mid_top, r)
+    return f'{outer} {counter}'
+
+
+def letter_s(x):
+    w, top = 67, CAP - X_HEIGHT
+    s, b, R, r, e = STEM, BAR, ROUND, INNER, END
+    mid_top, mid_bottom, low_top = top + MIDDLE - b / 2, top + MIDDLE + b / 2, CAP - b
+    return (
+        f'M{x + R} {top} H{x + w - e} A{e} {e} 0 0 1 {x + w} {top + e} V{top + b - e} '
+        f'A{e} {e} 0 0 1 {x + w - e} {top + b} H{x + s + r} A{r} {r} 0 0 0 {x + s} {top + b + r} '
+        f'V{mid_top - r} A{r} {r} 0 0 0 {x + s + r} {mid_top} H{x + w - R} '
+        f'A{R} {R} 0 0 1 {x + w} {mid_top + R} V{CAP - R} A{R} {R} 0 0 1 {x + w - R} {CAP} '
+        f'H{x + e} A{e} {e} 0 0 1 {x} {CAP - e} V{low_top + e} A{e} {e} 0 0 1 {x + e} {low_top} '
+        f'H{x + w - s - r} A{r} {r} 0 0 0 {x + w - s} {low_top - r} V{mid_bottom + r} '
+        f'A{r} {r} 0 0 0 {x + w - s - r} {mid_bottom} H{x + R} A{R} {R} 0 0 1 {x} {mid_bottom - R} '
+        f'V{top + R} A{R} {R} 0 0 1 {x + R} {top} Z'
+    )
+
+
+def letter_l(x):
+    """A stem rounded at its foot, which turns a little to the right."""
+    width, foot, R, r = 22, 8, 13, 4
+    return (f'M{x} 0 H{x + STEM} V{CAP - foot - r} A{r} {r} 0 0 0 {x + STEM + r} {CAP - foot} '
+            f'H{x + width} V{CAP} H{x + R} A{R} {R} 0 0 1 {x} {CAP - R} Z')
+
+
+def rounded_rect(x0, y0, x1, y1, r):
+    return (f'M{fmt(x0 + r)} {fmt(y0)} H{fmt(x1 - r)} A{r} {r} 0 0 1 {fmt(x1)} {fmt(y0 + r)} '
+            f'V{fmt(y1 - r)} A{r} {r} 0 0 1 {fmt(x1 - r)} {fmt(y1)} H{fmt(x0 + r)} '
+            f'A{r} {r} 0 0 1 {fmt(x0)} {fmt(y1 - r)} V{fmt(y0 + r)} A{r} {r} 0 0 1 {fmt(x0 + r)} {fmt(y0)} Z')
+
+
+# Where each letter starts, as spaced in the design: the e tucks under the bar of the T.
+LETTERS = [(letter_t, 0), (letter_e, 78), (letter_s, 167), (letter_e, 245), (letter_l, 333)]
+WORD_WIDTH = 355
+
+
+def wordmark():
+    d = ' '.join(draw(x) for draw, x in LETTERS)
+    return f'<path d="{d}" fill-rule="evenodd"/>'
+
+
+def fmt(value):
+    return f'{value:.2f}'.rstrip('0').rstrip('.')
 
 
 def main():
-    d, width, cap = wordmark()
-    k = 100 / cap  # cap height = 100 units
-    word_w, word_h = width * k, 100.0
-    word = f'<g transform="scale({k:.6f})"><path d="{d}" transform="translate(0 {cap})"/></g>'
-    write('wordmark.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {word_w:.1f} {word_h:.1f}" fill="{INK}">{word}</svg>')
-    write('mark.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" color="{PALE}">{mark()}</svg>')
-    # Lockup: the tiles about one and a half times as tall as the capitals, centred on them, so
-    # that the mark weighs as much as the word.
-    mark_h, gap = 170, 34
+    write('wordmark.svg',
+          f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WORD_WIDTH} {CAP}" fill="{INK}">{wordmark()}</svg>')
+    write('mark.svg',
+          f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150" color="{PALE}">{mark()}</svg>')
+    # Lockup: the mark a third taller than the capitals and set a little above their centre, as in
+    # the design; a quarter of the capitals' height between mark and word.
+    mark_h, gap = 132, 23
+    mark_top = -23
     height = mark_h
+    scale = mark_h / 150
     lockup = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {mark_h + gap + word_w:.1f} {height:.1f}" color="{INK}">'
-        f'<g transform="scale({mark_h / 100:.4f})">{mark()}</g>'
-        f'<g transform="translate({mark_h + gap:.1f} {(height - word_h) / 2:.2f})" fill="currentColor">{word}</g></svg>'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {mark_h + gap + WORD_WIDTH} {height}" color="{INK}">'
+        f'<g transform="scale({fmt(scale)})">{mark()}</g>'
+        f'<g transform="translate({mark_h + gap} {-mark_top})" fill="currentColor">{wordmark()}</g></svg>'
     )
     write('lockup.svg', lockup)
     # The headers of the app and the site are always ink, so both show a pale copy as an image. The
