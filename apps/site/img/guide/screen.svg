@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" width="400" height="800">
-  <!-- The app on a phone, drawn plain for the help page (ayuda/, en/help/): the top bar, the map
-       with the group on it, the map's buttons, SOS and the dock. Numbered lime badges point at
-       what the page's legend explains. No words, so both languages share it. -->
+  <!-- The app on a phone, drawn plain for the guide's first plate (guia/, en/guide/): the top
+       bar, the map with the group on it, the map's buttons, SOS and the dock. Numbered lime badges
+       point at what the plate's legend explains. No words, so both languages share it. -->
   <defs>
     <clipPath id="screen">
       <rect x="30" y="20" width="340" height="760" rx="34" />

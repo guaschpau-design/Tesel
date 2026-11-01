@@ -1,5 +1,5 @@
 <!-- On the map while this device is in no group: the two ways to start, each opening the groups
-     panel on it, and the help, which shows in one page how the app works. Gone as soon as there is
+     panel on it, and the guide, which shows how the app works. Gone as soon as there is
      a group. -->
 <script lang="ts">
   import { siteUrl } from '../config.ts';
@@ -34,7 +34,7 @@
         {t(way.label)}
       </button>
     {/each}
-    <a href={siteUrl(t('helpPath'))} target="_blank" rel="noopener">
+    <a href={siteUrl(t('guidePath'))} target="_blank" rel="noopener">
       <Pictogram name="help" size={24} />
       {t('howItWorks')}
     </a>
@@ -48,7 +48,7 @@
     gap: 0.4rem;
   }
 
-  /* The help is a link, to a page of the site, laid out like the buttons beside it. */
+  /* The guide is a link, to a page of the site, laid out like the buttons beside it. */
   .ways button,
   .ways a {
     display: grid;

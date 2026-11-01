@@ -1,5 +1,5 @@
 <!-- The dock's "More" menu: the tools used now and then, with or without a group, the way to this
-     device's settings, and the help, a page of the site that opens beside the app. -->
+     device's settings, and the guide, a page of the site that opens beside the app. -->
 <script lang="ts">
   import { siteUrl } from '../config.ts';
   import type { MessageKey, Translate } from '../i18n/index.ts';
@@ -63,9 +63,9 @@
     },
     {
       icon: 'help',
-      label: 'help',
+      label: 'guide',
       run: () => {
-        window.open(siteUrl(t('helpPath')), '_blank', 'noopener');
+        window.open(siteUrl(t('guidePath')), '_blank', 'noopener');
       },
     },
   ];

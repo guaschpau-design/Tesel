@@ -1,6 +1,6 @@
 # 0084. The guide, plate by plate
 
-- Status: Accepted
+- Status: Accepted, amended by [0085](0085-one-guide.md) (one page with the help, shorter plates)
 - Date: 2026-11-01
 
 ## Context

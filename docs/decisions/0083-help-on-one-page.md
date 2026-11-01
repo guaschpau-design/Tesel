@@ -1,6 +1,6 @@
 # 0083. Help on one page, in place of the practice
 
-- Status: Accepted
+- Status: Accepted, amended by [0085](0085-one-guide.md) (the help becomes the guide's first plate)
 - Date: 2026-10-31
 
 ## Context
