@@ -27,9 +27,9 @@ export class FakeGps implements GeolocationSource {
     this.#watches.delete(id);
   }
 
-  /** A fix at a place, taken `timestamp` milliseconds after the epoch. */
-  fix(lat: number, lon: number, timestamp = 1_000): void {
-    const coords = { latitude: lat, longitude: lon, accuracy: 8, heading: NaN, speed: null };
+  /** A fix at a place, taken `timestamp` milliseconds after the epoch, sure to `accuracy` metres. */
+  fix(lat: number, lon: number, timestamp = 1_000, accuracy = 8): void {
+    const coords = { latitude: lat, longitude: lon, accuracy, heading: NaN, speed: null };
     for (const { success } of this.#watches.values()) {
       success({ coords, timestamp } as unknown as GeolocationPosition);
     }

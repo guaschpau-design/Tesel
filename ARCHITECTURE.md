@@ -118,7 +118,7 @@ The current picture is a pure function of the event log, computed by the reducer
 
 - **Members:** latest `MEMBER_INFO` per origin.
 - **Positions:** latest `POSITION` or `POSITION_HIDDEN` per origin.
-- **Trails:** the newest positions of each origin, in order, for drawing where members have been. A `POSITION_HIDDEN` cuts the trail: positions up to it are dropped, so hiding also hides where one went.
+- **Trails:** the newest positions of each origin, in order, for drawing where members have been. The app draws from them only real moves, leaving out the GPS wandering within its error ([ADR-0092](docs/decisions/0092-moves-not-gps-wandering.md)). A `POSITION_HIDDEN` cuts the trail: positions up to it are dropped, so hiding also hides where one went.
 - **Map objects:** identified by the `(origin, seq)` of the event that created them. Later `MARKER`/`SHAPE`/`SWEEP` events for the same object replace it; `OBJECT_DELETE` removes it. Conflicts resolve by **last writer wins**, ordering by `(timestamp, origin, seq)`.
 - **Member states:** latest `MEMBER_STATE` per origin.
 - **Tasks:** like map objects, identified by the `(origin, seq)` of the event that created them, and the last writer wins.

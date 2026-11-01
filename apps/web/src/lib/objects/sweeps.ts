@@ -21,6 +21,7 @@ import {
   type TaskEvent,
 } from '@tesel/protocol';
 
+import { travelled } from '../position/movement.ts';
 import { TEAM_COLOURS } from '../teams/teams.ts';
 import type { Tone } from '../ui/theme.ts';
 
@@ -106,15 +107,16 @@ export function isStripDone(tasks: GroupState['tasks'], stripKey: string): boole
 
 /**
  * How much of a strip, from 0 to 1, the trail of a member, or those of a team's members, have
- * swept: within half the spacing of a lane, the band that lane stands for.
+ * swept: within half the spacing of a lane, the band that lane stands for. Only where they
+ * travelled counts, not where the GPS wandered (position/movement.ts).
  */
 export function sweptBy(
   strip: Strip,
   state: Pick<GroupState, 'trails' | 'teams'>,
   walker: NodeId,
 ): number {
-  const trails = membersFor(state.teams, walker).map(
-    (member) => state.trails.get(member)?.points ?? [],
+  const trails = membersFor(state.teams, walker).map((member) =>
+    travelled(state.trails.get(member)?.points ?? []),
   );
   return sweptFraction(strip.lanes, trails, strip.sweep.spacing / 2);
 }

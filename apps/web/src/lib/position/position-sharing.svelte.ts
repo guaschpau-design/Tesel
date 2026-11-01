@@ -6,7 +6,7 @@ import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { DeviceFix, DeviceLocation } from './device-location.svelte.ts';
 import type { PositionMode } from './position-mode.ts';
-import { shouldReport, type Report } from './report-policy.ts';
+import { nextReport, type Report } from './report-policy.ts';
 
 export class PositionSharing {
   readonly #mode: Preference<PositionMode>;
@@ -74,9 +74,17 @@ export class PositionSharing {
   }
 
   async #report(fix: DeviceFix): Promise<void> {
+    const feed = this.#feed;
+    const last = this.#last;
     const time = Math.floor(fix.time / 1000);
-    if (this.#feed === null || !shouldReport(this.#last, fix.at, time)) return;
-    this.#last = { at: fix.at, time };
-    await this.#feed.sharePosition(fix);
+    const next = feed === null ? null : nextReport(last, fix, time);
+    if (feed === null || next === null) return;
+    // A heartbeat publishes the place last published again: a device standing still stays put.
+    const shared: DeviceFix =
+      next === 'again' && last !== null
+        ? { at: last.at, accuracy: last.accuracy, heading: null, speed: null, time: fix.time }
+        : fix;
+    this.#last = { at: shared.at, accuracy: shared.accuracy, time };
+    await feed.sharePosition(shared);
   }
 }

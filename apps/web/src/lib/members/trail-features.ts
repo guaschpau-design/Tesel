@@ -1,9 +1,12 @@
-// Where members have been, as GeoJSON lines for the map: one per member with two positions or
-// more, this device's own included.
+// Where members have been, as GeoJSON lines for the map: one per member who has travelled
+// between two places, this device's own included. Only real moves are drawn, not the GPS
+// wandering (position/movement.ts).
 
 import type { GroupState } from '@tesel/core';
 import type { NodeId } from '@tesel/protocol';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
+
+import { travelled } from '../position/movement.ts';
 
 export interface TrailProperties {
   readonly self: boolean;
@@ -15,10 +18,11 @@ export function trailFeatures(
 ): FeatureCollection<LineString, TrailProperties> {
   const features: Feature<LineString, TrailProperties>[] = [];
   for (const [origin, trail] of state.trails) {
-    if (trail.points.length < 2) continue;
+    const points = travelled(trail.points);
+    if (points.length < 2) continue;
     features.push({
       type: 'Feature',
-      geometry: { type: 'LineString', coordinates: trail.points.map((p) => [p.lon, p.lat]) },
+      geometry: { type: 'LineString', coordinates: points.map((p) => [p.lon, p.lat]) },
       properties: { self: origin === self },
     });
   }

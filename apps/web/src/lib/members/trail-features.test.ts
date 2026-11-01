@@ -10,6 +10,16 @@ const T0 = 1_761_350_400;
 const fix = { lon: -0.37, accuracy: 5, heading: null, speed: null };
 
 describe('trail features', () => {
+  it('draws no line for a member whose GPS only wandered around one place', () => {
+    const vague = { ...fix, accuracy: 25 };
+    const state = stateOf([
+      { type: 'position', origin: ANA, seq: 1, time: T0, lat: 39.47, ...vague },
+      { type: 'position', origin: ANA, seq: 2, time: T0 + 10, lat: 39.4702, ...vague },
+      { type: 'position', origin: ANA, seq: 3, time: T0 + 20, lat: 39.4698, ...vague },
+    ]);
+    expect(trailFeatures(state, ANA).features).toEqual([]);
+  });
+
   it('draws a line for each member who has moved, marking this device’s own', () => {
     const state = stateOf([
       { type: 'position', origin: ANA, seq: 1, time: T0, lat: 39.47, ...fix },

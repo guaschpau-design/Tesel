@@ -47,6 +47,22 @@ describe('sharing this device’s position', () => {
     });
   });
 
+  it('standing still with a wandering GPS, stays where it was published', async () => {
+    const { gps, sharing, trail } = await anaDevice();
+    await sharing.setMode('sharing');
+    gps.fix(39.47, -0.37, 1_000, 25);
+    await vi.waitFor(() => {
+      expect(trail()).toEqual([39.47]);
+    });
+    // Twenty metres off within ±25 m: the GPS wandering, not a move.
+    gps.fix(39.4702, -0.37, 30_000, 25);
+    // A minute on, the heartbeat publishes the same place again.
+    gps.fix(39.4698, -0.37, 61_000, 25);
+    await vi.waitFor(() => {
+      expect(trail()).toEqual([39.47, 39.47]);
+    });
+  });
+
   it('once paused, publishes nothing new and leaves the last position to turn stale', async () => {
     const { gps, sharing, onTheMap, trail } = await anaDevice();
     await sharing.setMode('sharing');
