@@ -154,7 +154,7 @@ h3 {
   color: var(--ink-text);
 }
 
-/* Top bar: the brand on the left; Tesel Profesional, the app and the language on the right. */
+/* Top bar: the brand on the left; the app and the language on the right. */
 
 .top {
   position: sticky;
@@ -460,10 +460,9 @@ section.paper + section.paper > .wrap {
   color: var(--ink-muted);
 }
 
-/* Capabilities: the app itself, annotated, and what each number means. */
+/* Capabilities: the app itself, then what it does, in a grid. */
 
 .shot {
-  position: relative;
   margin: 0 0 3.5rem;
 }
 
@@ -478,30 +477,8 @@ section.paper + section.paper > .wrap {
     0 12px 24px -12px rgb(16 32 44 / 30%);
 }
 
-.pin {
-  position: absolute;
-  top: var(--y);
-  left: var(--x);
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ink);
-  background: var(--signal);
-  border: 2px solid var(--ink);
-  border-radius: 50%;
-  box-shadow: 0 3px 10px rgb(0 0 0 / 35%);
-  transform: translate(-50%, -50%);
-}
-
-/* On a phone the page shows the app as it looks on a phone, without the numbers. */
+/* On a phone the page shows the app as it looks on a phone. */
 @media (max-width: 40rem) {
-  .pin {
-    display: none;
-  }
-
   .shot img {
     width: min(100%, 17rem);
     margin: 0 auto;
@@ -519,30 +496,6 @@ section.paper + section.paper > .wrap {
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: capability;
-}
-
-.capabilities li {
-  position: relative;
-  padding-left: 2.8rem;
-  counter-increment: capability;
-}
-
-.capabilities li::before {
-  position: absolute;
-  top: -0.1rem;
-  left: 0;
-  display: grid;
-  place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  content: counter(capability);
-  color: var(--ink);
-  background: var(--signal);
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
 }
 
 .capabilities h3 {
@@ -567,7 +520,7 @@ section.paper + section.paper > .wrap {
 }
 
 /* Resilient communications: the three ways a message travels, a drawing each, then the facts of
-   the radio in a few short lines. On ink: the drawings carry their own light card. */
+   the radio in a few short lines. The drawings are schemes, drawn in light lines on the ink. */
 
 .channels {
   display: grid;
@@ -695,75 +648,6 @@ section.paper + section.paper > .wrap {
 @media (max-width: 50rem) {
   .steps {
     grid-template-columns: 1fr;
-  }
-}
-
-/* Tesel Profesional: what it is and its drawing beside what it brings, on ink. */
-
-.pro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 4rem;
-  align-items: start;
-}
-
-.pro h2 {
-  margin-bottom: 1.1rem;
-}
-
-.pro .lead {
-  font-size: 1.15rem;
-  color: var(--ink-muted);
-}
-
-.pro figure {
-  margin: 2rem 0 0;
-}
-
-.pro figure img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* "Coming soon", beside the name. */
-.soon {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.15rem 0.55rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  background: var(--signal);
-  border-radius: 999px;
-}
-
-.offer {
-  display: grid;
-  gap: 1.6rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.offer li {
-  padding-top: 1rem;
-  border-top: 1px solid var(--contour);
-}
-
-.offer h3 {
-  margin-bottom: 0.35rem;
-}
-
-.offer p {
-  margin: 0;
-  color: var(--ink-muted);
-}
-
-@media (max-width: 50rem) {
-  .pro {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
   }
 }
 

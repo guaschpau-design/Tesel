@@ -8,4 +8,4 @@ by the simulator (`pnpm --filter @tesel/simulator screenshots`, see `tools/simul
 JPEG. The base map is Tesel's own (OpenStreetMap data, Protomaps). Map data © OpenStreetMap
 contributors, ODbL.
 
-`net-coverage.svg`, `net-radio.svg`, `net-bridge.svg` and `pro-network.svg`: drawn by hand for the home page (ADR-0088): a message with coverage, without it (pocket radios passing it on), through a bridge, and a municipality covered by repeaters (Tesel Profesional). No words, so both languages share them.
+`net-coverage.svg`, `net-radio.svg` and `net-bridge.svg`: schemes drawn by hand for the home page (ADR-0088), in light lines for its dark section: a message with coverage, without it (passed from radio to radio) and through a phone that bridges both. No words, so both languages share them.

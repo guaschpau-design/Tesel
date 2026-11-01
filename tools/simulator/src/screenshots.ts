@@ -35,7 +35,8 @@ const VIEWS = {
   tabletMap: '15.6/39.47835/-0.37505',
   // With the chat open on the right, the scene moves left to stay in view.
   tabletChat: '15.45/39.4781/-0.3711',
-  phoneMap: '14.75/39.4766/-0.3745',
+  // The SOS card covers the top of a phone's screen; the scene sits below it.
+  phoneMap: '14.75/39.4796/-0.3735',
 };
 
 mkdirSync(values.out, { recursive: true });
@@ -66,8 +67,9 @@ try {
 
   await welcome.getByLabel('Tu nombre en el grupo').fill('Ana');
   await welcome.getByRole('button', { name: 'Continuar' }).click();
+  // After the name, the groups panel opens on the ways into a group (ADR-0087).
   await page
-    .getByRole('region', { name: 'Para empezar' })
+    .getByRole('region', { name: 'Grupos' })
     .getByRole('button', { name: 'Crear grupo' })
     .click();
   await page.getByLabel('Nombre del grupo').fill('Equipo Turia');
@@ -75,11 +77,8 @@ try {
   await page.getByTitle('Conectado al servidor del grupo').waitFor();
   await page.getByRole('button', { name: 'Invitar' }).click();
   const link = await page.getByLabel('Enlace de invitación').inputValue();
-  await page.getByRole('button', { name: 'Cerrar' }).click();
-  await page.getByRole('button', { name: /^Yo/ }).click();
-  await page.getByText('Posición', { exact: true }).click();
-  await page.getByRole('switch', { name: 'Compartir mi posición' }).click();
-  await page.getByRole('button', { name: 'Cerrar' }).click();
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await sharePosition(page);
 
   const invitation = parseInvitationUrl(link);
   if (!invitation.ok || invitation.value.server === null) throw new Error(`bad link ${link}`);
@@ -101,6 +100,9 @@ try {
   await openChat(page);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: join(values.out, 'tablet-chat.png') });
+  // The app took the whole screen at Ana's first tap (ui/fullscreen.svelte.ts); a full-screen
+  // window cannot be resized.
+  await page.evaluate(() => document.exitFullscreen());
   await page.setViewportSize({ width: 390, height: 844 });
   await showView(page, VIEWS.phoneMap);
   await page.screenshot({ path: join(values.out, 'phone-map.png') });
@@ -117,6 +119,15 @@ async function showView(page: Page, hash: string): Promise<void> {
     await close.click();
   }
   await page.waitForTimeout(500);
+}
+
+/** Makes sure Ana shares her position, so her dot is on the map, then closes "Me". */
+async function sharePosition(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /^Yo/ }).click();
+  const panel = page.getByRole('region', { name: 'Yo' });
+  const sharing = panel.getByRole('switch', { name: 'Compartir mi posición' });
+  if ((await sharing.getAttribute('aria-checked')) !== 'true') await sharing.click();
+  await panel.getByRole('button', { name: 'Cerrar' }).click();
 }
 
 /** The chat toggles, and a reload may restore it open: click until it is. */
