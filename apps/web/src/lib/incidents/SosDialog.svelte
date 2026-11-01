@@ -6,7 +6,9 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
+  import ChoiceTiles from '../ui/ChoiceTiles.svelte';
   import Dialog from '../ui/Dialog.svelte';
+  import Pictogram from '../ui/Pictogram.svelte';
   import { Submission } from '../ui/submission.svelte.ts';
   import { SOS_KINDS } from './sos-kinds.ts';
 
@@ -24,6 +26,7 @@
 
   let { t, onsend, oncancel }: Props = $props();
 
+  const KINDS = Object.keys(SOS_KINDS) as SosKind[];
   let kind: SosKind = $state('general');
   let text = $state('');
   const fix = $derived(deviceLocation.fix);
@@ -48,14 +51,18 @@
       send();
     }}
   >
-    <label>
-      {t('sosKind')}
-      <select bind:value={kind}>
-        {#each Object.entries(SOS_KINDS) as [value, label] (value)}
-          <option {value}>{t(label)}</option>
-        {/each}
-      </select>
-    </label>
+    <!-- One tap on what is happening, as large as the panel allows: no list to open under stress. -->
+    <ChoiceTiles
+      legend={t('sosKind')}
+      name="kind"
+      options={KINDS.map((value) => ({ value, label: t(SOS_KINDS[value].label) }))}
+      value={kind}
+      onchange={(chosen: SosKind) => (kind = chosen)}
+    >
+      {#snippet picture(chosen: SosKind)}
+        <Pictogram name={SOS_KINDS[chosen].icon} size={26} />
+      {/snippet}
+    </ChoiceTiles>
     <label>
       {t('sosText')}
       <input bind:value={text} autocomplete="off" />

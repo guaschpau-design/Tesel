@@ -1,6 +1,6 @@
 # 0071. Me and the map layers are read whole, without opening anything
 
-- Status: Accepted, amended by [0078](0078-one-look-and-straight-to-the-point.md) (the LoRa line, casualties folded) and [0081](0081-found-in-a-tap-or-two.md) (a member's card begins with the way there)
+- Status: Accepted, amended by [0078](0078-one-look-and-straight-to-the-point.md) (the LoRa line, casualties folded), [0081](0081-found-in-a-tap-or-two.md) (a member's card begins with the way there) and [0087](0087-explained-where-used.md) (Me folds what is seldom changed)
 - Date: 2026-10-29
 
 ## Context

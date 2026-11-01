@@ -1,7 +1,9 @@
-<!-- Draws this device where the GPS says it is now, whenever the GPS is on. -->
+<!-- Draws this device where the GPS says it is now, whenever the GPS is on, named 'You' so that
+     whoever opens the map knows which dot is theirs. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
+  import { nameLabel } from '../map/name-label.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
   import { themeColor } from '../ui/theme.ts';
   import { deviceLocation } from './device-location.svelte.ts';
@@ -9,15 +11,17 @@
 
   interface Props {
     map: MapLibreMap;
+    /** The name beside the dot. */
+    label: string;
   }
 
-  let { map }: Props = $props();
+  let { map, label }: Props = $props();
 
   const SOURCE = 'tesel-self';
 
   useOverlay(() => map, {
     level: 'self',
-    data: { [SOURCE]: () => selfFeatures(deviceLocation.fix) },
+    data: { [SOURCE]: () => selfFeatures(deviceLocation.fix, label) },
     layers: () => {
       const self = themeColor('self');
       const ring = themeColor('self-ring');
@@ -42,6 +46,12 @@
             'circle-stroke-color': ring,
           },
         },
+        nameLabel({
+          id: `${SOURCE}-label`,
+          source: SOURCE,
+          filter: ['==', ['geometry-type'], 'Point'],
+          overlap: true,
+        }),
       ];
     },
   });

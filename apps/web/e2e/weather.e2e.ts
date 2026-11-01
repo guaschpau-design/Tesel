@@ -73,7 +73,7 @@ test('a warning shows where this device is and at a point picked in it', async (
   await card.getByRole('button', { name: 'Cerrar' }).click();
   await expect(card).toBeHidden();
 
-  await page.locator('.maplibregl-canvas').click({ button: 'right' });
+  await page.locator('.maplibregl-canvas').click();
   const panel = page.getByRole('region', { name: 'Punto del mapa' });
   await expect(panel).toContainText('Aviso naranja · Lluvias');
   await panel.getByText('Detalles').click();

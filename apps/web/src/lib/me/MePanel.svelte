@@ -161,10 +161,10 @@
             {@const quality = accuracyQuality(deviceLocation.fix.accuracy)}
             <p class="accuracy">
               <StatusDot tone={quality} />
-              {t('accuracyWithin', {
+              {t('gpsQuality', {
+                quality: t(QUALITY[quality]),
                 distance: formatDistance(deviceLocation.fix.accuracy, locale),
               })}
-              · {t(QUALITY[quality])}
             </p>
           {/if}
         {:else if deviceLocation.problem}

@@ -151,6 +151,7 @@ export const GLYPHS = {
   close: glyph(['M6.5 6.5l11 11M17.5 6.5l-11 11']),
   /** Opens what lies below, as a list of choices. */
   chevron: glyph(['M7 9.5l5 5 5-5']),
+  check: glyph(['M5.5 12.5l4 4 9-9']),
   file: glyph(['M6 3.5h8l4 4v13H6z', 'M14 3.5v4h4', 'M12 17.5v-6M9.5 14l2.5-2.5 2.5 2.5']),
   send: glyph(['M4 4.5l16.5 7.5L4 19.5l2.8-7.5z', 'M6.8 12h6']),
   mic: glyph([

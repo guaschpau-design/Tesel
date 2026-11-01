@@ -50,7 +50,7 @@ test('an SOS is acknowledged by the group and cancelled by its sender', async ({
   await berta.getByRole('button', { name: /^Chat/ }).click();
   await berta.getByRole('button', { name: 'SOS', exact: true }).click();
   const dialog = berta.getByRole('dialog', { name: 'Enviar un SOS' });
-  await dialog.getByLabel('Qué pasa').selectOption({ label: 'Médica' });
+  await dialog.getByRole('radio', { name: 'Médica' }).check();
   await dialog.getByLabel('Detalles (opcional)').fill('Tobillo roto');
   await expect(dialog.getByText(/Se envía tu posición/)).toBeVisible();
   await dialog.getByRole('button', { name: 'Enviar SOS' }).click();

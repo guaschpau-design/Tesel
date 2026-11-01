@@ -32,7 +32,7 @@
       .filter((call) => !call.mine)
       .map((call): AlarmMessage => ({
         title: `${t('sos')} · ${call.author}`,
-        body: [t(SOS_KINDS[call.event.kind]), call.event.text].filter(Boolean).join(' · '),
+        body: [t(SOS_KINDS[call.event.kind].label), call.event.text].filter(Boolean).join(' · '),
         tag: call.key,
       })),
   );

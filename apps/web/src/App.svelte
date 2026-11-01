@@ -242,10 +242,14 @@
       : null,
   );
 
-  /** The first launch; arriving through an invitation, it joins its group in the same step. */
+  /**
+   * The first launch. Arriving through an invitation, it joins its group in the same step; without
+   * one, it goes straight on to the ways into a group, rather than leave the user on an empty map.
+   */
   async function createIdentity(alias: string): Promise<void> {
     await session?.createIdentity(alias);
     if (incoming?.ok) await join(incoming.value);
+    else openPanel({ name: 'groups', start: 'home' });
   }
 
   async function rename(alias: string): Promise<void> {
@@ -337,7 +341,7 @@
     {/if}
 
     {#if preferences && isOpen('settings')}
-      <SettingsPanel {t} {preferences} {locale} identity={session?.identity} onclose={closePanel} />
+      <SettingsPanel {t} {preferences} {locale} onclose={closePanel} />
     {/if}
 
     {#if isOpen('connections')}

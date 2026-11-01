@@ -23,7 +23,7 @@ test('a dictated coordinate is found on the map and read in another format', asy
   // The format is remembered.
   await expect.poll(() => stored(page, 'settings', 'coordinateFormat')).toBe('mgrs');
   await page.reload();
-  await page.locator('.maplibregl-canvas').click({ button: 'right' });
+  await page.locator('.maplibregl-canvas').click();
   await expect(page.getByRole('region', { name: 'Punto del mapa' }).locator('output')).toHaveText(
     /^\d{1,2}[C-X] [A-Z]{2} \d{5} \d{5}$/,
   );

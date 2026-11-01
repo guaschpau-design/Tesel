@@ -11,7 +11,7 @@ test('a member still for too long is asked, and an SOS goes out unanswered', asy
   await berta.clock.install();
 
   await ana.getByRole('button', { name: /^Grupo:/ }).click();
-  await ana.getByText('Organizar', { exact: true }).click();
+  await ana.getByText('Equipos y seguridad', { exact: true }).click();
   const check = ana.getByRole('switch', { name: 'Aviso «¿Sigues bien?»' });
   await check.click();
   await expect(check).toHaveAttribute('aria-checked', 'true');

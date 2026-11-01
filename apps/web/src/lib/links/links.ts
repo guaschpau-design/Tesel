@@ -50,6 +50,18 @@ export function linkOf(input: LinkInput): Link {
   return { channels, level: connecting ? 'connecting' : 'none' };
 }
 
+/** The link in a word, as the header says it beside the signs of the media. */
+export function linkWord(link: Link): MessageKey {
+  switch (link.level) {
+    case 'ok':
+      return link.channels.includes('internet') ? 'linkOnline' : 'linkByRadio';
+    case 'connecting':
+      return 'linkConnecting';
+    case 'none':
+      return 'linkNone';
+  }
+}
+
 /**
  * The medium of the internet channel. Browsers do not tell 4G from 5G, so the fastest mobile data is
  * "4G/5G"; where the browser says nothing (iPhone, most computers) it is "WiFi/5G".

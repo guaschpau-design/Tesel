@@ -15,8 +15,9 @@
   import { UnencodableEvent } from '../events/event-log.ts';
   import type { Translate } from '../i18n/index.ts';
   import Dialog from '../ui/Dialog.svelte';
+  import ChoiceTiles from '../ui/ChoiceTiles.svelte';
   import { Submission } from '../ui/submission.svelte.ts';
-  import { areaStyles, SYMBOLS } from './catalog.ts';
+  import { areaStyles, styleInfo, SYMBOLS } from './catalog.ts';
   import { DRAFT_TITLES, type DraftKind } from './draft.ts';
   import SymbolIcon from './SymbolIcon.svelte';
 
@@ -72,28 +73,31 @@
     }}
   >
     {#if kind !== 'route'}
-      <fieldset>
-        <legend>{isMarker ? t('symbol') : t('shapeType')}</legend>
-        <div class="choices">
-          {#if isMarker}
-            {#each SYMBOLS as symbol (symbol.code)}
-              <label class="choice">
-                <input type="radio" name="code" value={symbol.code} bind:group={code} />
-                <SymbolIcon code={symbol.code} size={30} />
-                <span>{t(symbol.label)}</span>
-              </label>
-            {/each}
-          {:else}
-            {#each styles as style (style.code)}
-              <label class="choice">
-                <input type="radio" name="code" value={style.code} bind:group={code} />
-                <span class="swatch" style:--swatch="var(--tone-{style.tone})"></span>
-                <span>{t(style.label)}</span>
-              </label>
-            {/each}
-          {/if}
-        </div>
-      </fieldset>
+      {#if isMarker}
+        <ChoiceTiles
+          legend={t('symbol')}
+          name="code"
+          options={SYMBOLS.map((symbol) => ({ value: symbol.code, label: t(symbol.label) }))}
+          value={code}
+          onchange={(chosen: number) => (code = chosen)}
+        >
+          {#snippet picture(chosen: number)}
+            <SymbolIcon code={chosen} size={30} />
+          {/snippet}
+        </ChoiceTiles>
+      {:else}
+        <ChoiceTiles
+          legend={t('shapeType')}
+          name="code"
+          options={styles.map((style) => ({ value: style.code, label: t(style.label) }))}
+          value={code}
+          onchange={(chosen: number) => (code = chosen)}
+        >
+          {#snippet picture(chosen: number)}
+            <span class="swatch" style:--swatch="var(--tone-{styleInfo(chosen).tone})"></span>
+          {/snippet}
+        </ChoiceTiles>
+      {/if}
       {#if code === ShapeStyleCode.OPERATION_AREA}
         <p class="hint">{t('operationAreaHint')}</p>
       {/if}
@@ -118,50 +122,6 @@
 </Dialog>
 
 <style>
-  /* A grid of tiles, a pictogram over a short name, so every choice is in view at once. */
-  .choices {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-  }
-
-  .choice {
-    position: relative;
-    display: grid;
-    gap: 0.25rem;
-    justify-items: center;
-    padding: 0.4rem 0.25rem;
-    font-size: var(--text-small);
-    line-height: 1.2;
-    text-align: center;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  .choice:has(input:checked) {
-    font-weight: 600;
-    border-color: var(--accent-line);
-    box-shadow: inset 0 0 0 1px var(--accent-line);
-  }
-
-  .choice:has(input:focus-visible) {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
-  }
-
-  /* The radio button is the whole card, invisible: it keeps keyboards, screen readers and taps
-     working, and the frame shows the choice. */
-  .choice input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    cursor: pointer;
-    opacity: 0;
-  }
-
   .swatch {
     flex-shrink: 0;
     width: 1.6rem;

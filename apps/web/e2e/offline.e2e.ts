@@ -10,7 +10,7 @@ test('a downloaded area keeps working after going offline and reloading', async 
 }) => {
   await page.goto('/#map=13/39.47/-0.36');
   await chooseAlias(page, 'Ana');
-  await expect(page.getByRole('button', { name: /^Conexiones: WiFi/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Conexiones: En línea \(WiFi/ })).toBeVisible();
 
   // The service worker must be active before we go offline.
   await expect

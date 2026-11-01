@@ -54,7 +54,7 @@
   {#each calls as call (call.key)}
     {@const where = call.where}
     <MapCard label="SOS" edge="var(--danger)">
-      <strong class="caller">SOS · {call.author} · {t(SOS_KINDS[call.event.kind])}</strong>
+      <strong class="caller">SOS · {call.author} · {t(SOS_KINDS[call.event.kind].label)}</strong>
       <span class="when">{formatTime(call.event.time * 1000, locale)}</span>
       {#if call.event.text}<p>{call.event.text}</p>{/if}
       {#if where.kind === 'shared'}

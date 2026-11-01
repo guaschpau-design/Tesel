@@ -4,6 +4,7 @@ import { translator } from '../i18n/index.ts';
 import {
   channelName,
   linkOf,
+  linkWord,
   networkName,
   networkStatus,
   radioLinkOf,
@@ -34,6 +35,16 @@ describe('link', () => {
     expect(linkOf({ ...BASE, server: 'local-only', radio: 'connecting' }).level).toBe('connecting');
     expect(linkOf({ ...BASE, server: 'disconnected' })).toEqual({ channels: [], level: 'none' });
     expect(linkOf({ ...BASE, server: 'local-only' }).level).toBe('none');
+  });
+
+  it('says in a word whether the group is reached online, only by radio, or not at all', () => {
+    const t = translator('es');
+    expect(t(linkWord(linkOf({ ...BASE, radio: 'linked' })))).toBe('En línea');
+    expect(t(linkWord(linkOf({ ...BASE, server: 'disconnected', radio: 'linked' })))).toBe(
+      'Por radio',
+    );
+    expect(t(linkWord(linkOf({ ...BASE, server: 'syncing' })))).toBe('Conectando…');
+    expect(t(linkWord(linkOf({ ...BASE, server: 'disconnected' })))).toBe('Sin conexión');
   });
 
   it('falls back on the browser without a group', () => {

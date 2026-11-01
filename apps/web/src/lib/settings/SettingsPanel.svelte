@@ -3,7 +3,6 @@
      remembered. -->
 <script lang="ts">
   import CoordinateFormatSelect from '../coordinates/CoordinateFormatSelect.svelte';
-  import type { LocalIdentity } from '../identity/identity.ts';
   import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
   import { LOCALE_NAMES, nextLocale, type Locale, type Translate } from '../i18n/index.ts';
   import {
@@ -24,12 +23,10 @@
     preferences: Preferences;
     /** The language shown now. */
     locale: Locale;
-    /** This device, once it has an identity: named at the foot, for whoever has to tell it. */
-    identity: LocalIdentity | undefined;
     onclose: () => void;
   }
 
-  let { t, preferences, locale, identity, onclose }: Props = $props();
+  let { t, preferences, locale, onclose }: Props = $props();
 
   /** Now and on every later visit, until switched off again. */
   function toggleFullscreen(): void {
@@ -90,9 +87,6 @@
     </button>
     <CoordinateFormatSelect {t} format={preferences.coordinateFormat} />
   </div>
-  {#if identity}
-    <p class="hint device">{identity.alias} · {t('deviceId', { node: identity.nodeId })}</p>
-  {/if}
 </Panel>
 
 <style>
@@ -110,11 +104,6 @@
     padding: 0.55rem 0.4rem;
     text-align: left;
     border-color: transparent;
-  }
-
-  .device {
-    margin-top: 0.5rem;
-    font-size: var(--text-small);
   }
 
   .value {

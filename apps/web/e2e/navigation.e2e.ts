@@ -2,6 +2,11 @@ import { device, expect, mapIdle, openMore, test } from './helpers.ts';
 
 test('a point picked on the map tells how far it is and is navigated to', async ({ browser }) => {
   const page = await device(browser, 'Ana');
+  // A tap on the map closes what is open: first the groups panel the first launch leaves open.
+  await page
+    .getByRole('region', { name: 'Grupos' })
+    .getByRole('button', { name: 'Cerrar' })
+    .click();
   await page.getByRole('button', { name: 'Mostrar mi ubicación' }).click();
   // Wait for the map to centre on this device, whose view the URL keeps, and settle there; then
   // pick a point above it.
@@ -11,7 +16,7 @@ test('a point picked on the map tells how far it is and is navigated to', async 
   const canvas = page.locator('.maplibregl-canvas');
   const box = await canvas.boundingBox();
   if (box === null) throw new Error('no map');
-  await canvas.click({ button: 'right', position: { x: box.width / 2, y: box.height / 2 - 150 } });
+  await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - 150 } });
 
   const panel = page.getByRole('region', { name: 'Punto del mapa' });
   await expect(panel.getByText(/^\d+ m · (00\d|35\d)° N desde ti$/)).toBeVisible();

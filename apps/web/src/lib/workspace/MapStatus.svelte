@@ -33,6 +33,7 @@
   import { saveTask } from '../tasks/task-actions.ts';
   import { fieldsOf } from '../tasks/tasks.ts';
   import Notices from '../ui/Notices.svelte';
+  import { isOpen } from '../ui/panels.svelte.ts';
   import { attempt } from '../ui/submission.svelte.ts';
   import WeatherCard from '../weather/WeatherCard.svelte';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
@@ -169,7 +170,8 @@
           navigateTo({ kind: 'point', at, name });
         }}
       />
-    {:else if groupless}
+    {:else if groupless && !isOpen('groups')}
+      <!-- The groups panel offers the same ways in: the card waits while it is open. -->
       <StartCard {t} />
     {/if}
   </div>

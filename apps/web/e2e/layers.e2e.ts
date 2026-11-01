@@ -6,7 +6,7 @@ test('a hidden map layer stays hidden after the app restarts', async ({ browser 
     await page.getByRole('button', { name: 'Capas del mapa' }).click();
   };
   await openLayers();
-  const trails = page.getByRole('switch', { name: 'Recorridos' });
+  const trails = page.getByRole('switch', { name: 'Por dónde han pasado' });
   await expect(trails).toBeChecked();
   await trails.click();
   await expect(trails).not.toBeChecked();
@@ -15,7 +15,7 @@ test('a hidden map layer stays hidden after the app restarts', async ({ browser 
 
   await page.reload();
   await openLayers();
-  await expect(page.getByRole('switch', { name: 'Recorridos' })).not.toBeChecked();
+  await expect(page.getByRole('switch', { name: 'Por dónde han pasado' })).not.toBeChecked();
   await expect(page.getByRole('switch', { name: 'Miembros' })).toBeChecked();
 });
 

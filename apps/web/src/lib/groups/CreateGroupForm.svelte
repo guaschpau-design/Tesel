@@ -1,5 +1,6 @@
 <!-- Creating a group: only its name is asked. The server it uses is proposed and can be changed
-     under "Server", which most people never open: folded, it says only whether it is Tesel's. -->
+     under "Advanced options", which most people never open: folded, it says only whether it is
+     Tesel's. -->
 <script lang="ts">
   import { GROUP_NAME_MAX_BYTES } from '@tesel/protocol';
 
@@ -13,7 +14,6 @@
   interface Props {
     t: Translate;
     session: Session;
-    /** Back to the groups, once created or when giving up. */
     /** Leaves the form: created, or given up. */
     onclose: () => void;
   }
@@ -56,14 +56,11 @@
     <input bind:value={newName} maxlength={GROUP_NAME_MAX_BYTES} autofocus />
   </label>
   {#if nameTooLong}<p class="warning">{t('nameInvalid')}</p>{/if}
-  <Fold title={t('server')} summary={serverSummary} open={server === undefined}>
-    <input
-      bind:value={serverText}
-      aria-label={t('server')}
-      inputmode="url"
-      autocomplete="off"
-      placeholder="https://"
-    />
+  <Fold title={t('advancedOptions')} summary={serverSummary} open={server === undefined}>
+    <label>
+      {t('server')}
+      <input bind:value={serverText} inputmode="url" autocomplete="off" placeholder="https://" />
+    </label>
     <p class:warning={server === undefined} class:hint={server !== undefined}>
       {server === undefined ? t('serverInvalid') : t('serverHint')}
     </p>

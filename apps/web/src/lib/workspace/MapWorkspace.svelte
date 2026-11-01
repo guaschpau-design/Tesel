@@ -20,7 +20,6 @@
   import SosLayer from '../incidents/SosLayer.svelte';
   import { MAP_LAYERS, type MapLayer } from '../map/layers.ts';
   import { showPoint } from '../map/geometry.ts';
-  import { onLongPress } from '../map/long-press.ts';
   import { useStyleCredits } from '../map/style/style-credits.svelte.ts';
   import { groupPoints, StartFraming } from '../map/start-framing.ts';
   import { MapTaps } from '../map/taps.ts';
@@ -58,7 +57,7 @@
   import Pictogram from '../ui/Pictogram.svelte';
   import { deviceClock } from '../sync/device-clock.svelte.ts';
   import { useStandingNotice } from '../ui/notices.svelte.ts';
-  import { closePanel, isOpen, openPanel, togglePanel } from '../ui/panels.svelte.ts';
+  import { closePanel, isOpen, openPanel, panels, togglePanel } from '../ui/panels.svelte.ts';
   import { keepScreenAwake } from '../ui/screen-awake.svelte.ts';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
   import WeatherLayer from '../weather/WeatherLayer.svelte';
@@ -223,9 +222,12 @@
     };
   });
 
+  // A tap on an empty part of the map closes what is open, as people expect; with nothing open,
+  // it shows that point: how far it is, the way there, and what can be done there.
   onMount(() =>
-    onLongPress(map, (at) => {
-      if (!drawingOrMeasuring) inspect(at);
+    taps.onPlace((at) => {
+      if (panels.open === null) inspect(at);
+      else closePanel();
     }),
   );
 
@@ -377,7 +379,7 @@
   onfind={find}
   onmark={markAt}
 />
-<SelfLayer {map} />
+<SelfLayer {map} label={t('youOnMap')} />
 
 {#if group}
   <SosAlarm

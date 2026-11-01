@@ -42,7 +42,7 @@ test('the group log is saved, and loading it adds only what is missing', async (
   await openDiary(ana);
   const diary = ana.getByRole('region', { name: 'Diario de la operación' });
 
-  await diary.getByText('Registro cifrado').click();
+  await diary.getByText('Copia de seguridad').click();
   const download = ana.waitForEvent('download');
   await diary.getByRole('button', { name: 'Guardar copia' }).click();
   const saved = await readFile(await (await download).path(), 'utf8');

@@ -74,7 +74,7 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
       case 'chat':
         return t('diaryChat', { text: event.text });
       case 'sos':
-        return withText(t('diarySos', { kind: t(SOS_KINDS[event.kind]) }), event.text);
+        return withText(t('diarySos', { kind: t(SOS_KINDS[event.kind].label) }), event.text);
       case 'sos-cancel': {
         const sos = state.sos.get(eventRefKey(event.sos));
         return sos ? t('diarySosCancelled', { name: aliasOf(state, sos.origin) }) : null;

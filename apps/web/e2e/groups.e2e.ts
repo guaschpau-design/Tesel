@@ -6,7 +6,10 @@ import { chooseAlias, createGroup, expect, test } from './helpers.ts';
 
 async function invitationLink(page: Page, role: 'miembro' | 'coordinador'): Promise<string> {
   await page.getByRole('button', { name: 'Invitar' }).click();
-  await page.getByRole('radio', { name: role }).click();
+  // A member by default; a coordinator is the seldom choice below.
+  if (role === 'coordinador') {
+    await page.getByRole('switch', { name: /^Que entre como coordinador/ }).click();
+  }
   await expect(page.getByRole('img', { name: 'Código QR de la invitación' })).toBeVisible();
   const link = await page.getByLabel('Enlace de invitación').inputValue();
   await page.getByRole('button', { name: 'Listo' }).click();

@@ -22,23 +22,41 @@ export type MapFlag = (typeof MAP_FLAGS)[number];
 
 export type LayerSwitch = MapLayer | MapFlag;
 
-/** Every switch of the layers panel, in its order: the team's own first, then the map's. */
-export const LAYER_SWITCHES: readonly {
+export interface LayerSwitchInfo {
   readonly name: LayerSwitch;
   readonly label: MessageKey;
   readonly icon: GlyphName;
+}
+
+/**
+ * Every switch of the layers panel, in its order and in two groups: what the group puts on the map,
+ * then what the map itself can tell about the place.
+ */
+export const LAYER_GROUPS: readonly {
+  readonly label: MessageKey;
+  readonly switches: readonly LayerSwitchInfo[];
 }[] = [
-  { name: 'members', label: 'layerMembers', icon: 'person' },
-  { name: 'objects', label: 'layerObjects', icon: 'pin' },
-  { name: 'tasks', label: 'layerTasks', icon: 'task' },
-  { name: 'reports', label: 'layerReports', icon: 'pushpin' },
-  { name: 'trails', label: 'layerTrails', icon: 'trail' },
-  { name: 'services', label: 'layerServices', icon: 'cross' },
-  { name: 'weather', label: 'layerWeather', icon: 'cloud' },
-  { name: 'relief', label: 'layerRelief', icon: 'relief' },
-  { name: 'cadastre', label: 'layerCadastre', icon: 'parcel' },
-  { name: 'radar', label: 'layerRadar', icon: 'radar' },
-  { name: 'grid', label: 'layerGrid', icon: 'grid' },
+  {
+    label: 'layersOfGroup',
+    switches: [
+      { name: 'members', label: 'layerMembers', icon: 'person' },
+      { name: 'objects', label: 'layerObjects', icon: 'pin' },
+      { name: 'tasks', label: 'layerTasks', icon: 'task' },
+      { name: 'reports', label: 'layerReports', icon: 'pushpin' },
+      { name: 'trails', label: 'layerTrails', icon: 'trail' },
+    ],
+  },
+  {
+    label: 'layersOfMap',
+    switches: [
+      { name: 'services', label: 'layerServices', icon: 'cross' },
+      { name: 'weather', label: 'layerWeather', icon: 'cloud' },
+      { name: 'relief', label: 'layerRelief', icon: 'relief' },
+      { name: 'cadastre', label: 'layerCadastre', icon: 'parcel' },
+      { name: 'radar', label: 'layerRadar', icon: 'radar' },
+      { name: 'grid', label: 'layerGrid', icon: 'grid' },
+    ],
+  },
 ];
 
 export function isFlag(name: LayerSwitch): name is MapFlag {

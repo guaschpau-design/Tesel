@@ -4,8 +4,8 @@ import { device, expect, shareAs, test, twoMembers } from './helpers.ts';
 import { SERVER_URL } from './ports.ts';
 
 test('new groups propose the build’s own server', async ({ browser }) => {
+  // The first launch leaves the groups panel open on the ways into a group.
   const ana = await device(browser, 'Ana');
-  await ana.getByRole('button', { name: 'Grupo: Sin grupo' }).click();
   await ana
     .getByRole('region', { name: 'Grupos' })
     .getByRole('button', { name: 'Crear grupo' })

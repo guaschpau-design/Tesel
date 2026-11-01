@@ -52,12 +52,14 @@ export async function device(
   return page;
 }
 
-/** Creates a group on the test server, from the map's start card, in the groups panel that stays open. */
+/**
+ * Creates a group on the test server from the groups panel, and leaves the panel open on it. The
+ * first launch leaves the panel open; after a reload it is opened from the top bar.
+ */
 export async function createGroup(page: Page, name: string): Promise<void> {
-  await page
-    .getByRole('region', { name: 'Para empezar' })
-    .getByRole('button', { name: 'Crear grupo' })
-    .click();
+  const panel = page.getByRole('region', { name: 'Grupos' });
+  if (!(await panel.isVisible())) await page.getByRole('button', { name: /^Grupo: / }).click();
+  await panel.getByRole('button', { name: 'Crear grupo' }).click();
   await page.getByLabel('Nombre del grupo').fill(name);
   await page.getByRole('button', { name: 'Crear', exact: true }).click();
 }

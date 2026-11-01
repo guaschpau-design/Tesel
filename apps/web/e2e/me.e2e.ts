@@ -20,9 +20,11 @@ test('a member’s profile, status and equipment reach the others', async ({ bro
   // Berta says who she is, that she is resting and what she carries.
   await berta.getByRole('button', { name: /^Yo/ }).click();
   const me = berta.getByRole('region', { name: 'Yo' });
-  await me.getByLabel('Perfil').selectOption({ label: 'Protección Civil' });
   await me.getByRole('radio', { name: 'En descanso' }).click();
   await expect(me.getByRole('radio', { name: 'En descanso' })).toBeChecked();
+  // The rest, seldom changed, waits under one line.
+  await me.getByText('Perfil, batería, radio y equipo').click();
+  await me.getByLabel('Perfil').selectOption({ label: 'Protección Civil' });
   await me.getByRole('button', { name: 'Botiquín' }).click();
   await me.getByRole('button', { name: 'Agua' }).click();
   await expect(me.getByRole('button', { name: 'Agua' })).toHaveAttribute('aria-pressed', 'true');
@@ -47,6 +49,7 @@ test('much equipment keeps the panel as narrow as a phone', async ({ browser }) 
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
+  await me.getByText('Perfil, batería, radio y equipo').click();
   const chips = me.locator('button[aria-pressed="false"]');
   for (let left = await chips.count(); left > 0; left -= 1) await chips.first().click();
   const sideways = await me.evaluate((panel) => panel.scrollWidth - panel.clientWidth);
@@ -59,6 +62,7 @@ test('Me says whether a LoRa radio keeps this person in touch, and leads to link
   const page = await device(browser, 'Ana');
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
+  await me.getByText('Perfil, batería, radio y equipo').click();
   await expect(me.getByText('No conectada')).toBeVisible();
   // Not something to pick by hand: the app knows whether a radio is linked.
   await expect(me.getByRole('button', { name: /LoRa/ })).toHaveCount(0);
@@ -107,5 +111,5 @@ test('a member not on the map is told so, and shows themselves in one tap', asyn
   await row.click();
   const card = ana.getByRole('region', { name: 'Berta' });
   await expect(card.getByRole('button', { name: 'Guíame' })).toBeVisible();
-  await expect(card).toContainText('Último dato');
+  await expect(card).toContainText('Último contacto');
 });

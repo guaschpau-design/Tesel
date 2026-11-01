@@ -41,6 +41,18 @@ describe('taps on the map', () => {
     expect(opened).toEqual(['member']);
   });
 
+  it('go to the place where they land when they hit no feature', () => {
+    const { map, taps, opened } = setUp();
+    taps.onFeature(['members'], () => opened.push('member'));
+    const places: LatLon[] = [];
+    taps.onPlace((at) => places.push(at));
+    map.tap(39.47, -0.37);
+    map.drawn.set('members', { id: 'berta' });
+    map.tap(39.48, -0.36);
+    expect(places).toEqual([{ lat: 39.47, lon: -0.37 }]);
+    expect(opened).toEqual(['member']);
+  });
+
   it('open nothing while features are not to be opened', () => {
     let tappable = false;
     const { map, taps, opened } = setUp(() => tappable);

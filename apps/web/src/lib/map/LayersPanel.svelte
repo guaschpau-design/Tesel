@@ -1,5 +1,6 @@
-<!-- The map under everything, and what is shown on it: pictures to choose the map, every layer as
-     a tile that is lit while it is shown, so what is on is seen at a glance, and the credits of the
+<!-- The map under everything, and what is shown on it: pictures to choose the map, then every layer
+     as a tile, those of the group apart from those of the map; a tile is lit and ticked while it
+     is shown, so what is on is seen at a glance. Last, the credits of the
      map's data and the licences of the third-party code the app ships, in one line of small print.
      This device and SOS calls are always shown. -->
 <script lang="ts">
@@ -9,13 +10,7 @@
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
   import BaseMapPreview from './BaseMapPreview.svelte';
-  import {
-    isFlag,
-    LAYER_SWITCHES,
-    type LayerSwitch,
-    type MapFlag,
-    type MapLayer,
-  } from './layers.ts';
+  import { isFlag, LAYER_GROUPS, type LayerSwitch, type MapFlag, type MapLayer } from './layers.ts';
   import { BASE_MAPS, type BaseMap } from './style/style.ts';
 
   interface Props {
@@ -65,19 +60,26 @@
       </button>
     {/each}
   </div>
-  <div class="tiles section">
-    {#each LAYER_SWITCHES as layer (layer.name)}
-      <button
-        class="layer"
-        role="switch"
-        aria-checked={isOn(layer.name)}
-        onclick={() => void toggle(layer.name)}
-      >
-        <Pictogram name={layer.icon} size={20} />
-        <span>{t(layer.label)}</span>
-      </button>
-    {/each}
-  </div>
+  {#each LAYER_GROUPS as group (group.label)}
+    <section class="section" aria-label={t(group.label)}>
+      <h3>{t(group.label)}</h3>
+      <div class="tiles">
+        {#each group.switches as layer (layer.name)}
+          {@const on = isOn(layer.name)}
+          <button
+            class="layer"
+            role="switch"
+            aria-checked={on}
+            onclick={() => void toggle(layer.name)}
+          >
+            {#if on}<span class="tick"><Pictogram name="check" size={14} /></span>{/if}
+            <Pictogram name={layer.icon} size={20} />
+            <span>{t(layer.label)}</span>
+          </button>
+        {/each}
+      </div>
+    </section>
+  {/each}
   <p class="credits section">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -- the credits are constants of the app -->
     {@html credits.join(' · ')} ·
@@ -118,7 +120,29 @@
   /* A layer that is shown is lit in the accent; one that is off fades, as a switch that is off
      does. */
   .layer {
+    position: relative;
     min-height: 4rem;
+  }
+
+  h3 {
+    margin: 0 0 0.4rem;
+    color: var(--muted);
+    font-size: var(--text-small);
+    font-weight: 600;
+  }
+
+  /* On, a tile is ticked in its corner as well as lit: the two states differ by more than a shade. */
+  .tick {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    display: grid;
+    place-items: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--surface);
+    background: var(--accent-line);
+    border-radius: 50%;
   }
 
   .layer[aria-checked='true'] {

@@ -35,7 +35,7 @@
   --chrome-pressed: rgb(230 235 232 / 14%);
   /* What has the keyboard's focus is ringed in the line colour; on the chrome, in lime (.chrome). */
   --focus: var(--accent-line);
-  /* Links, such as the user guide's: the line colour, underlined. */
+  /* Links: the line colour, underlined. */
   --link: var(--accent-line);
 
   /* The one action on a screen: lime, with ink on it. Lines and outlines on light surfaces take

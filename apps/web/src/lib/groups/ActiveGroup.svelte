@@ -65,6 +65,7 @@
     title={t('organize')}
     summary={checkIn ? t('organizeSummaryCheckIn') : t('organizeSummary')}
   >
+    <p class="hint">{t('teamsHint')}</p>
     <button class="new-team" onclick={() => (editing = { team: null })}>{t('teamNew')}</button>
     <SwitchRow
       icon="person"

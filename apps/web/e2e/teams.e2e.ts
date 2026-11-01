@@ -7,7 +7,7 @@ test('a team is made, handed a task, and its members see it as theirs', async ({
 
   // Ana makes the team "Norte", with Berta in it.
   await ana.getByRole('button', { name: /^Grupo:/ }).click();
-  await ana.getByText('Organizar', { exact: true }).click();
+  await ana.getByText('Equipos y seguridad', { exact: true }).click();
   await ana.getByRole('button', { name: 'Nuevo equipo' }).click();
   const form = ana.getByRole('dialog', { name: 'Nuevo equipo' });
   await form.getByLabel('Nombre del equipo').fill('Norte');
