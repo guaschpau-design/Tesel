@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tesel · Consciencia situacional para equipos</title>
+    <title>Tesel · El mapa común del equipo, también cuando cae la red</title>
     <meta
       name="description"
-      content="Tesel reúne en un mapa común las posiciones, los mensajes, las tareas y los incidentes de todo el equipo, en tiempo real, con una red de respaldo propia cuando caen la telefonía o la electricidad. Software libre, cifrado y sin cuentas."
+      content="Tesel reúne en un mapa común las posiciones, los mensajes, las tareas y los SOS de todo el equipo. Con internet y, cuando la red cae, por radios de bolsillo que se pasan los mensajes entre ellas. Gratuita, sin registro y cifrada."
     />
     <meta name="theme-color" content="#10202c" />
     <link rel="icon" href="app/icons/favicon.svg?v=5f378b66" type="image/svg+xml" />
@@ -22,6 +22,7 @@
           ><img src="img/lockup-pale.svg" width="622" height="150" alt="Tesel"
         /></a>
         <nav aria-label="Principal">
+          <a class="optional" href="#profesional">Profesional</a>
           <a class="button small" href="app/">Abrir<span class="optional">&nbsp;la app</span></a>
           <span class="lang" role="group" aria-label="Idioma">
             <span aria-current="true">ES</span>
@@ -47,30 +48,150 @@
         </picture>
         <div class="wrap">
           <p class="eyebrow">Coordinación de equipos sobre el terreno</p>
-          <h1>Consciencia situacional para equipos.</h1>
+          <h1>El mapa común del equipo. También cuando cae la red.</h1>
           <p class="lead">
-            Posiciones, mensajes, tareas e incidentes de todo el equipo en un mapa común y en tiempo
-            real. Con una red de respaldo propia que sigue funcionando cuando caen la telefonía o la
-            electricidad.
+            Dónde está cada uno, qué está pasando y quién hace qué, en un mismo mapa y al momento.
+            Con internet y, cuando la cobertura falla, por radios de bolsillo que se pasan los
+            mensajes entre ellas.
           </p>
           <div class="actions">
             <a class="button" href="app/">Abrir Tesel</a>
-            <a class="button quiet" href="#capacidades">Ver capacidades</a>
+            <a class="button quiet" href="#sin-red">Cómo sigue sin red</a>
           </div>
           <ul class="fine">
-            <li>Software libre</li>
-            <li>Cifrado de extremo a extremo</li>
-            <li>Sin cuentas</li>
+            <li>Gratuita</li>
+            <li>Sin registro</li>
+            <li>Cifrada</li>
           </ul>
         </div>
         <p class="credit">Foto: Maël Balland</p>
       </div>
 
+      <section class="paper" id="filosofia">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Por qué Tesel</p>
+            <h2>Hecha para el peor día.</h2>
+            <p>
+              En una emergencia, lo primero que falla es la red: antenas saturadas, cortes de luz,
+              valles sin cobertura. Justo cuando un equipo más necesita saber de los suyos. Tesel
+              nace para que eso no lo pare.
+            </p>
+          </div>
+          <ul class="principles">
+            <li>
+              <h3>Para cualquiera</h3>
+              <p>
+                Gratuita y sin registro: se abre en el navegador, se escribe un nombre y ya. Sin
+                correo, sin teléfono, sin contraseña.
+              </p>
+            </li>
+            <li>
+              <h3>Se entiende sola</h3>
+              <p>
+                Pensada para usarse con prisa y con nervios: en un par de minutos se sabe cómo
+                funciona, sin manual ni formación.
+              </p>
+            </li>
+            <li>
+              <h3>No depende de una sola red</h3>
+              <p>
+                Usa internet cuando lo hay y radio cuando no. Lo que se escribe sin conexión sale en
+                cuanto hay un camino.
+              </p>
+            </li>
+            <li>
+              <h3>Lo del equipo, para el equipo</h3>
+              <p>
+                Todo va cifrado con una clave que solo tiene el grupo. Nadie más puede leerlo, ni
+                siquiera nosotros.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="ink" id="sin-red">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Comunicaciones resilientes</p>
+            <h2>Un segundo camino, por radio.</h2>
+            <p>
+              La radio no sustituye a internet: lo complementa. Es un canal alternativo que no
+              depende de antenas de telefonía ni de la red eléctrica, y que Tesel usa solo, sin que
+              nadie tenga que cambiar nada.
+            </p>
+          </div>
+          <ol class="channels">
+            <li>
+              <img
+                src="img/net-coverage.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="Tres móviles conectados a una antena de telefonía, y esta a un servidor."
+              />
+              <h3>Con cobertura</h3>
+              <p>
+                Como cualquier app de mensajería: por wifi o datos móviles, a través del servidor,
+                que reenvía todo cifrado sin poder leerlo.
+              </p>
+            </li>
+            <li>
+              <img
+                src="img/net-radio.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="Una antena de telefonía tachada y tres radios de bolsillo en unas colinas que se pasan los mensajes de una a otra, con un móvil en cada extremo."
+              />
+              <h3>Sin cobertura</h3>
+              <p>
+                Cada móvil se une por Bluetooth a una radio de bolsillo. Las radios se pasan los
+                mensajes entre ellas, de una a otra, a kilómetros de distancia.
+              </p>
+            </li>
+            <li>
+              <img
+                src="img/net-bridge.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="Un móvil con radio, resaltado en el centro, unido a la vez a una antena de telefonía y a otra radio lejana."
+              />
+              <h3>Las dos a la vez</h3>
+              <p>
+                Un móvil con radio y con cobertura hace de puente sin configurar nada: lo que llega
+                por radio sube a internet y al revés. Así, quien está sin cobertura sigue al tanto.
+              </p>
+            </li>
+          </ol>
+          <ul class="facts">
+            <li>
+              <strong>Todo viaja por radio:</strong> SOS, mensajes, posiciones, marcas en el mapa,
+              tareas y partes.
+            </li>
+            <li>
+              <strong>Lo urgente primero:</strong> la radio envía pocos datos, así que el SOS pasa
+              delante de los mensajes, y estos delante de las posiciones.
+            </li>
+            <li>
+              <strong>Cuantas más radios, más lejos:</strong> cada una repite lo que oye. De un
+              kilómetro en ciudad a decenas entre puntos altos.
+            </li>
+            <li>
+              <strong>Sin licencias ni operadoras:</strong> banda libre de 868 MHz en Europa, y
+              radios que gastan muy poca energía.
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <section class="paper" id="capacidades">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Capacidades</p>
-            <h2>Una imagen operativa común.</h2>
+            <p class="eyebrow">Qué hace</p>
+            <h2>Una imagen común de la situación.</h2>
             <p>
               Cada miembro ve lo mismo, en el mismo mapa y al mismo tiempo: dónde está el equipo,
               qué está pasando y qué se ha decidido.
@@ -98,122 +219,58 @@
           </figure>
           <ol class="capabilities">
             <li>
-              <h3>Seguimiento del equipo</h3>
+              <h3>El equipo en el mapa</h3>
               <p>
-                La posición de cada miembro en tiempo real. Cada cual decide cuándo compartirla,
-                pausarla u ocultarla.
+                La posición de cada uno, su estado y lo que lleva. Cada cual decide cuándo compartir
+                dónde está.
               </p>
             </li>
             <li>
               <h3>SOS con confirmación</h3>
               <p>
-                Una petición de ayuda, con su tipo y su posición, llega a todo el equipo al
-                instante. Quien la emite ve quién la ha recibido.
+                Una petición de ayuda llega a todo el equipo con su posición. Quien la pide ve quién
+                la ha recibido, y los demás pueden ir hacia allí guiados.
               </p>
             </li>
             <li>
-              <h3>Mensajería del equipo</h3>
+              <h3>Chat y partes</h3>
               <p>
-                Mensajes breves, pensados para viajar también por radio. Lo que se escribe sin
-                cobertura sale en cuanto hay enlace.
+                Mensajes cortos, también dictados, y partes de situación con las víctimas, los
+                peligros y lo que hace falta.
               </p>
             </li>
             <li>
-              <h3>Tareas y partes</h3>
+              <h3>Tareas y batidas</h3>
               <p>
-                Quien coordina reparte tareas a personas o equipos, con su lugar en el mapa. Cada
-                cual informa de lo que encuentra con partes de situación.
+                Encargos para personas o equipos, con su lugar en el mapa, y batidas de búsqueda
+                repartidas en franjas.
               </p>
             </li>
             <li>
-              <h3>Marcado del terreno</h3>
+              <h3>El terreno marcado</h3>
               <p>
-                Sectores, puntos de encuentro, peligros y rutas, compartidos y editables por todo el
-                equipo.
+                Sectores, puntos de encuentro, rutas y zonas de peligro que avisan a quien entra en
+                ellas.
               </p>
             </li>
             <li>
-              <h3>Cartografía sin conexión</h3>
-              <p>
-                El mapa de la zona de operaciones, descargado de antemano. Sigue disponible aunque
-                no haya red.
-              </p>
+              <h3>Mapas sin conexión</h3>
+              <p>El mapa de la zona, descargado antes de salir, para verlo con detalle sin red.</p>
             </li>
           </ol>
-        </div>
-      </section>
-
-      <section class="ink" id="conectividad">
-        <div class="wrap">
-          <div class="section-head">
-            <p class="eyebrow">Conectividad</p>
-            <h2>Sigue funcionando cuando cae la red.</h2>
-            <p>
-              La misma app y los mismos datos, sea cual sea la infraestructura disponible. Tesel usa
-              el enlace que encuentra y sincroniza todo al recuperar la conexión.
-            </p>
-          </div>
-          <div class="routes">
-            <div class="route">
-              <div>
-                <h3>Internet</h3>
-                <p>
-                  Con cobertura móvil o wifi, a través del servidor de Tesel o del vuestro. El
-                  servidor reenvía los datos cifrados sin poder leerlos.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Dispositivo</span><span class="line"></span>
-                <span class="node hub">Servidor</span><span class="line"></span>
-                <span class="node">Equipo</span>
-              </div>
-            </div>
-            <div class="route">
-              <div>
-                <h3>Malla de radio LoRa</h3>
-                <p>
-                  Cada móvil se enlaza por Bluetooth con una radio de bolsillo. Las radios
-                  retransmiten los mensajes entre ellas a kilómetros de distancia, sin antenas de
-                  telefonía.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Dispositivo</span><span class="line"></span>
-                <span class="node hub">Radio</span><span class="line air"></span>
-                <span class="node">Malla</span>
-              </div>
-            </div>
-            <div class="route">
-              <div>
-                <h3>Puente automático</h3>
-                <p>
-                  Un móvil con radio y con cobertura une las dos redes sin configurar nada: lo que
-                  llega por radio sube al servidor y lo del servidor sale por radio. Quien está sin
-                  cobertura sigue al tanto de todo.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Malla</span><span class="line air"></span>
-                <span class="node hub">Puente</span><span class="line"></span>
-                <span class="node">Servidor</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
       <section class="paper" id="para-quien">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Ámbitos</p>
+            <p class="eyebrow">Para quién</p>
             <h2>Para equipos que trabajan sobre el terreno.</h2>
           </div>
           <ul class="audiences">
             <li>
               <h3>Protección civil</h3>
-              <p>
-                Agrupaciones de voluntariado y servicios municipales, en emergencias y preventivos.
-              </p>
+              <p>Agrupaciones de voluntariado, en emergencias y en preventivos.</p>
             </li>
             <li>
               <h3>Búsqueda y rescate</h3>
@@ -224,8 +281,8 @@
               <p>Equipos desplegados donde la infraestructura falla o no existe.</p>
             </li>
             <li>
-              <h3>Eventos y dispositivos</h3>
-              <p>Seguridad, sanitarios y organización en carreras, festivales y concentraciones.</p>
+              <h3>Eventos</h3>
+              <p>Seguridad, sanitarios y organización en carreras, fiestas y concentraciones.</p>
             </li>
             <li>
               <h3>Montaña y expediciones</h3>
@@ -235,94 +292,118 @@
         </div>
       </section>
 
-      <section class="paper" id="despliegue">
+      <section class="paper" id="empieza">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Despliegue</p>
-            <h2>Operativo en tres pasos.</h2>
+            <p class="eyebrow">Empieza ahora</p>
+            <h2>En marcha en un minuto.</h2>
             <p>
-              Sin instalaciones ni altas. Lo que lleva tiempo es practicar, y conviene hacerlo
-              antes.
+              Funciona en el navegador de cualquier móvil, tablet u ordenador. Sin tiendas de
+              aplicaciones, y se actualiza sola.
             </p>
           </div>
           <ol class="steps">
             <li>
-              <h3>Crea el equipo</h3>
+              <h3>Abre Tesel</h3>
               <p>
-                Quien coordina crea el grupo e invita con un enlace o un código QR. Cada miembro
-                solo elige su nombre.
+                Entra en <a href="app/">tesel.eu/app</a> y escribe tu nombre. Para tenerla a mano,
+                añádela a la pantalla de inicio desde el menú del navegador.
               </p>
             </li>
             <li>
-              <h3>Prepara la zona</h3>
+              <h3>Crea el grupo</h3>
               <p>
-                Descargad el mapa de la zona de operaciones con wifi y, si usáis radio, enlazadla
-                con el móvil.
+                Quien coordina lo crea e invita al resto con un código QR o un enlace. Quien lo
+                abre, entra.
               </p>
             </li>
             <li>
-              <h3>Haz un simulacro</h3>
+              <h3>Prepárate para quedarte sin red</h3>
               <p>
-                Practicad posiciones, SOS y tareas un día tranquilo. Una emergencia no es el momento
-                de aprender una herramienta.
+                Descarga el mapa de tu zona con wifi y, si tenéis radios, únelas al móvil. Y
+                practicad un día tranquilo.
               </p>
             </li>
           </ol>
+          <a class="button" href="app/">Abrir Tesel</a>
         </div>
       </section>
 
-      <section class="ink" id="empieza">
-        <div class="wrap get">
+      <section class="ink" id="profesional">
+        <div class="wrap pro">
           <div>
-            <p class="eyebrow">Empieza ahora</p>
-            <h2>Funciona en el navegador.</h2>
-            <p>
-              En cualquier móvil, tablet u ordenador, desde
-              <a href="app/">tesel.eu/app</a>. Sin tiendas de aplicaciones, y se actualiza sola.
+            <p class="eyebrow">Tesel Profesional <span class="soon">Próximamente</span></p>
+            <h2>Para ayuntamientos y organismos públicos.</h2>
+            <p class="lead">
+              La misma app, con una red de radio propia y un servicio a medida, para que tu
+              territorio esté preparado antes de que haga falta.
             </p>
-            <a class="button" href="app/">Abrir Tesel</a>
+            <figure>
+              <img
+                src="img/pro-network.svg"
+                width="520"
+                height="340"
+                loading="lazy"
+                alt="Un municipio visto desde arriba, con tres repetidores de radio en puntos altos, cada uno con el área que cubre, y el equipo repartido por el territorio."
+              />
+            </figure>
           </div>
-          <div>
-            <h3>Instálala como una app</h3>
-            <ul>
-              <li>Android, con Chrome: menú ⋮, «Añadir a pantalla de inicio».</li>
-              <li>iPhone, con Safari: botón Compartir, «Añadir a pantalla de inicio».</li>
-              <li>
-                Ordenador, con Chrome o Edge: el icono de instalar en la barra de direcciones.
-              </li>
-            </ul>
-            <p class="note">
-              Apps nativas para Android e iOS en desarrollo: posición en segundo plano, SOS con la
-              app cerrada y radio también en iPhone.
-            </p>
-          </div>
+          <ul class="offer">
+            <li>
+              <h3>Red de radio propia</h3>
+              <p>
+                Repetidores y nodos LoRa en puntos altos del municipio, dimensionados según la
+                superficie y el número de efectivos.
+              </p>
+            </li>
+            <li>
+              <h3>Servidor dedicado</h3>
+              <p>
+                Acceso con contraseña, trazabilidad y registro de misiones, y los datos alojados
+                según la normativa que os aplique.
+              </p>
+            </li>
+            <li>
+              <h3>Con vuestra identidad</h3>
+              <p>
+                Una dirección propia fácil de recordar, vuestras capas cartográficas y vuestros
+                logotipos.
+              </p>
+            </li>
+            <li>
+              <h3>Formación y simulacros</h3>
+              <p>Con vuestros equipos y en vuestro territorio.</p>
+            </li>
+            <li>
+              <h3>Sostenimiento</h3>
+              <p>Mantenimiento y reposición de equipos, y la app siempre al día.</p>
+            </li>
+          </ul>
         </div>
       </section>
 
       <section class="paper" id="privacidad">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Seguridad</p>
-            <h2>Privacidad por diseño.</h2>
+            <p class="eyebrow">Privacidad</p>
+            <h2>Lo que pasa en el equipo, se queda en el equipo.</h2>
           </div>
           <ul class="principles">
             <li>
-              <h3>Sin cuentas</h3>
+              <h3>Sin registro</h3>
               <p>Ni correo, ni teléfono, ni contraseña. Cada miembro solo elige un nombre.</p>
             </li>
             <li>
               <h3>Cifrado de extremo a extremo</h3>
-              <p>La clave solo la tiene el equipo. El servidor no puede leer nada.</p>
+              <p>La clave solo la tiene el grupo. El servidor no puede leer nada.</p>
+            </li>
+            <li>
+              <h3>Tu posición, cuando tú quieras</h3>
+              <p>Solo se comparte si lo eliges, y se deja de compartir con un toque.</p>
             </li>
             <li>
               <h3>Sin rastreo</h3>
               <p>Sin anuncios, sin analítica y sin registros de quién se conecta.</p>
-            </li>
-            <li>
-              <h3>Código abierto</h3>
-              <p>
-                Licencia europea EUPL. Cualquiera puede auditarlo o desplegar su propio servidor.
-              </p>
             </li>
           </ul>
           <p class="aside">Tesel no sustituye al 112. Si puedes llamar, llama.</p>
@@ -333,43 +414,48 @@
         <div class="wrap">
           <div class="section-head">
             <p class="eyebrow">Preguntas</p>
-            <h2>Antes de desplegarlo.</h2>
+            <h2>Antes de empezar.</h2>
           </div>
           <div class="questions">
             <details>
               <summary>¿Cuesta algo?</summary>
-              <p>No, y no va a costar. Solo las radios, si decidís usarlas.</p>
+              <p>No. Tesel es gratuita y sin registro. Solo pagaríais las radios, si las usáis.</p>
             </details>
             <details>
               <summary>¿Necesitamos radios?</summary>
               <p>
-                No. Con cobertura, Tesel funciona sin nada más. Las radios son para cuando no la
-                hay.
+                No. Con cobertura, Tesel funciona sin nada más. Las radios son el plan B para cuando
+                la red falla: conviene tenerlas preparadas antes.
               </p>
             </details>
             <details>
-              <summary>¿Qué radios son compatibles?</summary>
+              <summary>¿Tiene que llevar radio todo el mundo?</summary>
               <p>
-                Radios LoRa con MeshCore y su programa «Companion Bluetooth». Estamos validándolas
-                en campo y publicaremos aquí los modelos recomendados.
+                No. Quien lleva radio sigue en contacto aunque no haya cobertura. Quien no, recibe
+                lo que llegó por radio en cuanto tiene cobertura, a través de los puentes.
+              </p>
+            </details>
+            <details>
+              <summary>¿Qué radios sirven?</summary>
+              <p>
+                Radios LoRa con el programa MeshCore «Companion Bluetooth». Estamos validándolas en
+                campo y publicaremos aquí los modelos recomendados.
               </p>
             </details>
             <details>
               <summary>¿Funciona en iPhone?</summary>
               <p>
-                Sí, con internet. Safari no permite conectar una radio por Bluetooth; para eso
-                llegará la app nativa.
+                Sí. Para unir una radio por Bluetooth, en iPhone hay que abrir Tesel en el navegador
+                Bluefy, porque Safari no lo permite. Es una solución provisional que aún estamos
+                comprobando.
               </p>
             </details>
             <details>
-              <summary>¿Podemos usar nuestro propio servidor?</summary>
+              <summary>¿Y si un ayuntamiento quiere su propia red?</summary>
               <p>
-                Sí. El servidor es software libre y funciona en un ordenador modesto o en la nube.
+                Para eso preparamos <a href="#profesional">Tesel Profesional</a>: repetidores,
+                servidor dedicado, formación y mantenimiento.
               </p>
-            </details>
-            <details>
-              <summary>¿Quién está detrás?</summary>
-              <p>Un proyecto ciudadano de software libre, con licencia europea EUPL-1.2.</p>
             </details>
           </div>
         </div>
@@ -379,7 +465,7 @@
     <footer class="ink">
       <div class="wrap">
         <img src="img/lockup-pale.svg" width="622" height="150" alt="Tesel" />
-        <p>Software libre con licencia EUPL-1.2.</p>
+        <p>Gratuita y sin registro.</p>
         <nav aria-label="Enlaces">
           <a href="en/" hreflang="en" lang="en">English</a>
         </nav>

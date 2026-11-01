@@ -93,3 +93,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0085](0085-one-guide.md)                            | One guide: the help and the guide become one page                                           | Superseded by 0086                                      |
 | [0086](0086-no-guide.md)                             | No user guide: the app explains itself                                                      | Accepted                                                |
 | [0087](0087-explained-where-used.md)                 | The app explains itself where it is used                                                    | Accepted                                                |
+| [0088](0088-home-page-radio-and-professional.md)     | The home page: the radio as a second way, and Tesel Profesional                             | Accepted                                                |

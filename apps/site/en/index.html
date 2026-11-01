@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tesel · Situational awareness for teams</title>
+    <title>Tesel · The team's shared map, even when the network fails</title>
     <meta
       name="description"
-      content="Tesel brings the whole team's positions, messages, tasks and incidents together on one shared map, in real time, with a backup network of its own for when phone networks or the power go down. Free software, encrypted, no accounts."
+      content="Tesel brings the whole team's positions, messages, tasks and SOS calls together on one shared map. Over the internet and, when the network fails, through pocket radios that pass messages on to each other. Free, no sign-up, encrypted."
     />
     <meta name="theme-color" content="#10202c" />
     <link rel="icon" href="../app/icons/favicon.svg?v=5f378b66" type="image/svg+xml" />
@@ -22,6 +22,7 @@
           ><img src="../img/lockup-pale.svg" width="622" height="150" alt="Tesel"
         /></a>
         <nav aria-label="Main">
+          <a class="optional" href="#professional">Professional</a>
           <a class="button small" href="../app/">Open<span class="optional">&nbsp;the app</span></a>
           <span class="lang" role="group" aria-label="Language">
             <a href="../" hreflang="es" lang="es" aria-label="Español">ES</a>
@@ -46,31 +47,152 @@
           />
         </picture>
         <div class="wrap">
-          <p class="eyebrow">Coordination for teams in the field</p>
-          <h1>Situational awareness for teams.</h1>
+          <p class="eyebrow">Coordinating teams in the field</p>
+          <h1>The team's shared map. Even when the network fails.</h1>
           <p class="lead">
-            The whole team's positions, messages, tasks and incidents on one shared map, in real
-            time. With a backup network of its own that keeps working when phone networks or the
-            power go down.
+            Where everyone is, what is happening and who is doing what, on one map and at once. Over
+            the internet and, when coverage fails, through pocket radios that pass messages on to
+            each other.
           </p>
           <div class="actions">
             <a class="button" href="../app/">Open Tesel</a>
-            <a class="button quiet" href="#capabilities">See capabilities</a>
+            <a class="button quiet" href="#no-network">How it carries on</a>
           </div>
           <ul class="fine">
-            <li>Free software</li>
-            <li>End-to-end encrypted</li>
-            <li>No accounts</li>
+            <li>Free</li>
+            <li>No sign-up</li>
+            <li>Encrypted</li>
           </ul>
         </div>
         <p class="credit">Photo: Maël Balland</p>
       </div>
 
+      <section class="paper" id="why">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Why Tesel</p>
+            <h2>Made for the worst day.</h2>
+            <p>
+              In an emergency, the network is the first thing to fail: overloaded masts, power cuts,
+              valleys with no coverage. Just when a team most needs to know about its people. Tesel
+              is made so that this does not stop it.
+            </p>
+          </div>
+          <ul class="principles">
+            <li>
+              <h3>For anyone</h3>
+              <p>
+                Free and with no sign-up: it opens in the browser, you type a name and that is it.
+                No email, no phone number, no password.
+              </p>
+            </li>
+            <li>
+              <h3>Understood at once</h3>
+              <p>
+                Made to be used in a hurry and under stress: in a couple of minutes you know how it
+                works, with no manual or training.
+              </p>
+            </li>
+            <li>
+              <h3>Not tied to one network</h3>
+              <p>
+                It uses the internet when there is one and radio when there is not. What you write
+                offline goes out as soon as there is a way.
+              </p>
+            </li>
+            <li>
+              <h3>The team's, for the team</h3>
+              <p>
+                Everything is encrypted with a key only the group has. Nobody else can read it, not
+                even us.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="ink" id="no-network">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Resilient communications</p>
+            <h2>A second way, by radio.</h2>
+            <p>
+              Radio does not replace the internet: it backs it up. It is another channel that does
+              not depend on phone masts or the power grid, and Tesel uses it by itself, without
+              anyone having to change anything.
+            </p>
+          </div>
+          <ol class="channels">
+            <li>
+              <img
+                src="../img/net-coverage.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="Three phones linked to a phone mast, and the mast to a server."
+              />
+              <h3>With coverage</h3>
+              <p>
+                Like any messaging app: over wifi or mobile data, through the server, which passes
+                everything on encrypted without being able to read it.
+              </p>
+            </li>
+            <li>
+              <img
+                src="../img/net-radio.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="A crossed-out phone mast and three pocket radios on hills passing messages from one to the next, with a phone at each end."
+              />
+              <h3>Without coverage</h3>
+              <p>
+                Each phone pairs over Bluetooth with a pocket radio. The radios pass messages on to
+                each other, from one to the next, kilometres apart.
+              </p>
+            </li>
+            <li>
+              <img
+                src="../img/net-bridge.svg"
+                width="400"
+                height="280"
+                loading="lazy"
+                alt="A phone with a radio, highlighted in the middle, linked both to a phone mast and to a distant radio."
+              />
+              <h3>Both at once</h3>
+              <p>
+                A phone with a radio and coverage acts as a bridge with nothing to set up: what
+                comes by radio goes up to the internet and the other way round. So whoever has no
+                coverage stays in the loop.
+              </p>
+            </li>
+          </ol>
+          <ul class="facts">
+            <li>
+              <strong>Everything travels by radio:</strong> SOS calls, messages, positions, marks on
+              the map, tasks and reports.
+            </li>
+            <li>
+              <strong>The urgent first:</strong> radio carries little data, so an SOS goes ahead of
+              messages, and messages ahead of positions.
+            </li>
+            <li>
+              <strong>The more radios, the further:</strong> each one repeats what it hears. From a
+              kilometre in a city to tens between high points.
+            </li>
+            <li>
+              <strong>No licences, no operators:</strong> the free 868 MHz band in Europe, and
+              radios that use very little power.
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <section class="paper" id="capabilities">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Capabilities</p>
-            <h2>A common operating picture.</h2>
+            <p class="eyebrow">What it does</p>
+            <h2>One shared picture of the situation.</h2>
             <p>
               Every member sees the same thing, on the same map, at the same time: where the team
               is, what is happening and what has been decided.
@@ -98,106 +220,46 @@
           </figure>
           <ol class="capabilities">
             <li>
-              <h3>Team tracking</h3>
+              <h3>The team on the map</h3>
               <p>
-                Every member's position in real time. Each person decides when to share it, pause it
-                or hide it.
+                Where everyone is, their state and what they carry. Each person decides when to
+                share where they are.
               </p>
             </li>
             <li>
               <h3>SOS with acknowledgement</h3>
               <p>
-                A call for help, with its type and position, reaches the whole team at once. Whoever
-                sent it sees who has received it.
+                A call for help reaches the whole team with its position. Whoever calls sees who has
+                received it, and the others can be guided there.
               </p>
             </li>
             <li>
-              <h3>Team messaging</h3>
+              <h3>Chat and reports</h3>
               <p>
-                Short messages, built to travel over radio too. Whatever is written without coverage
-                goes out as soon as there is a link.
+                Short messages, dictated too, and situation reports with the casualties, the hazards
+                and what is needed.
               </p>
             </li>
             <li>
-              <h3>Tasks and reports</h3>
+              <h3>Tasks and sweeps</h3>
               <p>
-                Coordinators hand out tasks to people or teams, with their place on the map.
-                Everyone reports what they find with situation reports.
+                Jobs for people or teams, with their place on the map, and search sweeps split into
+                strips.
               </p>
             </li>
             <li>
-              <h3>Terrain marking</h3>
+              <h3>The ground marked</h3>
               <p>
-                Sectors, meeting points, hazards and routes, shared with and editable by the whole
-                team.
+                Sectors, meeting points, routes and danger areas that warn whoever walks into them.
               </p>
             </li>
             <li>
               <h3>Offline maps</h3>
               <p>
-                The map of the area of operations, downloaded in advance. Still there when the
-                network is not.
+                The map of the area, downloaded before setting out, to see it in detail offline.
               </p>
             </li>
           </ol>
-        </div>
-      </section>
-
-      <section class="ink" id="connectivity">
-        <div class="wrap">
-          <div class="section-head">
-            <p class="eyebrow">Connectivity</p>
-            <h2>Keeps working when the network goes down.</h2>
-            <p>
-              The same app and the same data, whatever infrastructure is available. Tesel uses
-              whichever link it finds and syncs everything when the connection returns.
-            </p>
-          </div>
-          <div class="routes">
-            <div class="route">
-              <div>
-                <h3>Internet</h3>
-                <p>
-                  With mobile data or wifi, through Tesel's server or your own. The server relays
-                  the encrypted data without being able to read it.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Device</span><span class="line"></span>
-                <span class="node hub">Server</span><span class="line"></span>
-                <span class="node">Team</span>
-              </div>
-            </div>
-            <div class="route">
-              <div>
-                <h3>LoRa radio mesh</h3>
-                <p>
-                  Each phone pairs over Bluetooth with a pocket radio. The radios relay messages
-                  between them over kilometres, with no phone masts involved.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Device</span><span class="line"></span>
-                <span class="node hub">Radio</span><span class="line air"></span>
-                <span class="node">Mesh</span>
-              </div>
-            </div>
-            <div class="route">
-              <div>
-                <h3>Automatic bridge</h3>
-                <p>
-                  A phone with a radio and coverage joins both networks with nothing to set up: what
-                  arrives by radio goes up to the server, and what the server has goes out by radio.
-                  Whoever has no coverage stays up to date.
-                </p>
-              </div>
-              <div class="path" aria-hidden="true">
-                <span class="node">Mesh</span><span class="line air"></span>
-                <span class="node hub">Bridge</span><span class="line"></span>
-                <span class="node">Server</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -205,116 +267,144 @@
         <div class="wrap">
           <div class="section-head">
             <p class="eyebrow">Who it is for</p>
-            <h2>For teams that work in the field.</h2>
+            <h2>For teams working in the field.</h2>
           </div>
           <ul class="audiences">
             <li>
               <h3>Civil protection</h3>
-              <p>Volunteer groups and local services, in emergencies and at planned events.</p>
+              <p>Volunteer groups, in emergencies and on standby at events.</p>
             </li>
             <li>
               <h3>Search and rescue</h3>
-              <p>Sector searches, with the ground divided up and every team in view.</p>
+              <p>Sweeps by sector, with the ground shared out and every team in view.</p>
             </li>
             <li>
               <h3>NGOs and humanitarian aid</h3>
               <p>Teams deployed where infrastructure fails or does not exist.</p>
             </li>
             <li>
-              <h3>Events and operations</h3>
-              <p>Security, medical and staff at races, festivals and large gatherings.</p>
+              <h3>Events</h3>
+              <p>Security, medics and organisers at races, festivals and gatherings.</p>
             </li>
             <li>
               <h3>Mountains and expeditions</h3>
-              <p>Groups beyond coverage who need to know about each other.</p>
+              <p>Groups out of coverage who need to know about each other.</p>
             </li>
           </ul>
         </div>
       </section>
 
-      <section class="paper" id="deploy">
+      <section class="paper" id="start">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Deployment</p>
-            <h2>Operational in three steps.</h2>
+            <p class="eyebrow">Start now</p>
+            <h2>Up and running in a minute.</h2>
             <p>
-              No installs, no sign-ups. What takes time is practice, and that is best done early.
+              It works in the browser of any phone, tablet or computer. No app stores, and it
+              updates itself.
             </p>
           </div>
           <ol class="steps">
             <li>
-              <h3>Create the team</h3>
+              <h3>Open Tesel</h3>
               <p>
-                The coordinator creates the group and invites with a link or a QR code. Each member
-                only picks a name.
+                Go to <a href="../app/">tesel.eu/app</a> and type your name. To keep it at hand, add
+                it to your home screen from the browser's menu.
               </p>
             </li>
             <li>
-              <h3>Prepare the area</h3>
+              <h3>Create the group</h3>
               <p>
-                Download the map of the area of operations over wifi and, if you use radios, pair
-                them with your phones.
+                The coordinator creates it and invites the rest with a QR code or a link. Whoever
+                opens it is in.
               </p>
             </li>
             <li>
-              <h3>Run a drill</h3>
+              <h3>Get ready to lose the network</h3>
               <p>
-                Practise positions, SOS and tasks on a quiet day. An emergency is not the time to
-                learn a new tool.
+                Download the map of your area on wifi and, if you have radios, pair them with your
+                phones. And practise on a quiet day.
               </p>
             </li>
           </ol>
+          <a class="button" href="../app/">Open Tesel</a>
         </div>
       </section>
 
-      <section class="ink" id="start">
-        <div class="wrap get">
+      <section class="ink" id="professional">
+        <div class="wrap pro">
           <div>
-            <p class="eyebrow">Start now</p>
-            <h2>It runs in the browser.</h2>
-            <p>
-              On any phone, tablet or computer, at <a href="../app/">tesel.eu/app</a>. No app
-              stores, and it updates itself.
+            <p class="eyebrow">Tesel Professional <span class="soon">Coming soon</span></p>
+            <h2>For town councils and public bodies.</h2>
+            <p class="lead">
+              The same app, with a radio network of your own and a tailored service, so that your
+              area is ready before it is needed.
             </p>
-            <a class="button" href="../app/">Open Tesel</a>
+            <figure>
+              <img
+                src="../img/pro-network.svg"
+                width="520"
+                height="340"
+                loading="lazy"
+                alt="A municipality seen from above, with three radio repeaters on high points, each with the area it covers, and the team spread across it."
+              />
+            </figure>
           </div>
-          <div>
-            <h3>Install it as an app</h3>
-            <ul>
-              <li>Android, with Chrome: menu ⋮, “Add to Home screen”.</li>
-              <li>iPhone, with Safari: Share button, “Add to Home Screen”.</li>
-              <li>Computer, with Chrome or Edge: the install icon in the address bar.</li>
-            </ul>
-            <p class="note">
-              Native apps for Android and iOS are in development: background location, SOS with the
-              app closed, and radio on iPhone too.
-            </p>
-          </div>
+          <ul class="offer">
+            <li>
+              <h3>A radio network of your own</h3>
+              <p>
+                LoRa repeaters and nodes on high points of the municipality, sized to its area and
+                the number of people deployed.
+              </p>
+            </li>
+            <li>
+              <h3>A dedicated server</h3>
+              <p>
+                Password access, traceability and a record of missions, with the data hosted as the
+                law that applies to you requires.
+              </p>
+            </li>
+            <li>
+              <h3>With your identity</h3>
+              <p>
+                An address of your own that is easy to remember, your map layers and your logos.
+              </p>
+            </li>
+            <li>
+              <h3>Training and drills</h3>
+              <p>With your teams and on your ground.</p>
+            </li>
+            <li>
+              <h3>Sustainment</h3>
+              <p>Maintenance and replacement of equipment, and the app always up to date.</p>
+            </li>
+          </ul>
         </div>
       </section>
 
       <section class="paper" id="privacy">
         <div class="wrap">
           <div class="section-head">
-            <p class="eyebrow">Security</p>
-            <h2>Private by design.</h2>
+            <p class="eyebrow">Privacy</p>
+            <h2>What happens in the team stays in the team.</h2>
           </div>
           <ul class="principles">
             <li>
-              <h3>No accounts</h3>
+              <h3>No sign-up</h3>
               <p>No email, no phone number, no password. Each member only picks a name.</p>
             </li>
             <li>
               <h3>End-to-end encryption</h3>
-              <p>Only the team holds the key. The server cannot read anything.</p>
+              <p>Only the group holds the key. The server cannot read anything.</p>
+            </li>
+            <li>
+              <h3>Your position, when you choose</h3>
+              <p>It is only shared if you choose, and you stop sharing it with one tap.</p>
             </li>
             <li>
               <h3>No tracking</h3>
               <p>No ads, no analytics and no logs of who connects.</p>
-            </li>
-            <li>
-              <h3>Open source</h3>
-              <p>European EUPL licence. Anyone can audit it or run their own server.</p>
             </li>
           </ul>
           <p class="aside">Tesel does not replace 112. If you can call, call.</p>
@@ -325,37 +415,50 @@
         <div class="wrap">
           <div class="section-head">
             <p class="eyebrow">Questions</p>
-            <h2>Before you deploy it.</h2>
+            <h2>Before you start.</h2>
           </div>
           <div class="questions">
             <details>
               <summary>Does it cost anything?</summary>
-              <p>No, and it will not. Only the radios, if you decide to use them.</p>
+              <p>
+                No. Tesel is free and needs no sign-up. You would only pay for radios, if you use
+                them.
+              </p>
             </details>
             <details>
               <summary>Do we need radios?</summary>
-              <p>No. With coverage, Tesel needs nothing else. Radios are for when there is none.</p>
-            </details>
-            <details>
-              <summary>Which radios are supported?</summary>
               <p>
-                LoRa radios running MeshCore with its “Companion Bluetooth” firmware. We are
-                validating them in the field and will publish recommended models here.
+                No. With coverage, Tesel needs nothing else. Radios are plan B for when the network
+                fails: best to have them ready beforehand.
               </p>
             </details>
             <details>
-              <summary>Does it work on iPhone?</summary>
+              <summary>Does everyone need a radio?</summary>
               <p>
-                Yes, over the internet. Safari does not allow Bluetooth radios; the native app will.
+                No. Whoever carries a radio stays in touch even without coverage. Whoever does not
+                gets what came by radio as soon as they have coverage, through the bridges.
               </p>
             </details>
             <details>
-              <summary>Can we run our own server?</summary>
-              <p>Yes. The server is free software and runs on a modest computer or in the cloud.</p>
+              <summary>Which radios work?</summary>
+              <p>
+                LoRa radios with MeshCore's “Companion Bluetooth” firmware. We are testing them in
+                the field and will publish the recommended models here.
+              </p>
             </details>
             <details>
-              <summary>Who is behind it?</summary>
-              <p>A citizen-led free software project, under the European EUPL-1.2 licence.</p>
+              <summary>Does it work on an iPhone?</summary>
+              <p>
+                Yes. To pair a radio over Bluetooth on an iPhone, open Tesel in the Bluefy browser,
+                as Safari does not allow it. It is a stopgap we are still testing.
+              </p>
+            </details>
+            <details>
+              <summary>What if a town council wants its own network?</summary>
+              <p>
+                That is what we are preparing <a href="#professional">Tesel Professional</a> for:
+                repeaters, a dedicated server, training and maintenance.
+              </p>
             </details>
           </div>
         </div>
@@ -365,7 +468,7 @@
     <footer class="ink">
       <div class="wrap">
         <img src="../img/lockup-pale.svg" width="622" height="150" alt="Tesel" />
-        <p>Free software under the EUPL-1.2 licence.</p>
+        <p>Free, with no sign-up.</p>
         <nav aria-label="Links">
           <a href="../" hreflang="es" lang="es">Español</a>
         </nav>

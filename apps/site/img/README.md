@@ -7,3 +7,5 @@ by the simulator (`pnpm --filter @tesel/simulator screenshots`, see `tools/simul
 `tablet-chat.png` and `phone-map.png`, resized to 1800 and 640 pixels wide and saved as WebP and
 JPEG. The base map is Tesel's own (OpenStreetMap data, Protomaps). Map data © OpenStreetMap
 contributors, ODbL.
+
+`net-coverage.svg`, `net-radio.svg`, `net-bridge.svg` and `pro-network.svg`: drawn by hand for the home page (ADR-0088): a message with coverage, without it (pocket radios passing it on), through a bridge, and a municipality covered by repeaters (Tesel Profesional). No words, so both languages share them.
