@@ -775,6 +775,51 @@ footer nav {
   gap: 1.5rem;
 }
 
+/* The legal notice: a page of plain reading, one column of a comfortable measure. */
+
+.legal {
+  max-width: var(--measure);
+}
+
+.legal h1 {
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem);
+}
+
+.legal .updated {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: var(--paper-muted);
+}
+
+.legal .lead {
+  margin: 1.5rem 0 0;
+  font-size: 1.15rem;
+  color: var(--paper-muted);
+}
+
+.legal h2 {
+  max-width: none;
+  margin: 2.8rem 0 0.8rem;
+  font-size: 1.35rem;
+  font-stretch: 106%;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.legal p,
+.legal ul {
+  margin: 0 0 1rem;
+  color: var(--paper-text);
+}
+
+.legal ul {
+  padding-left: 1.3rem;
+}
+
+.legal li + li {
+  margin-top: 0.5rem;
+}
+
 [id] {
   scroll-margin-top: 4.5rem;
 }

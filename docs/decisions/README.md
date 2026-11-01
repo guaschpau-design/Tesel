@@ -94,3 +94,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0086](0086-no-guide.md)                             | No user guide: the app explains itself                                                      | Accepted                                                |
 | [0087](0087-explained-where-used.md)                 | The app explains itself where it is used                                                    | Accepted                                                |
 | [0088](0088-home-page-radio-second-way.md)           | The home page: situational awareness, and the radio as a second way                         | Accepted                                                |
+| [0089](0089-legal-notice.md)                         | A legal notice and terms of use on the site                                                 | Accepted                                                |
