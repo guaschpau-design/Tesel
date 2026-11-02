@@ -16,6 +16,12 @@ export interface Slice<S, T extends EventType> {
    * return `state` itself when nothing changes, so that unchanged slices keep their identity.
    */
   apply(state: S, event: EventOfType<T>): S;
+  /**
+   * The slice after several more events at once, exactly as applying them one by one would leave
+   * it: for slices whose single update copies a collection that grows with the operation, so that
+   * opening a long operation is not quadratic. Optional; without it they are applied one by one.
+   */
+  applyAll?(state: S, events: readonly EventOfType<T>[]): S;
 }
 
 /** Declares a slice; the event types are inferred from `handles`. */

@@ -61,8 +61,8 @@ export interface RadioLink {
 
   /**
    * Asks the user to pick a radio and connects to it. If the connection is lost afterwards, the
-   * link reconnects to the same radio by itself, showing `connecting` meanwhile, until
-   * `disconnect` is called.
+   * link goes straight back to `connecting` (never through `disconnected`) and reconnects to the
+   * same radio by itself, until `disconnect` is called, which may be done while it reconnects.
    */
   connect(): Promise<void>;
 

@@ -2,7 +2,7 @@ import type { NodeId } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
 import { createGroup, invitationFor } from './group.ts';
-import { appBaseUrl, invitationInAddress, invitationLink } from './join-link.ts';
+import { appBaseUrl, invitationInAddress, invitationLink, isJoinAddress } from './join-link.ts';
 
 const ISSUER = 'a1b2c3d4' as NodeId;
 
@@ -37,5 +37,12 @@ describe('join links', () => {
     expect(invitationInAddress({ pathname: '/join', search: '', hash: '#AAAA' }, '/')?.ok).toBe(
       false,
     );
+  });
+
+  it('takes any join address for one whose secret must leave the address bar', () => {
+    const at = (pathname: string, search = '') => ({ pathname, search, hash: '#secret' });
+    expect(isJoinAddress(at('/app/join'), '/app/')).toBe(true);
+    expect(isJoinAddress(at('/app/join/', '?from=mail'), '/app/')).toBe(true);
+    expect(isJoinAddress(at('/app/'), '/app/')).toBe(false);
   });
 });

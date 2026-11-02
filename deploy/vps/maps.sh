@@ -43,7 +43,7 @@ free_mb=$(($(df --output=avail -B1 "$DIR" | tail -n 1) / 1024 / 1024))
 url=""
 for days_ago in $(seq 1 14); do
   candidate="https://build.protomaps.com/$(date -u -d "$days_ago days ago" +%Y%m%d).pmtiles"
-  if curl -fsI "$candidate" >/dev/null 2>&1; then
+  if curl -fsI --max-time 30 "$candidate" >/dev/null 2>&1; then
     url="$candidate"
     break
   fi

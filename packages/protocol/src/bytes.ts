@@ -18,7 +18,14 @@ export class ProtocolFailure extends Error {
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }); // keep a leading U+FEFF: decoding must be lossless
 
+/**
+ * A text as UTF-8. Half of a surrogate pair cannot be written in UTF-8 and would silently become
+ * U+FFFD, sending other text than was meant: it is refused instead.
+ */
 export function encodeUtf8(text: string): Uint8Array {
+  if (/\p{Cs}/u.test(text)) {
+    throw new ProtocolFailure('invalid-utf8', 'text holds half of a surrogate pair');
+  }
   return utf8Encoder.encode(text);
 }
 

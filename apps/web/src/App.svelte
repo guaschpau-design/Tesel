@@ -2,6 +2,7 @@
   import type { Invitation, ProtocolError, Result } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount, untrack } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
 
   // The logo comes from brand/, built by brand/build.py; the header is always ink, hence pale.
   import lockupUrl from '../../../brand/lockup-pale.svg';
@@ -11,7 +12,7 @@
   import type { JoinOutcome, StoredGroup } from './lib/groups/group.ts';
   import GroupsPanel from './lib/groups/GroupsPanel.svelte';
   import JoinDialog from './lib/groups/JoinDialog.svelte';
-  import { invitationInAddress } from './lib/groups/join-link.ts';
+  import { invitationInAddress, isJoinAddress } from './lib/groups/join-link.ts';
   import { resolveLocale, translator, type Locale, type MessageKey } from './lib/i18n/index.ts';
   import Onboarding from './lib/identity/Onboarding.svelte';
   import ConnectionsPanel from './lib/links/ConnectionsPanel.svelte';
@@ -57,7 +58,9 @@
   // Read an invitation link before anything else, then remove the secret from the address bar
   // and the history (ADR-0012). This runs before the map takes over the URL fragment.
   const fromAddress = invitationInAddress(window.location, import.meta.env.BASE_URL);
-  if (fromAddress !== null) window.history.replaceState(null, '', import.meta.env.BASE_URL);
+  if (isJoinAddress(window.location, import.meta.env.BASE_URL)) {
+    window.history.replaceState(null, '', import.meta.env.BASE_URL);
+  }
   let incoming: Result<Invitation, ProtocolError> | null = $state.raw(fromAddress);
 
   const archives = tileArchives(basemapUrl());
@@ -115,21 +118,27 @@
     const onScheme = (event: MediaQueryListEvent) => (theme = event.matches ? 'dark' : 'light');
     darkQuery.addEventListener('change', onScheme);
 
-    const versionChange: VersionChange = {
-      onBlocked: () => (startupFailure = 'blocked'),
+    /** The databases waiting for another window to let them go. */
+    const blocked = new SvelteSet<string>();
+    const versionChange = (database: string): VersionChange => ({
+      onBlocked: () => {
+        blocked.add(database);
+        startupFailure = 'blocked';
+      },
       onReplaced: () => (startupFailure = 'replaced'),
-    };
+    });
     const failed = (error: unknown) => {
       console.error('Tesel could not start', error);
       startupFailure = 'failed';
     };
-    /** A database that waited for another window opened in the end: nothing blocks any more. */
-    const opened = () => {
-      if (startupFailure === 'blocked') startupFailure = null;
+    /** A database that waited for another window opened: the app goes on once none waits. */
+    const opened = (database: string) => {
+      blocked.delete(database);
+      if (blocked.size === 0 && startupFailure === 'blocked') startupFailure = null;
     };
 
-    openTileStore(undefined, versionChange).then((store) => {
-      opened();
+    openTileStore(undefined, versionChange('tiles')).then((store) => {
+      opened('tiles');
       registerTileProtocol(store, archives);
       registerContourProtocol(store, archives);
       elevations = new ElevationReader((tile) => findTile('terrain', tile, store, archives));
@@ -138,9 +147,9 @@
     }, failed);
     const server = defaultServerUrl();
     let stopWaitingForTap: (() => void) | undefined;
-    openAppDb(undefined, versionChange)
+    openAppDb(undefined, versionChange('app'))
       .then(async (database) => {
-        opened();
+        opened('app');
         db = database;
         if (server !== null) weather = WeatherFeed.start(database, server);
         await radio.useStorage(database);

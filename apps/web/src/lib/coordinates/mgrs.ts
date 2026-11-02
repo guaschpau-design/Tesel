@@ -2,7 +2,7 @@
 // as ATAK, NATO forces and many rescue teams use them. "30S YJ 25695 72210" is a 1 m square;
 // fewer digits mean a larger square.
 
-import type { Utm } from './utm.ts';
+import { bandSouth, fromUtm, type Utm } from './utm.ts';
 
 /** Column letters of the 100 km squares; the set repeats every three zones. */
 const COLUMN_SETS = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'] as const;
@@ -80,12 +80,27 @@ export function mgrsToUtm(mgrs: Mgrs): Utm | null {
   const rowOffset = mgrs.zone % 2 === 0 ? 5 : 0;
   let northing = ((rowIndex - rowOffset + ROWS.length) % ROWS.length) * SQUARE;
   while (northing < minNorthing) northing += ROW_CYCLE;
-  return {
+  const utm = {
     zone: mgrs.zone,
     band: mgrs.band,
     easting: (column + 1) * SQUARE + (mgrs.easting + 0.5) * unit,
     northing: northing + (mgrs.northing + 0.5) * unit,
   };
+  // A row letter names a square in every 2 000 km: only the one within the band exists.
+  return isInBand(utm) ? utm : null;
+}
+
+/**
+ * How far beyond its band, in latitude, a point may be read: a 100 km square straddles the band's
+ * edge, and a wrong row letter lands some 18° away.
+ */
+const BAND_MARGIN_DEGREES = 1;
+
+function isInBand(utm: Utm): boolean {
+  const south = bandSouth(utm.band);
+  const north = south + (utm.band === 'X' ? 12 : 8);
+  const { lat } = fromUtm(utm);
+  return lat >= south - BAND_MARGIN_DEGREES && lat <= north + BAND_MARGIN_DEGREES;
 }
 
 /** As people write it: zone and band, square, easting, northing, with spaces between. */

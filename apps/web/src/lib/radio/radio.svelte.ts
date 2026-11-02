@@ -166,15 +166,17 @@ export class RadioSession {
    */
   async forgetGroup(secret: Uint8Array): Promise<void> {
     const left = groupId(secret);
-    if (this.#link?.state === 'ready') {
-      await this.#link.forgetChannels((held) => groupId(held) === left);
+    const link = this.#link?.state === 'ready' ? this.#link : null;
+    if (this.#db === null) {
+      await link?.forgetChannels((held) => groupId(held) === left);
       return;
     }
-    if (this.#db === null) return;
+    // Noted first, so that a clear the radio does not finish is tried again the next time.
     const pending = await this.#channelsToFree(this.#db);
     if (!pending.includes(left)) {
       await this.#db.put('settings', [...pending, left], 'radioChannelsToFree');
     }
+    if (link !== null) await this.#freeLeftChannels(link);
   }
 
   async #linkFeed(): Promise<void> {

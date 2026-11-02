@@ -1,11 +1,12 @@
 // A route or an area read from a file the user picks: refused if the file is too big to hold one,
 // and thinned to the points a shape can carry over the radio (draft.ts), with what that cost.
 
-import { simplifyLine } from '@tesel/core';
+import { simplifyLine, type Simplified } from '@tesel/core';
 import { SHAPE_LABEL_MAX_BYTES, SHAPE_MAX_POINTS, type LatLon, type Result } from '@tesel/protocol';
 
 import { fitBytes } from '../text.ts';
 import { readShapeFile, type ShapeFileError } from './shape-file.ts';
+import { densify } from './shape-points.ts';
 
 /** A route of a whole day's walk, recorded every second, takes a few megabytes of GPX. */
 export const MAX_SHAPE_FILE_BYTES = 5 * 1024 * 1024;
@@ -21,7 +22,7 @@ export interface ImportedShape {
   readonly deviation: number;
 }
 
-export type ShapeImportError = ShapeFileError | 'too-big' | 'unreadable';
+export type ShapeImportError = ShapeFileError | 'too-big' | 'unreadable' | 'too-wide';
 
 /** The fewest points of each kind of shape. */
 const FEWEST: Readonly<Record<ImportedShape['kind'], number>> = { route: 2, area: 3 };
@@ -43,7 +44,9 @@ export async function importShape(
   if (line.length < FEWEST[kind]) {
     return { ok: false, error: kind === 'route' ? 'no-line' : 'no-area' };
   }
-  const { points, deviation } = simplifyLine(line, SHAPE_MAX_POINTS);
+  const sendable = simplified(line, FEWEST[kind]);
+  if (sendable === null) return { ok: false, error: 'too-wide' };
+  const { points, deviation } = sendable;
   const name = read.value.name || file.name.replace(/\.[^.]*$/, '');
   return {
     ok: true,
@@ -55,6 +58,21 @@ export async function importShape(
       deviation,
     },
   };
+}
+
+/**
+ * The line in as many points as a shape may have once points are added where they are too far
+ * apart to send; null when even the fewest it may have would need more.
+ */
+function simplified(line: readonly LatLon[], fewest: number): Simplified | null {
+  let budget = SHAPE_MAX_POINTS;
+  while (budget >= fewest) {
+    const { points, deviation } = simplifyLine(line, budget);
+    const dense = densify(points);
+    if (dense.length <= SHAPE_MAX_POINTS) return { points: dense, deviation };
+    budget -= dense.length - SHAPE_MAX_POINTS;
+  }
+  return null;
 }
 
 /** The line without a point that repeats the one before it, as recorders do while standing. */

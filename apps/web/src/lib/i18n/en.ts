@@ -409,6 +409,7 @@ export const en = {
   drawArea: 'Area',
   drawRoute: 'Route',
   drawPointsCount: { one: '{count} point', other: '{count} points' },
+  drawTooWide: 'This is too wide to send. Draw it smaller.',
   drawPoints: '{count} of {max} points',
   drawHintMarker: 'Tap the map where it goes, or type its coordinates.',
   drawHintArea: 'Tap the corners on the map, or import a file.',
@@ -424,6 +425,7 @@ export const en = {
   shapeFileNoLine: 'The file has no route: it needs a line of two points or more.',
   shapeFileNoArea:
     'The file has no area: it needs a polygon, or a line that closes, of three points or more.',
+  shapeFileTooWide: 'What the file holds is too wide to send.',
   typeCoordinates: 'Type coordinates',
   undo: 'Undo',
   finish: 'Finish',
@@ -622,6 +624,7 @@ export const en = {
   teamName: 'Team name',
   teamColour: 'Colour',
   teamMembers: 'Who is in it',
+  teamFull: 'A team holds at most {count} people.',
   teamNone: 'No team',
   teamOf: 'Team {name}',
   teamDissolve: 'Dissolve team',

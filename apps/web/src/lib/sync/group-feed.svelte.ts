@@ -200,11 +200,13 @@ export class GroupFeed {
    */
   async attachRadio(sink: LoraSink | null): Promise<void> {
     this.#lora = sink;
-    if (this.#lora === null) return;
+    if (sink === null) return;
     const pending = await pendingEvents(this.#db, this.#group.id);
-    for (const event of standingEvents(this.state)) this.#lora.observe(event);
+    // The radio may have gone while the outbox was read: what it missed waits for the next one.
+    if (this.#lora !== sink) return;
+    for (const event of standingEvents(this.state)) sink.observe(event);
     for (const packet of catchUpPackets(this.state, this.#identity.nodeId, pending)) {
-      this.#lora.offer(packet, 'own');
+      sink.offer(packet, 'own');
     }
   }
 
@@ -282,8 +284,9 @@ export class GroupFeed {
     return this.state.positions.get(this.#identity.nodeId)?.type === 'position';
   }
 
-  async hidePosition(): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'position-hidden' }));
+  /** Tells the group to stop showing this device's position; returns the event's reference. */
+  hidePosition(): Promise<EventRef> {
+    return this.#publish((header) => ({ ...header, type: 'position-hidden' }));
   }
 
   /** Creates a marker; the event's own reference becomes the object's (protocol §3.10). */
@@ -346,15 +349,18 @@ export class GroupFeed {
     await this.#publish((header) => ({ ...header, type: 'object-delete', object }));
   }
 
-  /** Calls for help from `at`, or with no place when this device has no position (§3.8). */
-  async sendSos(
+  /**
+   * Calls for help from `at`, or with no place when this device has no position (§3.8); returns
+   * the call's reference.
+   */
+  sendSos(
     kind: SosKind,
     at: LatLon | null,
     accuracy: number | null,
     text: string,
-  ): Promise<void> {
+  ): Promise<EventRef> {
     const place = at === null ? NO_SOS_PLACE : { ...at, accuracy };
-    await this.#publish((header) => ({ ...header, type: 'sos', kind, ...place, text }));
+    return this.#publish((header) => ({ ...header, type: 'sos', kind, ...place, text }));
   }
 
   async cancelSos(sos: EventRef): Promise<void> {

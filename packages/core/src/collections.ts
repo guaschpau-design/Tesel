@@ -41,3 +41,58 @@ export function insertOrdered<T extends TeselEvent>(list: readonly T[], event: T
   if (atPosition?.origin === event.origin && atPosition.seq === event.seq) return list;
   return [...list.slice(0, low), event, ...list.slice(low)];
 }
+
+/** `keepNewest` for many events at once: the collection is copied once, if anything changes. */
+export function keepNewestAll<K, T extends TeselEvent>(
+  current: ReadonlyMap<K, T>,
+  events: readonly T[],
+  keyOf: (event: T) => K,
+): ReadonlyMap<K, T> {
+  return keepAll(current, events, keyOf, (known, event) => newerOf(known, event) !== known);
+}
+
+/** `keepOldest` for many events at once: the collection is copied once, if anything changes. */
+export function keepOldestAll<K, T extends TeselEvent>(
+  current: ReadonlyMap<K, T>,
+  events: readonly T[],
+  keyOf: (event: T) => K,
+): ReadonlyMap<K, T> {
+  return keepAll(current, events, keyOf, (known, event) => compareEvents(known, event) > 0);
+}
+
+function keepAll<K, T extends TeselEvent>(
+  current: ReadonlyMap<K, T>,
+  events: readonly T[],
+  keyOf: (event: T) => K,
+  replaces: (known: T, event: T) => boolean,
+): ReadonlyMap<K, T> {
+  let next: Map<K, T> | null = null;
+  for (const event of events) {
+    const key = keyOf(event);
+    const known = (next ?? current).get(key);
+    if (known !== undefined && !replaces(known, event)) continue;
+    next ??= new Map(current);
+    next.set(key, event);
+  }
+  return next ?? current;
+}
+
+/** `insertOrdered` for many events at once: one sort, instead of a copy per event. */
+export function insertAllOrdered<T extends TeselEvent>(
+  list: readonly T[],
+  events: readonly T[],
+): readonly T[] {
+  const known = new Set(list.map(orderKey));
+  const added = events.filter((event) => {
+    const key = orderKey(event);
+    if (known.has(key)) return false;
+    known.add(key);
+    return true;
+  });
+  return added.length === 0 ? list : [...list, ...added].sort(compareEvents);
+}
+
+/** What `compareEvents` orders by: two events with the same key are the same place in a list. */
+function orderKey(event: TeselEvent): string {
+  return `${String(event.time)}|${event.origin}|${String(event.seq)}`;
+}

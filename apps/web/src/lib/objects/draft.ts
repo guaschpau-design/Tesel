@@ -9,11 +9,11 @@ import {
 } from '@tesel/protocol';
 
 import type { MessageKey } from '../i18n/index.ts';
+import { densify } from './shape-points.ts';
 
 /** What can be drawn: a marker, a route or an area. Circles drawn by older versions still show. */
 export type DraftKind = 'marker' | 'route' | 'area';
 
-/** What a draft is called while it is drawn and described. */
 /** What kind of drawing a marker or a shape of the map is, to change it as it was drawn. */
 export function draftKindOf(object: MarkerEvent | ShapeEvent): DraftKind {
   if (object.type === 'marker') return 'marker';
@@ -69,8 +69,20 @@ export function isFull(draft: Draft): boolean {
   return draft.points.length >= MAXIMUM[draft.kind];
 }
 
-/** The line or polygon a complete route or area describes. Null for markers and unfinished ones. */
+/**
+ * The line or polygon a complete route or area describes, with points added where taps are too
+ * far apart to send. Null for markers, unfinished ones and those too long to send (`fits`).
+ */
 export function draftGeometry(draft: Draft): ShapeGeometry | null {
-  if (draft.kind === 'marker' || !isComplete(draft)) return null;
-  return { kind: draft.kind === 'route' ? 'polyline' : 'polygon', points: draft.points };
+  if (draft.kind === 'marker' || !isComplete(draft) || !fits(draft)) return null;
+  const points = densify(draft.points);
+  return { kind: draft.kind === 'route' ? 'polyline' : 'polygon', points };
+}
+
+/**
+ * Whether the draft can be sent: a route or an area spread so wide that the points it needs
+ * would be too many cannot.
+ */
+export function fits(draft: Draft): boolean {
+  return draft.kind === 'marker' || densify(draft.points).length <= SHAPE_MAX_POINTS;
 }

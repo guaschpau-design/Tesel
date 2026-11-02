@@ -38,24 +38,47 @@ export function prepareAlarmSound(): () => void {
   };
 }
 
-export function raiseAlarm(message: AlarmMessage, choices: AlarmChoices): void {
+/**
+ * Raises one alarm for calls that arrived together: the phone vibrates and the tone sounds once,
+ * and each call has its own notification.
+ */
+export function raiseAlarm(messages: readonly AlarmMessage[], choices: AlarmChoices): void {
   if ('vibrate' in navigator) navigator.vibrate(VIBRATION_MS);
-  if (choices.sound) playTone();
-  if (choices.notifications && document.visibilityState === 'hidden') void notify(message);
+  if (choices.sound) soundAlarm();
+  if (choices.notifications && document.visibilityState === 'hidden') {
+    for (const message of messages) void notify(message);
+  }
 }
 
-function playTone(): void {
-  if (audio === null || audio.state !== 'running') return;
-  const start = audio.currentTime;
+/** Plays the tone; audio the system suspended meanwhile (the phone locked, a call) resumes first. */
+function soundAlarm(): void {
+  const context = audio;
+  if (context === null) return;
+  if (context.state === 'running') {
+    playTone(context);
+    return;
+  }
+  context
+    .resume()
+    .then(() => {
+      if (context.state === 'running') playTone(context);
+    })
+    .catch((error: unknown) => {
+      console.warn('The alarm could not sound', error);
+    });
+}
+
+function playTone(context: AudioContext): void {
+  const start = context.currentTime;
   for (let index = 0; index < REPEATS * TONES_HZ.length; index++) {
-    const oscillator = audio.createOscillator();
-    const gain = audio.createGain();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
     oscillator.type = 'square';
     oscillator.frequency.value = TONES_HZ[index % TONES_HZ.length] ?? TONES_HZ[0];
     const at = start + index * BEEP_S * 1.2;
     gain.gain.setValueAtTime(0.25, at);
     gain.gain.setValueAtTime(0, at + BEEP_S);
-    oscillator.connect(gain).connect(audio.destination);
+    oscillator.connect(gain).connect(context.destination);
     oscillator.start(at);
     oscillator.stop(at + BEEP_S);
   }

@@ -23,6 +23,7 @@
   import JoinGroup from './JoinGroup.svelte';
   import QrScanner from './QrScanner.svelte';
   import { attempt } from '../ui/submission.svelte.ts';
+  import { hideOnLeaving } from '../position/hide-on-leaving.ts';
 
   interface Props {
     t: Translate;
@@ -55,6 +56,7 @@
     const text = t('confirmLeave', { group: group.name });
     if (!(await confirmations.ask({ text, confirm: t('leave') }))) return;
     attempt(async () => {
+      if (activeFeed?.groupId === group.id) await hideOnLeaving(activeFeed);
       await session.leave(group.id);
       onleft(group);
     }, t('actionFailed'));

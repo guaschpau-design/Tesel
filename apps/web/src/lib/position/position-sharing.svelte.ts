@@ -47,13 +47,14 @@ export class PositionSharing {
     this.#feed = null;
   }
 
+  /**
+   * Changes the mode. Reporting stops before the choice is stored, so no position is shared after
+   * the user turned sharing off.
+   */
   async setMode(mode: PositionMode): Promise<void> {
+    if (mode !== 'sharing') this.#stopReporting();
     await this.#mode.set(mode);
-    if (mode === 'sharing') {
-      this.#startReporting();
-      return;
-    }
-    this.#stopReporting();
+    if (mode === 'sharing') this.#startReporting();
     if (mode === 'hidden') await this.#feed?.hidePosition();
   }
 

@@ -39,7 +39,12 @@ export interface TileStore {
    * not be downloaded again; returns the others.
    */
   keepStored(owner: string, source: TileSourceId, tiles: readonly TileCoord[]): Promise<KeptTiles>;
-  /** Keeps a tile the map showed, among the latest ones seen. Never fails: it is a cache. */
+  /**
+   * Keeps a tile the map fetched while online, among the latest ones fetched. A tile already kept
+   * is served from here and not fetched again, so the cache drops first what was first kept, not
+   * what was least looked at: telling them apart would mean a write for every tile drawn. Never
+   * fails: it is a cache.
+   */
   keepViewed(source: TileSourceId, tile: TileCoord, data: ArrayBuffer): Promise<void>;
   saveArea(area: OfflineArea): Promise<void>;
   listAreas(): Promise<OfflineArea[]>;
@@ -188,7 +193,7 @@ class IndexedDbTileStore implements TileStore {
     await tx.done;
   }
 
-  /** Forgets the tiles seen longest ago, until those left take at most `room` bytes. */
+  /** Forgets the tiles kept longest ago, until those left take at most `room` bytes. */
   async #forgetViewed(room: number): Promise<void> {
     const tx = this.#db.transaction(['tiles', 'viewed'], 'readwrite');
     const viewed = tx.objectStore('viewed');

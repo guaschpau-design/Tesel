@@ -7,8 +7,9 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
+  import type { Placed } from '../position/movement.ts';
   import MapCard from '../ui/MapCard.svelte';
-  import { CheckIn, hasMoved, type CheckInStep, type Whereabouts } from './check-in.ts';
+  import { CheckIn, hasMoved, type CheckInStep } from './check-in.ts';
 
   interface Props {
     t: Translate;
@@ -51,7 +52,7 @@
   }
 
   onMount(() => {
-    let anchor: Whereabouts | null = null;
+    let anchor: Placed | null = null;
     const release = deviceLocation.use((fix) => {
       if (anchor !== null && !hasMoved(anchor, fix)) return;
       anchor = fix;

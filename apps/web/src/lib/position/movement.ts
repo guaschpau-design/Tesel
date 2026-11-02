@@ -18,17 +18,32 @@ export interface Placed {
 /** The smallest change counted as a move, however sharp the fixes. */
 const MIN_MOVE_M = 10;
 
-/** Whether going from `from` to `to` is more than the two fixes' uncertainty. */
-export function isMove(from: Placed, to: Placed): boolean {
+/**
+ * Whether going from `from` to `to` is more than the two fixes' uncertainty, and at least `least`
+ * metres.
+ */
+export function isMove(from: Placed, to: Placed, least = MIN_MOVE_M): boolean {
   const margin = (from.accuracy ?? 0) + (to.accuracy ?? 0);
-  return distanceMeters(from.at, to.at) >= Math.max(MIN_MOVE_M, margin);
+  return distanceMeters(from.at, to.at) >= Math.max(least, margin);
 }
+
+/** Each trail's travelled positions, worked out once: a trail is a new array whenever it grows. */
+const travelledOf = new WeakMap<readonly PositionEvent[], readonly PositionEvent[]>();
 
 /**
  * Where a member went, from their trail: positions of poor accuracy are left out, and each one
  * kept is a move from the last one kept. Every device draws the same from the same trail.
  */
-export function travelled(points: readonly PositionEvent[]): PositionEvent[] {
+export function travelled(points: readonly PositionEvent[]): readonly PositionEvent[] {
+  let kept = travelledOf.get(points);
+  if (kept === undefined) {
+    kept = keptMoves(points);
+    travelledOf.set(points, kept);
+  }
+  return kept;
+}
+
+function keptMoves(points: readonly PositionEvent[]): PositionEvent[] {
   const kept: PositionEvent[] = [];
   for (const point of points) {
     if (point.accuracy !== null && accuracyQuality(point.accuracy) === 'poor') continue;

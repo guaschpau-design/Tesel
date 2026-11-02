@@ -1,3 +1,4 @@
+export type { ChannelInfo, CompanionConnection, SyncedMessage } from './companion.ts';
 export { channelName, chooseChannelSlot } from './channel-slot.ts';
 export { MeshCoreRadio, type Connector, type OpenedRadio } from './meshcore-radio.ts';
 export {

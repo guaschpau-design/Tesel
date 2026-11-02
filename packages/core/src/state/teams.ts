@@ -3,7 +3,7 @@
 
 import type { NodeId, TeamEvent } from '@tesel/protocol';
 
-import { keepNewest } from '../collections.ts';
+import { keepNewest, keepNewestAll } from '../collections.ts';
 import { compareEvents } from '../ordering.ts';
 import { defineSlice } from './slice.ts';
 
@@ -11,6 +11,7 @@ export const teams = defineSlice({
   handles: ['team'],
   empty: new Map() as ReadonlyMap<NodeId, TeamEvent>,
   apply: (state, event) => keepNewest(state, event.team, event),
+  applyAll: (state, events) => keepNewestAll(state, events, (event) => event.team),
 });
 
 /** The team a member is in: of the teams that list them, the newest (§3.15); null if none. */

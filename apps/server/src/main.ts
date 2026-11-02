@@ -10,6 +10,8 @@ import { WeatherWarningsService } from './weather/weather-warnings.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RETENTION_SWEEP_MS = 60 * 60 * 1000;
+/** Envelopes deleted at a time by the sweep, which lets the server answer between them. */
+const SWEEP_BATCH = 5000;
 /** Shutting down takes longer than this only if something hangs; the server stops anyway. */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 const MEGABYTE = 1024 * 1024;
@@ -34,18 +36,21 @@ const weather =
 weather?.start();
 const app = await buildApp(store, relay, { ...config, weather });
 
-function sweep(): void {
+let stopping = false;
+
+/** Deletes the envelopes past their time, a batch at a time, until none is left or it stops. */
+async function sweep(): Promise<void> {
+  const before = Date.now() - config.retentionDays * DAY_MS;
   try {
-    store.deleteReceivedBefore(Date.now() - config.retentionDays * DAY_MS);
+    while (!stopping && store.deleteReceivedBefore(before, SWEEP_BATCH) === SWEEP_BATCH) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
   } catch (error) {
     // A full disk or a busy database: the next sweep tries again.
     console.error('Old envelopes could not be deleted:', error);
   }
 }
-sweep();
-const sweeper = setInterval(sweep, RETENTION_SWEEP_MS);
-
-let stopping = false;
+let sweeper: ReturnType<typeof setInterval> | undefined;
 
 /** Stops everything once, however many signals or failures ask for it, and exits. */
 function shutdown(exitCode: number): void {
@@ -87,6 +92,9 @@ process.on('unhandledRejection', (reason) => {
 try {
   await app.listen({ host: config.host, port: config.port });
   console.warn(`Tesel server listening on ${config.host}:${config.port}`);
+  // Once the server answers, so that a long first sweep does not hold up its health check.
+  void sweep();
+  sweeper = setInterval(() => void sweep(), RETENTION_SWEEP_MS);
 } catch (error) {
   console.error(error);
   process.exit(1);

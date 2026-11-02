@@ -2,8 +2,7 @@
 // touching it, the device asks whether they are well; with no answer in time, it calls for help.
 // Time with the app off screen does not count: a browser cannot tell what the member did meanwhile.
 
-import { distanceMeters } from '@tesel/core';
-import type { LatLon } from '@tesel/protocol';
+import { isMove, type Placed } from '../position/movement.ts';
 
 /** After how many minutes without a tap or a move whoever coordinates has members asked. */
 export const CHECK_IN_MINUTES = 30;
@@ -14,19 +13,12 @@ export const ANSWER_MS = 2 * 60_000;
 /** Moving this far, in metres, counts as being up and about. */
 const MOVED_M = 25;
 
-/** Where the device was, and how sure the browser was of it, in metres. */
-export interface Whereabouts {
-  readonly at: LatLon;
-  readonly accuracy: number | null;
-}
-
 /**
  * Whether the device has moved from one place to another: more than MOVED_M, and more than the
  * two fixes could be off together, so that a fix wandering in the same spot is not a move.
  */
-export function hasMoved(from: Whereabouts, to: Whereabouts): boolean {
-  const uncertainty = (from.accuracy ?? 0) + (to.accuracy ?? 0);
-  return distanceMeters(from.at, to.at) >= Math.max(MOVED_M, uncertainty);
+export function hasMoved(from: Placed, to: Placed): boolean {
+  return isMove(from, to, MOVED_M);
 }
 
 /** Nothing to say, asking, or help called for. */

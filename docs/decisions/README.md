@@ -98,3 +98,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0090](0090-pairing-a-radio-from-the-app.md)         | Pairing a radio from the app, and saying why a connection failed                            | Accepted                                                |
 | [0091](0091-interlocking-tiles-logo.md)              | The logo: two interlocking tiles and a drawn wordmark                                       | Accepted                                                |
 | [0092](0092-moves-not-gps-wandering.md)              | Moves, not the GPS wandering                                                                | Accepted                                                |
+| [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted                                                |

@@ -216,7 +216,6 @@ function seqRuns(
   return runs;
 }
 
-/** Forgets everything a group left on this device. */
 /**
  * Forgets what groups no longer on this device left behind: events stored while one was being
  * left, by a feed that had not stopped yet.
@@ -239,6 +238,7 @@ export async function deleteLeftovers(db: AppDb, kept: readonly string[]): Promi
   }
 }
 
+/** Forgets everything a group left on this device: its events, outbox and cursors. */
 export async function deleteGroupEvents(db: AppDb, groupId: string): Promise<void> {
   const tx = db.transaction(['events', 'outbox', 'cursors'], 'readwrite');
   for (const name of ['events', 'outbox'] as const) {

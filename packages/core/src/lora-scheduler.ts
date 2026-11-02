@@ -90,7 +90,7 @@ export class LoraScheduler {
   readonly #random: () => number;
   readonly #airtimeMs: (bytes: number) => number;
   readonly #pending = new Map<string, Pending>();
-  /** Event keys sent by us or heard on LoRa, with when: never put on the air again. */
+  /** Event keys sent by us or heard on LoRa in the last hour, with when: not put on the air again. */
   readonly #onAir = new Map<string, number>();
   /** Own SOS calls still waiting for an acknowledgement or a cancellation. */
   readonly #openSos = new Set<string>();
@@ -100,6 +100,11 @@ export class LoraScheduler {
   readonly #urgentTargets = new Set<string>();
   /** SOS calls seen cancelled: no longer worth bridging, however recent. */
   readonly #cancelledSos = new Set<string>();
+  /**
+   * Events another member acknowledged on the air (roll calls aside): the sender heard that, so a
+   * later ACK of them, own or bridged, would only add noise.
+   */
+  readonly #ackedOnAir = new Set<string>();
   readonly #airtime = new AirtimeWindow(LIMITS.windowMs);
   #lastOwnPosition: { readonly at: LatLon; readonly time: number } | null = null;
   readonly #lastBridgedPosition = new Map<NodeId, number>();
@@ -125,6 +130,7 @@ export class LoraScheduler {
     const key = eventRefKey(event);
     this.observe(event);
     if (this.#onAir.has(key) || this.#pending.has(key)) return;
+    if (event.type === 'ack' && this.#ackedOnAir.has(eventRefKey(event.target))) return;
     if (source === 'bridged' && this.#isHistory(event, now)) return;
     if (this.#superseded(event)) return;
     for (const [otherKey, other] of this.#pending) {
@@ -154,6 +160,7 @@ export class LoraScheduler {
       // Another member acknowledged, and the sender heard it as we did: our own ACK for the same
       // event, or one we bridge, would only add noise.
       const target = eventRefKey(event.target);
+      this.#ackedOnAir.add(target);
       for (const [pendingKey, pending] of this.#pending) {
         const queued = pending.packet.event;
         if (queued.type === 'ack' && eventRefKey(queued.target) === target) {
@@ -198,6 +205,7 @@ export class LoraScheduler {
     this.#rollCalls.clear();
     this.#urgentTargets.clear();
     this.#cancelledSos.clear();
+    this.#ackedOnAir.clear();
     this.#lastOwnPosition = null;
     this.#lastBridgedPosition.clear();
     this.#newestLocation.clear();
@@ -221,11 +229,18 @@ export class LoraScheduler {
       .filter((pending) => pending.dueAt <= now && this.#eligible(pending, now))
       .sort((a, b) => this.#urgency(a) - this.#urgency(b) || a.dueAt - b.dueAt);
     const spent = this.#airtime.usedMs(now);
+    // Once a packet does not fit its budget, nothing less urgent on that budget goes before it:
+    // otherwise a stream of small positions could hold back a long message for good.
+    const waiting = new Set<number>();
     for (const pending of due) {
       const cost = this.#airtimeMs(pending.packet.bytes.length);
       const budget =
         this.#urgency(pending) <= URGENT ? LIMITS.urgentBudgetMs : LIMITS.normalBudgetMs;
-      if (spent + cost > budget) continue;
+      if (waiting.has(budget)) continue;
+      if (spent + cost > budget) {
+        waiting.add(budget);
+        continue;
+      }
       this.#pending.delete(pending.key);
       this.#inFlight = { pending, cost, group: this.#group };
       return pending.packet;

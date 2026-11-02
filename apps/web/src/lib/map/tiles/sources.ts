@@ -99,7 +99,9 @@ export function terrainTileUrl(z: number, x: number, y: number): string {
 
 /**
  * A web tile service as a tile archive: undefined where it has no tile, which it says with a
- * client error. A server error or too many requests is a failure, worth trying again later.
+ * client error. A server error or too many requests is a failure, worth trying again later, and so
+ * is an error told as text with a success status (a WMS exception, a proxy's page): it must not be
+ * kept as a tile.
  */
 export function webArchive(url: (z: number, x: number, y: number) => string): TileArchive {
   return {
@@ -109,6 +111,10 @@ export function webArchive(url: (z: number, x: number, y: number) => string): Ti
         throw new Error(`tile service answered ${String(response.status)}`);
       }
       if (!response.ok) return undefined;
+      const type = response.headers.get('Content-Type') ?? '';
+      if (/^text\/|xml|html|json/i.test(type)) {
+        throw new Error(`tile service answered ${type} instead of a tile`);
+      }
       return response.arrayBuffer();
     },
   };

@@ -165,7 +165,7 @@
       {#if list.pending.length === 0}
         <p class="hint">{t('tasksEmpty')}</p>
       {/if}
-      {#each byDoer(list.pending) as part (doerName(part.doer))}
+      {#each byDoer(list.pending) as part (part.key)}
         <section class="part">
           <h3>{doerName(part.doer)}</h3>
           <ul class="cards">

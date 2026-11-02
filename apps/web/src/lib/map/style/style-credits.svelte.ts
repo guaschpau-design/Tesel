@@ -16,21 +16,29 @@ function styleCredits(map: MapLibreMap): string[] {
 }
 
 /**
- * The credits of the map's style, kept up to date while the calling component lives: read whenever
- * the map settles, which it does after every change of style.
+ * The credits of the map's style, kept up to date while the calling component lives: read when the
+ * map settles after a change of style, not after every move, since reading them serialises the
+ * whole style.
  */
 export function useStyleCredits(map: () => MapLibreMap): { readonly list: readonly string[] } {
   let list: readonly string[] = $state([]);
   $effect(() => {
     const target = map();
+    let changed = true;
+    const mark = () => {
+      changed = true;
+    };
     const update = () => {
-      if (!target.isStyleLoaded()) return;
+      if (!changed || !target.isStyleLoaded()) return;
+      changed = false;
       const next = styleCredits(target);
       if (next.join('\n') !== list.join('\n')) list = next;
     };
     untrack(update);
+    target.on('styledata', mark);
     target.on('idle', update);
     return () => {
+      target.off('styledata', mark);
       target.off('idle', update);
     };
   });

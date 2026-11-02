@@ -32,6 +32,8 @@ const SEGMENTS = 16;
 /** UTM reaches from 80° S to 84° N; the grid does too. */
 const SOUTH_LIMIT = -80;
 const NORTH_LIMIT = 84;
+/** The southern grid ends this close below the equator, in degrees, still in its hemisphere. */
+const EQUATOR_GAP = 1e-9;
 
 /** The finest spacing that leaves the lines at least MIN_GAP_PX apart, or null if none does. */
 export function gridSpacing(zoom: number, lat: number): number | null {
@@ -51,7 +53,13 @@ export function mgrsGrid(view: View): FeatureCollection {
   for (let zone = first; zone <= last; zone++) {
     const west = Math.max(view.west, zoneWest(zone));
     const east = Math.min(view.east, zoneWest(zone) + 6);
-    features.push(...zoneGrid(zone, { west, south, east, north }, spacing));
+    // Northings start again at the equator: each hemisphere has a grid of its own.
+    if (south < 0 && north > 0) {
+      features.push(...zoneGrid(zone, { west, south, east, north: -EQUATOR_GAP }, spacing));
+      features.push(...zoneGrid(zone, { west, south: 0, east, north }, spacing));
+    } else {
+      features.push(...zoneGrid(zone, { west, south, east, north }, spacing));
+    }
     if (zone > first) features.push(zoneEdge(zoneWest(zone), south, north));
   }
   return { type: 'FeatureCollection', features };

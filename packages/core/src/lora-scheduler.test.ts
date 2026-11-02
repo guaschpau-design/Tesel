@@ -70,6 +70,23 @@ describe('LoRa scheduler', () => {
     expect(drain(lora, LIMITS.windowMs + 1)).toHaveLength(5);
   });
 
+  it('lets nothing less urgent go before a message that waits for room in the budget', () => {
+    // Positions cost 1 s and a long chat message 3 s: the budget is spent but for 2 s.
+    const lora = new LoraScheduler({
+      random: () => 0,
+      airtimeMs: (bytes) => (bytes > 100 ? 3000 : 1000),
+    });
+    const normalSlots = LIMITS.normalBudgetMs / 1000;
+    for (let i = 0; i < normalSlots - 2; i++) lora.offer(chat(), 'own', 0);
+    expect(drain(lora, 0)).toHaveLength(normalSlots - 2);
+    const long = { ...chat(), bytes: new Uint8Array(160) };
+    lora.offer(long, 'own', 1);
+    lora.offer(position(), 'own', 1);
+    // The position would fit, but the message came first in urgency: both wait.
+    expect(drain(lora, 1)).toEqual([]);
+    expect(drain(lora, LIMITS.windowMs + 1)).toEqual(['chat', 'position']);
+  });
+
   it('thins own positions to one every 2 minutes, and only after moving 50 m or 10 minutes', () => {
     const lora = scheduler();
     lora.offer(position(), 'own', 0);
@@ -213,6 +230,15 @@ describe('LoRa scheduler', () => {
     lora.offer(packet({ type: 'ack', origin: ME, target }), 'own', 0);
     expect(drain(lora, 15_999)).toEqual([]);
     lora.heard({ type: 'ack', origin: '630dcd29' as NodeId, seq: 1, time: T0, target }, 10_000);
+    expect(drain(lora, 60_000)).toEqual([]);
+  });
+
+  it('sends no acknowledgement, own or bridged, of an event someone already acknowledged on the air', () => {
+    const lora = scheduler(0.5);
+    const target = { origin: OTHER, seq: 6 };
+    lora.heard({ type: 'ack', origin: '630dcd29' as NodeId, seq: 1, time: T0, target }, 0);
+    lora.offer(packet({ type: 'ack', origin: ME, target }), 'own', 1000);
+    lora.offer(packet({ type: 'ack', origin: '4a5b6c7d' as NodeId, target }), 'bridged', 1000);
     expect(drain(lora, 60_000)).toEqual([]);
   });
 

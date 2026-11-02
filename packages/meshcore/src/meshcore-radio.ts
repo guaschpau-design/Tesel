@@ -84,12 +84,19 @@ export class MeshCoreRadio implements RadioLink {
   async connect(): Promise<void> {
     if (this.#state !== 'disconnected') return;
     this.#setState('connecting');
+    let opened: OpenedRadio;
     try {
-      this.#open(await this.#connector());
+      opened = await this.#connector();
     } catch (error) {
-      this.#reset();
+      if (this.state === 'connecting') this.#reset('disconnected');
       throw error;
     }
+    // Disconnected while the radio was being opened: let it go.
+    if (this.state !== 'connecting') {
+      void opened.connection.close();
+      return;
+    }
+    this.#open(opened);
   }
 
   async configureGroupChannel(groupName: string, secret: Uint8Array): Promise<void> {
@@ -158,7 +165,7 @@ export class MeshCoreRadio implements RadioLink {
   async disconnect(): Promise<void> {
     const connection = this.#connection;
     this.#reopen = null;
-    this.#reset();
+    this.#reset('disconnected');
     await connection?.close();
   }
 
@@ -172,16 +179,16 @@ export class MeshCoreRadio implements RadioLink {
     this.#setState('ready');
   }
 
-  /** The connection dropped: connect to the same radio again, unless the user disconnected. */
+  /**
+   * The connection dropped: connect to the same radio again, unless the user disconnected. The link
+   * goes straight to `connecting`, never through `disconnected`, so the app keeps it for the group.
+   */
   #lost(): void {
     const reopen = this.#reopen;
     const connection = this.#connection;
-    this.#reset();
+    this.#reset(reopen === null ? 'disconnected' : 'connecting');
     void connection?.close();
-    if (reopen === null) return;
-    this.#reopen = reopen;
-    this.#setState('connecting');
-    this.#scheduleReconnect(reopen);
+    if (reopen !== null) this.#scheduleReconnect(reopen);
   }
 
   #scheduleReconnect(reopen: () => Promise<OpenedRadio>): void {
@@ -275,10 +282,13 @@ export class MeshCoreRadio implements RadioLink {
 
   /** Runs one command after the previous one has finished, with a timeout. */
   #command<T>(run: () => Promise<T>): Promise<T> {
+    const connection = this.#connection;
     const result = this.#queue.then(() => withTimeout(run()));
     this.#queue = result.catch((error: unknown) => {
-      // A late answer could be taken for the next command's: start clean on a new connection.
-      if (error instanceof RadioError && error.code === 'timeout') this.#lost();
+      // A late answer could be taken for the next command's: start clean on a new connection. A
+      // command left on a connection already replaced says nothing of the current one.
+      const timedOut = error instanceof RadioError && error.code === 'timeout';
+      if (timedOut && connection !== null && connection === this.#connection) this.#lost();
     });
     return result;
   }
@@ -290,16 +300,18 @@ export class MeshCoreRadio implements RadioLink {
     return this.#connection;
   }
 
-  #reset(): void {
+  /** Lets the connection go and moves to `next`; commands of the next connection queue anew. */
+  #reset(next: RadioLinkState): void {
     this.#connection?.off(PUSH_MSG_WAITING, this.#onMessageWaiting);
     this.#connection?.off('disconnected', this.#onDisconnected);
     if (this.#reconnectTimer !== null) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = null;
     this.#connection = null;
+    this.#queue = Promise.resolve();
     this.#channel = null;
     this.#channelSecrets = new Map();
     this.#name = null;
-    this.#setState('disconnected');
+    this.#setState(next);
   }
 
   #setState(state: RadioLinkState): void {

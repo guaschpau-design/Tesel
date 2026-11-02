@@ -23,14 +23,12 @@ export interface RelayOptions {
   readonly hasRoom?: () => boolean;
 }
 
-/** Backlog envelopes read from the database and sent at a time. */
-const BACKLOG_PAGE = 500;
 /**
- * A client that leaves this much unread is closed. Backlogs go out a page at a time, once the
- * previous page has left, and live envelopes are rate-limited, so only a client that stopped
- * reading for minutes gets here.
+ * Backlog envelopes read from the database and sent at a time. Each page goes once the previous
+ * one has left, and live envelopes are rate-limited, so a client that reads stays well within
+ * what it may leave unread (relay-limits.ts).
  */
-const MAX_BUFFERED_BYTES = 4 * 1024 * 1024;
+const BACKLOG_PAGE = 500;
 
 /** WebSocket close codes (RFC 6455 §7.4.1). */
 const CLOSE_POLICY_VIOLATION = 1008;
@@ -109,18 +107,18 @@ export class Relay {
         ? ({ ok: false, error: { code: 'bad-request', key: null } } as const)
         : parseClientMessage(text);
     if (!parsed.ok) {
-      send(socket, { t: 'error', code: parsed.error.code, key: parsed.error.key });
+      this.#send(socket, { t: 'error', code: parsed.error.code, key: parsed.error.key });
       return;
     }
     const message = parsed.value;
     switch (message.t) {
       case 'join':
         if (connection.group !== null) {
-          send(socket, { t: 'error', code: 'bad-request', key: null });
+          this.#send(socket, { t: 'error', code: 'bad-request', key: null });
           return;
         }
         if (!this.#mayJoin(message.group, connection.address)) {
-          send(socket, { t: 'error', code: 'rate-limited', key: null });
+          this.#send(socket, { t: 'error', code: 'rate-limited', key: null });
           socket.close(CLOSE_TRY_AGAIN_LATER, 'Too many new groups');
           return;
         }
@@ -130,13 +128,13 @@ export class Relay {
         return;
       case 'push':
         if (connection.group === null) {
-          send(socket, { t: 'error', code: 'not-joined', key: message.key });
+          this.#send(socket, { t: 'error', code: 'not-joined', key: message.key });
           return;
         }
         this.#push(connection, connection.group, message.key, message.env);
         return;
       case 'ping':
-        send(socket, { t: 'pong' });
+        this.#send(socket, { t: 'pong' });
         return;
     }
   }
@@ -150,11 +148,11 @@ export class Relay {
   #push(connection: Connection, group: Uint8Array, key: Uint8Array, env: Uint8Array): void {
     const { socket, bucket, address } = connection;
     if (!this.#limiter.allowsPush(bucket, toBase64url(group), address, this.#now())) {
-      send(socket, { t: 'error', code: 'rate-limited', key });
+      this.#send(socket, { t: 'error', code: 'rate-limited', key });
       return;
     }
     if (!this.#hasRoom()) {
-      send(socket, { t: 'error', code: 'unavailable', key });
+      this.#send(socket, { t: 'error', code: 'unavailable', key });
       return;
     }
     let stored: AppendResult;
@@ -162,15 +160,15 @@ export class Relay {
       stored = this.#store.append(group, key, env, this.#now());
     } catch (error) {
       console.error('An envelope could not be stored:', error);
-      send(socket, { t: 'error', code: 'unavailable', key });
+      this.#send(socket, { t: 'error', code: 'unavailable', key });
       return;
     }
-    send(socket, { t: 'stored', key });
+    this.#send(socket, { t: 'stored', key });
     if (!stored.isNew) return;
     // Relayed to the group's live clients but its sender, encoded once for all of them.
     const frame = encodeRelayMessage({ t: 'env', cursor: stored.cursor, key, env });
     for (const other of this.#rooms.get(toBase64url(group))?.live ?? []) {
-      if (other !== socket) sendFrame(other, frame);
+      if (other !== socket) this.#sendFrame(other, frame);
     }
   }
 
@@ -204,9 +202,9 @@ export class Relay {
       for (;;) {
         const page = this.#store.after(group, cursor, BACKLOG_PAGE);
         if (page.length < BACKLOG_PAGE) {
-          for (const stored of page) send(socket, envMessage(stored));
+          for (const stored of page) this.#send(socket, envMessage(stored));
           const last = this.#store.lastCursor(group);
-          send(socket, { t: 'synced', cursor: last, store: this.#store.id });
+          this.#send(socket, { t: 'synced', cursor: last, store: this.#store.id });
           room.catchingUp.delete(socket);
           room.live.add(socket);
           return;
@@ -228,22 +226,22 @@ export class Relay {
     room?.catchingUp.delete(socket);
     if (room?.live.size === 0 && room.catchingUp.size === 0) this.#rooms.delete(id);
   }
+
+  /** Sends a message, and drops a client that has stopped reading. */
+  #send(socket: WebSocket, message: ServerMessage): void {
+    this.#sendFrame(socket, encodeRelayMessage(message));
+  }
+
+  /** Sends an encoded message, and drops a client that has stopped reading. */
+  #sendFrame(socket: WebSocket, frame: string): void {
+    if (socket.readyState !== WebSocket.OPEN) return;
+    socket.send(frame);
+    if (socket.bufferedAmount > this.#limiter.maxBufferedBytes()) socket.terminate();
+  }
 }
 
 function envMessage(stored: StoredEnvelope): ServerMessage {
   return { t: 'env', cursor: stored.cursor, key: stored.key, env: stored.env };
-}
-
-/** Sends a message, and drops a client that has stopped reading. */
-function send(socket: WebSocket, message: ServerMessage): void {
-  sendFrame(socket, encodeRelayMessage(message));
-}
-
-/** Sends an encoded message, and drops a client that has stopped reading. */
-function sendFrame(socket: WebSocket, frame: string): void {
-  if (socket.readyState !== WebSocket.OPEN) return;
-  socket.send(frame);
-  if (socket.bufferedAmount > MAX_BUFFERED_BYTES) socket.terminate();
 }
 
 /** Sends messages; resolves once the last has been handed to the system, or the socket closed. */

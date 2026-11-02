@@ -21,6 +21,8 @@ import { listRepository, newestRegionsUrl, type Region, regionsOf } from './regi
 
 const WARNINGS_EVERY_MS = 10 * 60 * 1000;
 const REGIONS_EVERY_MS = 24 * 60 * 60 * 1000;
+/** After outlines that could not be downloaded, how long until they are tried again. */
+const REGIONS_RETRY_MS = 60 * 60 * 1000;
 /** Far more than a country's warnings feed takes. */
 const MAX_FEED_BYTES = 16 * 1024 * 1024;
 /**
@@ -130,12 +132,20 @@ export class WeatherWarningsService {
   async #refreshRegions(): Promise<void> {
     const url = newestRegionsUrl(await listRepository(this.#getJson));
     if (url === null) throw new Error('MeteoAlarm lists no region outlines');
-    this.#regionsCheckedAt = this.#now();
+    const checkedAt = this.#now();
+    this.#regionsCheckedAt = checkedAt;
     if (url === this.#regionsSource) return;
     // Kept before downloading: a server that runs out of memory on the way and restarts must not
     // download again at once, and again, instead of serving.
     await this.#storeRegions();
-    this.#regions = regionsOf(await this.#getJson(url, MAX_OUTLINES_BYTES), this.#countries);
+    try {
+      this.#regions = regionsOf(await this.#getJson(url, MAX_OUTLINES_BYTES), this.#countries);
+    } catch (error) {
+      // A download that failed, rather than one that took the server down, is tried again soon.
+      this.#regionsCheckedAt = checkedAt - REGIONS_EVERY_MS + REGIONS_RETRY_MS;
+      await this.#storeRegions();
+      throw error;
+    }
     this.#regionsSource = url;
     await this.#storeRegions();
   }

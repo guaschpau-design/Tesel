@@ -3,11 +3,12 @@
 
 import { eventRefKey, type TaskEvent } from '@tesel/protocol';
 
-import { keepNewest } from '../collections.ts';
+import { keepNewest, keepNewestAll } from '../collections.ts';
 import { defineSlice } from './slice.ts';
 
 export const tasks = defineSlice({
   handles: ['task'],
   empty: new Map() as ReadonlyMap<string, TaskEvent>,
   apply: (state, event) => keepNewest(state, eventRefKey(event.task), event),
+  applyAll: (state, events) => keepNewestAll(state, events, (event) => eventRefKey(event.task)),
 });

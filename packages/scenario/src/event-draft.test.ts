@@ -87,7 +87,7 @@ const SCENARIO: Scenario = {
 
 /** Plays a scenario's steps through a performer and returns the events sent. */
 async function perform(scenario: Scenario): Promise<TeselEvent[]> {
-  const performer = new ScenarioPerformer((name) => NODES[name]);
+  const performer = new ScenarioPerformer(new Map(Object.entries(NODES)));
   const sent: TeselEvent[] = [];
   const seqs = new Map<NodeId, number>();
   for (const event of plan(scenario, { positionEvery: 600 })) {

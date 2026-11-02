@@ -11,17 +11,19 @@ const HERE = { lat: 39.47, lon: -0.37 };
 function fakeFeed() {
   const calls: { at: LatLon | null; accuracy: number | null }[] = [];
   const shared: DeviceFix[] = [];
+  const sosCancels = new Map<string, unknown>();
   const feed = {
+    state: { sosCancels },
     sendSos: (_kind: SosKind, at: LatLon | null, accuracy: number | null) => {
       calls.push({ at, accuracy });
-      return Promise.resolve();
+      return Promise.resolve({ origin: 'a1b2c3d4', seq: 3 });
     },
     sharePosition: (fix: DeviceFix) => {
       shared.push(fix);
       return Promise.resolve();
     },
   } as unknown as GroupFeed;
-  return { feed, calls, shared };
+  return { feed, calls, shared, sosCancels };
 }
 
 describe('calling for help', () => {
@@ -54,5 +56,32 @@ describe('calling for help', () => {
     await Promise.resolve();
     expect(shared).toEqual([fix]);
     expect(release).toHaveBeenCalledOnce();
+  });
+
+  it('shares nothing once the call is cancelled', async () => {
+    const { feed, shared, sosCancels } = fakeFeed();
+    let onfix: ((fix: DeviceFix) => void) | undefined;
+    const release = vi.fn();
+    vi.spyOn(deviceLocation, 'use').mockImplementation((callback) => {
+      onfix = callback;
+      return release;
+    });
+    await callForHelp(feed, 'general', null, '');
+    sosCancels.set('a1b2c3d4:3', {});
+    onfix?.({ at: HERE, accuracy: 5, heading: null, speed: null, time: 0 });
+    await Promise.resolve();
+    expect(shared).toEqual([]);
+    expect(release).toHaveBeenCalledOnce();
+  });
+
+  it('lets the GPS go when no fix comes for a long while', async () => {
+    vi.useFakeTimers();
+    const { feed } = fakeFeed();
+    const release = vi.fn();
+    vi.spyOn(deviceLocation, 'use').mockReturnValue(release);
+    await callForHelp(feed, 'general', null, '');
+    await vi.advanceTimersByTimeAsync(15 * 60_000);
+    expect(release).toHaveBeenCalledOnce();
+    vi.useRealTimers();
   });
 });

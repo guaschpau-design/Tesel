@@ -8,7 +8,8 @@
 
   import type { Locale, Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
-  import { stripOf, sweptBy } from '../objects/sweeps.ts';
+  import { stripOf, stripWalker, sweptBy } from '../objects/sweeps.ts';
+  import { isFor } from '../teams/teams.ts';
   import { routeTaskOf } from '../tasks/tasks.ts';
   import { navigation, stopNavigating } from './navigation.svelte.ts';
   import PointGuide from './PointGuide.svelte';
@@ -39,11 +40,18 @@
 
   const target = $derived(navigation.target);
   const destination = $derived(target && targetDestination(target, { objects, positions }));
-  /** How much of a strip of a sweep followed this device has swept, from its own trail. */
+  /**
+   * How much of a strip of a sweep followed here is swept: by this device's team when the strip is
+   * the team's, as the sweep's panel counts it, or else by this device.
+   */
   const swept = $derived.by(() => {
-    const record = target?.kind === 'object' ? objects.get(target.key) : undefined;
+    if (target?.kind !== 'object' || self === null) return null;
+    const record = objects.get(target.key);
     const strip = record?.type === 'sweep' ? stripOf(record, objects) : null;
-    return strip && self !== null ? sweptBy(strip, { trails, teams }, self) : null;
+    if (strip === null) return null;
+    const walker = stripWalker(tasks, target.key);
+    const who = isFor(walker, self, teams) && walker !== null ? walker : self;
+    return sweptBy(strip, { trails, teams }, who);
   });
 
   $effect(() => {

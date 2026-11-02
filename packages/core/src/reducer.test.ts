@@ -8,7 +8,7 @@ import {
 } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
-import { EMPTY_STATE, HANDLED_TYPES, reduce, stateOf } from './reducer.ts';
+import { EMPTY_STATE, HANDLED_TYPES, reduce, reduceAll, stateOf } from './reducer.ts';
 
 const ALICE = 'a1b2c3d4' as NodeId;
 const BOB = '0f1e2d3c' as NodeId;
@@ -350,6 +350,41 @@ describe('slices', () => {
     expect(after.chat).not.toBe(before.chat);
     expect(after.members).toBe(before.members);
     expect(after.objects).toBe(before.objects);
+  });
+});
+
+describe('applying a batch', () => {
+  it('gives exactly the state that applying its events one by one gives, in any order', () => {
+    let seed = 7;
+    const random = () => (seed = (seed * 48271) % 2147483647) / 2147483647;
+    const batch = [...EVENTS, ...EVENTS.slice(0, 6)];
+    for (let round = 0; round < 20; round++) {
+      const shuffled = [...batch].sort(() => random() - 0.5);
+      const split = Math.floor(random() * shuffled.length);
+      const before = shuffled.slice(0, split).reduce(reduce, EMPTY_STATE);
+      const rest = shuffled.slice(split);
+      expect(reduceAll(before, rest)).toEqual(rest.reduce(reduce, before));
+    }
+  });
+
+  it('opens an operation of tens of thousands of messages and acknowledgements quickly', () => {
+    const events: TeselEvent[] = [];
+    for (let i = 0; i < 20_000; i++) {
+      events.push(chat(i % 2 ? ALICE : BOB, i + 1, T0 + i, 'ok'));
+      events.push({
+        type: 'ack',
+        origin: i % 2 ? BOB : ALICE,
+        seq: 100_000 + i,
+        time: T0 + i,
+        target: { origin: ALICE, seq: i + 1 },
+      });
+    }
+    // Under a second on a laptop; one by one it took minutes. Loose, so a busy machine passes.
+    const start = performance.now();
+    const state = stateOf(events);
+    expect(performance.now() - start).toBeLessThan(20_000);
+    expect(state.chat).toHaveLength(20_000);
+    expect(state.acks.size).toBe(20_000);
   });
 });
 

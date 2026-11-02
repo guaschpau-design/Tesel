@@ -1,6 +1,6 @@
 // What a planned action becomes on the wire: an event of the member who acts, still without its
 // header, which the sending device fills in with its own origin, sequence number and time. The
-// simulator and the app's practice both send a scenario's actions through a ScenarioPerformer.
+// simulator sends a scenario's actions through a ScenarioPerformer.
 
 import {
   generateTeamId,
@@ -25,10 +25,10 @@ export interface Actor {
 }
 
 /**
- * Who is who on the group: the node ID of a member by their alias. Undefined for a name the runner
- * does not know, which makes the step that uses it an error in the scenario.
+ * Who is who on the group: the node ID of each member by their alias. A name the runner does not
+ * know makes the step that uses it an error in the scenario.
  */
-export type Cast = (name: string) => NodeId | undefined;
+export type Cast = ReadonlyMap<string, NodeId>;
 
 /** Accuracy the simulated members report with every position, SOS and report, in metres. */
 const ACCURACY_M = 6;
@@ -48,7 +48,7 @@ function eventDraft(action: PlannedAction, actor: Actor, named: Named, cast: Cas
     return found;
   };
   const node = (name: string): NodeId => {
-    const found = named.teams.get(name) ?? cast(name);
+    const found = named.teams.get(name) ?? cast.get(name);
     if (found === undefined) throw new Error(`${action.type} names ${name}, who is not here`);
     return found;
   };
@@ -210,9 +210,12 @@ export class ScenarioPerformer {
     const named = { refs: this.#refs, teams: this.#teams, tasks: this.#tasks };
     // A new team's ID is chosen before its event is drafted, which names it.
     if (action.type === 'team' && !this.#teams.has(action.id)) {
-      const teams = new Set(this.#teams.values());
-      const taken = (id: NodeId) => teams.has(id) || this.#cast(id) !== undefined;
-      this.#teams.set(action.id, generateTeamId(taken));
+      // Never the ID of a member or of another team (§3.15).
+      const taken = new Set([...this.#teams.values(), ...this.#cast.values()]);
+      this.#teams.set(
+        action.id,
+        generateTeamId((id) => taken.has(id)),
+      );
     }
     const draft = eventDraft(action, actor, named, this.#cast);
     const ref = await send(draft);

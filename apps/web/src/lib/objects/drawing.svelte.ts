@@ -3,7 +3,15 @@
 
 import type { LatLon } from '@tesel/protocol';
 
-import { addPoint, isFull, startDraft, undoPoint, type Draft, type DraftKind } from './draft.ts';
+import {
+  addPoint,
+  fits,
+  isFull,
+  startDraft,
+  undoPoint,
+  type Draft,
+  type DraftKind,
+} from './draft.ts';
 import type { ImportedShape } from './shape-import.ts';
 
 export class Drawing {
@@ -30,11 +38,14 @@ export class Drawing {
     this.imported = shape;
   }
 
-  /** Adds a tapped point; once no more fit, the object is ready to be described. */
+  /**
+   * Adds a tapped point; once no more fit, the object is ready to be described, unless it is too
+   * wide to send, which the drawing bar says.
+   */
   add(at: LatLon): void {
     if (this.draft === null) return;
     this.draft = addPoint(this.draft, at);
-    if (isFull(this.draft)) this.describing = true;
+    if (isFull(this.draft) && fits(this.draft)) this.describing = true;
   }
 
   undo(): void {

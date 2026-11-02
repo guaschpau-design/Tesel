@@ -79,10 +79,25 @@ export function reduce(state: GroupState, event: TeselEvent): GroupState {
   return next;
 }
 
-/** The state after several more events, in any order: what a device does with a batch. */
+/**
+ * The state after several more events, in any order: what a device does with a batch. Each slice
+ * takes its share of the batch at once (`applyAll`), which is what the slices being independent
+ * and order-independent allows, and gives the same state as `reduce` event by event.
+ */
 export function reduceAll(state: GroupState, events: Iterable<TeselEvent>): GroupState {
+  const shares = new Map<SliceName, TeselEvent[]>();
+  for (const event of events) {
+    for (const name of READERS.get(event.type) ?? []) {
+      const share = shares.get(name);
+      if (share) share.push(event);
+      else shares.set(name, [event]);
+    }
+  }
   let next = state;
-  for (const event of events) next = reduce(next, event);
+  for (const [name, share] of shares) {
+    const value = applySliceAll(name, next[name], share);
+    if (value !== next[name]) next = { ...next, [name]: value };
+  }
   return next;
 }
 
@@ -120,4 +135,10 @@ export function outlivedEvents(
 function applySlice(name: SliceName, value: unknown, event: TeselEvent): unknown {
   const slice = SLICES[name] as unknown as Slice<unknown, EventType>;
   return slice.apply(value, event);
+}
+
+function applySliceAll(name: SliceName, value: unknown, events: readonly TeselEvent[]): unknown {
+  const slice = SLICES[name] as unknown as Slice<unknown, EventType>;
+  if (slice.applyAll) return slice.applyAll(value, events);
+  return events.reduce((current, event) => slice.apply(current, event), value);
 }

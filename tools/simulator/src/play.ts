@@ -26,14 +26,16 @@ export async function play(scenario: Scenario, options: PlayOptions): Promise<vo
   const events = plan(scenario, { positionEvery: options.positionEvery });
   const keys = deriveGroupKeys(options.secret);
   const devices = new Map<string, SimulatedDevice>();
-  for (const member of scenario.members) {
-    devices.set(member.alias, await SimulatedDevice.connect(options.server, keys));
-  }
-  const performer = new ScenarioPerformer((name) => devices.get(name)?.identity.nodeId);
-  const instant = !Number.isFinite(options.speed);
-  const startMs = Date.now();
-  const startTime = Math.floor(startMs / 1000) - (instant ? scenario.duration : 0);
   try {
+    // Inside the `try`: devices connected before one that fails are closed too.
+    for (const member of scenario.members) {
+      devices.set(member.alias, await SimulatedDevice.connect(options.server, keys));
+    }
+    const cast = new Map([...devices].map(([alias, device]) => [alias, device.nodeId]));
+    const performer = new ScenarioPerformer(cast);
+    const instant = !Number.isFinite(options.speed);
+    const startMs = Date.now();
+    const startTime = Math.floor(startMs / 1000) - (instant ? scenario.duration : 0);
     for (const event of events) {
       if (!instant) await waitUntil(startMs + (event.at * 1000) / options.speed);
       const device = devices.get(event.by);

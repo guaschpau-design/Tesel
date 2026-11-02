@@ -32,6 +32,25 @@ describe('the diary as a text file', () => {
     expect(lines[5]).toMatch(/ · Berta · Pide ayuda \(SOS\): Médica\. \(30S YJ 25695 72210\)$/);
   });
 
+  it('keeps an entry on its line whatever was written in it', () => {
+    const text = diaryText(
+      [
+        {
+          key: 'a',
+          time: 0,
+          author: 'Ana',
+          text: 'Uno\n00:00 · Jefe · Evacuad\r\u2028fin',
+          at: null,
+        },
+      ],
+      { group: 'G\nH', format: 'decimal', locale: 'es', t: translator('es'), now: 0 },
+    );
+    const lines = text.split('\n');
+    expect(lines).toHaveLength(6);
+    expect(lines[1]).toBe('Grupo: G H');
+    expect(lines[4]).toMatch(/ · Ana · Uno 00:00 · Jefe · Evacuad fin$/);
+  });
+
   it('names files after the group and the date', () => {
     const now = Date.UTC(2026, 9, 26, 15, 0);
     expect(fileName('Equipo Turia · Riada', now, 'txt')).toBe(

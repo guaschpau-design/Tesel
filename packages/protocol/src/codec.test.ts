@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { decodeEvent, encodeEvent, isKeepable, peekHeader } from './codec.ts';
-import { EventTypeCode, MAX_EVENT_SIZE } from './constants.ts';
+import { EventTypeCode, MAX_EVENT_SIZE, TEAM_MAX_MEMBERS } from './constants.ts';
 import type { NodeId, ShapeEvent, TeselEvent } from './events.ts';
 import { TASK_TEXT_MAX_BYTES } from './fields.ts';
 import { EVENT_TYPES, PAYLOADS } from './payloads.ts';
@@ -339,6 +339,14 @@ const polygonAt = (points: ShapeEvent['geometry']): ShapeEvent => ({
 });
 
 describe('text fields', () => {
+  it('refuses half of a surrogate pair rather than send other text', () => {
+    const chat = SAMPLE_EVENTS.find((event) => event.type === 'chat');
+    expect(chat).toBeDefined();
+    if (chat?.type !== 'chat') return;
+    expect(encodeEvent({ ...chat, text: 'SOS \ud83d' }).ok).toBe(false);
+    expect(encodeEvent({ ...chat, text: 'SOS \ud83d\udea8' }).ok).toBe(true);
+  });
+
   it('keeps a leading byte-order mark instead of silently dropping it', () => {
     const event: TeselEvent = { type: 'chat', origin: ALICE, seq: 1, time: T0, text: '﻿hi' };
     expect(decodeEvent(encodeOrFail(event))).toEqual({ ok: true, value: event });
@@ -520,8 +528,9 @@ describe('teams', () => {
   });
 
   it('holds 28 members with the longest name', () => {
+    expect(TEAM_MAX_MEMBERS).toBe(28);
     const members = Array.from(
-      { length: 28 },
+      { length: TEAM_MAX_MEMBERS },
       (_, index) => (0x10000000 + index).toString(16) as NodeId,
     );
     const full = { ...team, members, name: 'x'.repeat(32) };

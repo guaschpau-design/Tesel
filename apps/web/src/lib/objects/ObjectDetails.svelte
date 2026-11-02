@@ -1,6 +1,7 @@
 <!-- What a map object is, who last changed it, guidance there or along it, a task at it, changing
-     its label and kind, and deleting it for the whole group. A search area tells how its sweep goes, and lets whoever
-     coordinates plan one or remove it; a strip of a sweep, how far it is swept. -->
+     its label and kind, and deleting it for the whole group. A search area tells how its sweep
+     goes, and lets whoever coordinates plan one or remove it; a strip of a sweep, how far it is
+     swept. -->
 <script lang="ts">
   import { areaSquareMeters, lanesLength, pathMeters, type GroupState } from '@tesel/core';
   import { eventRefKey, ShapeStyleCode, type Place } from '@tesel/protocol';
@@ -114,11 +115,18 @@
     }
   });
 
+  /**
+   * Deletes the object for the whole group. A strip goes as its sweep's strips go, its tasks
+   * cancelled, and an area takes its sweep with it: no strip is left without its area.
+   */
   async function remove(): Promise<void> {
     const text = t('confirmDeleteObject', { name: title });
+    const isStrip = record?.type === 'sweep';
+    const swept = isStrip ? [objectKey] : strips.map((item) => item.key);
     if (!(await confirmations.ask({ text, confirm: t('delete') }))) return;
     attempt(async () => {
-      await ondelete();
+      if (swept.length > 0) await onremovesweep(swept);
+      if (!isStrip) await ondelete();
       onclose();
     }, t('actionFailed'));
   }
@@ -172,7 +180,10 @@
         folded: true,
       });
     }
-    list.push({ icon: 'trash', label: t('delete'), run: () => void remove(), folded: true });
+    // A sweep, and so a strip or an area with one, is removed only by whoever coordinates.
+    if (coordinator || (object.type !== 'sweep' && strips.length === 0)) {
+      list.push({ icon: 'trash', label: t('delete'), run: () => void remove(), folded: true });
+    }
     return list;
   });
 </script>

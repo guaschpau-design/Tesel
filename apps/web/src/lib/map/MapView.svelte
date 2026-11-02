@@ -1,7 +1,12 @@
 <script lang="ts">
   import 'maplibre-gl/dist/maplibre-gl.css';
 
-  import { Map as MapLibreMap, setWorkerUrl } from 'maplibre-gl';
+  import {
+    Map as MapLibreMap,
+    RasterTileSource,
+    setWorkerUrl,
+    VectorTileSource,
+  } from 'maplibre-gl';
   // MapLibre loads its worker relative to its own module, which bundling breaks; give Vite
   // the worker as a separate asset instead.
   import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
@@ -55,9 +60,20 @@
     instance.on('dataloading', startBusy);
     instance.on('movestart', startBusy);
     instance.on('idle', () => (busy = false));
+    // A tile that could not be had is drawn blank and kept so: when the connection comes back,
+    // every tile source is asked again (what is stored answers at once, the rest from the network).
+    const reload = () => {
+      for (const [id, spec] of Object.entries(instance.getStyle().sources)) {
+        const source = instance.getSource(id);
+        const tiled = source instanceof VectorTileSource || source instanceof RasterTileSource;
+        if (tiled && 'tiles' in spec) source.setTiles(spec.tiles);
+      }
+    };
+    window.addEventListener('online', reload);
     map = instance;
     onready(instance, openedWide);
     return () => {
+      window.removeEventListener('online', reload);
       instance.remove();
     };
   });

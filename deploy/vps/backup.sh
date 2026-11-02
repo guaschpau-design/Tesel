@@ -25,10 +25,13 @@ install -m 0700 -d "$backups"
 
 "$DIR/database.sh" "$DIR" copy "$backups/tesel-$stamp.db"
 
+# Written under another name until complete; a failed copy leaves nothing behind.
+partial="$backups/caddy-data-$stamp.tar.gz.partial"
+trap 'rm -f "$partial"' EXIT
 docker compose run --rm --no-deps --no-TTY --quiet-pull --entrypoint tar caddy \
-  -C /data -czf - . > "$backups/caddy-data-$stamp.tar.gz.partial"
-chmod 0600 "$backups/caddy-data-$stamp.tar.gz.partial"
-mv "$backups/caddy-data-$stamp.tar.gz.partial" "$backups/caddy-data-$stamp.tar.gz"
+  -C /data -czf - . > "$partial"
+chmod 0600 "$partial"
+mv "$partial" "$backups/caddy-data-$stamp.tar.gz"
 
 find "$backups" -maxdepth 1 -type f \( -name 'tesel-*.db' -o -name 'caddy-data-*.tar.gz' \) \
   -mtime "+$KEEP_DAYS" -delete

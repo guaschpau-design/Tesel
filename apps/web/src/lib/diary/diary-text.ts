@@ -15,8 +15,17 @@ export interface DiaryTextOptions {
   readonly now: number;
 }
 
+/**
+ * Every entry stays on its line: what members wrote may hold line breaks or other control
+ * characters, which would otherwise start what reads as an entry of its own.
+ */
+function oneLine(text: string): string {
+  return text.replace(/[\p{Cc}\u2028\u2029]+/gu, ' ');
+}
+
 export function diaryText(lines: readonly DiaryLine[], options: DiaryTextOptions): string {
-  const { group, format, locale, t, now } = options;
+  const { format, locale, t, now } = options;
+  const group = oneLine(options.group);
   const header = [
     `Tesel · ${t('diary')}`,
     t('diaryFileGroup', { group }),
@@ -25,7 +34,11 @@ export function diaryText(lines: readonly DiaryLine[], options: DiaryTextOptions
   ];
   const body = lines.map((line) => {
     const where = line.at && formatCoordinate(line.at, format);
-    const parts = [formatDateTime(line.time * 1000, locale), line.author, line.text];
+    const parts = [
+      formatDateTime(line.time * 1000, locale),
+      oneLine(line.author),
+      oneLine(line.text),
+    ];
     return parts.join(' · ') + (where ? ` (${where})` : '');
   });
   return [...header, ...body, ''].join('\n');

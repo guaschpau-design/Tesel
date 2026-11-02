@@ -29,7 +29,7 @@
   import MapScale from '../map/MapScale.svelte';
   import MemberLayer from '../members/MemberLayer.svelte';
   import TrailLayer from '../members/TrailLayer.svelte';
-  import { navigation } from '../navigation/navigation.svelte.ts';
+  import { navigation, stopNavigating } from '../navigation/navigation.svelte.ts';
   import { DRAFT_NAMES, draftGeometry, type DraftKind } from '../objects/draft.ts';
   import { Drawing } from '../objects/drawing.svelte.ts';
   import ObjectForm from '../objects/ObjectForm.svelte';
@@ -114,6 +114,19 @@
   const drawingOrMeasuring = $derived(drawing.draft !== null || tool !== null);
   /** Every tap on the map goes to one owner: the tool in use, or what is drawn on top. */
   const taps = new MapTaps(() => !drawingOrMeasuring);
+  // What was drawn, picked or followed in one group means nothing in another: changing groups, or
+  // leaving the last one, ends it. Guidance to a point of the map goes on.
+  let shownGroup: string | null = null;
+  $effect(() => {
+    const id = group?.feed.groupId ?? null;
+    untrack(() => {
+      if (id === shownGroup) return;
+      shownGroup = id;
+      drawing.stop();
+      tool = null;
+      if (navigation.target !== null && navigation.target.kind !== 'point') stopNavigating();
+    });
+  });
   /** The group's state slice by slice: each layer redraws only when its own slices change. */
   const slices = stateSlices(() => group?.feed.state ?? EMPTY_STATE);
   /** Which map layers are shown, by layer. */
@@ -238,6 +251,7 @@
     const geometry = draftGeometry(draft);
     if (draft.kind === 'marker' && first) await group.feed.placeMarker(first, code, label);
     else if (geometry) await group.feed.drawShape(geometry, code, label);
+    else return;
     drawing.stop();
     noticeSent(t, group.feed, t(DRAFT_NAMES[draft.kind]));
   }

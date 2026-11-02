@@ -142,4 +142,24 @@ describe('sweeps', () => {
     ]);
     expect(areasToClear(cleared, BERTA)).toEqual([]);
   });
+
+  it('does not clear an area while a strip it was planned with is missing', () => {
+    const done = [task(14, 2, 'done', ANA), task(15, 3, 'done', BERTA)];
+    // The second strip deleted: its ground was never searched.
+    const deleted = stateOf([
+      ...PLANNED,
+      ...done,
+      {
+        type: 'object-delete',
+        origin: ANA,
+        seq: 16,
+        time: T0 + 16,
+        object: { origin: ANA, seq: 3 },
+      },
+    ]);
+    expect(areasToClear(deleted, BERTA)).toEqual([]);
+    // The second strip not arrived yet over the radio: only the first is known.
+    const late = stateOf([...PLANNED.filter((event) => event.seq !== 3), task(14, 2, 'done', ANA)]);
+    expect(areasToClear(late, ANA)).toEqual([]);
+  });
 });

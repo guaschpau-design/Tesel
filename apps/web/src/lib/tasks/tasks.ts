@@ -94,18 +94,24 @@ export type TaskDoer =
   | { readonly kind: 'named'; readonly name: string }
   | { readonly kind: 'anyone' };
 
+/** A part of the list: the rows for one doer, and a key no other part has. */
+export interface DoerPart {
+  readonly key: string;
+  readonly doer: TaskDoer;
+  readonly rows: TaskRow[];
+}
+
 /**
  * The rows by whom they are for, each part in the list's order: this device's first, then each
  * other member or team by name, then those for anyone; so whoever coordinates sees who has what.
+ * Two members who go by the same name keep a part each.
  */
-export function byDoer(
-  rows: readonly TaskRow[],
-): { readonly doer: TaskDoer; readonly rows: TaskRow[] }[] {
-  const parts = new Map<string, { readonly doer: TaskDoer; readonly rows: TaskRow[] }>();
+export function byDoer(rows: readonly TaskRow[]): DoerPart[] {
+  const parts = new Map<string, DoerPart>();
   for (const row of rows) {
     const doer = doerOf(row);
-    const key = doer.kind === 'named' ? `named:${doer.name}` : doer.kind;
-    const part = parts.get(key) ?? { doer, rows: [] };
+    const key = doer.kind === 'named' ? `named:${row.fields.assignee ?? ''}` : doer.kind;
+    const part = parts.get(key) ?? { key, doer, rows: [] };
     part.rows.push(row);
     parts.set(key, part);
   }

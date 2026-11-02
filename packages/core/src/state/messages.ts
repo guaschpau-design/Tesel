@@ -3,23 +3,26 @@
 
 import type { AlertEvent, ChatEvent, ReportEvent } from '@tesel/protocol';
 
-import { insertOrdered } from '../collections.ts';
+import { insertAllOrdered, insertOrdered } from '../collections.ts';
 import { defineSlice } from './slice.ts';
 
 export const chat = defineSlice({
   handles: ['chat'],
   empty: [] as readonly ChatEvent[],
   apply: insertOrdered,
+  applyAll: insertAllOrdered,
 });
 
 export const reports = defineSlice({
   handles: ['report'],
   empty: [] as readonly ReportEvent[],
   apply: insertOrdered,
+  applyAll: insertAllOrdered,
 });
 
 export const alerts = defineSlice({
   handles: ['alert'],
   empty: [] as readonly AlertEvent[],
   apply: insertOrdered,
+  applyAll: insertAllOrdered,
 });

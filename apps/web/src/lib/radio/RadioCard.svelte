@@ -62,7 +62,8 @@
       <button class="primary" onclick={() => radio.connect()}>{t('radioConnect')}</button>
     </div>
     <p class="hint">{t('radioConnectHint')}</p>
-  {:else if supported && radio.state === 'ready'}
+  {:else if supported}
+    <!-- Also while it reconnects: a radio whose battery died can be let go and another paired. -->
     <div class="row">
       <button onclick={() => radio.disconnect()}>{t('radioDisconnect')}</button>
     </div>

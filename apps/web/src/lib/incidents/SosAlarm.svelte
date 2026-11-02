@@ -43,10 +43,10 @@
     const previous = known;
     known = new Set(current.map(({ tag }) => tag));
     if (previous === null) return;
-    const fresh = current.find(({ tag }) => !previous.has(tag));
-    if (fresh === undefined) return;
+    const fresh = current.filter(({ tag }) => !previous.has(tag));
+    if (fresh.length === 0) return;
     raiseAlarm(fresh, choices);
-    announcer.say(`${fresh.title}. ${fresh.body}`);
+    announcer.say(fresh.map(({ title, body }) => `${title}. ${body}`).join(' '));
     untrack(oninterrupt);
   });
 </script>

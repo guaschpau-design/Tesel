@@ -3,6 +3,8 @@
 // a notice either goes away by itself after a while or stays until the user closes it or its
 // owner withdraws it.
 
+import { untrack } from 'svelte';
+
 /** Something the user can do from a notice, besides closing it. */
 export interface NoticeAction {
   readonly label: string;
@@ -88,10 +90,13 @@ export function useStandingNotice(notice: () => StandingNotice | null): void {
   $effect(() => {
     const current = notice();
     if (current === null || current.text === closedText) return;
-    const id = notices.show(current.text, {
-      stays: true,
-      ...(current.action ? { action: current.action } : {}),
-    });
+    // Showing reads the list it writes: untracked, or the effect would run itself in a loop.
+    const id = untrack(() =>
+      notices.show(current.text, {
+        stays: true,
+        ...(current.action ? { action: current.action } : {}),
+      }),
+    );
     return () => {
       // Closed by the user: the same message is not shown again until it changes.
       if (!notices.list.some((shown) => shown.id === id)) closedText = current.text;

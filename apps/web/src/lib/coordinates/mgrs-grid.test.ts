@@ -43,6 +43,17 @@ describe('MGRS grid', () => {
     expect(lines(view).length).toBeGreaterThan(4);
   });
 
+  it('draws the grid of each hemisphere on its side of the equator', () => {
+    const view = { west: 9.98, south: -0.01, east: 10.02, north: 0.01, zoom: 15 };
+    const all = lines(view);
+    expect(all.length).toBeGreaterThan(4);
+    // No line runs across the equator: the northings of each side are their own.
+    for (const feature of all) {
+      const lats = feature.geometry.coordinates.map(([, lat = 0]) => lat);
+      expect(Math.min(...lats) < 0 && Math.max(...lats) > 0).toBe(false);
+    }
+  });
+
   it('draws nothing when zoomed too far out', () => {
     expect(mgrsGrid({ ...VALENCIA, zoom: 3 }).features).toEqual([]);
   });

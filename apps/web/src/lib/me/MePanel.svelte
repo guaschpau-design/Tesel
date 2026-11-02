@@ -25,7 +25,7 @@
   import StatusDot from '../ui/StatusDot.svelte';
   import SwitchRow from '../ui/SwitchRow.svelte';
   import type { StatusTone } from '../ui/status-tone.ts';
-  import { Submission } from '../ui/submission.svelte.ts';
+  import { attempt, Submission } from '../ui/submission.svelte.ts';
   import type { SelfName } from '../workspace/workspace.ts';
   import { deviceBattery } from './battery.svelte.ts';
 
@@ -141,14 +141,24 @@
             icon="locate"
             label={t('shareMyPosition')}
             on={current.mode === 'sharing'}
-            onclick={() => void current.setMode(current.mode === 'sharing' ? 'paused' : 'sharing')}
+            onclick={() => {
+              attempt(
+                () => current.setMode(current.mode === 'sharing' ? 'paused' : 'sharing'),
+                t('actionFailed'),
+              );
+            }}
           />
           {#if current.mode !== 'sharing'}
             <SwitchRow
               icon="hidden"
               label={t('hideLastPosition')}
               on={current.mode === 'hidden'}
-              onclick={() => void current.setMode(current.mode === 'hidden' ? 'paused' : 'hidden')}
+              onclick={() => {
+                attempt(
+                  () => current.setMode(current.mode === 'hidden' ? 'paused' : 'hidden'),
+                  t('actionFailed'),
+                );
+              }}
             />
             <p class="hint">
               {current.mode === 'hidden' ? t('positionHiddenHint') : t('positionNotSharedHint')}

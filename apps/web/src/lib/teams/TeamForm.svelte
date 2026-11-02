@@ -3,6 +3,7 @@
 <script lang="ts">
   import { teamOf, type GroupState } from '@tesel/core';
   import {
+    TEAM_MAX_MEMBERS,
     TEAM_NAME_MAX_BYTES,
     utf8ByteLength,
     type NodeId,
@@ -39,6 +40,8 @@
   const submission = new Submission();
 
   const tooLong = $derived(utf8ByteLength(name.trim()) > TEAM_NAME_MAX_BYTES);
+  /** No one more fits in the team (§3.15). */
+  const full = $derived(chosen.length >= TEAM_MAX_MEMBERS);
   /** Everyone the group knows, by alias, with the team each is in now. */
   const people = $derived(
     [...new Set<NodeId>([...groupState.members.keys(), ...groupState.positions.keys()])]
@@ -111,6 +114,7 @@
               <input
                 type="checkbox"
                 checked={chosen.includes(person.id)}
+                disabled={full && !chosen.includes(person.id)}
                 onchange={() => {
                   toggle(person.id);
                 }}
@@ -123,6 +127,7 @@
           </li>
         {/each}
       </ul>
+      {#if full}<p class="hint">{t('teamFull', { count: TEAM_MAX_MEMBERS })}</p>{/if}
     </fieldset>
     {#if submission.failed}<p class="warning">{t('sendFailed')}</p>{/if}
     <div class="row">

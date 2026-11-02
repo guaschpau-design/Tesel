@@ -107,6 +107,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Brand: a mark of three hexagonal tiles, one in signal lime, and an Archivo wordmark, used on the site, the app and its icons ([ADR-0020](docs/decisions/0020-colour-and-symbols.md)).
 - Map symbols of our own: pictograms on hexagonal tiles, coloured by family, chosen from a grid of symbols.
 - The project is called Tesel, formerly Teselia ([ADR-0019](docs/decisions/0019-name-tesel.md)); `tesel.eu` is its domain and the VPS redirects `teselia.eu` to it.
+- An audit of the whole code, and what it found put right: a radio whose link drops is linked to the group again by itself; a large SOS is never held back by smaller messages on the air; an area counts as cleared only with every strip of its sweep done, and goes with its sweep; teams stop at the 28 members one message holds; shapes too far apart get points in between; leaving a group hides one's position first; an SOS without a place is not drawn at an old position; every SOS that arrives sounds; an update waits in a window with an own SOS or a radio; the server shares out the memory clients may hold and checks their answers to its pings; and the timer's updates start the image they checked ([ADR-0093](docs/decisions/0093-gaps-an-audit-found.md)).
 
 ### Known limits
 

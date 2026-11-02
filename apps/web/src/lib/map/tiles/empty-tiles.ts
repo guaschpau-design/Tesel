@@ -8,9 +8,9 @@ function bytes(base64: string): ArrayBuffer {
 /** Vector tiles: no data at all. */
 export const EMPTY_VECTOR_TILE = new ArrayBuffer(0);
 
-/** A 1 × 1 transparent PNG. */
+/** A 1 × 1 PNG whose one pixel is fully transparent (0, 0, 0, 0). */
 const TRANSPARENT_PNG =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNgYGBgAAAABQABeqhXUAAAAABJRU5ErkJggg==';
 
 /** Raster maps: nothing to see. */
 export const EMPTY_RASTER_TILE = bytes(TRANSPARENT_PNG);

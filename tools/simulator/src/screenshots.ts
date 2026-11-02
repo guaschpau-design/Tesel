@@ -6,8 +6,8 @@
 //
 // The app must be built for its own server (VITE_SERVER_URL=/), as in the server image. Its base
 // map must be reachable, or given with --tiles: a JSON object of "z/x/y" → base64 tile, which is
-// loaded into the app's offline map store first. Writes tablet-map.png, tablet-chat.png and
-// phone-map.png; apps/site/img/README.md says how they become the site's images.
+// loaded into the app's offline map store first. Writes tablet-chat.png and phone-map.png;
+// apps/site/img/README.md says how they become the site's images.
 
 import { mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
@@ -32,7 +32,6 @@ const { values } = parseArgs({
 const ANA = { latitude: 39.4776, longitude: -0.3772 };
 /** Map views, as the app's address hash: zoom/lat/lon. */
 const VIEWS = {
-  tabletMap: '15.6/39.47835/-0.37505',
   // With the chat open on the right, the scene moves left to stay in view.
   tabletChat: '15.45/39.4781/-0.3711',
   // The SOS card covers the top of a phone's screen; the scene sits below it.
@@ -94,8 +93,6 @@ try {
   await page.getByLabel('Mensaje').fill('Reagrupamos en el punto de encuentro en 30 minutos');
   await page.getByRole('button', { name: 'Enviar', exact: true }).click();
 
-  await showView(page, VIEWS.tabletMap);
-  await page.screenshot({ path: join(values.out, 'tablet-map.png') });
   await showView(page, VIEWS.tabletChat);
   await openChat(page);
   await page.waitForTimeout(1500);

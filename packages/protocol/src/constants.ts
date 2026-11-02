@@ -289,6 +289,11 @@ export const TeamColourCode = {
 /** §3.15 Team name length in bytes. */
 export const TEAM_NAME_MAX_BYTES = 32;
 
+/** §3.15 Members a team holds at most: as many as fit in one event with the longest name. */
+export const TEAM_MAX_MEMBERS = Math.floor(
+  (MAX_EVENT_SIZE - HEADER_SIZE - NODE_ID_SIZE - 3 - TEAM_NAME_MAX_BYTES) / NODE_ID_SIZE,
+);
+
 /** §3.14 MEMBER_STATE.battery when unknown; values above 100 read as unknown too. */
 export const UNKNOWN_BATTERY = 0xff;
 

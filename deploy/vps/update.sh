@@ -51,10 +51,15 @@ set_setting() {
 }
 
 # Starts every service and waits for the server's health check only: whether a new image is
-# kept must not depend on the rest of the project.
+# kept must not depend on the rest of the project. The image is passed explicitly because
+# Compose prefers the environment to .env, and the timer's unit loads .env into the environment
+# when it starts: without this, the image this run just wrote to .env would not be the one
+# started.
 start() {
-  docker compose up --detach --remove-orphans --quiet-pull
-  docker compose up --detach --wait --wait-timeout "$HEALTH_TIMEOUT" tesel
+  local image
+  image="$(setting TESEL_IMAGE)"
+  TESEL_IMAGE="$image" docker compose up --detach --remove-orphans --quiet-pull
+  TESEL_IMAGE="$image" docker compose up --detach --wait --wait-timeout "$HEALTH_TIMEOUT" tesel
 }
 
 # Removes the server images that are neither running nor kept for going back.

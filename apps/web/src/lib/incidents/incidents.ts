@@ -4,6 +4,7 @@ import { openSosCalls, type GroupState } from '@tesel/core';
 import { sosPlace, type LatLon, type NodeId, type SosEvent } from '@tesel/protocol';
 
 import { aliasOf } from '../members/alias.ts';
+import { STALE_AFTER_S } from '../members/member-features.ts';
 
 interface Acknowledgement {
   /** Members who acknowledged, by alias. */
@@ -13,7 +14,7 @@ interface Acknowledgement {
 
 /**
  * Where the caller of an SOS is: where they called from; or, for a call made without a position,
- * the position they shared since; or nowhere known yet.
+ * the position they shared since, or shortly before; or nowhere known yet.
  */
 export type SosWhere =
   | { readonly kind: 'called'; readonly at: LatLon }
@@ -32,7 +33,8 @@ export function whereSos(state: Pick<GroupState, 'positions'>, event: SosEvent):
   const called = sosPlace(event);
   if (called !== null) return { kind: 'called', at: called };
   const shared = state.positions.get(event.origin);
-  return shared?.type === 'position'
+  // A position shared long before the call says little of where the caller is now.
+  return shared?.type === 'position' && shared.time >= event.time - STALE_AFTER_S
     ? { kind: 'shared', at: { lat: shared.lat, lon: shared.lon }, time: shared.time }
     : { kind: 'unknown' };
 }

@@ -102,9 +102,10 @@ function angleOf(tokens: readonly Token[]): { axis: 'lat' | 'lon' | null; value:
   // Only the last number may have decimals, and only degrees may carry a sign.
   if (numbers.slice(0, -1).some((value) => !Number.isInteger(value))) return null;
   const magnitude = Math.abs(degrees) + minutes / 60 + seconds / 3600;
-  const negative =
-    degrees < 0 || Object.is(degrees, -0) || letter?.letter === 'S' || letter?.letter === 'W';
-  if (letter !== undefined && degrees < 0) return null;
+  // "-0 30" is half a degree south or west: the sign of zero counts.
+  const signed = degrees < 0 || Object.is(degrees, -0);
+  if (letter !== undefined && signed) return null;
+  const negative = signed || letter?.letter === 'S' || letter?.letter === 'W';
   const axis =
     letter === undefined ? null : letter.letter === 'N' || letter.letter === 'S' ? 'lat' : 'lon';
   return { axis, value: negative ? -magnitude : magnitude };

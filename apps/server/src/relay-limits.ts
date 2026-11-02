@@ -37,6 +37,17 @@ export const DEFAULT_LIMITS: RelayLimits = {
   joinTimeoutMs: 10_000,
 };
 
+/**
+ * What the server lets all its clients leave unread together, shared out among the open
+ * connections, and what one connection may leave at most and at least of it. A client that leaves
+ * more is closed: a backlog page is far smaller than the least (500 envelopes of a few hundred
+ * bytes), so only a client that has stopped reading gets there, and many of them together cannot
+ * take the server's memory.
+ */
+const BUFFERED_BYTES_IN_ALL = 256 * 1024 * 1024;
+const MAX_BUFFERED_BYTES = 1024 * 1024;
+const MIN_BUFFERED_BYTES = 256 * 1024;
+
 /** A push rate limit lets this many seconds' worth of pushes through at once. */
 const BURST_SECONDS = 10;
 const SECONDS_PER_HOUR = 3600;
@@ -94,6 +105,12 @@ export class Limiter {
     const left = (this.#connectionsByAddress.get(address) ?? 1) - 1;
     if (left === 0) this.#connectionsByAddress.delete(address);
     else this.#connectionsByAddress.set(address, left);
+  }
+
+  /** What one connection may leave unread now, its share of what all may leave together. */
+  maxBufferedBytes(): number {
+    const share = BUFFERED_BYTES_IN_ALL / Math.max(1, this.#connections);
+    return Math.max(MIN_BUFFERED_BYTES, Math.min(MAX_BUFFERED_BYTES, share));
   }
 
   /** Takes one of the address's new groups for this hour, if it has one left. */

@@ -45,4 +45,16 @@ describe('MGRS', () => {
     expect(parseMgrs('30S IJ 25695 72210')).toBeNull();
     expect(parseMgrs('39.4699, -0.3763')).toBeNull();
   });
+
+  it('finds no square whose row letter lies outside the band', () => {
+    const rows = 'ABCDEFGHJKLMNPQRSTUV'.match(/./g) ?? [];
+    const read = rows.map((row) => {
+      const parsed = parseMgrs(`30S Y${row} 50000 50000`);
+      return parsed && mgrsToUtm(parsed);
+    });
+    const found = read.filter((utm) => utm !== null);
+    // Band S is 8° high, some 900 km: nine or ten of the twenty rows.
+    expect(found.length).toBeGreaterThan(8);
+    expect(found.length).toBeLessThan(12);
+  });
 });

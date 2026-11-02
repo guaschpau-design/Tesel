@@ -31,14 +31,29 @@ interface BasemapArchive extends TileArchive {
   bounds(): Promise<Bounds>;
 }
 
+/**
+ * pmtiles keeps a failed fetch of the archive's header or directories for good, so one failure
+ * offline would leave the base map blank for the rest of the session. After a failure that was
+ * not a cancellation, reading starts again with a fresh reader: the map comes back with the
+ * connection.
+ */
 function pmtilesArchive(url: string): BasemapArchive {
-  const archive = new PMTiles(url);
+  let archive = new PMTiles(url);
+  async function read<T>(use: (reader: PMTiles) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    const reader = archive;
+    try {
+      return await use(reader);
+    } catch (error) {
+      if (!signal?.aborted && archive === reader) archive = new PMTiles(url);
+      throw error;
+    }
+  }
   return {
     async getTile(z, x, y, signal) {
-      return (await archive.getZxy(z, x, y, signal))?.data;
+      return (await read((reader) => reader.getZxy(z, x, y, signal), signal))?.data;
     },
     async bounds() {
-      const { minLon, minLat, maxLon, maxLat } = await archive.getHeader();
+      const { minLon, minLat, maxLon, maxLat } = await read((reader) => reader.getHeader());
       return { west: minLon, south: minLat, east: maxLon, north: maxLat };
     },
   };

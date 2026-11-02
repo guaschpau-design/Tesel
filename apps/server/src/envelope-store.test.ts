@@ -54,6 +54,16 @@ describe('envelope store', () => {
     expect(store.append(GROUP_A, key(3), env(3), 4000).cursor).toBe(3);
   });
 
+  it('deletes old envelopes a batch at a time, the oldest first', () => {
+    const store = new EnvelopeStore(':memory:');
+    for (let n = 1; n <= 5; n++) store.append(GROUP_A, key(n), env(n), 1000 + n);
+    expect(store.deleteReceivedBefore(2000, 2)).toBe(2);
+    expect(store.after(GROUP_A, 0, 10).map((e) => e.cursor)).toEqual([3, 4, 5]);
+    expect(store.deleteReceivedBefore(2000, 2)).toBe(2);
+    expect(store.deleteReceivedBefore(2000, 2)).toBe(1);
+    expect(store.lastCursor(GROUP_A)).toBe(0);
+  });
+
   it('forgets a group whose envelopes have all expired, but never reuses its cursors', () => {
     const store = new EnvelopeStore(':memory:');
     store.append(GROUP_A, key(1), env(1), 1000);

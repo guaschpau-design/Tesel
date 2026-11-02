@@ -2,7 +2,7 @@
 // order, so every device keeps the same diary. The other slices hold the current picture; this one
 // keeps what happened on the way, such as an object's earlier versions or who joined when.
 
-import { insertOrdered } from '../collections.ts';
+import { insertAllOrdered, insertOrdered } from '../collections.ts';
 import { defineSlice, type EventOfType } from './slice.ts';
 
 const JOURNAL_TYPES = [
@@ -31,4 +31,5 @@ export const journal = defineSlice({
   handles: JOURNAL_TYPES,
   empty: [] as readonly JournalEvent[],
   apply: insertOrdered,
+  applyAll: insertAllOrdered,
 });

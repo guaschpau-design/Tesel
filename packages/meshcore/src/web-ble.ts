@@ -42,7 +42,7 @@ interface BleServer {
 
 export interface BleDevice {
   readonly name?: string;
-  readonly gatt?: { connect(): Promise<BleServer> };
+  readonly gatt?: { connect(): Promise<BleServer>; disconnect(): void };
   addEventListener(
     type: 'gattserverdisconnected',
     listener: () => void,
@@ -61,6 +61,7 @@ interface LibraryConnection extends CompanionConnection {
   /** Tells the radio which companion protocol version the app speaks; answers with its own. */
   deviceQuery(appTargetVersion: number): Promise<unknown>;
   sendToRadioFrame(frame: Uint8Array): Promise<void>;
+  sendCommandSyncNextMessage(): Promise<void>;
 }
 
 const Connection = UntypedConnection as new () => LibraryConnection;
@@ -97,9 +98,29 @@ class BleConnection extends Connection {
     this.#radioIn = radioIn;
   }
 
-  /** A refused write rejects the command that made it, instead of leaving it to time out. */
+  /**
+   * A refused write rejects the command that made it, instead of leaving it to time out, and tells
+   * the link the connection is gone, so it connects again at once.
+   */
   override async sendToRadioFrame(frame: Uint8Array): Promise<void> {
-    await this.#radioIn.writeValue(frame);
+    try {
+      await this.#radioIn.writeValue(frame);
+    } catch (error) {
+      this.onDisconnected();
+      throw error;
+    }
+  }
+
+  /**
+   * meshcore.js does not catch a refused write while reading the next message, which would surface
+   * as an unhandled rejection: the link is already being dropped (above), so it is let go here.
+   */
+  override async sendCommandSyncNextMessage(): Promise<void> {
+    try {
+      await super.sendCommandSyncNextMessage();
+    } catch {
+      // The connection is gone; the read that asked for it times out with it.
+    }
   }
 
   override close(): Promise<void> {
@@ -120,8 +141,15 @@ export const webBleConnector: Connector = async () => {
 
 /** Connects to `device`, pairs if it has not yet, and checks that the radio answers. */
 export async function openRadio(device: BleDevice): Promise<OpenedRadio> {
-  if (device.gatt === undefined) throw new Error('the device offers no Bluetooth services');
-  const server = await within(device.gatt.connect(), CONNECT_MS, 'the radio did not connect');
+  const { gatt } = device;
+  if (gatt === undefined) throw new Error('the device offers no Bluetooth services');
+  const server = await within(gatt.connect(), CONNECT_MS, 'the radio did not connect').catch(
+    (error: unknown) => {
+      // A connection that completes after the limit must not keep holding the radio.
+      gatt.disconnect();
+      throw error;
+    },
+  );
   try {
     const service = await server.getPrimaryService(SERVICE);
     const radioIn = await service.getCharacteristic(RADIO_IN);

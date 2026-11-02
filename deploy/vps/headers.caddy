@@ -25,6 +25,6 @@ header @app {
 	defer
 }
 header @site {
-	Content-Security-Policy "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+	Content-Security-Policy "default-src 'self'; script-src 'none'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 	defer
 }

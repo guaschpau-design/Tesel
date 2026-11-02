@@ -219,7 +219,8 @@ describe('MeshCore radio', () => {
     expect(radio.state).toBe('connecting');
     await vi.advanceTimersByTimeAsync(1000);
     expect(radio.state).toBe('ready');
-    expect(states).toEqual(['disconnected', 'connecting', 'ready']);
+    // Straight to reconnecting: the app keeps the radio for its group meanwhile.
+    expect(states).toEqual(['connecting', 'ready']);
     vi.useRealTimers();
   });
 
@@ -259,5 +260,43 @@ describe('MeshCore radio', () => {
     expect(fake.closed).toBe(true);
     await radio.disconnect();
     vi.useRealTimers();
+  });
+
+  it('keeps a new connection when a command left on the dropped one times out later', async () => {
+    vi.useFakeTimers();
+    const first = new FakeCompanion(slots(['Public', EMPTY], ['', EMPTY]));
+    const again = new FakeCompanion(slots(['Public', EMPTY], ['', EMPTY]));
+    const radio = await connected(first, again);
+    await radio.configureGroupChannel('Rescate', SECRET);
+    first.sendChannelData = () => new Promise(() => undefined);
+    const stuck = radio.send(new Uint8Array([1]));
+    // The link drops with the send in flight, and the radio is back a second later.
+    first.emit('disconnected');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(radio.state).toBe('ready');
+    // The send on the old connection times out: the new one stays.
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(await stuck).toMatchObject({ status: 'failed' });
+    expect(radio.state).toBe('ready');
+    expect(again.closed).toBe(false);
+    await radio.disconnect();
+    vi.useRealTimers();
+  });
+
+  it('lets go of a radio that finishes opening after the user disconnected', async () => {
+    let finish: (opened: OpenedRadio) => void = () => undefined;
+    const fake = new FakeCompanion(slots(['Public', EMPTY]));
+    const radio = new MeshCoreRadio(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const connecting = radio.connect();
+    await radio.disconnect();
+    finish({ connection: fake, name: 'MeshCore-T1000', reopen: () => Promise.reject(new Error()) });
+    await connecting;
+    expect(radio.state).toBe('disconnected');
+    expect(fake.closed).toBe(true);
   });
 });

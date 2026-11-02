@@ -30,6 +30,15 @@ export function invitationInAddress(
   return decodeInvitationToken(hash.slice(1));
 }
 
+/**
+ * Whether the address is a join link's, read or not: its secret, if it holds one, is taken out of
+ * the address bar and the history even when the link is not one the app reads (a query added by
+ * whatever passed it on, a slash at the end).
+ */
+export function isJoinAddress(address: Address, base: string): boolean {
+  return address.pathname.replace(/\/$/, '') === `${base}join`;
+}
+
 export function invitationLink(
   origin: string,
   base: string,

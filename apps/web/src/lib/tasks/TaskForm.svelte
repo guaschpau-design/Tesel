@@ -35,7 +35,6 @@
     onsave: (task: EventRef | null, fields: TaskFields) => Promise<void>;
     /** Leaves the form to pick the task's place on the map, with what it holds so far. */
     onpickplace: (draft: TaskFields) => void;
-    /** Back to the list. */
     /** Leaves the form: saved, or given up. */
     onclose: () => void;
   }

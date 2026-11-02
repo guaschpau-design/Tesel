@@ -222,9 +222,10 @@ sed -i '/^TESEL_COMMAND_POST=/d; /^TESEL_POST_DNS=/d; /^TESEL_POST_EMAIL=/d' "$I
 # Each scheduled job is a oneshot service run by its timer, which reports how it ended
 # (notify.sh): failures to the journal, and every result to TESEL_ALERT_URL when it is set.
 # cosign, which update.sh runs, keeps Sigstore's trust root under $HOME, which systemd does not
-# set for system services.
+# set for system services. Each job has a time limit, so one that hangs (a download that stalls)
+# fails, is reported, and does not keep its timer from starting it again.
 write_job() {
-  local name="$1" description="$2" command="$3" schedule="$4" timer_description="$5"
+  local name="$1" description="$2" command="$3" schedule="$4" timer_description="$5" limit="$6"
   cat > "/etc/systemd/system/$name.service" <<CONF
 [Unit]
 Description=$description
@@ -234,6 +235,7 @@ OnFailure=tesel-notify@%N.service
 
 [Service]
 Type=oneshot
+TimeoutStartSec=$limit
 Environment=HOME=/root
 EnvironmentFile=-$INSTALL_DIR/.env
 ExecStart=$command
@@ -262,16 +264,16 @@ CONF
 write_job tesel-update "Update Tesel to the latest signed version" \
   "$INSTALL_DIR/update.sh $INSTALL_DIR" \
   $'OnBootSec=5min\nOnUnitActiveSec=15min\nRandomizedDelaySec=2min' \
-  "Check for a new Tesel version every 15 minutes"
+  "Check for a new Tesel version every 15 minutes" 30min
 write_job tesel-maps "Rebuild the Tesel base map from the latest OpenStreetMap data" \
   "$INSTALL_DIR/maps.sh $INSTALL_DIR/maps" \
   $'OnCalendar=monthly\nRandomizedDelaySec=1d\nPersistent=true' \
-  "Rebuild the Tesel base map every month"
+  "Rebuild the Tesel base map every month" 6h
 # Before the automatic reboots at 04:00.
 write_job tesel-backup "Back up the Tesel server" \
   "$INSTALL_DIR/backup.sh $INSTALL_DIR" \
   $'OnCalendar=*-*-* 03:00\nRandomizedDelaySec=30min\nPersistent=true' \
-  "Back up the Tesel server every night"
+  "Back up the Tesel server every night" 2h
 systemctl daemon-reload
 
 if [[ ! -f "$INSTALL_DIR/maps/basemap.pmtiles" ]]; then

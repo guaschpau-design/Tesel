@@ -9,7 +9,7 @@
   import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
   import ToolButton from '../ui/ToolButton.svelte';
   import ToolCard from '../ui/ToolCard.svelte';
-  import { DRAFT_TITLES, isComplete, type Draft, type DraftKind } from './draft.ts';
+  import { DRAFT_TITLES, fits, isComplete, type Draft, type DraftKind } from './draft.ts';
   import CoordinateEntry from '../coordinates/CoordinateEntry.svelte';
   import { importShape, type ImportedShape, type ShapeImportError } from './shape-import.ts';
 
@@ -42,6 +42,7 @@
     unsupported: 'shapeFileUnsupported',
     'no-line': 'shapeFileNoLine',
     'no-area': 'shapeFileNoArea',
+    'too-wide': 'shapeFileTooWide',
   };
 
   let picker: HTMLInputElement | undefined = $state();
@@ -77,7 +78,7 @@
   onclose={oncancel}
   finish={draft.kind === 'marker'
     ? undefined
-    : { label: t('finish'), disabled: !isComplete(draft), run: onfinish }}
+    : { label: t('finish'), disabled: !isComplete(draft) || !fits(draft), run: onfinish }}
 >
   {#snippet tools()}
     <ToolButton
@@ -129,5 +130,6 @@
   {#if typing}
     <CoordinateEntry {t} action={t('add')} {onpoint} />
   {/if}
+  {#if !fits(draft)}<p class="warning">{t('drawTooWide')}</p>{/if}
   {#if failure}<p class="warning">{t(failure)}</p>{/if}
 </ToolCard>

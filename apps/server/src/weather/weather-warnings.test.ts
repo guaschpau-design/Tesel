@@ -112,6 +112,34 @@ describe('weather warnings service', () => {
     warn.mockRestore();
   });
 
+  it('tries the outlines again within the hour after a download that failed', async () => {
+    let time = now();
+    let failing = true;
+    const { asked, getJson } = meteoalarm();
+    const service = new WeatherWarningsService({
+      countries: ['ES'],
+      regionsFile: null,
+      maxAgeMinutes: MAX_AGE_MINUTES,
+      getJson: (url) =>
+        failing && url.includes('Geocodes')
+          ? Promise.reject(new Error('connection reset'))
+          : getJson(url),
+      now: () => time,
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await service.refresh();
+    expect(service.body()).toBeNull();
+    failing = false;
+    time += 10 * 60 * 1000;
+    await service.refresh();
+    expect(service.body()).toBeNull();
+    time += 60 * 60 * 1000;
+    await service.refresh();
+    expect(service.body()).not.toBeNull();
+    expect(asked.filter((url) => url.includes('Geocodes'))).toHaveLength(1);
+    warn.mockRestore();
+  });
+
   it('keeps the last document when MeteoAlarm cannot be reached', async () => {
     let reachable = true;
     const { getJson } = meteoalarm();

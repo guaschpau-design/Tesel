@@ -97,14 +97,20 @@ export class EnvelopeStore {
   }
 
   /**
-   * Deletes envelopes received before `time`, and forgets the cursors of groups left without
-   * envelopes; returns how many envelopes went. The space they
-   * took is given back to the file system.
+   * Deletes envelopes received before `time`, the oldest first and at most `limit` of them (all
+   * of them when it is negative, as SQLite's LIMIT takes it), and
+   * forgets the cursors of groups left without envelopes; returns how many envelopes went. The
+   * space they took is given back to the file system. A limit lets a long deletion go in short
+   * steps, with the server answering in between.
    */
-  deleteReceivedBefore(time: number): number {
+  deleteReceivedBefore(time: number, limit = -1): number {
     const deleted = transaction(this.#db, () => {
       const changes = Number(
-        this.#sql('DELETE FROM envelopes WHERE received_at < ?').run(time).changes,
+        this.#sql(
+          `DELETE FROM envelopes WHERE (group_id, cursor) IN
+            (SELECT group_id, cursor FROM envelopes WHERE received_at < ?
+              ORDER BY received_at LIMIT ?)`,
+        ).run(time, limit).changes,
       );
       // Groups left without envelopes are forgotten; the cursor they reached is kept as the one
       // every forgotten group counts on from, so a cursor is never reused.

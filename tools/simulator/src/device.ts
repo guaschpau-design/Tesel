@@ -26,7 +26,10 @@ export class SimulatedDevice {
   readonly #socket: WebSocket;
   readonly #keys: GroupKeys;
   /** Pushes waiting for the relay's `stored`, by event key. */
-  readonly #waiting = new Map<string, { resolve: () => void; retry: () => void }>();
+  readonly #waiting = new Map<
+    string,
+    { resolve: () => void; retry: () => void; reject: (error: Error) => void }
+  >();
   #seq = 0;
 
   private constructor(socket: WebSocket, keys: GroupKeys, identity: Identity) {
@@ -38,11 +41,24 @@ export class SimulatedDevice {
       if (!Buffer.isBuffer(data)) return;
       const message = parseServerMessage(data.toString('utf8'));
       if (message === null || (message.t !== 'stored' && message.t !== 'error')) return;
-      if (message.key === null) return;
+      if (message.key === null) {
+        // Refused without saying which push: none of them can be counted on.
+        if (message.t === 'error') this.#failAll(new Error(`the relay refused: ${message.code}`));
+        return;
+      }
       const waiting = this.#waiting.get(toBase64url(message.key));
       if (message.t === 'stored') waiting?.resolve();
       else if (message.code === 'rate-limited') waiting?.retry();
+      else waiting?.reject(new Error(`the relay refused the event: ${message.code}`));
     });
+    socket.on('close', () => {
+      this.#failAll(new Error('the relay closed the connection'));
+    });
+  }
+
+  /** Every push still waiting fails: the relay will not store it. */
+  #failAll(error: Error): void {
+    for (const waiting of [...this.#waiting.values()]) waiting.reject(error);
   }
 
   /** Connects a new device, with a new identity, to the group on `server`. */
@@ -72,12 +88,16 @@ export class SimulatedDevice {
     if (!bytes.ok) throw new Error(`cannot encode ${event.type}: ${bytes.error.detail}`);
     const key = eventKey(this.#keys, event);
     const push = encodeRelayMessage({ t: 'push', key, env: sealEnvelope(this.#keys, bytes.value) });
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const id = toBase64url(key);
       this.#waiting.set(id, {
         resolve: () => {
           this.#waiting.delete(id);
           resolve();
+        },
+        reject: (error) => {
+          this.#waiting.delete(id);
+          reject(error);
         },
         retry: () => {
           setTimeout(() => {

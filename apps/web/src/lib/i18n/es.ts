@@ -409,6 +409,7 @@ export const es: Messages = {
   drawArea: 'Zona',
   drawRoute: 'Ruta',
   drawPointsCount: { one: '{count} punto', other: '{count} puntos' },
+  drawTooWide: 'Es demasiado extenso para enviarlo. Dibújalo más pequeño.',
   drawPoints: '{count} de {max} puntos',
   drawHintMarker: 'Toca el mapa donde va, o escribe sus coordenadas.',
   drawHintArea: 'Toca las esquinas en el mapa, o importa un archivo.',
@@ -424,6 +425,7 @@ export const es: Messages = {
   shapeFileNoLine: 'El archivo no tiene ninguna ruta: hace falta una línea de dos puntos o más.',
   shapeFileNoArea:
     'El archivo no tiene ninguna zona: hace falta un polígono, o una línea que se cierre, de tres puntos o más.',
+  shapeFileTooWide: 'Lo que hay en el archivo es demasiado extenso para enviarlo.',
   typeCoordinates: 'Escribir coordenadas',
   undo: 'Deshacer',
   finish: 'Terminar',
@@ -622,6 +624,7 @@ export const es: Messages = {
   teamName: 'Nombre del equipo',
   teamColour: 'Color',
   teamMembers: 'Quién está',
+  teamFull: 'Un equipo tiene como máximo {count} personas.',
   teamNone: 'Sin equipo',
   teamOf: 'Equipo {name}',
   teamDissolve: 'Deshacer equipo',

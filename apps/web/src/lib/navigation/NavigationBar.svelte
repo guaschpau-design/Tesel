@@ -2,7 +2,7 @@
      guidance says and the button to stop. PointGuide and RouteGuide fill it. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
-  import { onMount, type Snippet } from 'svelte';
+  import { onMount, untrack, type Snippet } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
   import MapCard from '../ui/MapCard.svelte';
@@ -28,6 +28,19 @@
   /** The map may be turned; the arrow points the way on the map as it is shown. */
   let mapBearing = $state(0);
 
+  /**
+   * The arrow's turn, in degrees, kept unbounded: each change takes the shortest way, so the arrow
+   * swings past north rather than spinning the long way round.
+   */
+  let turn = $state(0);
+  $effect(() => {
+    if (bearing === null) return;
+    const target = bearing - mapBearing;
+    untrack(() => {
+      turn += ((((target - turn) % 360) + 540) % 360) - 180;
+    });
+  });
+
   onMount(() => {
     const turned = () => {
       mapBearing = map.getBearing();
@@ -43,7 +56,7 @@
 <MapCard label={title} {edge}>
   <div class="navigation">
     {#if bearing !== null}
-      <span class="arrow" style:rotate="{bearing - mapBearing}deg">
+      <span class="arrow" style:rotate="{turn}deg">
         <Pictogram name="heading" size={28} />
       </span>
     {/if}

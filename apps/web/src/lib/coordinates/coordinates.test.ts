@@ -56,7 +56,17 @@ describe('coordinates', () => {
   });
 
   it('refuses text that is no coordinate', () => {
-    for (const text of ['', 'Valencia', '91 0', '39.4 -0.3 2', '39°61′ N 0° W', '30S 725695']) {
+    const texts = [
+      '',
+      'Valencia',
+      '91 0',
+      '39.4 -0.3 2',
+      '39°61′ N 0° W',
+      '30S 725695',
+      // A sign and a letter that disagree, even on zero.
+      '39 N -0 30 E',
+    ];
+    for (const text of texts) {
       expect(parseCoordinate(text), text).toBeNull();
     }
   });

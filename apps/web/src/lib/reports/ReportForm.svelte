@@ -49,8 +49,11 @@
     return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
   }
 
+  /** One more or one less; one less than none goes back to not known. */
   function count(key: keyof Casualties, step: number): void {
-    const next = Math.min(MAX_COUNT, Math.max(0, (casualties[key] ?? 0) + step));
+    const current = casualties[key];
+    const next =
+      step < 0 && (current ?? 0) === 0 ? null : Math.min(MAX_COUNT, (current ?? 0) + step);
     casualties = { ...casualties, [key]: next };
   }
 

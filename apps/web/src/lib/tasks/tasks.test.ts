@@ -14,6 +14,7 @@ import {
 
 const ANA = 'a1b2c3d4' as NodeId;
 const BERTA = '0f1e2d3c' as NodeId;
+const CARLA = 'c0ffee01' as NodeId;
 const T0 = 1_761_350_400;
 
 function task(
@@ -89,6 +90,16 @@ describe('task list', () => {
       { doer: { kind: 'anyone' }, texts: ['Revisar el almacén', 'Cortar la calle'] },
     ]);
     expect(parts(BERTA)[0]).toEqual({ doer: { kind: 'you' }, texts: ['Llevar agua'] });
+  });
+
+  it('keeps apart the tasks of two members who go by the same name', () => {
+    const rows = [BERTA, CARLA].map((assignee, index) => ({
+      key: String(index),
+      mine: false,
+      assigneeName: 'Marta',
+      fields: { assignee },
+    })) as unknown as Parameters<typeof byDoer>[0];
+    expect(byDoer(rows).map((part) => part.rows.length)).toEqual([1, 1]);
   });
 
   it('lets this device move along only its own tasks and those for anyone', () => {

@@ -78,6 +78,9 @@ function fakeRadio(options: Options = {}): {
             server.disconnected = true;
           },
         }),
+      disconnect: () => {
+        server.disconnected = true;
+      },
     },
     addEventListener: () => undefined,
   };
@@ -117,6 +120,21 @@ describe('opening a radio over Web Bluetooth', () => {
   it('takes a write the system refuses for a link that is not paired', async () => {
     const { device } = fakeRadio({ readable: false, refuseWrites: true });
     expect((await failure(openRadio(device))).code).toBe('not-paired');
+  });
+
+  it('drops the link at once when the system refuses a write on an open connection', async () => {
+    const options: Options = {};
+    const { device } = fakeRadio(options);
+    const opened = await openRadio(device);
+    const dropped = vi.fn();
+    opened.connection.on('disconnected', dropped);
+    // The radio goes out of reach: from now on the system refuses every write.
+    options.refuseWrites = true;
+    await expect(opened.connection.getChannel(1)).rejects.toThrow();
+    // meshcore.js tells its listeners on the next turn of the event loop.
+    await vi.waitFor(() => {
+      expect(dropped).toHaveBeenCalledOnce();
+    });
   });
 
   it('connects a radio whose data cannot be read without reading it', async () => {
