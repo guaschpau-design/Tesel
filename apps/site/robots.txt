@@ -1,0 +1,8 @@
+# The landing page, in both languages, is for search engines; the app, its maps and the relay
+# are not pages to find.
+User-agent: *
+Disallow: /app/
+Disallow: /maps/
+Disallow: /v1/
+
+Sitemap: https://tesel.eu/sitemap.xml
