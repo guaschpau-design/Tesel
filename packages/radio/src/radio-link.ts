@@ -27,7 +27,10 @@ export class RadioError extends Error {
 }
 
 export interface ReceivedFrame {
-  /** Encoded event bytes, exactly as the sender produced them. */
+  /**
+   * The frame's bytes, exactly as the sender's app handed them to its radio: an event sealed by
+   * Tesel (protocol §5.2), which the app opens. A link neither seals nor opens frames.
+   */
   readonly bytes: Uint8Array;
   /** Signal-to-noise ratio of the last hop, in dB. */
   readonly snr: number;
@@ -81,19 +84,19 @@ export interface RadioLink {
   /** Clears every channel whose secret `matches`: those of groups that were left. */
   forgetChannels(matches: (secret: Uint8Array) => boolean): Promise<void>;
 
-  /** Floods one encoded event on the group channel. */
-  send(bytes: Uint8Array): Promise<SendOutcome>;
+  /** Floods one frame, an event the app has sealed (protocol §5.2), on the group channel. */
+  send(frame: Uint8Array): Promise<SendOutcome>;
 
   /**
-   * How long sending an event of `eventBytes` bytes keeps the air busy, in milliseconds, with the
+   * How long sending a frame of `frameBytes` bytes keeps the air busy, in milliseconds, with the
    * radio's settings as far as they are known: the airtime budget counts it (ADR-0015). Estimates
    * err on the long side.
    */
-  airtimeMs(eventBytes: number): number;
+  airtimeMs(frameBytes: number): number;
 
   /**
-   * Subscribes to events received on any channel holding a secret, the group channel and those of
-   * other groups this radio carried before; returns an unsubscribe function.
+   * Subscribes to Tesel frames received on any channel holding a secret, the group channel and
+   * those of other groups this radio carried before; returns an unsubscribe function.
    */
   onReceive(listener: (frame: ReceivedFrame) => void): () => void;
 

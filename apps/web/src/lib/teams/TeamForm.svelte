@@ -42,6 +42,8 @@
   const tooLong = $derived(utf8ByteLength(name.trim()) > TEAM_NAME_MAX_BYTES);
   /** No one more fits in the team (§3.15). */
   const full = $derived(chosen.length >= TEAM_MAX_MEMBERS);
+  /** More than fit: a team written when events could be larger, before radio frames were sealed. */
+  const overFull = $derived(chosen.length > TEAM_MAX_MEMBERS);
   /** Everyone the group knows, by alias, with the team each is in now. */
   const people = $derived(
     [...new Set<NodeId>([...groupState.members.keys(), ...groupState.positions.keys()])]
@@ -134,7 +136,7 @@
       <button
         type="submit"
         class="primary"
-        disabled={submission.busy || name.trim() === '' || tooLong}>{t('save')}</button
+        disabled={submission.busy || name.trim() === '' || tooLong || overFull}>{t('save')}</button
       >
       <button type="button" onclick={onclose}>{t('cancel')}</button>
       {#if initial}

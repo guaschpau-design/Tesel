@@ -34,6 +34,10 @@ export type LoraEvent = TeselEvent | OpaqueEvent;
 
 export interface LoraPacket {
   readonly event: LoraEvent;
+  /**
+   * The bytes to put on the air, whose length the airtime budget weighs: in the app, the event
+   * sealed for the radio (protocol §5.2).
+   */
   readonly bytes: Uint8Array;
 }
 

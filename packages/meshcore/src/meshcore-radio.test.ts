@@ -131,7 +131,7 @@ describe('MeshCore radio', () => {
     expect(await radio.send(new Uint8Array([1]))).toMatchObject({ status: 'failed' });
   });
 
-  it('passes on Tesel datagrams of channels with a secret, each with its secret', async () => {
+  it('passes on Tesel datagrams of channels with a secret, each with its secret, and no others', async () => {
     const other = new Uint8Array(16).fill(4);
     const fake = new FakeCompanion(slots(['Public', EMPTY], ['Rescate', SECRET], ['Antes', other]));
     const radio = await connected(fake);
@@ -151,6 +151,8 @@ describe('MeshCore radio', () => {
         },
       },
       { channelData: { channelIdx: 1, dataType: 0x1234, data: new Uint8Array([2]), snr: 5 } },
+      // Events of earlier versions, which went on the air unsealed.
+      { channelData: { channelIdx: 1, dataType: 0xff4d, data: new Uint8Array([3]), snr: 5 } },
       { channelData: { channelIdx: 1, dataType: MESHCORE_DATA_TYPE, data: ours, snr: 6.25 } },
       { channelData: { channelIdx: 2, dataType: MESHCORE_DATA_TYPE, data: ours, snr: 1 } },
     );

@@ -123,8 +123,8 @@ export class MeshCoreRadio implements RadioLink {
     }
   }
 
-  airtimeMs(eventBytes: number): number {
-    return meshcoreAirtimeMs(eventBytes);
+  airtimeMs(frameBytes: number): number {
+    return meshcoreAirtimeMs(frameBytes);
   }
 
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {

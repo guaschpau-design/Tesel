@@ -1,4 +1,4 @@
-// How long a Tesel event keeps the air busy when a Meshtastic radio sends it (ADR-0015, ADR-0098),
+// How long a Tesel frame keeps the air busy when a Meshtastic radio sends it (ADR-0015, ADR-0098),
 // from the LoRa settings the radio reports when it connects.
 
 import { MESHTASTIC_PORTNUM } from '@tesel/protocol';
@@ -53,11 +53,11 @@ const BANDWIDTH_CODES: ReadonlyMap<number, number> = new Map([
 ]);
 
 /**
- * Time on air of one Tesel event sent by a Meshtastic radio with `lora` settings, in milliseconds.
+ * Time on air of one Tesel frame sent by a Meshtastic radio with `lora` settings, in milliseconds.
  * Without settings, Meshtastic's default, LongFast, is assumed.
  */
-export function meshtasticAirtimeMs(eventBytes: number, lora: LoraSettings | null): number {
-  const payload = data(MESHTASTIC_PORTNUM, new Uint8Array(eventBytes)).finish().length;
+export function meshtasticAirtimeMs(frameBytes: number, lora: LoraSettings | null): number {
+  const payload = data(MESHTASTIC_PORTNUM, new Uint8Array(frameBytes)).finish().length;
   return timeOnAirMs(HEADER_BYTES + payload + BITFIELD_BYTES, modulationOf(presetOf(lora)));
 }
 

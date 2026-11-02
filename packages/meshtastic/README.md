@@ -1,6 +1,6 @@
 # @tesel/meshtastic
 
-Connects Tesel to a Meshtastic radio over Web Bluetooth and exchanges events as packets on the group's channel, as specified in [`docs/protocol.md`](../../docs/protocol.md) §7.2 and decided in [ADR-0098](../../docs/decisions/0098-meshtastic-radios.md).
+Connects Tesel to a Meshtastic radio over Web Bluetooth and exchanges frames (events Tesel has sealed, which this package neither seals nor opens) as packets on the group's channel, as specified in [`docs/protocol.md`](../../docs/protocol.md) §7.2 and decided in [ADR-0098](../../docs/decisions/0098-meshtastic-radios.md).
 
 Meshtastic's own libraries are GPL-3.0 and Tesel is EUPL-1.2, so nothing here comes from them: the protobuf codec and the messages are written for Tesel from the public protocol definitions, whose field numbers and Bluetooth UUIDs are interoperability facts. Do not add `@meshtastic/*` packages as dependencies, nor copy or adapt their code.
 
@@ -10,7 +10,7 @@ Meshtastic's own libraries are GPL-3.0 and Tesel is EUPL-1.2, so nothing here co
 | `meshtastic-radio.ts` | `RadioLink` over a Meshtastic radio, on the connection keeper of `@tesel/radio`, and the nodes it hears (`onNode`)            |
 | `channels.ts`         | Which of the radio's eight channels holds a group                                                                             |
 | `nodes.ts`            | The other Meshtastic nodes heard: names and last positions                                                                    |
-| `air.ts`              | Time on air of an event, from the radio's LoRa settings                                                                       |
+| `air.ts`              | Time on air of a frame, from the radio's LoRa settings                                                                        |
 | `connection.ts`       | The connection the link uses, small so that tests can fake it                                                                 |
 | `web-ble.ts`          | Opening a radio: pairing and the configuration handshake                                                                      |
 | `ble-connection.ts`   | The connection over Bluetooth: reading FromRadio until empty, writing ToRadio, which packets the radio took                   |

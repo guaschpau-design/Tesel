@@ -1,139 +1,15 @@
 import { encodeEvent, type NodeId, type TeselEvent } from '@tesel/protocol';
-import type { LoraEvent } from '@tesel/core';
 import 'fake-indexeddb/auto';
 
-import {
-  RadioError,
-  type RadioFamily,
-  type RadioLink,
-  type RadioLinkState,
-  type RadioText,
-  type ReceivedFrame,
-  type SendOutcome,
-} from '@tesel/radio';
+import { RadioError } from '@tesel/radio';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { LoraSink } from '../sync/lora-events.ts';
 import { loadEvents } from '../events/event-log.ts';
 import { createGroup } from '../groups/group.ts';
 import { saveGroup } from '../groups/group-store.ts';
 import { openAppDb } from '../storage/app-db.ts';
-import { RadioSession, type RadioFeed } from './radio.svelte.ts';
-
-const SECRET: Uint8Array = new Uint8Array(16).fill(1);
-
-class FakeLink implements RadioLink {
-  readonly family: RadioFamily;
-  state: RadioLinkState = 'disconnected';
-  name: string | null = null;
-  channel: string | null = null;
-  readonly sent: Uint8Array[] = [];
-  readonly forgotten: Uint8Array[] = [];
-  held: Uint8Array[] = [];
-  #receive: ((frame: ReceivedFrame) => void) | null = null;
-  #stateChange: ((state: RadioLinkState) => void) | null = null;
-  #text: ((message: RadioText) => void) | null = null;
-
-  constructor(family: RadioFamily = 'meshcore') {
-    this.family = family;
-  }
-
-  connect(): Promise<void> {
-    this.state = 'ready';
-    this.name = 'MeshCore-T1000';
-    this.#stateChange?.('ready');
-    return Promise.resolve();
-  }
-
-  configureGroupChannel(name: string): Promise<void> {
-    this.channel = name;
-    return Promise.resolve();
-  }
-
-  forgetChannels(matches: (secret: Uint8Array) => boolean): Promise<void> {
-    this.forgotten.push(...this.held.filter(matches));
-    this.held = this.held.filter((secret) => !matches(secret));
-    return Promise.resolve();
-  }
-
-  /** The Bluetooth link drops, then the radio is back. */
-  dropAndReturn(): void {
-    this.state = 'connecting';
-    this.#stateChange?.('connecting');
-    this.state = 'ready';
-    this.#stateChange?.('ready');
-  }
-
-  send(bytes: Uint8Array): Promise<SendOutcome> {
-    this.sent.push(bytes);
-    return Promise.resolve({ status: 'sent' });
-  }
-
-  airtimeMs(): number {
-    return 1000;
-  }
-
-  onReceive(listener: (frame: ReceivedFrame) => void): () => void {
-    this.#receive = listener;
-    return () => undefined;
-  }
-
-  onStateChange(listener: (state: RadioLinkState) => void): () => void {
-    this.#stateChange = listener;
-    return () => undefined;
-  }
-
-  onText(listener: (message: RadioText) => void): () => void {
-    this.#text = listener;
-    return () => {
-      this.#text = null;
-    };
-  }
-
-  say(message: RadioText): void {
-    this.#text?.(message);
-  }
-
-  disconnect(): Promise<void> {
-    this.state = 'disconnected';
-    this.#stateChange?.('disconnected');
-    return Promise.resolve();
-  }
-
-  hear(bytes: Uint8Array, secret = SECRET): void {
-    this.#receive?.({ bytes, snr: 7.5, secret });
-  }
-}
-
-class FakeFeed implements RadioFeed {
-  sink: LoraSink | null = null;
-  attached = 0;
-  readonly received: Uint8Array[] = [];
-  readonly aired: LoraEvent[] = [];
-  readonly radioChannel = { name: 'Rescate', secret: SECRET };
-
-  readonly groupId: string;
-
-  constructor(groupId = 'rescate') {
-    this.groupId = groupId;
-  }
-
-  attachRadio(sink: LoraSink | null): Promise<void> {
-    this.sink = sink;
-    if (sink !== null) this.attached++;
-    return Promise.resolve();
-  }
-
-  radioSent(event: LoraEvent): Promise<void> {
-    this.aired.push(event);
-    return Promise.resolve();
-  }
-
-  receiveFromRadio(bytes: Uint8Array): Promise<void> {
-    this.received.push(bytes);
-    return Promise.resolve();
-  }
-}
+import { FakeFeed, FakeLink, sealedFor } from './fake-radio.ts';
+import { RadioSession } from './radio.svelte.ts';
 
 const chat: TeselEvent = {
   type: 'chat',
@@ -154,7 +30,7 @@ afterEach(() => {
 });
 
 describe('radio session', () => {
-  it('configures the active group’s channel once connected and sends its events', async () => {
+  it('configures the active group’s channel once connected and sends its events sealed', async () => {
     const link = new FakeLink();
     const radio = new RadioSession(
       () => Promise.resolve(link),
@@ -171,7 +47,7 @@ describe('radio session', () => {
 
     feed.sink?.offer({ event: chat, bytes }, 'own');
     await vi.advanceTimersByTimeAsync(1000);
-    expect(link.sent).toEqual([bytes]);
+    expect(link.sent).toEqual([sealedFor(bytes)]);
     expect(feed.aired).toEqual([chat]);
   });
 
@@ -204,7 +80,7 @@ describe('radio session', () => {
     before.sink?.offer({ event: chat, bytes }, 'own');
     await radio.useFeed(new FakeFeed('rescate'));
     await vi.advanceTimersByTimeAsync(1000);
-    expect(link.sent).toEqual([bytes]);
+    expect(link.sent).toEqual([sealedFor(bytes)]);
   });
 
   it('never sends what was queued for one group on another group’s channel', async () => {
@@ -223,13 +99,13 @@ describe('radio session', () => {
     expect(link.sent).toEqual([]);
   });
 
-  it('hands what it hears to the feed', async () => {
+  it('hands what it hears to the feed, opened', async () => {
     const link = new FakeLink();
     const radio = new RadioSession(() => Promise.resolve(link));
     const feed = new FakeFeed();
     await radio.connect();
     await radio.useFeed(feed);
-    link.hear(bytes);
+    link.hear(sealedFor(bytes));
     expect(feed.received).toEqual([bytes]);
     expect(radio.lastSnr).toBe(7.5);
   });
@@ -262,7 +138,7 @@ describe('radio session', () => {
     const feed = new FakeFeed();
     await radio.connect();
     await radio.useFeed(feed);
-    link.hear(bytes, other.secret);
+    link.hear(sealedFor(bytes, other.secret), other.secret);
     await vi.waitFor(async () => {
       expect(await loadEvents(db, other.id)).toEqual([bytes]);
     });
@@ -321,5 +197,55 @@ describe('radio session', () => {
     await radio.disconnect();
     expect(radio.linked).toBe(false);
     expect(feed.sink).toBeNull();
+  });
+});
+
+describe('Tesel’s seal on radio frames', () => {
+  async function linked(): Promise<{ link: FakeLink; radio: RadioSession; feed: FakeFeed }> {
+    const link = new FakeLink();
+    const radio = new RadioSession(
+      () => Promise.resolve(link),
+      () => 0,
+    );
+    const feed = new FakeFeed();
+    await radio.connect();
+    await radio.useFeed(feed);
+    return { link, radio, feed };
+  }
+
+  it('drops frames that do not open: unsealed, changed on the way, or sealed by another group', async () => {
+    const { link, radio, feed } = await linked();
+    const changed = sealedFor(bytes);
+    changed[changed.length - 1] = (changed[changed.length - 1] ?? 0) ^ 1;
+    link.hear(bytes);
+    link.hear(changed);
+    link.hear(sealedFor(bytes, new Uint8Array(16).fill(9)));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(feed.received).toEqual([]);
+    expect(radio.lastSnr).toBeNull();
+  });
+
+  it('weighs each packet’s airtime at the size of its sealed frame', async () => {
+    const { link, feed } = await linked();
+    feed.sink?.offer({ event: chat, bytes }, 'own');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(link.weighed).toContain(sealedFor(bytes).length);
+    expect(link.weighed).not.toContain(bytes.length);
+  });
+
+  it('keeps off the air an event too large for a frame, written before frames were sealed', async () => {
+    const { link, feed } = await linked();
+    // A chat line of 151 bytes, which filled an event before frames were sealed.
+    const earlier = { ...chat, seq: 2, text: 'x'.repeat(151) };
+    const earlierBytes = Uint8Array.from([
+      ...bytes.subarray(0, 6),
+      ...[2, 0, 0, 0],
+      ...bytes.subarray(10, 14),
+      ...new Uint8Array(151).fill(0x78),
+    ]);
+    feed.sink?.offer({ event: earlier, bytes: earlierBytes }, 'own');
+    feed.sink?.offer({ event: chat, bytes }, 'own');
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(link.sent).toEqual([sealedFor(bytes)]);
   });
 });

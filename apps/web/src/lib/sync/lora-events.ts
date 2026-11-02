@@ -22,6 +22,10 @@ import type { OutboxEntry } from '../storage/app-db.ts';
 
 /** Where a group feed hands events for the radio: the LoRa scheduler of a connected radio. */
 export interface LoraSink {
+  /**
+   * Offers an event for the air, `packet.bytes` encoded as stored. The radio seals it into a
+   * frame for the scheduler (protocol §5.2), and keeps off the air one too large for a frame.
+   */
   offer(packet: LoraPacket, source: LoraSource): void;
   heard(event: LoraEvent): void;
   observe(event: LoraEvent): void;

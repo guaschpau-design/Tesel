@@ -1,11 +1,11 @@
 // The LoRa radio of this device: connecting it, giving it the active group's channel, and
 // feeding the group's events through the airtime scheduler (ARCHITECTURE.md §4.2–4.3,
-// ADR-0043). The code of each kind of radio is loaded when a radio of that kind is picked, not
-// with the app (radio-families.ts).
+// ADR-0043), sealed on the way out and opened on the way in (ADR-0099). The code of each kind of
+// radio is loaded when a radio of that kind is picked, not with the app (radio-families.ts).
 
 import { LIMITS, LoraScheduler, type LoraPacket } from '@tesel/core';
 import { bytesEqual } from '@tesel/protocol';
-import type { RadioFamily, RadioLink, RadioLinkState, ReceivedFrame } from '@tesel/radio';
+import type { RadioFamily, RadioLink, RadioLinkState } from '@tesel/radio';
 
 import { receiveEvents } from '../events/event-log.ts';
 import { groupId } from '../groups/group.ts';
@@ -15,6 +15,7 @@ import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { LoraSink } from '../sync/lora-events.ts';
 import { pickedRadioLink } from './radio-families.ts';
+import { RadioFrames } from './radio-frames.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
 import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';
@@ -32,8 +33,10 @@ const MAX_UNSTORED = 200;
 /** Times a frame is tried before it is given up: one that cannot be stored at all must not loop. */
 const STORE_ATTEMPTS = 5;
 
+/** An event heard by radio, opened, with the secret of the channel it came on. */
 interface Unstored {
-  readonly frame: ReceivedFrame;
+  readonly secret: Uint8Array;
+  readonly event: Uint8Array;
   readonly attempts: number;
 }
 
@@ -67,11 +70,17 @@ export class RadioSession {
   #db: AppDb | null = null;
   #pump: ReturnType<typeof setInterval> | null = null;
   #sending = false;
-  /** Frames whose storing failed, tried again on the next pump: none is lost to a busy disk. */
+  /** Events whose storing failed, tried again on the next pump: none is lost to a busy disk. */
   #unstored: Unstored[] = [];
+  readonly #frames = new RadioFrames();
   readonly #sink: LoraSink = {
     offer: (packet, source) => {
-      this.#scheduler.offer(packet, source, Date.now());
+      const secret = this.#feed?.radioChannel.secret;
+      const frame = secret === undefined ? null : this.#frames.seal(secret, packet.bytes);
+      // An event written before frames were sealed may be too large for one: it stays off the
+      // air, but what it says still counts, as an SOS whose answers are urgent.
+      if (frame === null) this.#scheduler.observe(packet.event);
+      else this.#scheduler.offer({ event: packet.event, bytes: frame }, source, Date.now());
     },
     heard: (event) => {
       this.#scheduler.heard(event, Date.now());
@@ -108,9 +117,13 @@ export class RadioSession {
           void this.#linkFeed();
         }
       }),
-      link.onReceive((frame) => {
-        this.lastSnr = frame.snr;
-        void this.#store({ frame, attempts: 0 });
+      link.onReceive(({ bytes, snr, secret }) => {
+        // A frame that does not open was not sealed by the group: forged, changed on the way or
+        // sent by an earlier version. It is dropped as if never heard.
+        const event = this.#frames.open(secret, bytes);
+        if (event === null) return;
+        this.lastSnr = snr;
+        void this.#store({ secret, event, attempts: 0 });
       }),
       link.onText((text) => {
         const stored = { ...text, receivedAt: Date.now() };
@@ -224,26 +237,26 @@ export class RadioSession {
   }
 
   /**
-   * A frame heard on a group's channel: the active group's goes to its feed; another group's,
+   * An event heard on a group's channel: the active group's goes to its feed; another group's,
    * one this device belongs to and whose channel the radio still holds, goes to that group's log
    * for when it is opened.
    */
-  async #store({ frame, attempts }: Unstored): Promise<void> {
+  async #store({ secret, event, attempts }: Unstored): Promise<void> {
     try {
       const feed = this.#feed;
-      if (feed !== null && bytesEqual(frame.secret, feed.radioChannel.secret)) {
-        await feed.receiveFromRadio(frame.bytes);
+      if (feed !== null && bytesEqual(secret, feed.radioChannel.secret)) {
+        await feed.receiveFromRadio(event);
         return;
       }
       const db = this.#db;
-      const group = db === null ? undefined : await getGroup(db, groupId(frame.secret));
+      const group = db === null ? undefined : await getGroup(db, groupId(secret));
       if (db === null || group === undefined) return;
-      await receiveEvents(db, group.id, [frame.bytes], { forward: group.server !== null });
+      await receiveEvents(db, group.id, [event], { forward: group.server !== null });
     } catch (error) {
       console.warn('Storing a radio frame failed', error);
       storageRefusals.note(error);
       if (attempts + 1 < STORE_ATTEMPTS) {
-        this.#unstored = [...this.#unstored, { frame, attempts: attempts + 1 }].slice(
+        this.#unstored = [...this.#unstored, { secret, event, attempts: attempts + 1 }].slice(
           -MAX_UNSTORED,
         );
       }

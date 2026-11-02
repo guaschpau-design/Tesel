@@ -1,4 +1,4 @@
-// How long a Tesel event keeps the air busy when a MeshCore radio sends it (ADR-0015).
+// How long a Tesel frame keeps the air busy when a MeshCore radio sends it (ADR-0015).
 
 import { timeOnAirMs, type LoraModulation } from '@tesel/radio';
 
@@ -15,18 +15,18 @@ const EU_NARROW: LoraModulation = {
 
 /** MeshCore packet bytes outside the encryption: header 1, path length 1, channel hash 1, MAC 2. */
 const MESHCORE_CLEAR_BYTES = 5;
-/** The datagram's data type, encrypted with the event. */
+/** The datagram's data type, encrypted with the frame. */
 const DATA_TYPE_BYTES = 2;
 /** MeshCore encrypts with AES, padding to whole blocks. */
 const AES_BLOCK_BYTES = 16;
 
-/** Size on the air of a channel datagram carrying `eventBytes`, in a flood (no path yet). */
-function packetSize(eventBytes: number): number {
-  const encrypted = Math.ceil((eventBytes + DATA_TYPE_BYTES) / AES_BLOCK_BYTES) * AES_BLOCK_BYTES;
+/** Size on the air of a channel datagram carrying `frameBytes`, in a flood (no path yet). */
+function packetSize(frameBytes: number): number {
+  const encrypted = Math.ceil((frameBytes + DATA_TYPE_BYTES) / AES_BLOCK_BYTES) * AES_BLOCK_BYTES;
   return MESHCORE_CLEAR_BYTES + encrypted;
 }
 
-/** Time on air of one Tesel event sent through MeshCore, in milliseconds. */
-export function meshcoreAirtimeMs(eventBytes: number): number {
-  return timeOnAirMs(packetSize(eventBytes), EU_NARROW);
+/** Time on air of one Tesel frame (a sealed event) sent through MeshCore, in milliseconds. */
+export function meshcoreAirtimeMs(frameBytes: number): number {
+  return timeOnAirMs(packetSize(frameBytes), EU_NARROW);
 }

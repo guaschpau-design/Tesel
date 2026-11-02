@@ -1,7 +1,7 @@
 // RadioLink over a Meshtastic radio (protocol §7.2, ADR-0098).
 //
 // The group's channel is one of the radio's secondary channels, named after the group, whose key
-// is the group secret; Tesel events travel on it as packets to everyone on Meshtastic's
+// is the group secret; Tesel's sealed frames travel on it as packets to everyone on Meshtastic's
 // PRIVATE_APP port. Channels are set with an admin message to the radio itself. Commands go
 // through the same keeper as MeshCore's, one at a time with a timeout, and the link connects again
 // by itself when Bluetooth drops (packages/radio, ADR-0043).
@@ -138,8 +138,8 @@ export class MeshtasticRadio implements RadioLink {
     }
   }
 
-  airtimeMs(eventBytes: number): number {
-    return meshtasticAirtimeMs(eventBytes, this.#setup.lora);
+  airtimeMs(frameBytes: number): number {
+    return meshtasticAirtimeMs(frameBytes, this.#setup.lora);
   }
 
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {
@@ -210,7 +210,7 @@ export class MeshtasticRadio implements RadioLink {
     }
   }
 
-  /** A Tesel event, on any channel that holds a group secret, passed on with that secret. */
+  /** A Tesel frame, on any channel that holds a group secret, passed on with that secret. */
   #hearFrame(packet: MeshPacket): void {
     const channel = this.#setup.channels.find(({ index }) => index === packet.channel);
     const secret = channel === undefined ? null : groupSecretOf(channel);
