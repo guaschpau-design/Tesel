@@ -44,11 +44,17 @@ const OSM_ATTRIBUTION =
 
 const ORTHO_SOURCE = 'ortho';
 const RELIEF_SOURCE = 'terrain';
+/** The same elevation tiles again for the ground raised in 3D, as MapLibre advises. */
+const GROUND_SOURCE = 'terrain-3d';
+/** How much higher than they are mountains are raised, so that gentle ground still shows. */
+const GROUND_EXAGGERATION = 1.5;
 
 export interface StyleChoice {
   readonly base: BaseMap;
   /** Shading of the terrain, over the base map's ground and under its lines and names. */
   readonly relief: boolean;
+  /** The ground raised in 3D (ADR-0102). */
+  readonly threeD: boolean;
   readonly theme: MapTheme;
   readonly lang: string;
 }
@@ -72,8 +78,27 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
     version: 8,
     glyphs: `${assetsUrl}fonts/{fontstack}/{range}.pbf`,
     sprite: `${assetsUrl}sprites/${sprite}`,
-    sources: relief ? { ...sources, [RELIEF_SOURCE]: relief.source } : sources,
+    sources: {
+      ...sources,
+      ...(relief ? { [RELIEF_SOURCE]: relief.source } : {}),
+      ...(choice.threeD ? { [GROUND_SOURCE]: elevationSource() } : {}),
+    },
     layers: [...ground, ...(relief ? [relief.layer] : []), ...lines, ...names],
+    ...(choice.threeD
+      ? { terrain: { source: GROUND_SOURCE, exaggeration: GROUND_EXAGGERATION } }
+      : {}),
+  };
+}
+
+/** The elevation tiles (tiles/sources.ts), as MapLibre reads them. */
+function elevationSource(): SourceSpecification {
+  return {
+    type: 'raster-dem',
+    tiles: [tileUrlTemplate('terrain')],
+    encoding: 'terrarium',
+    tileSize: TERRAIN_TILE_SIZE,
+    maxzoom: TERRAIN_MAX_ZOOM,
+    attribution: TERRAIN_ATTRIBUTION,
   };
 }
 
@@ -146,14 +171,7 @@ function reliefShading(theme: MapTheme): {
   layer: HillshadeLayerSpecification;
 } {
   return {
-    source: {
-      type: 'raster-dem',
-      tiles: [tileUrlTemplate('terrain')],
-      encoding: 'terrarium',
-      tileSize: TERRAIN_TILE_SIZE,
-      maxzoom: TERRAIN_MAX_ZOOM,
-      attribution: TERRAIN_ATTRIBUTION,
-    },
+    source: elevationSource(),
     layer: {
       id: 'relief',
       type: 'hillshade',

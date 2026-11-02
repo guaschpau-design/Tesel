@@ -269,6 +269,7 @@ export const es: Messages = {
   followStrip: 'Seguir franja',
   measure: 'Medir distancias',
   northUp: 'Norte arriba',
+  ground3d: 'Relieve en 3D',
   layers: 'Capas del mapa',
   layerMembers: 'Miembros',
   layerTrails: 'Por dónde han pasado',

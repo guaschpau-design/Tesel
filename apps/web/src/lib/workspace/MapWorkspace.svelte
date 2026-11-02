@@ -27,6 +27,7 @@
   import { groupPoints, StartFraming } from '../map/start-framing.ts';
   import { MapTaps } from '../map/taps.ts';
   import CompassButton from '../map/CompassButton.svelte';
+  import GroundButton from '../map/GroundButton.svelte';
   import MapControl from '../map/MapControl.svelte';
   import MapCredits from '../map/MapCredits.svelte';
   import MapScale from '../map/MapScale.svelte';
@@ -292,6 +293,7 @@
 <MapControl {map}>
   <CompassButton {t} {map} />
   <LocateButton {t} {map} />
+  <GroundButton {t} {map} />
   <button
     aria-label={t('layers')}
     title={t('layers')}

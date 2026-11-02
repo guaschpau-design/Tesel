@@ -269,6 +269,7 @@ export const en = {
   followStrip: 'Follow strip',
   measure: 'Measure distances',
   northUp: 'North up',
+  ground3d: 'Ground in 3D',
   layers: 'Map layers',
   layerMembers: 'Members',
   layerTrails: 'Where they have been',

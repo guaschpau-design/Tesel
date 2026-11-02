@@ -12,6 +12,7 @@
   import { resolveLocale, translator, type Locale, type MessageKey } from './lib/i18n/index.ts';
   import Onboarding from './lib/identity/Onboarding.svelte';
   import { radioLinkOf } from './lib/links/links.ts';
+  import { ground } from './lib/map/ground.svelte.ts';
   import { mapLibreLocale } from './lib/map/style/maplibre-locale.ts';
   import MapView from './lib/map/MapView.svelte';
   import { activity } from './lib/power/activity.svelte.ts';
@@ -169,6 +170,7 @@
         choice={{
           base: startup.preferences.baseMap.value,
           relief: startup.preferences.relief.value,
+          threeD: ground.raised,
           theme,
           lang: locale,
         }}

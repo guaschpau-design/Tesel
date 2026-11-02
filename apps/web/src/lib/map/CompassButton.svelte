@@ -1,11 +1,12 @@
 <!-- Among the map's controls: a needle that points to the north of the map as it turns, and puts
-     north back up when pressed. -->
+     north back up when pressed; the map lies flat again too, unless the ground is raised in 3D. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
   import Pictogram from '../ui/Pictogram.svelte';
+  import { ground } from './ground.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -33,7 +34,8 @@
   aria-label={t('northUp')}
   title={t('northUp')}
   onclick={() => {
-    map.resetNorthPitch();
+    if (ground.raised) map.resetNorth();
+    else map.resetNorthPitch();
   }}
 >
   <span style:transform="rotate({-bearing}deg)"><Pictogram name="compass" size={20} /></span>
