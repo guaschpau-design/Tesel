@@ -96,7 +96,8 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0088](0088-home-page-radio-second-way.md)           | The home page: situational awareness, and the radio as a second way                         | Accepted                                                |
 | [0089](0089-legal-notice.md)                         | A legal notice and terms of use on the site                                                 | Accepted                                                |
 | [0090](0090-pairing-a-radio-from-the-app.md)         | Pairing a radio from the app, and saying why a connection failed                            | Accepted                                                |
-| [0091](0091-interlocking-tiles-logo.md)              | The logo: two interlocking tiles and a drawn wordmark                                       | Accepted                                                |
+| [0091](0091-interlocking-tiles-logo.md)              | The logo: two interlocking tiles and a drawn wordmark                                       | Superseded by 0095                                      |
 | [0092](0092-moves-not-gps-wandering.md)              | Moves, not the GPS wandering                                                                | Accepted                                                |
 | [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted                                                |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
+| [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |

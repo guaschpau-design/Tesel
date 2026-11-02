@@ -1,6 +1,6 @@
 # 0091. The logo: two interlocking tiles and a drawn wordmark
 
-- Status: Accepted
+- Status: Superseded by [0095](0095-pin-of-four-tiles-logo.md)
 - Date: 2026-11-01
 
 ## Context

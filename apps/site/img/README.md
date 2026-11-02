@@ -6,8 +6,9 @@
 by the simulator (`pnpm --filter @tesel/simulator screenshots`, see `tools/simulator`):
 `tablet-chat.png` and `phone-map.png`, resized to 1800 and 640 pixels wide and saved as WebP and
 JPEG. The base map is Tesel's own (OpenStreetMap data, Protomaps). Map data © OpenStreetMap
-contributors, ODbL.
+contributors, ODbL. When the logo changed (ADR-0095) only the header's logo was redrawn in them, at the size and
+place the app gives it; take them again with the simulator when the app itself changes.
 
 `net-coverage.svg`, `net-radio.svg` and `net-bridge.svg`: schemes drawn by hand for the home page (ADR-0088), in light lines for its dark section: a message with coverage, without it (passed from radio to radio) and through a phone that bridges both. No words, so both languages share them.
 
-`share-es.jpg` and `share-en.jpg`: the picture a link to the home page shows when shared (Open Graph), 1200 × 630, one per language: `hero.jpg` darkened towards the left, with the pale lockup, the home page's eyebrow and heading in Archivo, and the address. Rendered from a small HTML page in Chromium and saved as JPEG; to change the words, render them again the same way.
+`share-es.jpg` and `share-en.jpg`: the picture a link to the home page shows when shared (Open Graph), 1200 × 630, one per language: `hero.jpg` darkened towards the left, with the pale lockup, the home page's eyebrow and heading in Archivo, and the address. Rendered from a small HTML page in Chromium and saved as JPEG; to change the words, render them again the same way. For the logo of ADR-0095 only the lockup was replaced: the picture under the old one rebuilt from `hero.jpg`, the new one drawn 64 pixels tall where it stood.

@@ -31,13 +31,14 @@ function page(size, scale, radius) {
     </div></body>`;
 }
 
-// The mark fills its own box, so these scales are its share of the icon.
+// The mark fills its own box corner to corner (a square on its point), so these scales are its
+// share of the icon; the maskable one keeps its corners inside the safe circle (scale <= 0.8).
 const icons = [
-  { file: 'icon-192.png', size: 192, scale: 0.68, radius: 0 },
-  { file: 'icon-512.png', size: 512, scale: 0.68, radius: 0 },
-  { file: 'maskable-512.png', size: 512, scale: 0.52, radius: 0 },
-  { file: 'apple-touch-icon.png', size: 180, scale: 0.68, radius: 0 },
-  { file: 'favicon-64.png', size: 64, scale: 0.76, radius: 12 },
+  { file: 'icon-192.png', size: 192, scale: 0.72, radius: 0 },
+  { file: 'icon-512.png', size: 512, scale: 0.72, radius: 0 },
+  { file: 'maskable-512.png', size: 512, scale: 0.6, radius: 0 },
+  { file: 'apple-touch-icon.png', size: 180, scale: 0.72, radius: 0 },
+  { file: 'favicon-64.png', size: 64, scale: 0.84, radius: 12 },
 ];
 
 await (async () => {
@@ -52,7 +53,7 @@ await (async () => {
   await browser.close();
   // The SVG favicon: the mark on a rounded ink square, crisp at any size. The mark keeps its own
   // box (viewBox) inside, pale as the file has it.
-  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/>${mark.trim().replace('<svg ', '<svg x="12" y="12" width="76" height="76" ')}</svg>`;
+  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/>${mark.trim().replace('<svg ', '<svg x="8" y="8" width="84" height="84" ')}</svg>`;
   writeFileSync(join(out, 'favicon.svg'), favicon);
   const version = iconVersion(favicon);
   for (const page of PAGES_WITH_ICONS) {
