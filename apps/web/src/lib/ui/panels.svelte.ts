@@ -1,8 +1,8 @@
 // Which side panel is open, with what it shows (ADR-0048). Only one is open at a time, wherever it
 // is opened from; a panel about something carries that something, so it can never show another.
-// Each is drawn where what it needs is: App.svelte draws those of the device (offline maps,
-// connections, groups, settings), workspace/MapPanels.svelte those of the map, and workspace/GroupPanels.svelte
-// those of the active group.
+// Each is drawn where what it needs is: workspace/DevicePanels.svelte draws those of the device
+// (offline maps, connections, groups, settings), workspace/MapPanels.svelte those of the map, and
+// workspace/GroupPanels.svelte those of the active group.
 
 import type { LatLon, NodeId } from '@tesel/protocol';
 

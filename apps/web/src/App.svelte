@@ -1,57 +1,35 @@
+<!-- The app's shell: the top bar, the map with the group's workspace and the device's panels on it,
+     and the dialogs of the first launch, invitations, updates and a failed start. -->
 <script lang="ts">
   import type { Invitation, ProtocolError, Result } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
-  import { onMount, untrack } from 'svelte';
-  import { SvelteSet } from 'svelte/reactivity';
+  import { onMount } from 'svelte';
 
-  // The logo comes from brand/, built by brand/build.py; the header is always ink, hence pale.
-  import lockupUrl from '../../../brand/lockup-pale.svg';
-  import markUrl from '../../../brand/mark.svg';
-  import { basemapUrl, defaultServerUrl } from './lib/config.ts';
   import { connection, watchConnection } from './lib/links/connection.svelte.ts';
-  import type { JoinOutcome, StoredGroup } from './lib/groups/group.ts';
-  import GroupsPanel from './lib/groups/GroupsPanel.svelte';
+  import type { JoinOutcome } from './lib/groups/group.ts';
   import JoinDialog from './lib/groups/JoinDialog.svelte';
   import { invitationInAddress, isJoinAddress } from './lib/groups/join-link.ts';
   import { resolveLocale, translator, type Locale, type MessageKey } from './lib/i18n/index.ts';
   import Onboarding from './lib/identity/Onboarding.svelte';
-  import ConnectionsPanel from './lib/links/ConnectionsPanel.svelte';
-  import SettingsPanel from './lib/settings/SettingsPanel.svelte';
-  import LinkButton from './lib/links/LinkButton.svelte';
-  import { linkOf, networkStatus, radioLinkOf } from './lib/links/links.ts';
+  import { radioLinkOf } from './lib/links/links.ts';
   import { mapLibreLocale } from './lib/map/style/maplibre-locale.ts';
   import MapView from './lib/map/MapView.svelte';
-  import { registerContourProtocol } from './lib/map/style/contours.ts';
-  import { findTile, registerTileProtocol, tileArchives } from './lib/map/tiles/protocol.ts';
-  import { openTileStore } from './lib/map/tiles/store.ts';
-  import type { OfflineMaps } from './lib/offline/offline-maps.ts';
-  import OfflineAreasPanel from './lib/offline/OfflineAreasPanel.svelte';
-  import { keepOverview } from './lib/offline/overview.ts';
-  import { deviceLocation } from './lib/position/device-location.svelte.ts';
-  import { hideInOtherGroups } from './lib/position/hide-position.ts';
-  import { PositionSharing } from './lib/position/position-sharing.svelte.ts';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { activeSos } from './lib/incidents/incidents.ts';
   import Announcer from './lib/ui/Announcer.svelte';
   import ConfirmDialog from './lib/ui/ConfirmDialog.svelte';
-  import Pictogram from './lib/ui/Pictogram.svelte';
   import StartupProblem from './lib/ui/StartupProblem.svelte';
-  import type { StartupFailure, VersionChange } from './lib/storage/version-change.ts';
   import { radio } from './lib/radio/radio.svelte.ts';
-  import { loadPreferences, type Preferences } from './lib/settings/preferences.ts';
-  import { Session } from './lib/session.svelte.ts';
-  import { ElevationReader } from './lib/terrain/elevation.ts';
   import { terrain } from './lib/terrain/terrain.svelte.ts';
-  import { openAppDb, type AppDb } from './lib/storage/app-db.ts';
-  import { storageRefusals } from './lib/storage/storage-space.svelte.ts';
-  import { GroupFeed } from './lib/sync/group-feed.svelte.ts';
-  import { fullscreenAtFirstTap, fullscreenSupported } from './lib/ui/fullscreen.svelte.ts';
-  import { closePanel, isOpen, openPanel, panels, togglePanel } from './lib/ui/panels.svelte.ts';
+  import { Startup } from './lib/storage/startup.svelte.ts';
+  import { useActiveGroupFeed } from './lib/sync/active-group-feed.svelte.ts';
+  import { closePanel, openPanel } from './lib/ui/panels.svelte.ts';
   import { notices } from './lib/ui/notices.svelte.ts';
-  import { attempt, useStorageFullNotice } from './lib/ui/submission.svelte.ts';
+  import { useStorageFullNotice } from './lib/ui/submission.svelte.ts';
   import type { MapTheme } from './lib/ui/theme.ts';
-  import { WeatherFeed } from './lib/weather/weather-feed.svelte.ts';
+  import DevicePanels from './lib/workspace/DevicePanels.svelte';
   import MapWorkspace from './lib/workspace/MapWorkspace.svelte';
+  import TopBar from './lib/workspace/TopBar.svelte';
 
   const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
   let theme: MapTheme = $state(darkQuery.matches ? 'dark' : 'light');
@@ -64,38 +42,19 @@
   }
   let incoming: Result<Invitation, ProtocolError> | null = $state.raw(fromAddress);
 
-  const archives = tileArchives(basemapUrl());
-  let elevations: ElevationReader | null = $state.raw(null);
+  /** The databases and what waits for them, each as it opens. */
+  const startup = new Startup();
   $effect(() => {
-    terrain.reader = preferences?.relief.value ? elevations : null;
+    terrain.reader = startup.preferences?.relief.value ? startup.elevations : null;
   });
-  /** Downloaded maps, once their database is open. */
-  let offline: OfflineMaps | undefined = $state.raw();
-  // What starting up opens is reactive, so that what waits for it runs whatever order it comes in.
-  let db: AppDb | undefined = $state.raw();
-  let session: Session | undefined = $state();
-  let preferences: Preferences | undefined = $state.raw();
-  /** Why the app cannot start, while it cannot. */
-  let startupFailure: StartupFailure | null = $state(null);
   /** The language chosen in More, or the browser's until preferences are read. */
   const locale: Locale = $derived(
-    resolveLocale(preferences?.language.value ?? 'auto', navigator.languages),
+    resolveLocale(startup.preferences?.language.value ?? 'auto', navigator.languages),
   );
   const t = $derived(translator(locale));
-  let sharing: PositionSharing | undefined = $state.raw();
-  let feed: GroupFeed | undefined = $state.raw();
   let map: MapLibreMap | undefined = $state();
   /** The map opened on its wide view, not on one the address gave: it may frame the group. */
   let mapOpenedWide = $state(false);
-  /** Official weather warnings from the app's own server, once the database is open. */
-  let weather: WeatherFeed | null = $state.raw(null);
-  /** How this device reaches its group now (lib/links). */
-  const linkInput = $derived({
-    server: feed?.status ?? null,
-    radio: radioLinkOf(radio),
-    browserOnline: connection.online,
-  });
-  const link = $derived(linkOf(linkInput));
 
   // Downloaded maps are what can be deleted to make room for the group's log (ADR-0056).
   useStorageFullNotice(() => ({
@@ -118,60 +77,11 @@
     const stopWatching = watchConnection();
     const onScheme = (event: MediaQueryListEvent) => (theme = event.matches ? 'dark' : 'light');
     darkQuery.addEventListener('change', onScheme);
-
-    /** The databases waiting for another window to let them go. */
-    const blocked = new SvelteSet<string>();
-    const versionChange = (database: string): VersionChange => ({
-      onBlocked: () => {
-        blocked.add(database);
-        startupFailure = 'blocked';
-      },
-      onReplaced: () => (startupFailure = 'replaced'),
-    });
-    const failed = (error: unknown) => {
-      console.error('Tesel could not start', error);
-      startupFailure = 'failed';
-    };
-    /** A database that waited for another window opened: the app goes on once none waits. */
-    const opened = (database: string) => {
-      blocked.delete(database);
-      if (blocked.size === 0 && startupFailure === 'blocked') startupFailure = null;
-    };
-
-    openTileStore(undefined, versionChange('tiles')).then((store) => {
-      opened('tiles');
-      registerTileProtocol(store, archives);
-      registerContourProtocol(store, archives);
-      elevations = new ElevationReader((tile) => findTile('terrain', tile, store, archives));
-      offline = { store, archives };
-      void keepOverview(store, archives);
-    }, failed);
-    const server = defaultServerUrl();
-    let stopWaitingForTap: (() => void) | undefined;
-    openAppDb(undefined, versionChange('app'))
-      .then(async (database) => {
-        opened('app');
-        db = database;
-        if (server !== null) weather = WeatherFeed.start(database, server);
-        await radio.useStorage(database);
-        preferences = await loadPreferences(database);
-        if (fullscreenSupported && preferences.fullscreen.value) {
-          stopWaitingForTap = fullscreenAtFirstTap();
-        }
-        sharing = new PositionSharing(preferences.positionMode, deviceLocation, async () => {
-          const identity = session?.identity;
-          if (session && identity) {
-            await hideInOtherGroups(database, session.groups, identity, session.activeGroupId);
-          }
-        });
-        session = await Session.load(database);
-      })
-      .catch(failed);
+    const stopStarting = startup.start();
 
     return () => {
       stopWatching();
-      stopWaitingForTap?.();
-      weather?.stop();
+      stopStarting();
       darkQuery.removeEventListener('change', onScheme);
     };
   });
@@ -181,55 +91,14 @@
     map = instance;
   }
 
-  /** Bumped to open the group again after opening it failed. */
-  let openings = $state(0);
+  const active = useActiveGroupFeed(startup, () => t);
+  const feed = $derived(active.feed);
 
-  // One feed for the active group. It is reopened only when what it depends on changes, not
-  // whenever the list of groups is reloaded, or when the user tries again after it failed.
-  const feedKey = $derived.by(() => {
-    const group = session?.activeGroup;
-    const identity = session?.identity;
-    if (!group || !identity) return null;
-    // Not the alias: a new name is told to the open group (rename), without opening it again.
-    return [group.id, group.server ?? '', group.role, identity.nodeId, openings].join('|');
-  });
-
-  $effect(() => {
-    if (feedKey === null) return;
-    const group = untrack(() => session?.activeGroup);
-    const identity = untrack(() => session?.identity);
-    if (!db || !sharing || !group || !identity) return;
-    const database = db;
-    const positions = sharing;
-    let opened: GroupFeed | undefined;
-    let failure: number | undefined;
-    let cancelled = false;
-    GroupFeed.open(database, group, identity).then(
-      (created) => {
-        if (cancelled) {
-          created.close();
-          return;
-        }
-        opened = created;
-        feed = created;
-        positions.attach(created);
-      },
-      (error: unknown) => {
-        console.warn('The group could not be opened', error);
-        if (cancelled || storageRefusals.note(error)) return;
-        failure = notices.show(t('groupOpenFailed'), {
-          stays: true,
-          action: { label: t('tryAgain'), run: () => openings++ },
-        });
-      },
-    );
-    return () => {
-      cancelled = true;
-      if (failure !== undefined) notices.withdraw(failure);
-      positions.detach();
-      opened?.close();
-      feed = undefined;
-    };
+  /** How this device reaches its group now (lib/links). */
+  const linkInput = $derived({
+    server: feed?.status ?? null,
+    radio: radioLinkOf(radio),
+    browserOnline: connection.online,
   });
 
   // The radio follows the active group: its channel, its events. Derived first, so that reloading
@@ -241,18 +110,18 @@
 
   /** An SOS of this device not cancelled yet: nothing may reload the app meanwhile. */
   const ownSosOpen = $derived(
-    feed !== undefined && session?.identity
-      ? activeSos(feed.state, session.identity.nodeId).some((call) => call.mine)
+    feed !== undefined && startup.session?.identity
+      ? activeSos(feed.state, startup.session.identity.nodeId).some((call) => call.mine)
       : false,
   );
 
   const workspaceGroup = $derived(
-    feed && sharing && session?.identity && session.activeGroup
+    feed && startup.sharing && startup.session?.identity && startup.session.activeGroup
       ? {
           feed,
-          sharing,
-          self: session.identity.nodeId,
-          role: session.activeGroup.role,
+          sharing: startup.sharing,
+          self: startup.session.identity.nodeId,
+          role: startup.session.activeGroup.role,
         }
       : null,
   );
@@ -262,19 +131,19 @@
    * one, it goes straight on to the ways into a group, rather than leave the user on an empty map.
    */
   async function createIdentity(alias: string): Promise<void> {
-    await session?.createIdentity(alias);
+    await startup.session?.createIdentity(alias);
     if (incoming?.ok) await join(incoming.value);
     else openPanel({ name: 'groups', start: 'home' });
   }
 
   async function rename(alias: string): Promise<void> {
-    await session?.renameIdentity(alias);
+    await startup.session?.renameIdentity(alias);
     await feed?.rename(alias);
   }
 
   async function join(invitation: Invitation): Promise<void> {
-    if (!session) return;
-    const outcome = await session.join(invitation);
+    if (!startup.session) return;
+    const outcome = await startup.session.join(invitation);
     incoming = null;
     notices.show(t(JOIN_NOTICES[outcome], { group: invitation.groupName }));
   }
@@ -290,44 +159,14 @@
 </script>
 
 <div class="app">
-  <header class="bar chrome">
-    <span class="brand">
-      <img class="lockup" src={lockupUrl} alt="Tesel" />
-      <img class="mark" src={markUrl} alt="Tesel" />
-    </span>
-    {#if session?.identity}
-      {@const groupLabel = session.activeGroup?.name ?? t('noGroup')}
-      <button
-        class="group"
-        onclick={() => {
-          togglePanel({ name: 'groups', start: 'home' });
-        }}
-        aria-expanded={isOpen('groups')}
-        aria-label="{t('group')}: {groupLabel}"
-      >
-        <span class="caption">{t('group')}</span>
-        <span class="name">{groupLabel}</span>
-        <Pictogram name="chevron" size={16} />
-      </button>
-    {/if}
-    <LinkButton
-      {t}
-      {link}
-      network={connection.network}
-      detail={t(networkStatus(linkInput).label)}
-      expanded={isOpen('connections')}
-      onclick={() => {
-        togglePanel('connections');
-      }}
-    />
-  </header>
+  <TopBar {t} session={startup.session} {linkInput} />
 
   <main>
-    {#if offline && preferences}
+    {#if startup.offline && startup.preferences}
       <MapView
         choice={{
-          base: preferences.baseMap.value,
-          relief: preferences.relief.value,
+          base: startup.preferences.baseMap.value,
+          relief: startup.preferences.relief.value,
           theme,
           lang: locale,
         }}
@@ -336,58 +175,39 @@
       />
     {/if}
 
-    {#if map && offline && preferences}
+    {#if map && startup.offline && startup.preferences}
       <MapWorkspace
         {t}
         {locale}
         {map}
         {mapOpenedWide}
         group={workspaceGroup}
-        groupless={session?.identity !== undefined && session.activeGroup === undefined}
-        selfName={session?.identity ? { alias: session.identity.alias, rename } : null}
-        {preferences}
-        {offline}
-        {weather}
+        groupless={startup.session?.identity !== undefined &&
+          startup.session.activeGroup === undefined}
+        selfName={startup.session?.identity
+          ? { alias: startup.session.identity.alias, rename }
+          : null}
+        preferences={startup.preferences}
+        offline={startup.offline}
+        weather={startup.weather}
       />
     {/if}
 
-    {#if map && offline && isOpen('offline')}
-      <OfflineAreasPanel {t} {locale} {map} {offline} onclose={closePanel} />
-    {/if}
+    <DevicePanels
+      {t}
+      {locale}
+      {map}
+      offline={startup.offline}
+      preferences={startup.preferences}
+      session={startup.session}
+      {feed}
+      {linkInput}
+      oninvitation={received}
+    />
 
-    {#if preferences && isOpen('settings')}
-      <SettingsPanel {t} {preferences} {locale} onclose={closePanel} />
-    {/if}
-
-    {#if isOpen('connections')}
-      <ConnectionsPanel
-        {t}
-        input={linkInput}
-        network={connection.network}
-        groupName={session?.activeGroup?.name ?? null}
-        onclose={closePanel}
-      />
-    {/if}
-
-    {#if session && panels.open?.name === 'groups'}
-      {#key panels.open.start}
-        <GroupsPanel
-          {t}
-          {session}
-          activeFeed={feed}
-          oninvitation={received}
-          onleft={(group: StoredGroup) => {
-            attempt(() => radio.forgetGroup(group.secret), t('actionFailed'));
-          }}
-          start={panels.open.start}
-          onclose={closePanel}
-        />
-      {/key}
-    {/if}
-
-    {#if session && !session.identity}
+    {#if startup.session && !startup.session.identity}
       <Onboarding {t} invitation={incoming?.ok ? incoming.value : null} oncreate={createIdentity} />
-    {:else if session && incoming}
+    {:else if startup.session && incoming}
       <JoinDialog
         {t}
         invitation={incoming.ok ? incoming.value : null}
@@ -400,11 +220,11 @@
     <Announcer />
     <UpdatePrompt
       {t}
-      hold={feed !== undefined && session?.identity !== undefined && ownSosOpen}
+      hold={feed !== undefined && startup.session?.identity !== undefined && ownSosOpen}
       radioLinked={radio.linked}
     />
-    {#if startupFailure}
-      <StartupProblem {t} failure={startupFailure} />
+    {#if startup.failure}
+      <StartupProblem {t} failure={startup.failure} />
     {/if}
   </main>
 </div>
@@ -418,85 +238,10 @@
     height: 100dvh;
   }
 
-  /* The logo, the group in use, and on the right how this device reaches it. */
-  .bar {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-    /* Clear of a notch at the top, or at a side when the phone is held sideways. */
-    padding: calc(0.3rem + env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0.3rem
-      max(1rem, env(safe-area-inset-left));
-  }
-
-  /* A slim bar leaves the map the room: its two buttons are lower than the others, and alike. */
-  .bar :global(button) {
-    min-height: 2.5rem;
-    border-color: var(--chrome-line);
-  }
-
-  .brand {
-    display: flex;
-    flex-shrink: 0;
-  }
-
-  .brand img {
-    display: block;
-    height: 1.45rem;
-    width: auto;
-  }
-
-  .brand .mark {
-    display: none;
-  }
-
   /* A size container: menus and panels on the map measure themselves against it (cqh). */
   main {
     position: relative;
     overflow: hidden;
     container-type: size;
-  }
-
-  /* On narrow screens the mark stands for the name. */
-  @media (max-width: 30rem) {
-    .brand .lockup {
-      display: none;
-    }
-
-    .brand .mark {
-      display: block;
-      height: 1.7rem;
-    }
-  }
-
-  /* Says what it is above the group's name, which is cut short rather than crowd the bar. */
-  .group {
-    display: grid;
-    grid-template-columns: minmax(0, auto) auto;
-    column-gap: 0.4rem;
-    align-items: center;
-    min-width: 0;
-    padding: 0.15rem 0.5rem 0.15rem 0.65rem;
-    line-height: 1.15;
-    text-align: left;
-  }
-
-  .group .caption {
-    grid-column: 1;
-    color: var(--chrome-muted);
-    font-size: var(--text-small);
-  }
-
-  .group .name {
-    grid-column: 1;
-    overflow: hidden;
-    font-size: var(--text-secondary);
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .group :global(svg) {
-    grid-row: 1 / span 2;
-    grid-column: 2;
   }
 </style>
