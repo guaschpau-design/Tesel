@@ -683,6 +683,8 @@ export const es: Messages = {
   warningRed: 'Aviso rojo',
   warningUntil: 'Hasta {until}',
   warningFromUntil: 'De {from} a {until}',
+  warningUntilBrief: 'hasta {until}',
+  warningFromBrief: 'desde {from}',
   warningSource: 'Fuente:',
   warningThrough: 'a través de',
   details: 'Detalles',

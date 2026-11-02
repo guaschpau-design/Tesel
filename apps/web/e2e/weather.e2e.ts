@@ -1,6 +1,6 @@
 // Official weather warnings (protocol §8.2): the server's answer is stood in for by an orange
-// warning over Valencia, which shows where this device is and at any point picked in it, and goes
-// away with its layer.
+// warning over Valencia, which shows where this device is, as a card and then as one line, and at
+// any point picked in it, and goes away with its layer.
 
 import type { Page } from '@playwright/test';
 
@@ -70,8 +70,14 @@ test('a warning shows where this device is and at a point picked in it', async (
     'href',
     'https://meteoalarm.org',
   );
+  // Closed, it leaves one line that says what is in force here and opens it again.
   await card.getByRole('button', { name: 'Cerrar' }).click();
   await expect(card).toBeHidden();
+  const brief = page.getByRole('button', { name: /^Aviso naranja · Lluvias · hasta / });
+  await brief.click();
+  await expect(card).toContainText('80 mm en 12 horas');
+  await card.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(brief).toBeVisible();
 
   await page.locator('.maplibregl-canvas').click();
   const panel = page.getByRole('region', { name: 'Punto del mapa' });

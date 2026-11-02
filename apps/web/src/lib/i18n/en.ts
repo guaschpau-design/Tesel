@@ -683,6 +683,8 @@ export const en = {
   warningRed: 'Red warning',
   warningUntil: 'Until {until}',
   warningFromUntil: 'From {from} to {until}',
+  warningUntilBrief: 'until {until}',
+  warningFromBrief: 'from {from}',
   warningSource: 'Source:',
   warningThrough: 'through',
   details: 'Details',

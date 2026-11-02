@@ -97,13 +97,50 @@ export function regionFeatures(regions: readonly ActiveRegion[]): FeatureCollect
   };
 }
 
+/**
+ * The edges of the regions to draw, with the same `tone`. Each ring is turned so that its region
+ * lies on its right, outer rings clockwise and holes the other way round: a line offset to the
+ * right then runs along the inside of the region, whichever way the issuer wound it.
+ */
+export function regionEdges(regions: readonly ActiveRegion[]): FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: regions.map(({ region }) => ({
+      type: 'Feature',
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: polygonsOf(region.geometry).flatMap(([outer, ...holes]) => [
+          ...(outer === undefined ? [] : [turned(outer, true)]),
+          ...holes.map((hole) => turned(hole, false)),
+        ]),
+      },
+      properties: { tone: WARNING_LOOKS[region.properties.level].tone },
+    })),
+  };
+}
+
+/** A ring walked clockwise or not, on a map with north up. */
+function turned(ring: [number, number][], clockwise: boolean): [number, number][] {
+  // Twice the ring's signed area, positive when it runs anticlockwise (the shoelace formula).
+  let area = 0;
+  ring.forEach(([x1, y1], index) => {
+    const [x2, y2] = ring[(index + 1) % ring.length] ?? [x1, y1];
+    area += x1 * y2 - x2 * y1;
+  });
+  return area < 0 === clockwise ? ring : [...ring].reverse();
+}
+
 /** A warning's text in the app's language, or in the other one if the issuer gave only that. */
 export function warningText(warning: WeatherWarning, locale: Locale): WarningText | null {
   return warning.text[locale] ?? warning.text.es ?? warning.text.en ?? null;
 }
 
+function polygonsOf(geometry: RegionGeometry): [number, number][][][] {
+  return geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+}
+
 function boundsOf(geometry: RegionGeometry): Bounds {
-  const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+  const polygons = polygonsOf(geometry);
   let [west, south, east, north] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const polygon of polygons) {
     // The outer ring holds the rest.
@@ -119,8 +156,7 @@ function boundsOf(geometry: RegionGeometry): Bounds {
 
 /** Whether a point is inside a polygon or multipolygon, holes left out. */
 export function contains(geometry: RegionGeometry, at: LatLon): boolean {
-  const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
-  return polygons.some(
+  return polygonsOf(geometry).some(
     ([outer, ...holes]) =>
       outer !== undefined && insideRing(outer, at) && !holes.some((hole) => insideRing(hole, at)),
   );

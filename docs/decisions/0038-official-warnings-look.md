@@ -1,6 +1,6 @@
 # 0038. Draw official warnings unlike the group's own areas
 
-- Status: Accepted
+- Status: Accepted, amended by [0100](0100-warnings-leave-the-map-clear.md) (hatching from afar only, a band inside the edge)
 - Date: 2026-10-27
 
 ## Context

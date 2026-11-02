@@ -43,7 +43,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0035](0035-base-maps-by-purpose.md)                 | Give each base map a purpose of its own                                                     | Accepted                                                |
 | [0036](0036-cadastre-layer.md)                       | The cadastre's parcels as one picture of the view, online only                              | Accepted, amended by 0037                               |
 | [0037](0037-maps-across-borders.md)                  | Maps across Spain, Portugal and southern France                                             | Accepted, amended by 0041                               |
-| [0038](0038-official-warnings-look.md)               | Draw official warnings unlike the group's own areas                                         | Accepted                                                |
+| [0038](0038-official-warnings-look.md)               | Draw official warnings unlike the group's own areas                                         | Accepted, amended by 0100                               |
 | [0039](0039-map-credits-and-scale.md)                | Map credits on opening and in the layers panel, scale with the controls                     | Accepted                                                |
 | [0040](0040-dictated-messages.md)                    | Dictate chat messages with the browser's speech recognition                                 | Accepted                                                |
 | [0041](0041-satellite-mosaic-and-national-photos.md) | One Sentinel-2 mosaic from afar, each country's photographs close up                        | Accepted, amended by 0051                               |
@@ -105,3 +105,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted                                                |
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
 | [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted                                                |
+| [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |

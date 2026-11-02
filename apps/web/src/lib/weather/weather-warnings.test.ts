@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
   activeRegions,
   contains,
+  regionEdges,
   regionFeatures,
   warningsAt,
   warningText,
@@ -98,6 +99,34 @@ describe('weather warnings', () => {
     expect(contains(holed, { lat: 1, lon: 1 })).toBe(false);
     const multi: RegionGeometry = { type: 'MultiPolygon', coordinates: [[hole], [square]] };
     expect(contains(multi, { lat: 1.8, lon: 1.8 })).toBe(true);
+  });
+
+  it('turns each edge so that its region lies on its right', () => {
+    const holed = activeRegions(
+      document({
+        ...region('A', [warning(3, NOW + 60)]),
+        geometry: { type: 'Polygon', coordinates: [square, hole] },
+      }),
+      NOW,
+    );
+    // The outer ring, given anticlockwise, is walked clockwise; the hole, anticlockwise, is kept.
+    expect(regionEdges(holed).features[0]).toEqual({
+      type: 'Feature',
+      geometry: { type: 'MultiLineString', coordinates: [[...square].reverse(), hole] },
+      properties: { tone: 'orange' },
+    });
+    const clockwise = [...square].reverse();
+    const multi = activeRegions(
+      document({
+        ...region('B', [warning(2, NOW + 60)]),
+        geometry: { type: 'MultiPolygon', coordinates: [[clockwise], [[...hole].reverse()]] },
+      }),
+      NOW,
+    );
+    expect(regionEdges(multi).features[0]?.geometry).toEqual({
+      type: 'MultiLineString',
+      coordinates: [clockwise, [...hole].reverse()],
+    });
   });
 
   it('gives the text in the app’s language, or in the other one', () => {
