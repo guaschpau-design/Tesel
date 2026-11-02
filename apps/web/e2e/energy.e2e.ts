@@ -13,7 +13,8 @@ test('the screen rests after a minute untouched, and comes back at a touch', asy
     await page.clock.fastForward('01:10');
     await expect(rest).toBeVisible({ timeout: 1000 });
   }).toPass();
-  await rest.click();
+  // A touch anywhere: the screen goes as the finger lands, before any click.
+  await page.mouse.click(200, 300);
   await expect(rest).toBeHidden();
 
   // Turned off, it does not rest any more.
