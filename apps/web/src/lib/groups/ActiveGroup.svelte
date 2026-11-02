@@ -10,6 +10,7 @@
   import type { GroupFeed } from '../sync/group-feed.svelte.ts';
   import { dissolveTeam, saveTeam } from '../teams/team-actions.ts';
   import TeamForm from '../teams/TeamForm.svelte';
+  import Explained from '../ui/Explained.svelte';
   import Fold from '../ui/Fold.svelte';
   import { openPanel } from '../ui/panels.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
@@ -66,8 +67,9 @@
     title={t('organize')}
     summary={checkIn ? t('organizeSummaryCheckIn') : t('organizeSummary')}
   >
-    <p class="hint">{t('teamsHint')}</p>
-    <button class="new-team" onclick={() => (editing = { team: null })}>{t('teamNew')}</button>
+    <Explained label={t('aboutTeams')} text={t('teamsHint')}>
+      <button onclick={() => (editing = { team: null })}>{t('teamNew')}</button>
+    </Explained>
     <SwitchRow
       icon="person"
       label={t('checkInSwitch')}
@@ -119,10 +121,6 @@
     display: inline-flex;
     gap: 0.45rem;
     align-items: center;
-    justify-self: start;
-  }
-
-  .new-team {
     justify-self: start;
   }
 </style>

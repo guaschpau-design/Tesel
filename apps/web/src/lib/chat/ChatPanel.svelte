@@ -137,8 +137,9 @@
       </button>
     {:else if tab === 'mesh' && showRadioTab}
       <div class="scroll stack">
-        <p class="hint">{t('meshIntro')}</p>
         {#if radioTexts.length === 0}
+          <!-- What this tab is for is said while it is empty: its messages say it after. -->
+          <p class="hint">{t('meshIntro')}</p>
           <p class="hint">{t('noMeshMessages')}</p>
         {:else}
           <ol class="messages">

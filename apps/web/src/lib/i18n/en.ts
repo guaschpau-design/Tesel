@@ -689,6 +689,11 @@ export const en = {
   warningThrough: 'through',
   details: 'Details',
   aboutThis: 'What “{name}” is',
+  aboutTeams: 'What a team is',
+  aboutRadioConnect: 'Help pairing the radio',
+  aboutOfflineAreas: 'What downloaded maps are for',
+  aboutDownloadAlso: 'Which areas they cover',
+  aboutCoordinates: 'Which formats can be typed',
   thirdPartyLicences: 'Third-party licences',
 } as const;
 

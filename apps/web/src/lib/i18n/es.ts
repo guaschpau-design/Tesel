@@ -689,5 +689,10 @@ export const es: Messages = {
   warningThrough: 'a través de',
   details: 'Detalles',
   aboutThis: 'Qué es «{name}»',
+  aboutTeams: 'Qué es un equipo',
+  aboutRadioConnect: 'Ayuda para emparejar la radio',
+  aboutOfflineAreas: 'Para qué sirven los mapas descargados',
+  aboutDownloadAlso: 'Qué zonas abarcan',
+  aboutCoordinates: 'Qué formatos se pueden escribir',
   thirdPartyLicences: 'Licencias de terceros',
 };

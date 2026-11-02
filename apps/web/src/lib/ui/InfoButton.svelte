@@ -17,7 +17,9 @@
   let { label, controls, open, onclick }: Props = $props();
 </script>
 
+<!-- Never a form's submit button, whatever form it is in. -->
 <button
+  type="button"
   class="info"
   aria-label={label}
   aria-expanded={open}

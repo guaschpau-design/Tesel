@@ -14,7 +14,9 @@
   import type { Bounds } from '../map/tiles/math.ts';
   import type { OfflineArea } from '../map/tiles/store-schema.ts';
   import { confirmations } from '../ui/confirmations.svelte.ts';
+  import Explained from '../ui/Explained.svelte';
   import Fold from '../ui/Fold.svelte';
+  import InfoButton from '../ui/InfoButton.svelte';
   import Panel from '../ui/Panel.svelte';
   import { offlineDownload as job } from './download-job.svelte.ts';
   import {
@@ -119,11 +121,12 @@
       map.off('moveend', update);
     };
   });
+
+  const alsoHint = $props.id();
+  let alsoOpen = $state(false);
 </script>
 
 <Panel title={t('offlineAreas')} closeLabel={t('close')} {onclose}>
-  <p class="intro">{t('areasIntro')}</p>
-
   <form
     class="download"
     onsubmit={(event) => {
@@ -131,7 +134,9 @@
       startDownload();
     }}
   >
-    <h3>{t('downloadVisible')}</h3>
+    <Explained label={t('aboutOfflineAreas')} text={t('areasIntro')}>
+      <h3>{t('downloadVisible')}</h3>
+    </Explained>
     {#if job.progress}
       <progress max={job.progress.total} value={job.progress.done}></progress>
       <p class="hint">
@@ -166,14 +171,23 @@
         </select>
       </label>
       <fieldset class="extras" disabled={job.running}>
-        <legend>{t('downloadAlso')}</legend>
+        <!-- A legend holds no paragraph: its (i) is in it, what it shows just after. -->
+        <legend>
+          {t('downloadAlso')}
+          <InfoButton
+            label={t('aboutDownloadAlso')}
+            controls={alsoHint}
+            open={alsoOpen}
+            onclick={() => (alsoOpen = !alsoOpen)}
+          />
+        </legend>
+        <p id={alsoHint} class="hint" hidden={!alsoOpen}>{t('downloadAlsoHint')}</p>
         {#each EXTRAS as extra (extra)}
           <label class="check">
             <input type="checkbox" value={extra} bind:group={extras} />
             {t(EXTRA_NAMES[extra])}
           </label>
         {/each}
-        <p class="hint">{t('downloadAlsoHint')}</p>
       </fieldset>
     </Fold>
   </form>
@@ -254,6 +268,11 @@
   .extras {
     display: grid;
     gap: 0.35rem;
+  }
+
+  .extras legend {
+    display: flex;
+    align-items: center;
   }
 
   .check {

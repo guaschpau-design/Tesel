@@ -3,6 +3,7 @@
   import type { LatLon } from '@tesel/protocol';
 
   import type { Translate } from '../i18n/index.ts';
+  import Explained from '../ui/Explained.svelte';
   import Panel from '../ui/Panel.svelte';
   import { parseCoordinate } from './coordinates.ts';
 
@@ -23,14 +24,17 @@
     unreadable = found === null;
     if (found) onfind(found);
   }
+  const field = $props.id();
 </script>
 
 <Panel title={t('findCoordinate')} closeLabel={t('close')} {onclose}>
   <form class="stack section" onsubmit={find}>
-    <p class="intro">{t('coordinatesIntro')}</p>
-    <label>
-      {t('coordinates')}
+    <div class="field">
+      <Explained label={t('aboutCoordinates')} text={t('coordinatesIntro')}>
+        <label for={field}>{t('coordinates')}</label>
+      </Explained>
       <input
+        id={field}
         bind:value={typed}
         oninput={() => (unreadable = false)}
         placeholder="39.47, -0.37 · 30S 725695 4372210"
@@ -38,8 +42,15 @@
         autocapitalize="characters"
         spellcheck="false"
       />
-    </label>
+    </div>
     {#if unreadable}<p class="warning">{t('coordinateUnreadable')}</p>{/if}
     <div class="row"><button type="submit" disabled={typed.trim() === ''}>{t('find')}</button></div>
   </form>
 </Panel>
+
+<style>
+  .field {
+    display: grid;
+    gap: 0.25rem;
+  }
+</style>

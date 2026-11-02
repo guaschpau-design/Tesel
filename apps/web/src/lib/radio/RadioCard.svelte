@@ -6,6 +6,7 @@
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import ChannelCard from '../links/ChannelCard.svelte';
   import type { Link } from '../links/links.ts';
+  import Explained from '../ui/Explained.svelte';
   import { problemMessage } from './radio-problem.ts';
   import { radio } from './radio.svelte.ts';
 
@@ -59,10 +60,9 @@
     </ol>
   {/if}
   {#if supported && radio.state === 'disconnected'}
-    <div class="row">
+    <Explained label={t('aboutRadioConnect')} text={t('radioConnectHint')}>
       <button class="primary" onclick={() => radio.connect()}>{t('radioConnect')}</button>
-    </div>
-    <p class="hint">{t('radioConnectHint')}</p>
+    </Explained>
   {:else if supported}
     <!-- Also while it reconnects: a radio whose battery died can be let go and another paired. -->
     <div class="row">

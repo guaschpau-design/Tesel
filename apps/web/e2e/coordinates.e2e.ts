@@ -5,6 +5,12 @@ test('a dictated coordinate is found on the map and read in another format', asy
 }) => {
   const page = await device(browser, 'Ana');
   await openMore(page, 'Ir a una coordenada');
+  // What can be typed is shown on asking, without sending the form.
+  const formats = page.getByText('En grados, UTM o MGRS');
+  await expect(formats).toBeHidden();
+  await page.getByRole('button', { name: 'Qué formatos se pueden escribir' }).click();
+  await expect(formats).toBeVisible();
+  await expect(page.getByText('Tesel no reconoce')).toBeHidden();
   await page.getByLabel('Coordenadas').fill('39,4699 -0,3763');
   await page.getByRole('button', { name: 'Ir', exact: true }).click();
   const panel = page.getByRole('region', { name: 'Punto del mapa' });
