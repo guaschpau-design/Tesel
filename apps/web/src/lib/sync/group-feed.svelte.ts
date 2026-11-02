@@ -247,9 +247,10 @@ export class GroupFeed {
   }
 
   close(): void {
+    if (this.#client === null) return;
     window.removeEventListener('online', this.#retry);
     document.removeEventListener('visibilitychange', this.#retry);
-    this.#client?.stop();
+    this.#client.stop();
   }
 
   async sendChat(text: string): Promise<void> {

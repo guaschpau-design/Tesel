@@ -9,9 +9,13 @@ import { openAppDb, type AppDb } from '../storage/app-db.ts';
 import { GroupFeed } from '../sync/group-feed.svelte.ts';
 import { DeviceLocation } from './device-location.svelte.ts';
 import { FakeGps } from './fake-gps.ts';
+import { hideInOtherGroups } from './hide-position.ts';
 import { PositionSharing } from './position-sharing.svelte.ts';
 
 let databases = 0;
+
+/** No other group to hide the position in. */
+const NOWHERE_ELSE = () => Promise.resolve();
 
 /** Ana's device in a group with no server, sharing in its remembered mode. */
 async function anaDevice(db?: AppDb) {
@@ -20,7 +24,7 @@ async function anaDevice(db?: AppDb) {
   const feed = await GroupFeed.open(database, createGroup('Rescate', null, 0), ana);
   const gps = new FakeGps();
   const mode = (await loadPreferences(database)).positionMode;
-  const sharing = new PositionSharing(mode, new DeviceLocation(gps));
+  const sharing = new PositionSharing(mode, new DeviceLocation(gps), NOWHERE_ELSE);
   sharing.attach(feed);
   /** What the group's map shows of Ana: her last position, or that she hid it. */
   const onTheMap = () => feed.state.positions.get(ana.nodeId);
@@ -111,6 +115,7 @@ describe('sharing this device’s position', () => {
     const sharing = new PositionSharing(
       (await loadPreferences(db)).positionMode,
       new DeviceLocation(gps),
+      NOWHERE_ELSE,
     );
     sharing.attach(rescue);
     await sharing.setMode('sharing');
@@ -124,6 +129,34 @@ describe('sharing this device’s position', () => {
     sharing.attach(rescue);
     await vi.waitFor(() => {
       expect(rescue.showsOwnPosition).toBe(false);
+    });
+  });
+
+  it('hides the position at once in the other groups too, when the user hides it', async () => {
+    const db = await openAppDb(`position-sharing-${String(++databases)}`);
+    const ana = createLocalIdentity('Ana', 0);
+    const rescueGroup = createGroup('Rescate', null, 0);
+    const otherGroup = createGroup('Otro', null, 0);
+    const rescue = await GroupFeed.open(db, rescueGroup, ana);
+    const gps = new FakeGps();
+    const sharing = new PositionSharing(
+      (await loadPreferences(db)).positionMode,
+      new DeviceLocation(gps),
+      () => hideInOtherGroups(db, [rescueGroup, otherGroup], ana, otherGroup.id),
+    );
+    sharing.attach(rescue);
+    await sharing.setMode('sharing');
+    gps.fix(39.47, -0.37);
+    await vi.waitFor(() => {
+      expect(rescue.showsOwnPosition).toBe(true);
+    });
+    rescue.close();
+    sharing.attach(await GroupFeed.open(db, otherGroup, ana));
+    await sharing.setMode('hidden');
+    await vi.waitFor(async () => {
+      const reopened = await GroupFeed.open(db, rescueGroup, ana);
+      reopened.close();
+      expect(reopened.showsOwnPosition).toBe(false);
     });
   });
 

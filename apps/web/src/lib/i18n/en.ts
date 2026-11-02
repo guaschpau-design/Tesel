@@ -29,6 +29,7 @@ export const en = {
   language: 'Language',
   settings: 'Settings',
   offlineAreas: 'Offline maps',
+  offlineSaved: 'Map “{name}” saved: it works without a connection.',
   close: 'Close',
   areasIntro: 'Without a connection, the map shows in detail only the downloaded areas.',
   downloadVisible: 'Download visible area',
@@ -629,7 +630,7 @@ export const en = {
   teamOf: 'Team {name}',
   teamDissolve: 'Dissolve team',
   confirmDissolveTeam:
-    'Dissolve the team “{name}”? Its members are left in no team; its tasks do not change.',
+    'Dissolve the team “{name}”? Its members are left without a team, and what the team had to do is for anyone from then on.',
   colourBlue: 'Blue',
   colourOrange: 'Orange',
   colourTeal: 'Teal',

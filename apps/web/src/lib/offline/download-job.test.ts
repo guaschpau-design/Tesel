@@ -94,6 +94,16 @@ describe('a download of an area', () => {
     expect(await store.listAreas()).toEqual([]);
   });
 
+  it('counts only the tiles it still has to fetch when it checks for room', async () => {
+    const store = await freshStore();
+    const job = new DownloadJob();
+    await expect(job.run(store, plan(everyTile))).resolves.toBe(true);
+    // No room left for anything new, and nothing new to store: the same area downloads again.
+    vi.stubGlobal('navigator', storageWith(10 * 1024 ** 2));
+    await expect(job.run(store, plan(everyTile))).resolves.toBe(true);
+    expect(job.failure).toBeNull();
+  });
+
   it('says the service is out of reach when tile after tile fails, and never rejects', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const job = new DownloadJob();
@@ -112,6 +122,7 @@ describe('a download of an area', () => {
       getTile: (source, at) => store.getTile(source, at),
       putTiles: () => Promise.reject(new DOMException('full', 'QuotaExceededError')),
       keepStored: (owner, source, tiles) => store.keepStored(owner, source, tiles),
+      countStored: (source, tiles) => store.countStored(source, tiles),
       keepViewed: (source, at, data) => store.keepViewed(source, at, data),
       saveArea: (area) => store.saveArea(area),
       listAreas: () => store.listAreas(),

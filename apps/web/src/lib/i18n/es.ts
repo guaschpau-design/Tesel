@@ -28,6 +28,7 @@ export const es: Messages = {
   language: 'Idioma',
   settings: 'Ajustes',
   offlineAreas: 'Mapas sin conexión',
+  offlineSaved: 'Mapa «{name}» guardado: funciona sin conexión.',
   close: 'Cerrar',
   areasIntro: 'Sin conexión, el mapa solo se ve con detalle en las zonas descargadas.',
   downloadVisible: 'Descargar la zona visible',
@@ -629,7 +630,7 @@ export const es: Messages = {
   teamOf: 'Equipo {name}',
   teamDissolve: 'Deshacer equipo',
   confirmDissolveTeam:
-    '¿Deshacer el equipo «{name}»? Sus miembros quedan sin equipo; sus tareas no cambian.',
+    '¿Deshacer el equipo «{name}»? Sus miembros quedan sin equipo, y lo que el equipo tenía por hacer pasa a ser para cualquiera.',
   colourBlue: 'Azul',
   colourOrange: 'Naranja',
   colourTeal: 'Turquesa',

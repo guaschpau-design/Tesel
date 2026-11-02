@@ -74,6 +74,26 @@ export function countAreaTiles(
 }
 
 /**
+ * How many tiles of each layer of an area are not stored yet: what downloading it would still
+ * fetch, whether it is new, resumed or overlaps what is kept.
+ */
+export async function missingTiles(
+  store: TileStore,
+  bounds: Bounds,
+  layers: readonly Pick<DownloadLayer, 'source' | 'maxZoom'>[],
+): Promise<number[]> {
+  return Promise.all(
+    layers.map(async (layer) => {
+      let missing = 0;
+      for (const batch of inBatches(tilesInBounds(bounds, MIN_ZOOM, layer.maxZoom))) {
+        missing += batch.length - (await store.countStored(layer.source, batch));
+      }
+      return missing;
+    }),
+  );
+}
+
+/**
  * Downloads an area: saved first as incomplete, so an interrupted download is visible and can be
  * resumed or deleted, and complete once every tile is stored.
  */

@@ -11,14 +11,21 @@ import { nextReport, type Report } from './report-policy.ts';
 export class PositionSharing {
   readonly #mode: Preference<PositionMode>;
   readonly #location: DeviceLocation;
+  /** Hides the position in the groups other than the active one (hide-position.ts). */
+  readonly #hideElsewhere: () => Promise<void>;
   #feed: GroupFeed | null = null;
   /** Lets go of the GPS; set while sharing. */
   #release: (() => void) | null = null;
   #last: Report | null = null;
 
-  constructor(mode: Preference<PositionMode>, location: DeviceLocation) {
+  constructor(
+    mode: Preference<PositionMode>,
+    location: DeviceLocation,
+    hideElsewhere: () => Promise<void>,
+  ) {
     this.#mode = mode;
     this.#location = location;
+    this.#hideElsewhere = hideElsewhere;
   }
 
   get mode(): PositionMode {
@@ -55,7 +62,13 @@ export class PositionSharing {
     if (mode !== 'sharing') this.#stopReporting();
     await this.#mode.set(mode);
     if (mode === 'sharing') this.#startReporting();
-    if (mode === 'hidden') await this.#feed?.hidePosition();
+    if (mode !== 'hidden') return;
+    await this.#feed?.hidePosition();
+    // The other groups are told meanwhile; the switch does not wait for them.
+    this.#hideElsewhere().catch((error: unknown) => {
+      console.warn('Hiding the position in the other groups failed', error);
+      storageRefusals.note(error);
+    });
   }
 
   #startReporting(): void {

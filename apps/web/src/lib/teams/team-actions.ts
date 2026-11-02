@@ -1,9 +1,10 @@
 // What is done with teams for the whole group: saved, with the members moved into a team taken out
-// of the one they were in, and dissolved.
+// of the one they were in, and dissolved, with what the team had to do left for anyone.
 
 import { TEAM_MAX_MEMBERS, type TeamEvent } from '@tesel/protocol';
 
 import type { GroupFeed, TeamFields } from '../sync/group-feed.svelte.ts';
+import { fieldsOf as taskFields, isPending } from '../tasks/tasks.ts';
 import { activeTeams } from './teams.ts';
 
 /**
@@ -24,8 +25,16 @@ export async function saveTeam(feed: GroupFeed, team: TeamFields): Promise<void>
   await feed.writeTeam(team);
 }
 
-/** Dissolves a team: it is no longer shown, and its members are in none. */
+/**
+ * Dissolves a team: it is no longer shown, and its members are in none. What it still had to do,
+ * strips of a sweep among them, is for anyone from then on, rather than for a team no one is in.
+ */
 export async function dissolveTeam(feed: GroupFeed, team: TeamEvent): Promise<void> {
+  for (const task of feed.state.tasks.values()) {
+    if (task.assignee === team.team && isPending(task.status)) {
+      await feed.writeTask(task.task, { ...taskFields(task), assignee: null });
+    }
+  }
   await feed.writeTeam({ ...fieldsOf(team), dissolved: true, members: [] });
 }
 

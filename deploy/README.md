@@ -74,7 +74,7 @@ A new version may upgrade the database's schema, which older versions cannot rea
 
 ### Alerts
 
-Failures of the update, base map and backup jobs go to the journal. Set `TESEL_ALERT_URL` in `/opt/tesel/.env` to a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service to hear about them: each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
+Failures of the update, base map and backup jobs go to the journal. To hear about them, give the installer a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service with `--alert-url` (kept in `.env` as `TESEL_ALERT_URL`, and on later runs): it pings it once, then each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
 
 ### Backups
 

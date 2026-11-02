@@ -4,7 +4,12 @@
 
 import { formatBytes } from '../format.ts';
 import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
-import { countAreaTiles, MAX_AREA_TILES, type DownloadLayer } from '../map/tiles/area-download.ts';
+import {
+  countAreaTiles,
+  MAX_AREA_TILES,
+  missingTiles,
+  type DownloadLayer,
+} from '../map/tiles/area-download.ts';
 import { containsBounds, type Bounds } from '../map/tiles/math.ts';
 import type { TileArchives } from '../map/tiles/protocol.ts';
 import type { TileStore } from '../map/tiles/store.ts';
@@ -128,6 +133,22 @@ function layerOf(archives: TileArchives, source: TileSourceId, maxZoom: number):
 export function estimatedBytes(bounds: Bounds, layers: readonly DownloadLayer[]): number {
   return layers.reduce(
     (sum, layer) => sum + countAreaTiles(bounds, [layer]) * AVERAGE_TILE_BYTES[layer.source],
+    0,
+  );
+}
+
+/**
+ * Roughly what downloading an area takes now: only its tiles not stored yet, so that resuming it,
+ * or one overlapping what is kept, is not refused for room it will not use.
+ */
+export async function bytesStillNeeded(
+  store: TileStore,
+  bounds: Bounds,
+  layers: readonly DownloadLayer[],
+): Promise<number> {
+  const missing = await missingTiles(store, bounds, layers);
+  return layers.reduce(
+    (sum, layer, index) => sum + (missing[index] ?? 0) * AVERAGE_TILE_BYTES[layer.source],
     0,
   );
 }

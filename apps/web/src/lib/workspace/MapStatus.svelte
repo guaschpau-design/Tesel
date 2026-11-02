@@ -26,6 +26,7 @@
   import { planSweep, type SweepRecipe } from '../objects/sweep-actions.ts';
   import SweepPlanner from '../objects/SweepPlanner.svelte';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
+  import DownloadCard from '../offline/DownloadCard.svelte';
   import OperationAreaOffer from '../offline/OperationAreaOffer.svelte';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import SharePrompt from '../position/SharePrompt.svelte';
@@ -211,6 +212,7 @@
     {#if weather}
       <WeatherCard {t} {locale} {weather} />
     {/if}
+    <DownloadCard {t} {locale} />
     {#if group}
       {#key group.feed}
         <OperationAreaOffer {t} {locale} groupState={group.feed.state} {offline} />

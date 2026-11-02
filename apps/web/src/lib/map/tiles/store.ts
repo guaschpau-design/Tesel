@@ -39,6 +39,8 @@ export interface TileStore {
    * not be downloaded again; returns the others.
    */
   keepStored(owner: string, source: TileSourceId, tiles: readonly TileCoord[]): Promise<KeptTiles>;
+  /** How many of `tiles` are stored, whoever keeps them; it changes nothing. */
+  countStored(source: TileSourceId, tiles: readonly TileCoord[]): Promise<number>;
   /**
    * Keeps a tile the map fetched while online, among the latest ones fetched. A tile already kept
    * is served from here and not fetched again, so the cache drops first what was first kept, not
@@ -117,6 +119,13 @@ class IndexedDbTileStore implements TileStore {
       }),
       tx.done,
     ]);
+  }
+
+  async countStored(source: TileSourceId, tiles: readonly TileCoord[]): Promise<number> {
+    const tx = this.#db.transaction('tiles', 'readonly');
+    const found = await Promise.all(tiles.map((tile) => tx.store.getKey(storageKey(source, tile))));
+    await tx.done;
+    return found.filter((key) => key !== undefined).length;
   }
 
   async keepStored(

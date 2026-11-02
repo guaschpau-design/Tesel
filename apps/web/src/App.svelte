@@ -28,6 +28,7 @@
   import OfflineAreasPanel from './lib/offline/OfflineAreasPanel.svelte';
   import { keepOverview } from './lib/offline/overview.ts';
   import { deviceLocation } from './lib/position/device-location.svelte.ts';
+  import { hideInOtherGroups } from './lib/position/hide-position.ts';
   import { PositionSharing } from './lib/position/position-sharing.svelte.ts';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { activeSos } from './lib/incidents/incidents.ts';
@@ -157,7 +158,12 @@
         if (fullscreenSupported && preferences.fullscreen.value) {
           stopWaitingForTap = fullscreenAtFirstTap();
         }
-        sharing = new PositionSharing(preferences.positionMode, deviceLocation);
+        sharing = new PositionSharing(preferences.positionMode, deviceLocation, async () => {
+          const identity = session?.identity;
+          if (session && identity) {
+            await hideInOtherGroups(database, session.groups, identity, session.activeGroupId);
+          }
+        });
         session = await Session.load(database);
       })
       .catch(failed);

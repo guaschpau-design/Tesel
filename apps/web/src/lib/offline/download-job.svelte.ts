@@ -1,5 +1,7 @@
-// One download of an area for offline use, as the interface follows it: its progress, why it
-// stopped short if it did, and cancelling it. A download that stopped short can be resumed.
+// The download of an area for offline use, as the interface follows it: its progress, why it
+// stopped short if it did, and cancelling it. A download that stopped short can be resumed. There
+// is one on the device (`offlineDownload`), which goes on while the map is used: the panel that
+// started it can be closed, and a card on the map follows it meanwhile.
 
 import {
   countAreaTiles,
@@ -11,7 +13,7 @@ import type { Bounds } from '../map/tiles/math.ts';
 import type { TileStore } from '../map/tiles/store.ts';
 import type { OfflineArea } from '../map/tiles/store-schema.ts';
 import { isStorageFull, keepStorage, roomForMaps } from '../storage/storage-space.svelte.ts';
-import { estimatedBytes, type DownloadFailure } from './offline-maps.ts';
+import { bytesStillNeeded, type DownloadFailure } from './offline-maps.ts';
 
 export interface DownloadPlan {
   readonly name: string;
@@ -26,6 +28,10 @@ export class DownloadJob {
   progress: { readonly done: number; readonly total: number } | null = $state(null);
   /** Why the last download stopped short, or null if it did not (or was cancelled). */
   failure: DownloadFailure | null = $state.raw(null);
+  /** The name of the area being downloaded, or last downloaded. */
+  name = $state('');
+  /** Whether the last download was cancelled by the user. */
+  cancelled = false;
   #controller: AbortController | null = null;
 
   get running(): boolean {
@@ -37,13 +43,16 @@ export class DownloadJob {
    * true once the whole area is stored, false otherwise; it never rejects.
    */
   async run(store: TileStore, plan: DownloadPlan): Promise<boolean> {
+    if (this.running) return false;
     this.failure = null;
+    this.cancelled = false;
+    this.name = plan.name;
     // Running, and so cancellable, from the start: the check for room takes a moment too.
     const controller = new AbortController();
     this.#controller = controller;
     this.progress = { done: 0, total: countAreaTiles(plan.bounds, plan.layers) };
     try {
-      const needed = estimatedBytes(plan.bounds, plan.layers);
+      const needed = await bytesStillNeeded(store, plan.bounds, plan.layers);
       const room = await roomForMaps();
       if (controller.signal.aborted) return false;
       if (room !== null && room < needed) {
@@ -76,7 +85,9 @@ export class DownloadJob {
   }
 
   cancel(): void {
-    this.#controller?.abort();
+    if (this.#controller === null) return;
+    this.cancelled = true;
+    this.#controller.abort();
   }
 }
 
@@ -85,3 +96,6 @@ function failureOf(error: unknown): DownloadFailure {
   if (error instanceof SourceUnreachable) return { kind: 'unreachable' };
   return { kind: 'failed' };
 }
+
+/** The device's one download of an offline area at a time. */
+export const offlineDownload = new DownloadJob();

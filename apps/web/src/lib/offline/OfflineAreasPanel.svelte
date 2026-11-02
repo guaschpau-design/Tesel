@@ -16,7 +16,7 @@
   import { confirmations } from '../ui/confirmations.svelte.ts';
   import Fold from '../ui/Fold.svelte';
   import Panel from '../ui/Panel.svelte';
-  import { DownloadJob } from './download-job.svelte.ts';
+  import { offlineDownload as job } from './download-job.svelte.ts';
   import {
     areaContents,
     areaLayers,
@@ -55,7 +55,6 @@
   let name = $state('');
   let storage: { used: number; quota: number } | null = $state(null);
   let extras: Extra[] = $state([]);
-  const job = new DownloadJob();
 
   const layers = $derived(downloadLayers(offline.archives, maxZoom, extras));
   const tileCount = $derived(countAreaTiles(bounds, layers));
@@ -76,7 +75,6 @@
       name.trim() || t('defaultAreaName', { date: formatDateTime(Date.now(), locale) });
     attempt(async () => {
       if (await job.run(offline.store, { name: areaName, bounds, layers })) name = '';
-      await refresh();
     }, t('actionFailed'));
   }
 
@@ -88,10 +86,7 @@
       layers: areaLayers(offline.archives, area),
       resumes: area,
     };
-    attempt(async () => {
-      await job.run(offline.store, plan);
-      await refresh();
-    }, t('actionFailed'));
+    attempt(() => job.run(offline.store, plan), t('actionFailed'));
   }
 
   async function remove(area: OfflineArea): Promise<void> {
@@ -108,13 +103,20 @@
     map.fitBounds([west, south, east, north], { padding: 24 });
   }
 
+  // The list as the panel opens, and again whenever a download ends, here or from the map.
+  $effect(() => {
+    if (job.running) return;
+    untrack(() => {
+      attempt(refresh, t('actionFailed'));
+    });
+  });
+
   onMount(() => {
     const update = () => (bounds = mapBounds(map));
     map.on('moveend', update);
-    attempt(refresh, t('actionFailed'));
+    // A download goes on once the panel is closed; a card on the map follows it.
     return () => {
       map.off('moveend', update);
-      job.cancel();
     };
   });
 </script>

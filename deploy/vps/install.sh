@@ -22,6 +22,7 @@ REPO_RAW="https://raw.githubusercontent.com/guaschpau-design/Tesel"
 REF="main"
 DOMAIN=""
 REDIRECT_FROM=""
+ALERT_URL=""
 SKIP_DNS_CHECK=false
 INSTALL_DIR="/opt/tesel"
 # Where servers installed before the project was renamed live (ADR-0019).
@@ -30,10 +31,12 @@ LEGACY_DIR="/opt/teselia"
 usage() {
   cat >&2 <<'TEXT'
 Usage: install.sh --domain DOMAIN [--redirect-from DOMAIN[,DOMAIN...]]
-                  [--ref GIT_REF] [--skip-dns-check]
+                  [--alert-url URL] [--ref GIT_REF] [--skip-dns-check]
 
   --domain         The server's name, e.g. tesel.example.eu
   --redirect-from  Old names of the server, which redirect to the new one; kept on later runs
+  --alert-url      Ping URL of healthchecks.io or alike, told how each scheduled job ends; kept
+                   on later runs
   --ref            Branch or tag whose deployment files are installed (default: main)
 TEXT
   exit 2
@@ -43,6 +46,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --domain) DOMAIN="${2:-}"; shift 2 ;;
     --redirect-from) REDIRECT_FROM="${2:-}"; shift 2 ;;
+    --alert-url) ALERT_URL="${2:-}"; shift 2 ;;
     --ref) REF="${2:-}"; shift 2 ;;
     --skip-dns-check) SKIP_DNS_CHECK=true; shift ;;
     *) usage ;;
@@ -69,6 +73,8 @@ IFS=',' read -r -a REDIRECT_DOMAINS <<< "$REDIRECT_FROM"
 for old in "${REDIRECT_DOMAINS[@]}"; do
   is_domain "$old" || fail "--redirect-from: \"$old\" is not a domain name."
 done
+[[ -z "$ALERT_URL" || "$ALERT_URL" =~ ^https://[A-Za-z0-9./_~%-]+$ ]] ||
+  fail "--alert-url: \"$ALERT_URL\" is not an https address."
 [[ $EUID -eq 0 ]] || fail "run as root (with sudo)."
 # shellcheck source=/dev/null
 . /etc/os-release
@@ -202,6 +208,11 @@ chmod 0600 "$INSTALL_DIR/.env"
 set_setting TESEL_DOMAIN "$DOMAIN"
 if [[ -n "$REDIRECT_FROM" ]] || ! grep -q '^TESEL_REDIRECT_FROM=' "$INSTALL_DIR/.env"; then
   set_setting TESEL_REDIRECT_FROM "$REDIRECT_FROM"
+fi
+if [[ -n "$ALERT_URL" ]]; then
+  set_setting TESEL_ALERT_URL "$ALERT_URL"
+  # A first ping, so the alert service knows the server and starts expecting the jobs' own.
+  TESEL_ALERT_URL="$ALERT_URL" "$INSTALL_DIR/notify.sh" success tesel-install
 fi
 # Caddy needs site names in its configuration itself, so the redirect site is written from the
 # setting into a file the Caddyfile imports (empty when there are no old names).

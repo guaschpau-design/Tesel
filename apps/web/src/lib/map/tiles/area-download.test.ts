@@ -155,6 +155,7 @@ describe('area download', () => {
       getTile: (source, tile) => store.getTile(source, tile),
       putTiles: () => Promise.reject(new DOMException('full', 'QuotaExceededError')),
       keepStored: (owner, source, tiles) => store.keepStored(owner, source, tiles),
+      countStored: (source, tiles) => store.countStored(source, tiles),
       keepViewed: (source, tile, data) => store.keepViewed(source, tile, data),
       saveArea: (area) => store.saveArea(area),
       listAreas: () => store.listAreas(),
