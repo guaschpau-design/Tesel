@@ -1,6 +1,6 @@
 # 0010. Rely on MeshCore channel encryption for LoRa in v0.1, knowing its limits
 
-- Status: Accepted
+- Status: Accepted, amended by [0098](0098-meshtastic-radios.md) (Meshtastic links, protected less)
 - Date: 2026-10-25
 
 ## Context

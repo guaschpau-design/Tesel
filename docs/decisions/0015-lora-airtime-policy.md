@@ -1,6 +1,6 @@
 # 0015. LoRa airtime policy
 
-- Status: Accepted, amended by [0043](0043-radio-delivery.md) (SOS repeats and bridging of urgent events)
+- Status: Accepted, amended by [0043](0043-radio-delivery.md) (SOS repeats and bridging of urgent events), [0098](0098-meshtastic-radios.md) (airtime estimated by each kind of radio)
 - Date: 2026-10-25
 
 ## Context

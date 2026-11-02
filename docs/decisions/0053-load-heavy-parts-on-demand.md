@@ -1,6 +1,6 @@
 # 0053. Load the heavy parts of the app on demand, MapLibre in a file of its own
 
-- Status: Accepted
+- Status: Accepted, amended by [0098](0098-meshtastic-radios.md) (the radio contract in `@tesel/radio`, each kind loaded when picked)
 - Date: 2026-10-28
 
 ## Context

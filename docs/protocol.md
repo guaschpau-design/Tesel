@@ -18,7 +18,7 @@ Keywords MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 
 ## 2. Size budget
 
-The largest MeshCore channel datagram payload is **165 bytes**. Every event, on every transport, MUST be at most 165 bytes once encoded. Encoders MUST refuse to produce larger events; the user interface is responsible for keeping text short enough.
+The largest MeshCore channel datagram payload is **165 bytes**; a Meshtastic packet carries more. Every event, on every transport, MUST be at most 165 bytes once encoded. Encoders MUST refuse to produce larger events; the user interface is responsible for keeping text short enough.
 
 ## 3. Events
 
@@ -393,13 +393,25 @@ The token sits in the fragment so it is never sent to any server. It is the base
 
 Decoders MUST accept only secure URLs with no query whose last path segment is exactly `join` (the path is `/join` or ends in `/join`). Servers and static hosts MUST answer that path with the web app (see [ADR-0012](decisions/0012-invitation-links-under-a-base-path.md)). A reserved `role` value grants member. Anyone holding an invitation can join the group. Interfaces MUST make clear that sharing an invitation shares the group.
 
-## 7. Transport: MeshCore
+## 7. Transport: LoRa radios
+
+A device reaches the LoRa mesh through a radio of one of two kinds, by the firmware it runs. Both carry the same event bytes; a radio of one kind does not hear one of the other, since their packets differ on the air.
+
+### 7.1 MeshCore
 
 - The group secret is written to a channel slot of the companion radio with `CMD_SET_CHANNEL`. The channel name is the group name, truncated to 31 bytes at a code-point boundary. Implementations MUST reuse a slot that already holds the secret, otherwise take the first empty slot (empty name, all-zero secret) other than slot 0, and MUST NOT overwrite any other channel.
 - Each event is sent with `CMD_SEND_CHANNEL_DATA` on that channel, flood routing (`path_len = 0xFF`), `data_type = 0xFF4D`, payload = the event bytes. The radio encrypts it with the channel key.
 - Inbound `RESP_CODE_CHANNEL_DATA_RECV` frames on that channel with `data_type = 0xFF4D` are decoded as events. Other `data_type` values are ignored.
 - The radio encrypts channel traffic with AES-128 in ECB mode and authenticates it with a 2-byte truncated HMAC. That protects against casual listening, not against a determined attacker; see [ADR-0010](decisions/0010-lora-link-security.md).
 - `0xFF4D` is in MeshCore's development range. A permanent value will be registered before the first public release; implementations SHOULD accept both during the transition.
+
+### 7.2 Meshtastic
+
+- The group secret is the key (PSK) of one of the radio's secondary channels, set with an `AdminMessage.set_channel` sent to the radio's own node number on `ADMIN_APP`. The channel name is the group name, truncated to 11 bytes at a code-point boundary. Implementations MUST reuse a secondary channel whose 16-byte key is the secret, otherwise take the first disabled channel, and MUST NOT change the primary channel or any other channel. With all eight in use, the group cannot use the radio.
+- Each event is sent as a `MeshPacket` to the broadcast address (`0xFFFFFFFF`) on that channel's index, with the radio's configured hop limit (3 if it reports none) and no acknowledgement requested. Its `Data` has `portnum = 256` (`PRIVATE_APP`) and `payload` = the event bytes. The radio encrypts it with the channel key.
+- Inbound packets with `portnum = 256`, decoded by the radio on a secondary channel whose key is 16 bytes, are decoded as events of the group with that secret. Other ports are not Tesel events.
+- The radio encrypts with AES-128 in CTR mode keyed with the channel key, and adds no message authentication: anyone can flip bits of a packet unnoticed, and only Tesel's strict decoder stands between a forged packet and the log. That protects against casual listening, not against a determined attacker; see [ADR-0098](decisions/0098-meshtastic-radios.md).
+- Meshtastic and MeshCore radios do not hear each other. A group whose members carry both kinds reaches all of them only through members who bridge to the internet (ARCHITECTURE.md §4.3).
 
 ## 8. Transport: internet
 
