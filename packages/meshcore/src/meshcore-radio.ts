@@ -38,7 +38,11 @@ export class MeshCoreRadio implements RadioLink {
   #channel: number | null = null;
   /** Secrets by slot, learnt when configuring the group channel. */
   #channelSecrets = new Map<number, Uint8Array>();
-  #draining = false;
+  /**
+   * The connection being drained, if any: one drain per connection, so that one cut short by a
+   * drop does not hold up the next connection's.
+   */
+  #drainingOn: CompanionConnection | null = null;
   #drainRequested = false;
   readonly #receivers = new Set<(frame: ReceivedFrame) => void>();
   readonly #textListeners = new Set<(message: RadioText) => void>();
@@ -171,30 +175,33 @@ export class MeshCoreRadio implements RadioLink {
 
   /**
    * Fetches every message the radio is holding and passes ours on. A notice that arrives while
-   * draining makes the loop run once more, so no message is left waiting. Until the group channel
-   * is set, messages stay in the radio: reading them earlier would lose the group's datagrams.
-   * Datagrams of every channel with a secret are passed on with it, so those of a group that is
-   * not active now are kept for it too.
+   * draining makes the loop run once more, so no message is left waiting, even when the loop ends
+   * in an error. Until the group channel is set, messages stay in the radio: reading them earlier
+   * would lose the group's datagrams. Datagrams of every channel with a secret are passed on with
+   * it, so those of a group that is not active now are kept for it too.
    */
   async #drain(): Promise<void> {
     this.#drainRequested = true;
-    if (this.#draining || this.#channel === null) return;
-    this.#draining = true;
+    const connection = this.#keeper.connection;
+    if (connection === null || this.#channel === null || this.#drainingOn === connection) return;
+    this.#drainingOn = connection;
     try {
-      while (this.#drainRequested) {
+      while (this.#drainRequested && this.#keeper.connection === connection) {
         this.#drainRequested = false;
-        await this.#drainOnce();
+        await this.#drainOnce(connection);
       }
     } catch (error) {
       console.warn('Reading from the radio failed', error);
     } finally {
-      this.#draining = false;
+      if (this.#drainingOn === connection) {
+        this.#drainingOn = null;
+        // Asked for while the loop failed: what the radio announced must still be read.
+        if (this.#drainRequested) void this.#drain();
+      }
     }
   }
 
-  async #drainOnce(): Promise<void> {
-    const connection = this.#keeper.connection;
-    if (connection === null) return;
+  async #drainOnce(connection: CompanionConnection): Promise<void> {
     for (;;) {
       const message = await this.#command(() => connection.syncNextMessage());
       if (message === null) return;

@@ -219,6 +219,36 @@ describe('MeshCore radio', () => {
     vi.useRealTimers();
   });
 
+  it('reads what the radio holds once back, though the link dropped in the middle of a read', async () => {
+    vi.useFakeTimers();
+    const first = new FakeCompanion(slots(['Public', EMPTY], ['Rescate', SECRET]));
+    const again = new FakeCompanion(slots(['Public', EMPTY], ['Rescate', SECRET]));
+    const radio = await connected(first, again);
+    radio.onStateChange((state) => {
+      if (state === 'ready') void radio.configureGroupChannel('Rescate', SECRET);
+    });
+    await radio.configureGroupChannel('Rescate', SECRET);
+    const frames: ReceivedFrame[] = [];
+    radio.onReceive((frame) => frames.push(frame));
+    // A message is announced, and Bluetooth drops while it is being read.
+    first.syncNextMessage = () => new Promise(() => undefined);
+    first.emit(PUSH_MSG_WAITING);
+    await vi.advanceTimersByTimeAsync(10);
+    first.emit('disconnected');
+    // Meanwhile an SOS of the group reached the radio and waits in it.
+    const sos = new Uint8Array([8, 8]);
+    again.waiting.push({
+      channelData: { channelIdx: 1, dataType: MESHCORE_DATA_TYPE, data: sos, snr: 1 },
+    });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(radio.state).toBe('ready');
+    expect(frames).toEqual([{ bytes: sos, snr: 1, secret: SECRET }]);
+    expect(again.waiting).toEqual([]);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await radio.disconnect();
+    vi.useRealTimers();
+  });
+
   it('keeps trying with growing pauses while the radio is out of reach, until disconnected', async () => {
     vi.useFakeTimers();
     const fake = new FakeCompanion(slots(['Public', EMPTY]));
