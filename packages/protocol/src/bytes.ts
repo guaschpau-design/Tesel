@@ -39,6 +39,19 @@ export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
   return a.length === b.length && a.every((byte, index) => byte === b[index]);
 }
 
+/**
+ * Orders byte strings byte by byte, as unsigned integers; a string that is the start of another
+ * comes first. Negative if `a` comes first, 0 only if they are equal.
+ */
+export function compareBytes(a: Uint8Array, b: Uint8Array): number {
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index++) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+  return a.length - b.length;
+}
+
 function decodeUtf8(bytes: Uint8Array): string {
   try {
     return utf8Decoder.decode(bytes);
@@ -93,10 +106,6 @@ export class ByteWriter {
       );
     }
     return this.u8(data.length).raw(data);
-  }
-
-  get length(): number {
-    return this.#bytes.length;
   }
 
   toBytes(): Uint8Array {

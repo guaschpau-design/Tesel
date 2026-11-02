@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { decodeEvent, encodeEvent, isKeepable, peekHeader } from './codec.ts';
+import { compareBytes } from './bytes.ts';
+import { compareEncodings, decodeEvent, encodeEvent, isKeepable, peekHeader } from './codec.ts';
 import {
   EventTypeCode,
   MAX_DECODABLE_EVENT_SIZE,
@@ -729,5 +730,30 @@ describe('event types', () => {
   it('round-trips a sample of every known type', () => {
     const sampled = new Set(SAMPLE_EVENTS.map((event) => event.type));
     expect([...sampled].sort()).toEqual([...EVENT_TYPES].sort());
+  });
+});
+
+describe('order of rivals (§3.1)', () => {
+  it('compares bytes as unsigned integers, a prefix first', () => {
+    expect(compareBytes(hex('00ff'), hex('0100'))).toBeLessThan(0);
+    expect(compareBytes(hex('80'), hex('7f'))).toBeGreaterThan(0);
+    expect(compareBytes(hex('01'), hex('0100'))).toBeLessThan(0);
+    expect(compareBytes(hex('0102'), hex('0102'))).toBe(0);
+  });
+
+  it('orders two events under one (origin, seq) by their encoding', () => {
+    const chat = (text: string): TeselEvent => ({
+      type: 'chat',
+      origin: ALICE,
+      seq: 3,
+      time: T0,
+      text,
+    });
+    expect(compareEncodings(chat('a'), chat('b'))).toBeLessThan(0);
+    expect(compareEncodings(chat('b'), chat('a'))).toBeGreaterThan(0);
+    expect(compareEncodings(chat('a'), chat('a'))).toBe(0);
+    expect(Math.sign(compareEncodings(chat('a'), chat('b')))).toBe(
+      Math.sign(compareBytes(encodeOrFail(chat('a')), encodeOrFail(chat('b')))),
+    );
   });
 });

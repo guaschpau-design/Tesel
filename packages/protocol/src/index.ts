@@ -1,6 +1,13 @@
 export * from './base64url.ts';
-export { bytesEqual, utf8ByteLength } from './bytes.ts';
-export { decodeEvent, encodeEvent, isKeepable, peekHeader, type RawHeader } from './codec.ts';
+export { bytesEqual, compareBytes, utf8ByteLength } from './bytes.ts';
+export {
+  compareEncodings,
+  decodeEvent,
+  encodeEvent,
+  isKeepable,
+  peekHeader,
+  type RawHeader,
+} from './codec.ts';
 export * from './constants.ts';
 export * from './crypto.ts';
 export type * from './events.ts';

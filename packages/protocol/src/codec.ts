@@ -1,7 +1,7 @@
 // Event encoding and decoding (docs/protocol.md §3): the header here, the payload of each type in
 // payloads.ts, and the field helpers in fields.ts.
 
-import { ByteReader, ByteWriter, ProtocolFailure } from './bytes.ts';
+import { ByteReader, ByteWriter, compareBytes, ProtocolFailure } from './bytes.ts';
 import {
   MAX_DECODABLE_EVENT_SIZE,
   MAX_EVENT_SIZE,
@@ -24,15 +24,34 @@ export interface RawHeader extends EventHeader {
  */
 export function encodeEvent(event: TeselEvent): Result<Uint8Array, ProtocolError> {
   return catchFailure(() => {
-    const writer = new ByteWriter();
-    const payload = payloadOf(event);
-    writeHeader(writer, event, payload.code);
-    payload.write(writer, event);
-    if (writer.length > MAX_EVENT_SIZE) {
-      throw new ProtocolFailure('too-large', `event is ${writer.length} bytes`);
+    const bytes = writeEvent(event);
+    if (bytes.length > MAX_EVENT_SIZE) {
+      throw new ProtocolFailure('too-large', `event is ${bytes.length} bytes`);
     }
-    return writer.toBytes();
+    return bytes;
   });
+}
+
+/**
+ * Orders two events by their encoding, byte by byte: how receivers order rivals, different events
+ * under one `(origin, seq)` (§3.1). Events written before radio frames were sealed, too large to
+ * send today, are compared as they were written; one that cannot be encoded at all comes first.
+ */
+export function compareEncodings(a: TeselEvent, b: TeselEvent): number {
+  return compareBytes(encodingOf(a), encodingOf(b));
+}
+
+function encodingOf(event: TeselEvent): Uint8Array {
+  const written = catchFailure(() => writeEvent(event));
+  return written.ok ? written.value : new Uint8Array();
+}
+
+function writeEvent(event: TeselEvent): Uint8Array {
+  const writer = new ByteWriter();
+  const payload = payloadOf(event);
+  writeHeader(writer, event, payload.code);
+  payload.write(writer, event);
+  return writer.toBytes();
 }
 
 /**
