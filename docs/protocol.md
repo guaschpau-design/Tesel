@@ -143,11 +143,13 @@ With an empty label, a shape holds up to 30 points; with a 32-byte label, up to 
 
 **Circle geometry:**
 
-| Size | Field    | Notes                         |
-| ---- | -------- | ----------------------------- |
-| 4    | `lat`    | Centre, coordinate            |
-| 4    | `lon`    | Centre, coordinate            |
-| 4    | `radius` | `u32`, metres, greater than 0 |
+| Size | Field    | Notes                      |
+| ---- | -------- | -------------------------- |
+| 4    | `lat`    | Centre, coordinate         |
+| 4    | `lon`    | Centre, coordinate         |
+| 4    | `radius` | `u32`, metres, 1–1 000 000 |
+
+An event whose `radius` is 0 or above 1 000 000 m (1 000 km) is discarded. No operation covers more: a circle that size takes in the whole Iberian Peninsula ([ADR-0105](decisions/0105-circles-stay-on-the-earth.md)). Near a pole even such a circle reaches past it; receivers MUST stop the points they work out from it, to draw or frame it, at ±90° latitude.
 
 ### 3.8 `SOS`
 
@@ -513,7 +515,7 @@ Only warnings that have not expired are listed, at the time of the request. The 
 
 ## 9. Versioning
 
-This document describes protocol version 1. Adding event types, symbol codes or style codes does not change the version. Version 1 is frozen with the first release, v0.1.0; until then it still changed in place: the `env` message gained `key`, and §8.1 was added; command posts, servers that replicated another (§8.2 and §8.3 then), were added and later removed ([ADR-0058](decisions/0058-no-command-posts.md)); §3.1 gained the rules on an author's times, on damaged events and on rivals, and §3.8 the SOS without a place; envelope nonces became derived from the event (§5.1); `synced` gained the store identity, servers keep every distinct envelope, the error `unavailable` was added, and `healthz` gained `time`, and `ping` and `pong` were added (§8); radio frames were sealed with keys of their own, events shrank from 165 to 153 bytes to make room for the seal, those written before still decoding, and MeshCore's `data_type` moved from `0xFF4D` to `0xFF4E` (§2, §5, §7). Changing any existing layout, derivation or transport rule requires version 2, a new ADR and a migration plan.
+This document describes protocol version 1. Adding event types, symbol codes or style codes does not change the version. Version 1 is frozen with the first release, v0.1.0; until then it still changed in place: the `env` message gained `key`, and §8.1 was added; command posts, servers that replicated another (§8.2 and §8.3 then), were added and later removed ([ADR-0058](decisions/0058-no-command-posts.md)); §3.1 gained the rules on an author's times, on damaged events and on rivals, and §3.8 the SOS without a place; envelope nonces became derived from the event (§5.1); `synced` gained the store identity, servers keep every distinct envelope, the error `unavailable` was added, and `healthz` gained `time`, and `ping` and `pong` were added (§8); radio frames were sealed with keys of their own, events shrank from 165 to 153 bytes to make room for the seal, those written before still decoding, and MeshCore's `data_type` moved from `0xFF4D` to `0xFF4E` (§2, §5, §7); a circle's radius was limited to 1 000 km (§3.7). Changing any existing layout, derivation or transport rule requires version 2, a new ADR and a migration plan.
 
 ## 10. Log files
 

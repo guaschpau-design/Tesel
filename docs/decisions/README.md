@@ -110,3 +110,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0102](0102-ground-in-3d.md)                         | The ground raised in 3D, on asking                                                          | Accepted                                                |
 | [0103](0103-rivals-full-storage-and-urgent-sync.md)  | Rivals under one event reference, a full storage, and an SOS that does not wait             | Accepted                                                |
 | [0104](0104-sos-across-drops-and-groups.md)          | Keep the radio and SOS calls going across drops and group changes                           | Accepted                                                |
+| [0105](0105-circles-stay-on-the-earth.md)            | Keep circles to 1 000 km, and their points on the Earth                                     | Accepted                                                |
