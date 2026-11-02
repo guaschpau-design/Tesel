@@ -101,3 +101,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted                                                |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
 | [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |
+| [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted                                                |

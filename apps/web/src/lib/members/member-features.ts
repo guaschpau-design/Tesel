@@ -7,6 +7,7 @@ import type { Feature, FeatureCollection, Point } from 'geojson';
 
 import { TEAM_COLOURS } from '../teams/teams.ts';
 import type { Tone } from '../ui/theme.ts';
+import { aliasOf } from './alias.ts';
 
 /** A position older than this is drawn as stale. */
 export const STALE_AFTER_S = 10 * 60;
@@ -43,7 +44,7 @@ export function memberFeatures(
       geometry: { type: 'Point', coordinates: [report.lon, report.lat] },
       properties: {
         id: origin,
-        label: state.members.get(origin)?.alias ?? origin,
+        label: aliasOf(state, origin),
         stale: now - report.time > STALE_AFTER_S,
         sos: calling.has(origin),
         away: (state.memberStates.get(origin)?.status ?? 'active') !== 'active',

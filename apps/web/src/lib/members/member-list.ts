@@ -5,6 +5,7 @@ import type { NodeId, Role, TeamEvent } from '@tesel/protocol';
 
 import type { Heard } from '../links/heard.ts';
 import { activeTeams } from '../teams/teams.ts';
+import { aliasOf } from './alias.ts';
 import { STALE_AFTER_S } from './member-features.ts';
 
 export type PositionStatus = 'live' | 'stale' | 'hidden' | 'never';
@@ -39,7 +40,7 @@ export function memberRows(
     const radioTime = heard.get(id)?.radio;
     return {
       id,
-      alias: info?.alias ?? id,
+      alias: aliasOf(state, id),
       role: info?.role ?? null,
       self: id === self,
       position,
