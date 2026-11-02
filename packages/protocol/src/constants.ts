@@ -133,6 +133,9 @@ export const SHAPE_MAX_POINTS =
  */
 export const SWEEP_MAX_LANES = 1000;
 
+/** §3.7 The largest circle radius, in metres: 1 000 km takes in the whole Iberian Peninsula. */
+export const MAX_CIRCLE_RADIUS_M = 1_000_000;
+
 /** §3.7 Shape kind codes. */
 export const ShapeKindCode = { POLYLINE: 1, POLYGON: 2, CIRCLE: 3 } as const;
 

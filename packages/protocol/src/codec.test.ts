@@ -4,6 +4,7 @@ import { compareBytes } from './bytes.ts';
 import { compareEncodings, decodeEvent, encodeEvent, isKeepable, peekHeader } from './codec.ts';
 import {
   EventTypeCode,
+  MAX_CIRCLE_RADIUS_M,
   MAX_DECODABLE_EVENT_SIZE,
   MAX_EVENT_SIZE,
   SHAPE_MAX_POINTS,
@@ -246,6 +247,32 @@ describe('event codec', () => {
 
     it('refuses consecutive points too far apart for a 16-bit delta', () => {
       expect(encodeEvent(line(2, 0.4)).ok).toBe(false);
+    });
+
+    function circle(radius: number): ShapeEvent {
+      return { ...baseShape, geometry: { kind: 'circle', center: { lat: 85, lon: 0 }, radius } };
+    }
+
+    it('accepts a circle of up to 1 000 km and refuses a larger one, or no radius at all', () => {
+      expect(MAX_CIRCLE_RADIUS_M).toBe(1_000_000);
+      expect(decodeEvent(encodeOrFail(circle(MAX_CIRCLE_RADIUS_M)))).toEqual({
+        ok: true,
+        value: circle(MAX_CIRCLE_RADIUS_M),
+      });
+      for (const radius of [MAX_CIRCLE_RADIUS_M + 1, 4e9, 0.4, Number.NaN, Infinity]) {
+        expect(encodeEvent(circle(radius)).ok).toBe(false);
+      }
+    });
+
+    it('discards a circle whose radius is above 1 000 km or 0', () => {
+      const bytes = encodeOrFail(circle(MAX_CIRCLE_RADIUS_M));
+      const radius = new DataView(bytes.buffer, bytes.byteOffset + bytes.length - 4);
+      radius.setUint32(0, MAX_CIRCLE_RADIUS_M + 1);
+      expect(decodeError(bytes)).toBe('invalid-value');
+      radius.setUint32(0, 4_000_000_000);
+      expect(decodeError(bytes)).toBe('invalid-value');
+      radius.setUint32(0, 0);
+      expect(decodeError(bytes)).toBe('invalid-value');
     });
 
     it('refuses a polygon whose last point repeats the first', () => {

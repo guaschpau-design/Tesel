@@ -7,6 +7,7 @@ import {
   EVENT_REF_SIZE,
   HEADER_SIZE,
   KIND_SIZE,
+  MAX_CIRCLE_RADIUS_M,
   MAX_DECODABLE_EVENT_SIZE,
   MAX_EVENT_SIZE,
   NODE_ID_SIZE,
@@ -229,13 +230,13 @@ export function writeGeometry(writer: ByteWriter, geometry: ShapeGeometry): void
       requireCount(geometry.points.length, 3, 'polygon');
       writePointList(writer, geometry.points, true);
       return;
-    case 'circle':
-      if (!Number.isFinite(geometry.radius) || geometry.radius < 1) {
-        throw new ProtocolFailure('invalid-value', 'circle radius must be at least 1 m');
-      }
+    case 'circle': {
+      const radius = Math.round(geometry.radius);
+      requireRadius(radius);
       writePoint(writer, geometry.center);
-      writer.u32(Math.round(geometry.radius));
+      writer.u32(radius);
       return;
+    }
   }
 }
 
@@ -249,11 +250,21 @@ export function readGeometry(reader: ByteReader, kindCode: number): ShapeGeometr
     case ShapeKindCode.CIRCLE: {
       const center = readPoint(reader);
       const radius = reader.u32();
-      if (radius < 1) throw new ProtocolFailure('invalid-value', 'circle radius is 0');
+      requireRadius(radius);
       return { kind: 'circle', center, radius };
     }
     default:
       throw new ProtocolFailure('invalid-value', `shape kind ${kindCode}`);
+  }
+}
+
+/** §3.7: a circle's radius is from 1 m to MAX_CIRCLE_RADIUS_M, in whole metres. */
+function requireRadius(radius: number): void {
+  if (!(radius >= 1 && radius <= MAX_CIRCLE_RADIUS_M)) {
+    throw new ProtocolFailure(
+      'invalid-value',
+      `circle radius must be 1 to ${String(MAX_CIRCLE_RADIUS_M)} m`,
+    );
   }
 }
 
