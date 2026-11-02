@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ANSWER_MS, CheckIn, hasMoved } from './check-in.ts';
+import { ANSWER_MS, CheckIn, hasMoved, RETRY_FIRST_MS, RETRY_MAX_MS } from './check-in.ts';
 
 const MINUTE = 60_000;
 const LIMIT = 30 * MINUTE;
@@ -13,8 +13,86 @@ describe('the safety check-in', () => {
     expect(check.deadline).toBe(LIMIT + ANSWER_MS);
     expect(check.tick(LIMIT + ANSWER_MS - 1, LIMIT)).toBeNull();
     expect(check.tick(LIMIT + ANSWER_MS, LIMIT)).toBe('call');
+    expect(check.step).toBe('calling');
+    check.sent();
     expect(check.step).toBe('called');
     expect(check.tick(LIMIT * 3, LIMIT)).toBeNull();
+  });
+
+  it('says help was called for only once the call went out', () => {
+    const check = new CheckIn(0);
+    check.tick(LIMIT, LIMIT);
+    check.tick(LIMIT + ANSWER_MS, LIMIT);
+    expect(check.step).toBe('calling');
+    expect(check.tick(LIMIT * 3, LIMIT)).toBeNull();
+    expect(check.step).toBe('calling');
+  });
+
+  it('tries a call that could not be sent again, less and less often, until it goes out', () => {
+    const check = new CheckIn(0);
+    check.tick(LIMIT, LIMIT);
+    let now = LIMIT + ANSWER_MS;
+    expect(check.tick(now, LIMIT)).toBe('call');
+    const waits: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt++) {
+      check.failed(now);
+      expect(check.step).toBe('failed');
+      const retry = check.deadline ?? 0;
+      waits.push(retry - now);
+      expect(check.tick(retry - 1, LIMIT)).toBeNull();
+      expect(check.tick(retry, LIMIT)).toBe('call');
+      now = retry;
+    }
+    expect(waits).toEqual([
+      RETRY_FIRST_MS,
+      RETRY_FIRST_MS * 2,
+      RETRY_FIRST_MS * 4,
+      RETRY_FIRST_MS * 8,
+      RETRY_MAX_MS,
+      RETRY_MAX_MS,
+    ]);
+    check.sent();
+    expect(check.step).toBe('called');
+  });
+
+  it('tries a failed call again even with the app off screen', () => {
+    const check = new CheckIn(0);
+    check.tick(LIMIT, LIMIT);
+    check.tick(LIMIT + ANSWER_MS, LIMIT);
+    check.failed(LIMIT + ANSWER_MS);
+    check.away();
+    expect(check.tick(LIMIT + ANSWER_MS + RETRY_FIRST_MS, LIMIT)).toBe('call');
+  });
+
+  it('stops calling when the member answers, and starts the waits again from the first', () => {
+    const check = new CheckIn(0);
+    const callAt = (now: number) => {
+      check.tick(now, LIMIT);
+      check.tick(now + ANSWER_MS, LIMIT);
+      return now + ANSWER_MS;
+    };
+    let now = callAt(LIMIT);
+    check.failed(now);
+    now += RETRY_FIRST_MS;
+    check.tick(now, LIMIT);
+    check.failed(now);
+    check.activity(now + 1);
+    expect(check.step).toBe('quiet');
+    expect(check.tick(now + RETRY_MAX_MS, LIMIT)).toBeNull();
+    now = callAt(now + 1 + LIMIT);
+    check.failed(now);
+    expect(check.deadline).toBe(now + RETRY_FIRST_MS);
+  });
+
+  it('ignores the outcome of a call the member answered while it was on its way', () => {
+    const check = new CheckIn(0);
+    check.tick(LIMIT, LIMIT);
+    check.tick(LIMIT + ANSWER_MS, LIMIT);
+    check.activity(LIMIT + ANSWER_MS + 1);
+    check.failed(LIMIT + ANSWER_MS + 2);
+    expect(check.step).toBe('quiet');
+    check.sent();
+    expect(check.step).toBe('quiet');
   });
 
   it('starts waiting again whenever the member moves or answers', () => {

@@ -565,6 +565,8 @@ export const es: Messages = {
     'Llevas un rato sin moverte ni tocar el móvil. Si no respondes, en {when} se enviará un SOS.',
   inMinutes: { one: '{count} minuto', other: '{count} minutos' },
   inSeconds: { one: '{count} segundo', other: '{count} segundos' },
+  checkInCalling: 'No respondiste: enviando un SOS con tu última posición…',
+  checkInFailed: 'No respondiste y el SOS no se ha podido enviar. Se reintentará en {when}.',
   checkInCalled: 'No respondiste: se ha enviado un SOS con tu última posición.',
   checkInFine: 'Estoy bien',
   checkInSosText: 'Sin respuesta al aviso «¿Sigues bien?»',

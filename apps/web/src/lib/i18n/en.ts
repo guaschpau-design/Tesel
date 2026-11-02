@@ -565,6 +565,8 @@ export const en = {
     'You have not moved or touched your phone for a while. Without an answer, an SOS goes out in {when}.',
   inMinutes: { one: '{count} minute', other: '{count} minutes' },
   inSeconds: { one: '{count} second', other: '{count} seconds' },
+  checkInCalling: 'No answer: sending an SOS with your last position…',
+  checkInFailed: 'No answer, and the SOS could not be sent. Trying again in {when}.',
   checkInCalled: 'No answer: an SOS went out with your last position.',
   checkInFine: 'I am OK',
   checkInSosText: 'No answer to “Are you OK?”',

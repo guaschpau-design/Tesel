@@ -1,7 +1,8 @@
 <!-- The safety check-in (protocol §3.17), while the group has it on and this member is active: it
      watches quietly for taps and moves, asks "Are you OK?" after the group's time without either,
      and calls for help if the question goes unanswered. Time with the app off screen does not
-     count: a browser cannot tell what the member did meanwhile. -->
+     count: a browser cannot tell what the member did meanwhile. A call that could not be sent shows
+     as such, draws attention and is tried again until it goes out; only then does the card say so. -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -34,25 +35,44 @@
     left > 60 ? t('inMinutes', { count: Math.ceil(left / 60) }) : t('inSeconds', { count: left }),
   );
 
+  /** Shows where the check-in stands at `now`. */
+  function show(now: number): void {
+    step = check.step;
+    left = Math.max(0, Math.ceil(((check.deadline ?? now) - now) / 1000));
+  }
+
+  /** Something the member, or anyone near them, must notice now. */
+  function drawAttention(): void {
+    if ('vibrate' in navigator) navigator.vibrate([300, 200, 300]);
+    callAttention();
+  }
+
   function activity(): void {
     check.activity(Date.now());
-    step = check.step;
+    show(Date.now());
+  }
+
+  function call(): void {
+    onsos().then(
+      () => {
+        check.sent();
+        show(Date.now());
+      },
+      (error: unknown) => {
+        console.warn('The check-in could not call for help', error);
+        check.failed(Date.now());
+        show(Date.now());
+        if (check.step === 'failed') drawAttention();
+      },
+    );
   }
 
   function tick(): void {
     const now = Date.now();
     const due = check.tick(now, minutes * 60_000);
-    if (due === 'ask') {
-      if ('vibrate' in navigator) navigator.vibrate([300, 200, 300]);
-      callAttention();
-    }
-    if (due === 'call') {
-      onsos().catch((error: unknown) => {
-        console.warn('The check-in could not call for help', error);
-      });
-    }
-    step = check.step;
-    left = Math.max(0, Math.ceil(((check.deadline ?? now) - now) / 1000));
+    if (due === 'ask') drawAttention();
+    if (due === 'call') call();
+    show(now);
   }
 
   onMount(() => {
@@ -65,7 +85,7 @@
     const visible = () => {
       if (document.visibilityState === 'visible') check.back(Date.now());
       else check.away();
-      step = check.step;
+      show(Date.now());
     };
     window.addEventListener('pointerdown', activity);
     window.addEventListener('keydown', activity);
@@ -84,9 +104,19 @@
 {#if step !== 'quiet'}
   <MapCard label={t('checkInTitle')} edge="var(--warning)">
     <p class="question">{t('checkInTitle')}</p>
-    <p class="hint">
-      {step === 'asking' ? t('checkInAsking', { when: timeLeft }) : t('checkInCalled')}
-    </p>
+    {#if step === 'failed'}
+      <p class="warning">{t('checkInFailed', { when: timeLeft })}</p>
+    {:else}
+      <p class="hint">
+        {#if step === 'asking'}
+          {t('checkInAsking', { when: timeLeft })}
+        {:else if step === 'calling'}
+          {t('checkInCalling')}
+        {:else}
+          {t('checkInCalled')}
+        {/if}
+      </p>
+    {/if}
     <div class="row">
       <button class="primary" onclick={activity}>{t('checkInFine')}</button>
     </div>
