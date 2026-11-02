@@ -3,9 +3,9 @@
 // LoRa is slow and EU law allows a transmitter at most 10 % airtime in the 869.4–869.65 MHz
 // sub-band. The scheduler queues events, sends the most urgent first, keeps a rolling one-hour
 // airtime budget, thins positions, repeats an own SOS until someone acknowledges or cancels it,
-// and applies the bridging rules to events that came from the server (ADR-0015, ADR-0043). It is
-// pure: time and randomness are passed in, and the caller does the sending: it takes one packet
-// with `next`, then reports `sent` or `retry`.
+// even after the radio changes group (ADR-0104), and applies the bridging rules to events that
+// came from the server (ADR-0015, ADR-0043). It is pure: time and randomness are passed in, and
+// the caller does the sending: it takes one packet with `next`, then reports `sent` or `retry`.
 
 import {
   eventRefKey,
@@ -81,19 +81,23 @@ export const LIMITS = {
 /** Events urgent enough to use the full legal budget. */
 const URGENT = URGENCY.alert;
 
-interface Pending {
+interface Pending<Packet extends LoraPacket> {
   readonly key: string;
-  readonly packet: LoraPacket;
+  readonly packet: Packet;
   readonly source: LoraSource;
   readonly dueAt: number;
   /** For an own SOS: how many times it has been sent. */
   readonly sends: number;
 }
 
-export class LoraScheduler {
+/**
+ * `Packet` is what the caller queues: a packet with whatever else it needs to send it, such as the
+ * channel it goes out on, since an own SOS outlives a change of group.
+ */
+export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   readonly #random: () => number;
   readonly #airtimeMs: (bytes: number) => number;
-  readonly #pending = new Map<string, Pending>();
+  readonly #pending = new Map<string, Pending<Packet>>();
   /** Event keys sent by us or heard on LoRa in the last hour, with when: not put on the air again. */
   readonly #onAir = new Map<string, number>();
   /** Own SOS calls still waiting for an acknowledgement or a cancellation. */
@@ -118,7 +122,7 @@ export class LoraScheduler {
   #group = 0;
   /** The packet handed out by `next`, until the caller reports how sending it went. */
   #inFlight: {
-    readonly pending: Pending;
+    readonly pending: Pending<Packet>;
     readonly cost: number;
     readonly group: number;
   } | null = null;
@@ -133,7 +137,7 @@ export class LoraScheduler {
   }
 
   /** Queues an event for LoRa. Repeated offers of the same event change nothing. */
-  offer(packet: LoraPacket, source: LoraSource, now: number): void {
+  offer(packet: Packet, source: LoraSource, now: number): void {
     const { event } = packet;
     const key = eventRefKey(event);
     this.observe(event);
@@ -202,14 +206,17 @@ export class LoraScheduler {
 
   /**
    * Forgets the traffic of the group the radio carried until now, when it changes to another
-   * group's channel: nothing queued for one group may go out on another's. The airtime spent
-   * stays, since the budget belongs to the radio, and so does that of a packet in flight.
+   * group's channel: nothing queued for one group may go out on another's. Own SOS calls still
+   * open are kept: they repeat on their own group's channel until answered (ADR-0104), and the
+   * caller tells the acknowledgements and cancellations it hears for them (`observe`). The airtime
+   * spent stays, since the budget belongs to the radio, and so does that of a packet in flight.
    */
   changeGroup(): void {
     this.#group += 1;
-    this.#pending.clear();
+    for (const key of this.#pending.keys()) {
+      if (!this.#openSos.has(key)) this.#pending.delete(key);
+    }
     this.#onAir.clear();
-    this.#openSos.clear();
     this.#rollCalls.clear();
     this.#urgentTargets.clear();
     this.#cancelledSos.clear();
@@ -223,7 +230,7 @@ export class LoraScheduler {
    * The next packet to send now, if any fits the airtime budget. One packet at a time: the
    * caller reports `sent` or `retry` before asking again.
    */
-  next(now: number): LoraPacket | null {
+  next(now: number): Packet | null {
     if (this.#inFlight !== null) return null;
     this.#forgetOnAirBefore(now - LIMITS.windowMs);
     // What waited in the queue for the budget may have become history, or been superseded by a
@@ -262,7 +269,7 @@ export class LoraScheduler {
     if (inFlight === null) return;
     this.#inFlight = null;
     this.#airtime.add(now, inFlight.cost);
-    if (inFlight.group === this.#group) this.#markSent(inFlight.pending, now);
+    if (this.#stillQueued(inFlight)) this.#markSent(inFlight.pending, now);
   }
 
   /** The radio refused the packet from `next`: try it again a little later. */
@@ -271,12 +278,23 @@ export class LoraScheduler {
     if (inFlight === null) return;
     this.#inFlight = null;
     const { pending } = inFlight;
-    if (inFlight.group !== this.#group || this.#pending.has(pending.key)) return;
+    if (!this.#stillQueued(inFlight) || this.#pending.has(pending.key)) return;
     // Heard from someone else meanwhile, or superseded by a newer position: let it go. An own SOS
     // still open was on the air before, and keeps repeating until it is answered.
     const open = this.#openSos.has(pending.key);
     if (!open && (this.#onAir.has(pending.key) || this.#superseded(pending.packet.event))) return;
     this.#pending.set(pending.key, { ...pending, dueAt: now + LIMITS.retryMs });
+  }
+
+  /** Drops the queued packets that `matches`, and their repeats: those of a group left. */
+  forget(matches: (packet: Packet) => boolean): void {
+    for (const [key, pending] of this.#pending) {
+      if (!matches(pending.packet)) continue;
+      this.#pending.delete(key);
+      this.#openSos.delete(key);
+    }
+    const inFlight = this.#inFlight?.pending;
+    if (inFlight !== undefined && matches(inFlight.packet)) this.#openSos.delete(inFlight.key);
   }
 
   /** Airtime used in the current window, in milliseconds. */
@@ -288,7 +306,7 @@ export class LoraScheduler {
    * How urgent a queued packet is: its type's urgency, except that an acknowledgement of an SOS,
    * a critical alert or a roll call is as urgent as an alert.
    */
-  #urgency(pending: Pending): number {
+  #urgency(pending: Pending<Packet>): number {
     const { event } = pending.packet;
     if (event.type === 'ack' && this.#urgentTargets.has(eventRefKey(event.target))) return URGENT;
     return urgencyOf(event.type);
@@ -326,7 +344,7 @@ export class LoraScheduler {
     return 0;
   }
 
-  #eligible(pending: Pending, now: number): boolean {
+  #eligible(pending: Pending<Packet>, now: number): boolean {
     const { event } = pending.packet;
     if (event.type !== 'position') return true;
     if (pending.source === 'bridged') {
@@ -343,7 +361,12 @@ export class LoraScheduler {
     );
   }
 
-  #markSent(pending: Pending, now: number): void {
+  /** Whether a packet in flight still belongs in the queue: of the group now, or an open own SOS. */
+  #stillQueued(inFlight: { readonly pending: Pending<Packet>; readonly group: number }): boolean {
+    return inFlight.group === this.#group || this.#openSos.has(inFlight.pending.key);
+  }
+
+  #markSent(pending: Pending<Packet>, now: number): void {
     const { event } = pending.packet;
     this.#onAir.set(pending.key, now);
     if (event.type === 'position') {

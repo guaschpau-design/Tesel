@@ -25,6 +25,8 @@ export class FakeLink implements RadioLink {
   name: string | null = null;
   channel: string | null = null;
   readonly sent: Uint8Array[] = [];
+  /** The secret of the channel each frame in `sent` went out on. */
+  readonly sentOn: Uint8Array[] = [];
   /** The sizes the scheduler asked the airtime of, in bytes. */
   readonly weighed: number[] = [];
   readonly forgotten: Uint8Array[] = [];
@@ -63,8 +65,9 @@ export class FakeLink implements RadioLink {
     this.#stateChange?.('ready');
   }
 
-  send(bytes: Uint8Array): Promise<SendOutcome> {
+  send(bytes: Uint8Array, secret: Uint8Array): Promise<SendOutcome> {
     this.sent.push(bytes);
+    this.sentOn.push(secret);
     return Promise.resolve({ status: 'sent' });
   }
 
@@ -111,12 +114,12 @@ export class FakeFeed implements RadioFeed {
   attached = 0;
   readonly received: Uint8Array[] = [];
   readonly aired: LoraEvent[] = [];
-  readonly radioChannel = { name: 'Rescate', secret: SECRET };
-
+  readonly radioChannel: { readonly name: string; readonly secret: Uint8Array };
   readonly groupId: string;
 
-  constructor(groupId = 'rescate') {
+  constructor(groupId = 'rescate', secret = SECRET) {
     this.groupId = groupId;
+    this.radioChannel = { name: 'Rescate', secret };
   }
 
   attachRadio(sink: LoraSink | null): Promise<void> {

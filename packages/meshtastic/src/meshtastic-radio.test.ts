@@ -112,7 +112,7 @@ describe('Meshtastic radio', () => {
     ]);
 
     const bytes = new Uint8Array([1, 2, 3]);
-    expect(await link.send(bytes)).toEqual({ status: 'sent' });
+    expect(await link.send(bytes, SECRET)).toEqual({ status: 'sent' });
     expect(radio.sent[1]).toEqual({
       to: BROADCAST,
       channel: 1,
@@ -137,8 +137,20 @@ describe('Meshtastic radio', () => {
     });
     const link = await connected(radio);
     await link.configureGroupChannel('Rescate', SECRET);
-    await link.send(new Uint8Array([1]));
+    await link.send(new Uint8Array([1]), SECRET);
     expect(radio.sent).toMatchObject([{ channel: 2, hopLimit: 5 }]);
+  });
+
+  it('sends on the channel of a group it carried before, given its secret, and on no other', async () => {
+    const radio = new FakeRadio({ channels: channels(['Antes', OTHER]) });
+    const link = await connected(radio);
+    await link.configureGroupChannel('Rescate', SECRET);
+    radio.sent.length = 0;
+    expect(await link.send(new Uint8Array([1]), OTHER)).toEqual({ status: 'sent' });
+    expect(await link.send(new Uint8Array([2]), new Uint8Array(16).fill(5))).toMatchObject({
+      status: 'failed',
+    });
+    expect(radio.sent).toMatchObject([{ channel: 1, payload: new Uint8Array([1]) }]);
   });
 
   it('refuses to take over a radio whose channels are all in use, and never the primary', async () => {
@@ -151,7 +163,7 @@ describe('Meshtastic radio', () => {
     await expect(failure).rejects.toBeInstanceOf(RadioError);
     await expect(failure).rejects.toMatchObject({ code: 'no-free-channel' });
     expect(radio.sent).toEqual([]);
-    expect(await link.send(new Uint8Array([1]))).toMatchObject({ status: 'failed' });
+    expect(await link.send(new Uint8Array([1]), SECRET)).toMatchObject({ status: 'failed' });
   });
 
   it('passes on Tesel events of channels with a group secret, each with its secret', async () => {
@@ -239,7 +251,7 @@ describe('Meshtastic radio', () => {
     await link.configureGroupChannel('Rescate', SECRET);
     radio.take = () =>
       Promise.reject(new RadioError('refused', 'the radio did not take the packet (32)'));
-    expect(await link.send(new Uint8Array([1]))).toEqual({
+    expect(await link.send(new Uint8Array([1]), SECRET)).toEqual({
       status: 'failed',
       reason: 'the radio did not take the packet (32)',
     });
@@ -301,7 +313,7 @@ describe('a Meshtastic radio whose link drops', () => {
     const link = await connected(radio);
     await link.configureGroupChannel('Rescate', SECRET);
     radio.take = () => new Promise(() => undefined);
-    const outcome = link.send(new Uint8Array([1]));
+    const outcome = link.send(new Uint8Array([1]), SECRET);
     await vi.advanceTimersByTimeAsync(5000);
     expect(await outcome).toMatchObject({ status: 'failed', reason: 'the radio did not answer' });
     await vi.advanceTimersByTimeAsync(0);

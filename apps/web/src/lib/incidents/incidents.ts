@@ -55,6 +55,11 @@ export function activeSos(state: GroupState, self: NodeId): SosView[] {
   return views.sort((a, b) => b.event.time - a.event.time);
 }
 
+/** Whether `self` has an SOS not cancelled yet: nothing may reload or close its group meanwhile. */
+export function hasOwnSos(state: GroupState, self: NodeId): boolean {
+  return activeSos(state, self).some((call) => call.mine);
+}
+
 function acknowledgement(state: GroupState, key: string, self: NodeId): Acknowledgement {
   const acks = state.acks.get(key);
   if (acks === undefined) return { by: [], bySelf: false };

@@ -84,8 +84,12 @@ export interface RadioLink {
   /** Clears every channel whose secret `matches`: those of groups that were left. */
   forgetChannels(matches: (secret: Uint8Array) => boolean): Promise<void>;
 
-  /** Floods one frame, an event the app has sealed (protocol §5.2), on the group channel. */
-  send(frame: Uint8Array): Promise<SendOutcome>;
+  /**
+   * Floods one frame, an event the app has sealed (protocol §5.2), on the channel that holds
+   * `secret`: the group channel, or that of a group this radio carried before, for an own SOS
+   * still open there (ADR-0104). It fails if no channel of the radio holds the secret.
+   */
+  send(frame: Uint8Array, secret: Uint8Array): Promise<SendOutcome>;
 
   /**
    * How long sending a frame of `frameBytes` bytes keeps the air busy, in milliseconds, with the

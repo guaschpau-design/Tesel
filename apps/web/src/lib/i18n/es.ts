@@ -133,6 +133,9 @@ export const es: Messages = {
   organizeSummaryCheckIn: 'Aviso «¿Sigues bien?» activado',
   startTitle: 'Para empezar',
   confirmLeave: '¿Salir de «{group}»? Para volver necesitarás una invitación nueva.',
+  confirmSwitchWithSos:
+    'Tu SOS en «{group}» sigue abierto. Hasta que vuelvas a abrir «{group}», solo se repetirá por radio, si tienes una enlazada.',
+  switchGroup: 'Cambiar de grupo',
   createGroup: 'Crear grupo',
   groupName: 'Nombre del grupo',
   create: 'Crear',

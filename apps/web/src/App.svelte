@@ -18,7 +18,7 @@
   import { activity } from './lib/power/activity.svelte.ts';
   import RestScreen from './lib/power/RestScreen.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
-  import { activeSos } from './lib/incidents/incidents.ts';
+  import { hasOwnSos } from './lib/incidents/incidents.ts';
   import Announcer from './lib/ui/Announcer.svelte';
   import ConfirmDialog from './lib/ui/ConfirmDialog.svelte';
   import StartupProblem from './lib/ui/StartupProblem.svelte';
@@ -114,7 +114,7 @@
   /** An SOS of this device not cancelled yet: nothing may reload the app meanwhile. */
   const ownSosOpen = $derived(
     feed !== undefined && startup.session?.identity
-      ? activeSos(feed.state, startup.session.identity.nodeId).some((call) => call.mine)
+      ? hasOwnSos(feed.state, startup.session.identity.nodeId)
       : false,
   );
 

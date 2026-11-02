@@ -18,8 +18,14 @@ const chat: TeselEvent = {
   time: 1,
   text: 'hola',
 };
-const encoded = encodeEvent(chat);
-const bytes = encoded.ok ? encoded.value : new Uint8Array();
+function encoded(event: TeselEvent): Uint8Array {
+  const result = encodeEvent(event);
+  if (!result.ok) throw new Error('the event does not encode');
+  return result.value;
+}
+const bytes = encoded(chat);
+/** The secret of the group a fake feed carries unless told otherwise. */
+const SECRET_OF_FEED = new FakeFeed().radioChannel.secret;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -237,6 +243,61 @@ describe('radio session', () => {
     await radio.disconnect();
     expect(radio.linked).toBe(false);
     expect(feed.sink).toBeNull();
+  });
+});
+
+describe('an own SOS when another group is opened', () => {
+  const OTHER = new Uint8Array(16).fill(2);
+  const sos: TeselEvent = {
+    type: 'sos',
+    origin: 'a1b2c3d4' as NodeId,
+    seq: 5,
+    time: 1,
+    kind: 'medical',
+    lat: 39.47,
+    lon: -0.38,
+    accuracy: 5,
+    text: '',
+  };
+  const sosBytes = encoded(sos);
+
+  async function calledThenSwitched(): Promise<{ link: FakeLink; radio: RadioSession }> {
+    const link = new FakeLink();
+    const radio = new RadioSession(
+      () => Promise.resolve(link),
+      () => 0,
+    );
+    const feed = new FakeFeed();
+    await radio.connect();
+    await radio.useFeed(feed);
+    feed.sink?.offer({ event: sos, bytes: sosBytes }, 'own');
+    await vi.advanceTimersByTimeAsync(1000);
+    await radio.useFeed(new FakeFeed('otro', OTHER));
+    return { link, radio };
+  }
+
+  it('keeps repeating on its own group’s channel, sealed with its keys, until answered', async () => {
+    const { link } = await calledThenSwitched();
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(link.sent).toEqual([sealedFor(sosBytes), sealedFor(sosBytes)]);
+    expect(link.sentOn).toEqual([SECRET_OF_FEED, SECRET_OF_FEED]);
+    const ack = encoded({
+      type: 'ack',
+      origin: '0f1e2d3c' as NodeId,
+      seq: 9,
+      time: 2,
+      target: { origin: sos.origin, seq: sos.seq },
+    });
+    link.hear(sealedFor(ack));
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(link.sent).toHaveLength(2);
+  });
+
+  it('stops repeating once its group is left', async () => {
+    const { link, radio } = await calledThenSwitched();
+    await radio.forgetGroup(SECRET_OF_FEED);
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(link.sent).toEqual([sealedFor(sosBytes)]);
   });
 });
 

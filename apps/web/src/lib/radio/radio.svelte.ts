@@ -1,9 +1,9 @@
 // The LoRa radio of this device: connecting it, giving it the active group's channel, and
-// feeding the group's events through the airtime scheduler (ARCHITECTURE.md §4.2–4.3,
-// ADR-0043), sealed on the way out and opened on the way in (ADR-0099). The code of each kind of
-// radio is loaded when a radio of that kind is picked, not with the app (radio-families.ts).
+// feeding the group's events through the airtime scheduler (radio-sender.svelte.ts,
+// ARCHITECTURE.md §4.2–4.3, ADR-0043), sealed on the way out and opened on the way in (ADR-0099).
+// The code of each kind of radio is loaded when a radio of that kind is picked, not with the app
+// (radio-families.ts).
 
-import { LIMITS, LoraScheduler, type LoraPacket } from '@tesel/core';
 import { bytesEqual } from '@tesel/protocol';
 import type { RadioFamily, RadioLink, RadioLinkState } from '@tesel/radio';
 
@@ -13,11 +13,12 @@ import { getGroup } from '../groups/group-store.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
-import type { LoraSink } from '../sync/lora-events.ts';
+import { sosNewsIn } from './heard-elsewhere.ts';
 import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
 import { pickedRadioLink } from './radio-families.ts';
 import { RadioFrames } from './radio-frames.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
+import { RadioSender } from './radio-sender.svelte.ts';
 import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
 import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';
 import { Relinker, type LinkAttempt } from './relinker.ts';
@@ -54,8 +55,6 @@ export class RadioSession {
   problem: RadioProblem | null = $state(null);
   /** Signal-to-noise ratio of the last packet received, in dB. */
   lastSnr: number | null = $state(null);
-  /** Share of the legal airtime (10 % of an hour) used in the last hour, 0 to 1. */
-  airtimeUsed = $state(0);
   /** Text messages of other apps on the radio network, oldest first, the newest `MAX_RADIO_TEXTS`. */
   texts: readonly StoredRadioText[] = $state.raw([]);
 
@@ -67,39 +66,28 @@ export class RadioSession {
   #unfollow: (() => void)[] = [];
   /** True while the user picks a radio and its link is made. */
   #picking = false;
-  readonly #scheduler: LoraScheduler;
   readonly #relinker = new Relinker(() => this.#linkFeed());
   #feed: RadioFeed | null = null;
   #db: AppDb | null = null;
   #pump: ReturnType<typeof setInterval> | null = null;
-  #sending = false;
   /** Events whose storing failed, tried again on the next pump: none is lost to a busy disk. */
   #unstored: Unstored[] = [];
   readonly #frames = new RadioFrames();
-  readonly #sink: LoraSink = {
-    offer: (packet, source) => {
-      const secret = this.#feed?.radioChannel.secret;
-      const frame = secret === undefined ? null : this.#frames.seal(secret, packet.bytes);
-      // An event written before frames were sealed may be too large for one: it stays off the
-      // air, but what it says still counts, as an SOS whose answers are urgent.
-      if (frame === null) this.#scheduler.observe(packet.event);
-      else this.#scheduler.offer({ event: packet.event, bytes: frame }, source, Date.now());
-    },
-    heard: (event) => {
-      this.#scheduler.heard(event, Date.now());
-    },
-    observe: (event) => {
-      this.#scheduler.observe(event);
-    },
-  };
+  readonly #sender: RadioSender;
 
   constructor(makeLink: () => Promise<RadioLink> = pickedRadioLink, random = Math.random) {
     this.#makeLink = makeLink;
-    this.#scheduler = new LoraScheduler({
+    this.#sender = new RadioSender({
+      link: () => this.#link,
+      feed: () => this.#feed,
+      frames: this.#frames,
       random,
-      // Each kind of radio puts an event on the air its own way. Without a radio nothing goes out.
-      airtimeMs: (bytes) => this.#link?.airtimeMs(bytes) ?? Number.POSITIVE_INFINITY,
     });
+  }
+
+  /** Share of the legal airtime (10 % of an hour) used in the last hour, 0 to 1. */
+  get airtimeUsed(): number {
+    return this.#sender.airtimeUsed;
   }
 
   /** Keeps this session in step with what `link` says, and stops following the previous one. */
@@ -124,6 +112,10 @@ export class RadioSession {
         const event = this.#frames.open(secret, bytes);
         if (event === null) return;
         this.lastSnr = snr;
+        const feed = this.#feed;
+        if (feed === null || !bytesEqual(secret, feed.radioChannel.secret)) {
+          this.#heardElsewhere(event);
+        }
         void this.#store({ secret, event, attempts: 0 });
       }),
       link.onText((text) => {
@@ -175,20 +167,22 @@ export class RadioSession {
 
   /**
    * Follows the active group: its channel goes into the radio and its events through it. What
-   * was queued stays queued unless the group changes, as for a new alias or role.
+   * was queued stays queued unless the group changes, as for a new alias or role; even then, an
+   * own SOS still open keeps repeating on its group's channel.
    */
   async useFeed(feed: RadioFeed | null): Promise<void> {
     this.#unlink();
-    if (feed?.groupId !== this.#feed?.groupId) this.#scheduler.changeGroup();
+    if (feed?.groupId !== this.#feed?.groupId) this.#sender.changeGroup();
     this.#feed = feed;
     await this.#relinker.link();
   }
 
   /**
    * Clears a group's channel from the radio once the group is left, now if a radio is linked,
-   * otherwise the next time one is (left-channels.ts).
+   * otherwise the next time one is (left-channels.ts). Its own SOS calls stop repeating.
    */
   async forgetGroup(secret: Uint8Array): Promise<void> {
+    this.#sender.forget(secret);
     const left = groupId(secret);
     const link = this.#link?.state === 'ready' ? this.#link : null;
     if (this.#db === null) {
@@ -219,7 +213,7 @@ export class RadioSession {
     this.linked = true;
     this.#pump ??= setInterval(() => void this.#tick(), PUMP_MS);
     try {
-      await feed.attachRadio(this.#sink);
+      await feed.attachRadio(this.#sender.sink);
       return 'linked';
     } catch (error) {
       console.warn('Giving the group the radio failed', error);
@@ -232,6 +226,15 @@ export class RadioSession {
     this.linked = false;
     if (this.#pump !== null) clearInterval(this.#pump);
     this.#pump = null;
+  }
+
+  /**
+   * An event heard on the channel of a group that is not open: an answer ends an own SOS that
+   * may still repeat there.
+   */
+  #heardElsewhere(bytes: Uint8Array): void {
+    const event = sosNewsIn(bytes);
+    if (event !== null && event.type !== 'sos') this.#sender.observe(event);
   }
 
   /**
@@ -265,37 +268,7 @@ export class RadioSession {
     const unstored = this.#unstored;
     this.#unstored = [];
     for (const item of unstored) await this.#store(item);
-    await this.#sendNext();
-  }
-
-  async #sendNext(): Promise<void> {
-    const link = this.#link;
-    if (this.#sending || !this.linked || link === null) return;
-    const now = Date.now();
-    const packet = this.#scheduler.next(now);
-    this.airtimeUsed = this.#scheduler.spentMs(now) / LIMITS.urgentBudgetMs;
-    if (packet === null) return;
-    this.#sending = true;
-    try {
-      const outcome = await link.send(packet.bytes);
-      if (outcome.status === 'sent') await this.#sent(packet);
-      else this.#scheduler.retry(Date.now());
-    } catch (error) {
-      console.warn('Radio send failed', error);
-      this.#scheduler.retry(Date.now());
-    } finally {
-      this.#sending = false;
-    }
-  }
-
-  async #sent(packet: LoraPacket): Promise<void> {
-    this.#scheduler.sent(Date.now());
-    try {
-      await this.#feed?.radioSent(packet.event);
-    } catch (error) {
-      // The event did go out; at worst a radio linked later sends it once more.
-      console.warn('Recording a radio send failed', error);
-    }
+    if (this.linked) await this.#sender.sendNext();
   }
 }
 

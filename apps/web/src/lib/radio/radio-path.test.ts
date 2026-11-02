@@ -29,7 +29,6 @@ class AirLink implements RadioLink {
   readonly #air: Air;
   #receive: ((frame: ReceivedFrame) => void) | null = null;
   #stateChange: ((state: RadioLinkState) => void) | null = null;
-  #secret: Uint8Array = new Uint8Array(16);
 
   constructor(air: Air) {
     this.#air = air;
@@ -41,8 +40,7 @@ class AirLink implements RadioLink {
     return Promise.resolve();
   }
 
-  configureGroupChannel(_name: string, secret: Uint8Array): Promise<void> {
-    this.#secret = secret;
+  configureGroupChannel(): Promise<void> {
     return Promise.resolve();
   }
 
@@ -50,8 +48,7 @@ class AirLink implements RadioLink {
     return Promise.resolve();
   }
 
-  send(bytes: Uint8Array): Promise<SendOutcome> {
-    const secret = this.#secret;
+  send(bytes: Uint8Array, secret: Uint8Array): Promise<SendOutcome> {
     for (const radio of this.#air.radios) {
       if (radio !== this) radio.#receive?.({ bytes, snr: 5, secret });
     }

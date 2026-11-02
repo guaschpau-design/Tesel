@@ -134,6 +134,9 @@ export const en = {
   organizeSummaryCheckIn: '“Are you OK?” check on',
   startTitle: 'To start',
   confirmLeave: 'Leave “{group}”? To come back you will need a new invitation.',
+  confirmSwitchWithSos:
+    'Your SOS in “{group}” is still open. Until you open “{group}” again, it repeats only by radio, if one is linked.',
+  switchGroup: 'Switch group',
   createGroup: 'Create a group',
   groupName: 'Group name',
   create: 'Create',

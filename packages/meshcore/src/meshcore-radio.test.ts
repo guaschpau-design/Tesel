@@ -116,10 +116,22 @@ describe('MeshCore radio', () => {
     expect(fake.channels[1]).toEqual({ channelIdx: 1, name: 'Rescate Valencia', secret: SECRET });
 
     const bytes = new Uint8Array([1, 2, 3]);
-    expect(await radio.send(bytes)).toEqual({ status: 'sent' });
+    expect(await radio.send(bytes, SECRET)).toEqual({ status: 'sent' });
     expect(fake.sent).toEqual([
       { channel: 1, pathLen: 0xff, dataType: MESHCORE_DATA_TYPE, payload: bytes },
     ]);
+  });
+
+  it('sends on the slot of a group it carried before, given its secret, and on no other', async () => {
+    const before = new Uint8Array(16).fill(4);
+    const fake = new FakeCompanion(slots(['Public', EMPTY], ['Antes', before], ['', EMPTY]));
+    const radio = await connected(fake);
+    await radio.configureGroupChannel('Rescate', SECRET);
+    expect(await radio.send(new Uint8Array([1]), before)).toEqual({ status: 'sent' });
+    expect(await radio.send(new Uint8Array([2]), new Uint8Array(16).fill(5))).toMatchObject({
+      status: 'failed',
+    });
+    expect(fake.sent.map(({ channel }) => channel)).toEqual([1]);
   });
 
   it('refuses to take over a radio whose channel slots are all in use', async () => {
@@ -128,7 +140,7 @@ describe('MeshCore radio', () => {
     );
     const radio = await connected(fake);
     await expect(radio.configureGroupChannel('Rescate', SECRET)).rejects.toBeInstanceOf(RadioError);
-    expect(await radio.send(new Uint8Array([1]))).toMatchObject({ status: 'failed' });
+    expect(await radio.send(new Uint8Array([1]), SECRET)).toMatchObject({ status: 'failed' });
   });
 
   it('passes on Tesel datagrams of channels with a secret, each with its secret, and no others', async () => {
@@ -276,7 +288,7 @@ describe('MeshCore radio', () => {
     fake.sendChannelData = () => new Promise(() => undefined);
     const radio = await connected(fake);
     await radio.configureGroupChannel('Rescate', SECRET);
-    const outcome = radio.send(new Uint8Array([1]));
+    const outcome = radio.send(new Uint8Array([1]), SECRET);
     await vi.advanceTimersByTimeAsync(5000);
     expect(await outcome).toMatchObject({ status: 'failed', reason: 'the radio did not answer' });
     // A late answer could be taken for the next command's: the link starts again, clean.
@@ -294,7 +306,7 @@ describe('MeshCore radio', () => {
     const radio = await connected(first, again);
     await radio.configureGroupChannel('Rescate', SECRET);
     first.sendChannelData = () => new Promise(() => undefined);
-    const stuck = radio.send(new Uint8Array([1]));
+    const stuck = radio.send(new Uint8Array([1]), SECRET);
     // The link drops with the send in flight, and the radio is back a second later.
     first.emit('disconnected');
     await vi.advanceTimersByTimeAsync(1000);

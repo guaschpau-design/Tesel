@@ -6,7 +6,7 @@
 // through the same keeper as MeshCore's, one at a time with a timeout, and the link connects again
 // by itself when Bluetooth drops (packages/radio, ADR-0043).
 
-import { MESHTASTIC_PORTNUM } from '@tesel/protocol';
+import { bytesEqual, MESHTASTIC_PORTNUM } from '@tesel/protocol';
 import {
   channelName,
   ConnectionKeeper,
@@ -38,7 +38,6 @@ export class MeshtasticRadio implements RadioLink {
   readonly #keeper: ConnectionKeeper<MeshtasticConnection>;
   /** What the radio told when it connected, with the channels as Tesel has set them since. */
   #setup: RadioSetup = NO_SETUP;
-  #channel: number | null = null;
   #unsubscribe: (() => void)[] = [];
   readonly #nodes = new NodeBook();
   readonly #receivers = new Set<(frame: ReceivedFrame) => void>();
@@ -65,7 +64,6 @@ export class MeshtasticRadio implements RadioLink {
         for (const unsubscribe of this.#unsubscribe) unsubscribe();
         this.#unsubscribe = [];
         this.#setup = NO_SETUP;
-        this.#channel = null;
       },
     });
   }
@@ -97,7 +95,6 @@ export class MeshtasticRadio implements RadioLink {
         name,
       });
     }
-    this.#channel = choice.index;
   }
 
   async forgetChannels(matches: (secret: Uint8Array) => boolean): Promise<void> {
@@ -109,16 +106,17 @@ export class MeshtasticRadio implements RadioLink {
     for (const { index } of left) {
       const disabled: ChannelEntry = { index, role: 'disabled', psk: new Uint8Array(0), name: '' };
       await this.#setChannel(connection, disabled);
-      if (this.#channel === index) this.#channel = null;
     }
   }
 
-  async send(bytes: Uint8Array): Promise<SendOutcome> {
+  async send(bytes: Uint8Array, secret: Uint8Array): Promise<SendOutcome> {
     const connection = this.#keeper.connection;
-    const channel = this.#channel;
-    if (connection === null || channel === null) {
-      return { status: 'failed', reason: 'radio not ready' };
-    }
+    if (connection === null) return { status: 'failed', reason: 'radio not ready' };
+    const channel = this.#setup.channels.find((entry) => {
+      const held = groupSecretOf(entry);
+      return held !== null && bytesEqual(held, secret);
+    })?.index;
+    if (channel === undefined) return { status: 'failed', reason: 'no channel holds the group' };
     // A packet sent with no hop limit would not be repeated at all.
     const configured = this.#setup.lora?.hopLimit ?? 0;
     const hopLimit = configured > 0 ? configured : DEFAULT_HOP_LIMIT;

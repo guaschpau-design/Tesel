@@ -4,6 +4,7 @@
 // at once could take each other's answers: the connection keeper runs them one at a time, with a
 // timeout, and connects again when the link drops (packages/radio, ADR-0043).
 
+import { bytesEqual } from '@tesel/protocol';
 import {
   channelName,
   ConnectionKeeper,
@@ -111,12 +112,11 @@ export class MeshCoreRadio implements RadioLink {
     if (left.length > 0) this.#learn(await this.#listChannels(connection));
   }
 
-  async send(bytes: Uint8Array): Promise<SendOutcome> {
+  async send(bytes: Uint8Array, secret: Uint8Array): Promise<SendOutcome> {
     const connection = this.#keeper.connection;
-    const channel = this.#channel;
-    if (connection === null || channel === null) {
-      return { status: 'failed', reason: 'radio not ready' };
-    }
+    if (connection === null) return { status: 'failed', reason: 'radio not ready' };
+    const channel = [...this.#channelSecrets].find(([, held]) => bytesEqual(held, secret))?.[0];
+    if (channel === undefined) return { status: 'failed', reason: 'no channel holds the group' };
     try {
       await this.#command(() =>
         connection.sendChannelData(channel, FLOOD, new Uint8Array(0), SEND_DATA_TYPE, bytes),

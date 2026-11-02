@@ -349,14 +349,40 @@ describe('LoRa scheduler', () => {
     expect(lora.next(0)).not.toBeNull();
   });
 
-  it('drops everything queued for a group when the radio changes group, but keeps the airtime spent', () => {
+  it('drops what is queued for a group when the radio changes group, but keeps the airtime spent', () => {
     const lora = scheduler();
-    lora.offer(sos(), 'own', 0);
-    expect(drain(lora, 0)).toEqual(['sos']);
+    lora.offer(packet({ type: 'alert', origin: ME, level: 'critical', text: 'Evacuad' }), 'own', 0);
+    expect(drain(lora, 0)).toEqual(['alert']);
     lora.offer(chat(), 'own', 0);
     lora.changeGroup();
     expect(drain(lora, 60 * 60_000 - 1)).toEqual([]);
     expect(lora.spentMs(1)).toBe(1000);
+  });
+
+  it('keeps repeating an own SOS still open after the radio changes group, until it is answered', () => {
+    const lora = scheduler();
+    const call = sos();
+    lora.offer(call, 'own', 0);
+    lora.offer(chat(), 'own', 0);
+    expect(drain(lora, 0)).toEqual(['sos', 'chat']);
+    lora.changeGroup();
+    expect(drain(lora, LIMITS.sosFirstRepeatMs)).toEqual(['sos']);
+    // In flight across another change of group: it still counts as sent, and repeats.
+    expect(lora.next(3 * LIMITS.sosFirstRepeatMs)?.event.type).toBe('sos');
+    lora.changeGroup();
+    lora.sent(3 * LIMITS.sosFirstRepeatMs);
+    expect(drain(lora, 7 * LIMITS.sosFirstRepeatMs)).toEqual(['sos']);
+    lora.observe({ type: 'ack', origin: OTHER, seq: 900, time: T0, target: call.event });
+    expect(drain(lora, 60 * 60_000)).toEqual([]);
+  });
+
+  it('forgets what is queued for a group that was left, own SOS calls included', () => {
+    const lora = scheduler();
+    lora.offer(sos(), 'own', 0);
+    expect(drain(lora, 0)).toEqual(['sos']);
+    lora.changeGroup();
+    lora.forget((queued) => queued.event.type === 'sos');
+    expect(drain(lora, 60 * 60_000)).toEqual([]);
   });
 
   it('charges a packet in flight when the group changes, but does not put it back', () => {

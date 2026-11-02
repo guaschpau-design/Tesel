@@ -24,6 +24,7 @@
   import QrScanner from './QrScanner.svelte';
   import { attempt } from '../ui/submission.svelte.ts';
   import { hidePositionAndWait } from '../position/hide-position.ts';
+  import { hasOwnSos } from '../incidents/incidents.ts';
 
   interface Props {
     t: Translate;
@@ -52,6 +53,20 @@
     oninvitation(invitation);
   }
 
+  /**
+   * Opens another group. An own SOS still open in the group in use then repeats only by radio,
+   * until that group is opened again (ADR-0104): the user is told so first.
+   */
+  async function use(group: StoredGroup): Promise<void> {
+    const current = session.activeGroup;
+    const self = session.identity?.nodeId;
+    if (current && self && activeFeed && hasOwnSos(activeFeed.state, self)) {
+      const text = t('confirmSwitchWithSos', { group: current.name });
+      if (!(await confirmations.ask({ text, confirm: t('switchGroup') }))) return;
+    }
+    attempt(() => session.activate(group.id), t('actionFailed'));
+  }
+
   async function leave(group: StoredGroup): Promise<void> {
     const text = t('confirmLeave', { group: group.name });
     if (!(await confirmations.ask({ text, confirm: t('leave') }))) return;
@@ -69,7 +84,7 @@
       {#each others as group (group.id)}
         <li>
           <span>{group.name}</span>
-          <button onclick={() => session.activate(group.id)}>{t('use')}</button>
+          <button onclick={() => use(group)}>{t('use')}</button>
         </li>
       {/each}
     </ul>

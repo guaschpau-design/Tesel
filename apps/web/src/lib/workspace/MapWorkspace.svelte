@@ -18,7 +18,7 @@
   import { useChatUnread } from '../chat/chat-unread.svelte.ts';
   import GroupNews from '../groups/GroupNews.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
-  import { activeSos } from '../incidents/incidents.ts';
+  import { hasOwnSos } from '../incidents/incidents.ts';
   import SosAlarm from '../incidents/SosAlarm.svelte';
   import SosCall from '../incidents/SosCall.svelte';
   import { MAP_LAYERS, type MapLayer } from '../map/layers.ts';
@@ -125,8 +125,7 @@
   useEnergySaving({
     enabled: () => preferences.energySaving.value,
     busy: () => tools.drawingOrMeasuring || sosOpen,
-    calling: () =>
-      group !== null && activeSos(group.feed.state, group.self).some((call) => call.mine),
+    calling: () => group !== null && hasOwnSos(group.feed.state, group.self),
   });
 
   useDeviceNotices(() => t);
