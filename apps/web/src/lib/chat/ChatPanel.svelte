@@ -3,26 +3,23 @@
      lines as possible are in view, and writes in one row. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
-  import {
-    CHAT_MAX_BYTES,
-    eventRefKey,
-    utf8ByteLength,
-    type NodeId,
-    type Place,
-  } from '@tesel/protocol';
+  import { eventRefKey, type NodeId, type Place } from '@tesel/protocol';
   import { onDestroy, tick } from 'svelte';
 
   import { formatTime } from '../format.ts';
-  import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
+  import type { Locale, Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
   import type { StoredRadioText } from '../radio/radio-texts.ts';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
-  import { Submission } from '../ui/submission.svelte.ts';
-  import { Dictation, speechRecognizer, type DictationProblem } from './dictation.svelte.ts';
   import ReportCard from '../reports/ReportCard.svelte';
   import { addedUp, casualtiesLine } from '../reports/report-summary.ts';
+  import ChatComposer from './ChatComposer.svelte';
+  import ChatLine from './ChatLine.svelte';
+  import ChatTabs from './ChatTabs.svelte';
+  import { ChatDraft } from './chat-draft.svelte.ts';
   import type { ChatTab } from './chat-tabs.ts';
+  import { speechRecognizer } from './dictation.svelte.ts';
   import { timeline } from './timeline.ts';
 
   interface Props {
@@ -66,64 +63,20 @@
   const reports = $derived([...groupState.reports].reverse());
   const casualtiesTotal = $derived(casualtiesLine(addedUp(groupState.reports), t));
 
-  const tabs: readonly ChatTab[] = $derived(
-    showRadioTab ? ['group', 'reports', 'meshcore'] : ['group', 'reports'],
-  );
-
-  /** Arrow keys, Home and End move between the tabs, as in any tab list. */
-  function moveTab(event: KeyboardEvent): void {
-    const index = tabs.indexOf(tab);
-    const to = {
-      ArrowRight: (index + 1) % tabs.length,
-      ArrowLeft: (index - 1 + tabs.length) % tabs.length,
-      Home: 0,
-      End: tabs.length - 1,
-    }[event.key];
-    const next = to === undefined ? undefined : tabs[to];
-    if (next === undefined) return;
-    event.preventDefault();
-    ontab(next);
-    void tick().then(() => document.getElementById(`chat-tab-${next}`)?.focus());
+  /** Where a text of another MeshCore app was heard, and who sent it if it says. */
+  function heardIn(message: StoredRadioText): string {
+    const where =
+      message.kind === 'direct'
+        ? t('meshcoreDirect')
+        : t('meshcoreChannel', { name: message.channel ?? t('meshcoreUnknownChannel') });
+    return message.sender ? `${where} · ${message.sender}` : where;
   }
 
-  let text = $state('');
+  const draft = new ChatDraft(speechRecognizer());
+  onDestroy(() => draft.dictation?.cancel());
+
   let list: HTMLOListElement | undefined = $state();
   const entries = $derived(timeline(groupState));
-  const size = $derived(utf8ByteLength(text.trim()));
-  const fits = $derived(size > 0 && size <= CHAT_MAX_BYTES);
-
-  /** Dictation, where the browser can recognise speech. */
-  const Recognizer = speechRecognizer();
-  const dictation = Recognizer ? new Dictation(Recognizer) : null;
-  const DICTATION_PROBLEMS: Readonly<Record<DictationProblem, MessageKey>> = {
-    permission: 'dictationPermission',
-    network: 'dictationNetwork',
-    silence: 'dictationSilence',
-    unavailable: 'dictationUnavailable',
-  };
-
-  function toggleDictation(): void {
-    if (!dictation) return;
-    if (dictation.listening) dictation.stop();
-    else dictation.start(locale, text, (heard) => (text = heard));
-  }
-
-  onDestroy(() => dictation?.cancel());
-
-  const submission = new Submission();
-
-  /**
-   * Sends the text typed or dictated. The box is emptied at once, and gets the text back if it
-   * could not be sent.
-   */
-  async function send(): Promise<void> {
-    if (!fits) return;
-    dictation?.cancel();
-    const message = text.trim();
-    text = '';
-    const sent = await submission.run(() => onsend(message));
-    if (!sent && text === '') text = message;
-  }
 
   /** How near the end, in pixels, the reader still counts as at the end. */
   const END_SLACK_PX = 48;
@@ -152,31 +105,14 @@
 
 <Panel title={t('chat')} closeLabel={t('close')} {onclose} fill>
   {#snippet header()}
-    <div class="tabs" role="tablist" tabindex="-1" onkeydown={moveTab}>
-      {#each tabs as each (each)}
-        <button
-          role="tab"
-          id="chat-tab-{each}"
-          aria-selected={tab === each}
-          aria-controls="chat-tabpanel"
-          tabindex={tab === each ? 0 : -1}
-          onclick={() => {
-            ontab(each);
-          }}
-        >
-          {#if each === 'group'}
-            {t('chatGroup')}
-          {:else if each === 'reports'}
-            <Pictogram name="pushpin" size={16} />
-            {t('reportsTab')}
-            {#if reports.length > 0}<span class="count">{reports.length}</span>{/if}
-          {:else}
-            {t('chatMeshcore')}
-            {#if radioTexts.length > 0}<span class="count">{radioTexts.length}</span>{/if}
-          {/if}
-        </button>
-      {/each}
-    </div>
+    <ChatTabs
+      {t}
+      {tab}
+      {ontab}
+      {showRadioTab}
+      reportCount={reports.length}
+      radioTextCount={radioTexts.length}
+    />
   {/snippet}
 
   <div id="chat-tabpanel" class="tabpanel" role="tabpanel" aria-labelledby="chat-tab-{tab}">
@@ -207,20 +143,11 @@
         {:else}
           <ol class="messages">
             {#each radioTexts as message, index (index)}
-              <li>
-                <span class="meta">
-                  {message.kind === 'direct'
-                    ? t('meshcoreDirect')
-                    : t('meshcoreChannel', {
-                        name: message.channel ?? t('meshcoreUnknownChannel'),
-                      })}
-                  {#if message.sender}· {message.sender}{/if}
-                </span>
-                <span class="line">
-                  <span class="text">{message.text}</span>
-                  <span class="time">{formatTime(message.receivedAt, locale)}</span>
-                </span>
-              </li>
+              <ChatLine
+                text={message.text}
+                time={formatTime(message.receivedAt, locale)}
+                meta={heardIn(message)}
+              />
             {/each}
           </ol>
         {/if}
@@ -232,70 +159,26 @@
         <ol class="messages scroll" bind:this={list} {onscroll}>
           {#each entries as entry (entry.key)}
             {#if entry.kind === 'report'}
-              <li class="report">
+              <!-- A report is its own card, across the panel, not a line. -->
+              <li>
                 <ReportCard {t} {locale} {groupState} report={entry.event} open={false} {onplace} />
               </li>
             {:else}
               {@const own = entry.event.origin === self}
-              <li class:own class:follows={entry.follows} class="chat">
-                {#if !own && !entry.follows}
-                  <span class="meta">{aliasOf(groupState, entry.event.origin)}</span>
-                {/if}
-                <span class="line">
-                  <span class="text">{entry.event.text}</span>
-                  <span class="time">{formatTime(entry.event.time * 1000, locale)}</span>
-                </span>
-                {#if undelivered.has(eventRefKey(entry.event))}
-                  <span class="pending">{t('notSentYet')}</span>
-                {/if}
-              </li>
+              <ChatLine
+                text={entry.event.text}
+                time={formatTime(entry.event.time * 1000, locale)}
+                meta={own || entry.follows ? undefined : aliasOf(groupState, entry.event.origin)}
+                {own}
+                follows={entry.follows}
+                pending={undelivered.has(eventRefKey(entry.event)) ? t('notSentYet') : undefined}
+              />
             {/if}
           {/each}
         </ol>
       {/if}
 
-      <form
-        class="compose"
-        onsubmit={(event) => {
-          event.preventDefault();
-          void send();
-        }}
-      >
-        <div class="field">
-          <input
-            bind:value={text}
-            aria-label={t('message')}
-            placeholder={dictation?.listening ? t('dictationListening') : t('message')}
-            autocomplete="off"
-          />
-          {#if dictation}
-            <button
-              type="button"
-              class="dictate"
-              aria-pressed={dictation.listening}
-              aria-label={dictation.listening ? t('dictationStop') : t('dictate')}
-              title={dictation.listening ? t('dictationStop') : t('dictate')}
-              onclick={toggleDictation}
-            >
-              <Pictogram name="mic" size={20} />
-            </button>
-          {/if}
-        </div>
-        <button
-          type="submit"
-          class="primary icon"
-          aria-label={t('send')}
-          title={t('send')}
-          disabled={submission.busy || !fits}
-        >
-          <Pictogram name="send" size={22} />
-        </button>
-      </form>
-      {#if submission.failed}<p class="warning">{t('sendFailed')}</p>{/if}
-      {#if size > CHAT_MAX_BYTES}<p class="warning">{t('messageTooLong')}</p>{/if}
-      {#if dictation?.problem}
-        <p class="warning">{t(DICTATION_PROBLEMS[dictation.problem])}</p>
-      {/if}
+      <ChatComposer {t} {locale} {draft} {onsend} />
     {/if}
   </div>
 </Panel>
@@ -304,38 +187,6 @@
   /* The tab's content lays out in the panel as if there were no wrapper. */
   .tabpanel {
     display: contents;
-  }
-
-  /* The tabs head the panel, beside its close button. */
-  .tabs {
-    display: flex;
-    flex: 1;
-    gap: 0.25rem;
-    min-width: 0;
-    overflow-x: auto;
-  }
-
-  .tabs button {
-    display: inline-flex;
-    flex: none;
-    gap: 0.35rem;
-    align-items: center;
-    padding-inline: 0.6rem;
-    border: none;
-    border-bottom: 3px solid transparent;
-    border-radius: 0;
-  }
-
-  .tabs button[aria-selected='true'] {
-    font-weight: 600;
-    border-bottom-color: var(--accent-line);
-  }
-
-  .count {
-    padding: 0 0.4rem;
-    font-size: var(--text-small);
-    border: 1px solid currentcolor;
-    border-radius: var(--radius-pill);
   }
 
   /* What scrolls takes the height left by the tabs and the row that writes. */
@@ -370,128 +221,5 @@
     gap: 0.4rem;
     padding: 0;
     list-style: none;
-  }
-
-  li {
-    display: grid;
-    justify-self: start;
-    max-width: 85%;
-    padding: 0.35rem 0.6rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-  }
-
-  /* A line under the one before it, from the same person: close to it, and without the name. */
-  li.follows {
-    margin-top: -0.2rem;
-  }
-
-  li.own {
-    justify-self: end;
-    border-color: var(--accent-line);
-  }
-
-  /* Level classes are prefixed: a plain `.warning` is the app's error text (app.css). */
-  /* A report is its own card, across the panel. */
-  li.report,
-  .reports li {
-    display: block;
-    justify-self: stretch;
-    max-width: none;
-    padding: 0;
-    background: none;
-    border: none;
-  }
-
-  .meta {
-    color: var(--muted);
-    font-size: var(--text-small);
-  }
-
-  /* The text, and its time at the end of its last line. */
-  .line {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 0.6rem;
-    align-items: baseline;
-  }
-
-  .text {
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-  }
-
-  .time {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: var(--text-small);
-  }
-
-  .pending {
-    color: var(--muted);
-    font-size: var(--text-small);
-    font-style: italic;
-  }
-
-  /* One row: the menu, the text with its microphone, and Send. */
-  .compose {
-    display: grid;
-    flex: none;
-    grid-template-columns: 1fr auto;
-    gap: 0.4rem;
-    align-items: center;
-  }
-
-  .warning {
-    flex: none;
-    margin: 0;
-  }
-
-  /* An item with a word on what it does, or on what it needs first. */
-  /* The microphone inside the text box, at its end, where the thumb is. */
-  .field {
-    position: relative;
-    display: grid;
-    min-width: 0;
-  }
-
-  .field input {
-    min-width: 0;
-    padding-right: calc(var(--control-size) + 0.25rem);
-  }
-
-  .dictate {
-    position: absolute;
-    top: 50%;
-    right: 0.15rem;
-    display: grid;
-    place-items: center;
-    width: var(--control-size);
-    height: var(--control-size);
-    padding: 0;
-    color: var(--muted);
-    border: 0;
-    border-radius: 50%;
-    transform: translateY(-50%);
-  }
-
-  /* Listening: in the colour of what is live, pulsing gently. */
-  .dictate[aria-pressed='true'] {
-    color: var(--on-danger);
-    background: var(--danger-fill);
-    animation: listening 1.4s ease-in-out infinite;
-  }
-
-  @keyframes listening {
-    50% {
-      box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--danger-fill) 30%, transparent);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dictate[aria-pressed='true'] {
-      animation: none;
-    }
   }
 </style>
