@@ -8,16 +8,28 @@ const EARTH_RADIUS_M = 6_371_000;
 
 const RAD = Math.PI / 180;
 
+/** Half a turn of longitude, in degrees. */
+const HALF_TURN = 180;
+/** The poles' latitude, in degrees. */
+const POLE = 90;
+
 /**
  * The point `north` and `east` metres from `from` (negative for south and west), on a plane
  * fitted at `from`: for drawing circles and placing points a few kilometres away, not for long
- * journeys.
+ * journeys. Where the plane no longer fits, near a pole or far away (protocol §3.7), the latitude
+ * stops at the pole, never past it, and the longitude at half a turn east or west of `from`, which
+ * keeps a ring drawn around `from` in one piece.
  */
 export function offsetMeters(from: LatLon, north: number, east: number): LatLon {
+  const eastDegrees = east / (EARTH_RADIUS_M * Math.cos(from.lat * RAD)) / RAD;
   return {
-    lat: from.lat + north / EARTH_RADIUS_M / RAD,
-    lon: from.lon + east / (EARTH_RADIUS_M * Math.cos(from.lat * RAD)) / RAD,
+    lat: clamp(from.lat + north / EARTH_RADIUS_M / RAD, -POLE, POLE),
+    lon: from.lon + clamp(eastDegrees, -HALF_TURN, HALF_TURN),
   };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 /** How far `point` is east and north of `origin`, in metres: the reverse of `offsetMeters`. */

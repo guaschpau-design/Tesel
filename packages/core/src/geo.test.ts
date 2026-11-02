@@ -61,6 +61,17 @@ describe('geometry on the Earth', () => {
     expect(offsetMeters(VALENCIA, 0, 0)).toEqual(VALENCIA);
   });
 
+  it('never places a point past a pole, nor more than half a turn east or west', () => {
+    const north = { lat: 85, lon: 10 };
+    const far = offsetMeters(north, 1_000_000, 2_000_000);
+    expect(far.lat).toBe(90);
+    expect(far.lon).toBe(190);
+    expect(offsetMeters(north, -1_000_000, -2_000_000).lon).toBe(-170);
+    expect(offsetMeters({ lat: -89, lon: 0 }, -4e9, 0).lat).toBe(-90);
+    const pole = offsetMeters({ lat: 90, lon: 0 }, 0, 10);
+    expect(pole).toEqual({ lat: 90, lon: 180 });
+  });
+
   it('tells how far a point is east and north of another', () => {
     const away = offsetMeters(VALENCIA, 300, -400);
     const offset = eastNorthMeters(VALENCIA, away);
