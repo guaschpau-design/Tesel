@@ -641,6 +641,13 @@ describe('member states', () => {
     expect(decoded.ok && decoded.value).toMatchObject({ equipment: ['four-by-four', 'megaphone'] });
   });
 
+  it('refuses equipment the protocol does not define, rather than write it as bit 0', () => {
+    // Cast: a newer or broken caller can hand over a value the type does not allow.
+    const unknown = ['rope', 'jetpack'] as unknown as typeof state.equipment;
+    const result = encodeEvent({ ...state, equipment: unknown });
+    expect(result.ok || result.error.code).toBe('invalid-value');
+  });
+
   it('refuses a battery that is not a whole percent', () => {
     expect(encodeEvent({ ...state, battery: 101 }).ok).toBe(false);
     expect(encodeEvent({ ...state, battery: 50.5 }).ok).toBe(false);

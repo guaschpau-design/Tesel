@@ -142,14 +142,15 @@ export function readPlace(reader: ByteReader): Place | null {
 
 // --- Sets of flags (§3.14) ----------------------------------------------------------------
 
-/** Writes a set as a u16 or u32 of bits, each value at its bit. */
+/** Writes a set as a u16 or u32 of bits, each value at its bit; a value with no bit is refused. */
 export function writeFlags<T extends string>(
   writer: ByteWriter,
   bits: Readonly<Record<T, number>>,
   values: readonly T[],
   size: 2 | 4,
+  field: string,
 ): void {
-  const flags = values.reduce((all, value) => (all | (1 << bits[value])) >>> 0, 0);
+  const flags = values.reduce((all, value) => (all | (1 << enumCode(bits, value, field))) >>> 0, 0);
   if (size === 2) writer.u16(flags);
   else writer.u32(flags);
 }

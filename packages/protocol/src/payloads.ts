@@ -292,10 +292,10 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       writer.u8(REPORT_KIND_SITUATION);
       writePlace(writer, event.place);
       writer.u8(enumCode(IncidentTypeCode, event.incident, 'incident type'));
-      writeFlags(writer, HazardBit, event.hazards, 2);
+      writeFlags(writer, HazardBit, event.hazards, 2, 'hazard');
       writer.u8(enumCode(SceneAccessCode, event.access, 'scene access'));
       for (const category of TRIAGE) writeCount(writer, event.casualties[category]);
-      writeFlags(writer, ResourceBit, event.resources, 2);
+      writeFlags(writer, ResourceBit, event.resources, 2, 'resource');
       writeTextRest(writer, event.note, 0, REPORT_NOTE_MAX_BYTES, 'report note');
     },
     read(reader, header) {
@@ -361,7 +361,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       writer.u8(enumCode(ProfileCode, event.profile, 'profile'));
       writer.u8(enumCode(DutyStatusCode, event.status, 'duty status'));
       writer.u8(battery ?? UNKNOWN_BATTERY);
-      writeFlags(writer, EquipmentBit, event.equipment, 4);
+      writeFlags(writer, EquipmentBit, event.equipment, 4, 'equipment');
     },
     read: (reader, header) => ({
       ...header,
