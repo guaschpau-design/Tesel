@@ -21,6 +21,7 @@ export {
   connectGatt,
   copyOf,
   messageOf,
+  openOn,
   pair,
   pickRadio,
   type BleCharacteristic,

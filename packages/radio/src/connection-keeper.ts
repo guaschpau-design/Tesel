@@ -4,7 +4,8 @@
 // firmware, lost Bluetooth link). A late answer could be taken for the next command's, so a radio
 // that misses the timeout is dropped and connected again from clean. A lost connection is retried
 // by itself, with growing pauses, until the user disconnects: a radio in a pocket loses Bluetooth
-// now and then.
+// now and then. The pauses start short again only once a link has stayed up a while: a radio that
+// opens and then stops answering at once would otherwise be opened again every few seconds.
 
 import { RadioError, type RadioLinkState } from './radio-link.ts';
 import { within } from './time-limit.ts';
@@ -36,6 +37,8 @@ const COMMAND_TIMEOUT_MS = 5000;
 /** Reconnection attempts after a lost connection: first after this long, doubling up to the cap. */
 const RECONNECT_FIRST_MS = 1000;
 const RECONNECT_MAX_MS = 30_000;
+/** A connection that stays up this long is healthy: once it drops, the pauses start short again. */
+const HEALTHY_MS = 60_000;
 
 export class ConnectionKeeper<Connection extends ClosableConnection> {
   readonly #connector: Connector<Connection>;
@@ -46,7 +49,10 @@ export class ConnectionKeeper<Connection extends ClosableConnection> {
   /** How to open the same radio again; null once the user disconnects. */
   #reopen: (() => Promise<OpenedRadio<Connection>>) | null = null;
   #reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  /** The pause before the next reconnection attempt. */
   #reconnectDelayMs = RECONNECT_FIRST_MS;
+  /** Shortens the pauses again once the open connection has stayed up `HEALTHY_MS`. */
+  #healthyTimer: ReturnType<typeof setTimeout> | null = null;
   #queue: Promise<unknown> = Promise.resolve();
   readonly #stateListeners = new Set<(state: RadioLinkState) => void>();
 
@@ -70,6 +76,7 @@ export class ConnectionKeeper<Connection extends ClosableConnection> {
 
   async connect(): Promise<void> {
     if (this.#state !== 'disconnected') return;
+    this.#reconnectDelayMs = RECONNECT_FIRST_MS;
     this.#setState('connecting');
     let opened: OpenedRadio<Connection>;
     try {
@@ -137,12 +144,18 @@ export class ConnectionKeeper<Connection extends ClosableConnection> {
     this.#connection = opened.connection;
     this.#name = opened.name;
     this.#reopen = opened.reopen;
-    this.#reconnectDelayMs = RECONNECT_FIRST_MS;
+    this.#healthyTimer = setTimeout(() => {
+      this.#healthyTimer = null;
+      this.#reconnectDelayMs = RECONNECT_FIRST_MS;
+    }, HEALTHY_MS);
     this.#hooks.opened(opened.connection);
     this.#setState('ready');
   }
 
+  /** Tries to open the radio again after the current pause, and makes the next pause longer. */
   #scheduleReconnect(reopen: () => Promise<OpenedRadio<Connection>>): void {
+    const delayMs = this.#reconnectDelayMs;
+    this.#reconnectDelayMs = Math.min(delayMs * 2, RECONNECT_MAX_MS);
     this.#reconnectTimer = setTimeout(() => {
       this.#reconnectTimer = null;
       reopen().then(
@@ -151,12 +164,10 @@ export class ConnectionKeeper<Connection extends ClosableConnection> {
           else this.#open(opened);
         },
         () => {
-          if (this.#reopen === null) return;
-          this.#reconnectDelayMs = Math.min(this.#reconnectDelayMs * 2, RECONNECT_MAX_MS);
-          this.#scheduleReconnect(reopen);
+          if (this.#reopen !== null) this.#scheduleReconnect(reopen);
         },
       );
-    }, this.#reconnectDelayMs);
+    }, delayMs);
   }
 
   /** Lets the connection go and moves to `next`; commands of the next connection queue anew. */
@@ -164,6 +175,8 @@ export class ConnectionKeeper<Connection extends ClosableConnection> {
     if (this.#connection !== null) this.#hooks.released(this.#connection);
     if (this.#reconnectTimer !== null) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = null;
+    if (this.#healthyTimer !== null) clearTimeout(this.#healthyTimer);
+    this.#healthyTimer = null;
     this.#connection = null;
     this.#queue = Promise.resolve();
     this.#name = null;

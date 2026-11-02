@@ -8,7 +8,7 @@
 // for its configuration (`want_config_id`) and tells its node number, channels, LoRa settings and
 // the nodes it knows, ending with `config_complete_id`.
 
-import { connectGatt, pair, type BleDevice, type OpenedRadio } from '@tesel/radio';
+import { connectGatt, openOn, pair, type BleDevice, type OpenedRadio } from '@tesel/radio';
 
 import { BleConnection } from './ble-connection.ts';
 import type { MeshtasticConnection } from './connection.ts';
@@ -23,7 +23,7 @@ export function linkTo(device: BleDevice): MeshtasticRadio {
 /** Connects to `device`, pairs if it has not yet, and reads the radio's configuration. */
 export async function openRadio(device: BleDevice): Promise<OpenedRadio<MeshtasticConnection>> {
   const server = await connectGatt(device);
-  try {
+  return openOn(server, async () => {
     const service = await server.getPrimaryService(MESHTASTIC_SERVICE);
     const toRadio = await service.getCharacteristic(TO_RADIO);
     const fromRadio = await service.getCharacteristic(FROM_RADIO);
@@ -34,8 +34,5 @@ export async function openRadio(device: BleDevice): Promise<OpenedRadio<Meshtast
     await fromNum.startNotifications();
     await connection.configure();
     return { connection, name: device.name ?? null, reopen: () => openRadio(device) };
-  } catch (error) {
-    server.disconnect();
-    throw error;
-  }
+  });
 }

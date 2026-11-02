@@ -42,6 +42,11 @@ interface Bluetooth {
 const CONNECT_MS = 15_000;
 /** How long the user has to type the PIN when the system asks for it. */
 const PAIRING_MS = 60_000;
+/**
+ * How long a radio has to open once its Bluetooth connection is made: finding its service and
+ * characteristics, the PIN typed, and the first answers. Generous, as it covers all of them.
+ */
+const OPEN_MS = 120_000;
 
 /**
  * Shows the browser's Bluetooth picker with every radio that offers one of `services`, one per
@@ -78,6 +83,23 @@ export async function connectGatt(device: BleDevice): Promise<BleServer> {
     gatt.disconnect();
     throw error;
   });
+}
+
+/**
+ * Opens a radio on its Bluetooth connection with `open`, or lets the connection go. A step the
+ * browser never finishes (finding the service, turning notifications on) fails after a while, so
+ * a radio being opened again after a drop cannot keep its link waiting forever.
+ */
+export async function openOn<Opened>(
+  server: BleServer,
+  open: () => Promise<Opened>,
+): Promise<Opened> {
+  try {
+    return await within(open(), OPEN_MS, 'the radio did not finish opening');
+  } catch (error) {
+    server.disconnect();
+    throw error;
+  }
 }
 
 /**

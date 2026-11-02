@@ -21,6 +21,8 @@ interface Options {
   refuseWrites?: boolean;
   /** Whether the radio answers the device query. */
   answers?: boolean;
+  /** Whether turning on its notifications ever finishes: a radio may stop answering halfway. */
+  notifies?: boolean;
 }
 
 /** A radio in memory, as Web Bluetooth shows it; `log` records reads and writes in order. */
@@ -40,7 +42,8 @@ function fakeRadio(options: Options = {}): {
       return (options.read ?? (() => Promise.resolve(new DataView(new ArrayBuffer(0)))))();
     },
     writeValue: () => Promise.reject(new Error('not writable')),
-    startNotifications: () => Promise.resolve(),
+    startNotifications: () =>
+      (options.notifies ?? true) ? Promise.resolve() : new Promise<never>(() => undefined),
     addEventListener: (_type: string, listener: () => void) => {
       notify = listener;
     },
@@ -149,5 +152,14 @@ describe('opening a radio over Web Bluetooth', () => {
     const opening = failure(openRadio(device));
     await vi.advanceTimersByTimeAsync(5000);
     expect((await opening).code).toBe('timeout');
+  });
+
+  it('gives up on a radio whose Bluetooth stops answering halfway, and lets it go', async () => {
+    vi.useFakeTimers();
+    const { device, server } = fakeRadio({ notifies: false });
+    const opening = failure(openRadio(device));
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect((await opening).code).toBe('timeout');
+    expect(server.disconnected).toBe(true);
   });
 });

@@ -15,6 +15,7 @@ import UntypedConstants from '@liamcottle/meshcore.js/src/constants.js';
 import {
   connectGatt,
   copyOf,
+  openOn,
   pair,
   RadioError,
   within,
@@ -105,7 +106,7 @@ export function linkTo(device: BleDevice): MeshCoreRadio {
 /** Connects to `device`, pairs if it has not yet, and checks that the radio answers. */
 export async function openRadio(device: BleDevice): Promise<OpenedRadio<CompanionConnection>> {
   const server = await connectGatt(device);
-  try {
+  return openOn(server, async () => {
     const service = await server.getPrimaryService(MESHCORE_SERVICE);
     const radioIn = await service.getCharacteristic(RADIO_IN);
     const radioOut = await service.getCharacteristic(RADIO_OUT);
@@ -124,10 +125,7 @@ export async function openRadio(device: BleDevice): Promise<OpenedRadio<Companio
       { once: true },
     );
     return { connection, name: device.name ?? null, reopen: () => openRadio(device) };
-  } catch (error) {
-    server.disconnect();
-    throw error;
-  }
+  });
 }
 
 /**
