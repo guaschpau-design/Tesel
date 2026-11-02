@@ -13,7 +13,7 @@ import { getGroup } from '../groups/group-store.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
-import { sosNewsIn } from './heard-elsewhere.ts';
+import { sosNewsIn, type SosElsewhere } from './heard-elsewhere.ts';
 import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
 import { pickedRadioLink } from './radio-families.ts';
 import { RadioFrames } from './radio-frames.ts';
@@ -74,6 +74,7 @@ export class RadioSession {
   #unstored: Unstored[] = [];
   readonly #frames = new RadioFrames();
   readonly #sender: RadioSender;
+  #sosListeners: readonly ((call: SosElsewhere) => void)[] = [];
 
   constructor(makeLink: () => Promise<RadioLink> = pickedRadioLink, random = Math.random) {
     this.#makeLink = makeLink;
@@ -114,7 +115,7 @@ export class RadioSession {
         this.lastSnr = snr;
         const feed = this.#feed;
         if (feed === null || !bytesEqual(secret, feed.radioChannel.secret)) {
-          this.#heardElsewhere(event);
+          this.#heardElsewhere(secret, event);
         }
         void this.#store({ secret, event, attempts: 0 });
       }),
@@ -135,6 +136,14 @@ export class RadioSession {
   async useStorage(db: AppDb): Promise<void> {
     this.#db = db;
     this.texts = [...(await loadRadioTexts(db)), ...this.texts].slice(-MAX_RADIO_TEXTS);
+  }
+
+  /** Tells `listener` of each SOS call or cancellation heard for a group that is not open. */
+  onSosElsewhere(listener: (call: SosElsewhere) => void): () => void {
+    this.#sosListeners = [...this.#sosListeners, listener];
+    return () => {
+      this.#sosListeners = this.#sosListeners.filter((other) => other !== listener);
+    };
   }
 
   /**
@@ -230,11 +239,15 @@ export class RadioSession {
 
   /**
    * An event heard on the channel of a group that is not open: an answer ends an own SOS that
-   * may still repeat there.
+   * may still repeat there, and an SOS or its cancellation is told, for the alarm.
    */
-  #heardElsewhere(bytes: Uint8Array): void {
+  #heardElsewhere(secret: Uint8Array, bytes: Uint8Array): void {
     const event = sosNewsIn(bytes);
-    if (event !== null && event.type !== 'sos') this.#sender.observe(event);
+    if (event === null) return;
+    if (event.type !== 'sos') this.#sender.observe(event);
+    if (event.type === 'ack') return;
+    const call: SosElsewhere = { groupId: groupId(secret), event };
+    for (const listener of this.#sosListeners) listener(call);
   }
 
   /**

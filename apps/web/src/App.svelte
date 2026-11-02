@@ -19,6 +19,7 @@
   import RestScreen from './lib/power/RestScreen.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { hasOwnSos } from './lib/incidents/incidents.ts';
+  import { useSosElsewhere } from './lib/incidents/sos-elsewhere.svelte.ts';
   import Announcer from './lib/ui/Announcer.svelte';
   import ConfirmDialog from './lib/ui/ConfirmDialog.svelte';
   import StartupProblem from './lib/ui/StartupProblem.svelte';
@@ -110,6 +111,16 @@
   $effect(() => {
     void radio.useFeed(radioFeed);
   });
+
+  // An SOS heard by radio for a group that is not open sounds too, and says which group it is.
+  useSosElsewhere(() => ({
+    t,
+    session: startup.session,
+    choices: startup.preferences && {
+      sound: startup.preferences.alarmSound.value,
+      notifications: startup.preferences.notifications.value,
+    },
+  }));
 
   /** An SOS of this device not cancelled yet: nothing may reload the app meanwhile. */
   const ownSosOpen = $derived(

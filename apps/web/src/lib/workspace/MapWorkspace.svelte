@@ -261,6 +261,7 @@
 {#if group}
   <SosAlarm
     {t}
+    groupId={group.feed.groupId}
     groupState={group.feed.state}
     self={group.self}
     choices={{

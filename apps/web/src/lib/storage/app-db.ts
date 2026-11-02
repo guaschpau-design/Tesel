@@ -55,7 +55,9 @@ export type SettingKey =
   | 'language'
   | 'alarmSound'
   | 'notifications'
-  | 'radioChannelsToFree';
+  | 'radioChannelsToFree'
+  /** The SOS calls the alarm was raised for, by group (incidents/alarmed-sos.ts). */
+  | 'alarmedSos';
 
 export type EventKey = [groupId: string, origin: NodeId, seq: number];
 

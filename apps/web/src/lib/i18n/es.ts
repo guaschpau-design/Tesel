@@ -446,6 +446,8 @@ export const es: Messages = {
   changedBy: 'Último cambio de {name} · {time}',
   confirmDeleteObject: '¿Borrar «{name}» para todo el grupo?',
   sos: 'SOS',
+  sosElsewhere: 'SOS en «{group}», oído por radio',
+  openGroup: 'Abrir el grupo',
   sosTitle: 'Enviar un SOS',
   sosKind: 'Qué pasa',
   sosGeneral: 'Emergencia',

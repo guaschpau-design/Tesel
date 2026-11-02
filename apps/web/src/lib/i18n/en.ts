@@ -445,6 +445,8 @@ export const en = {
   changedBy: 'Last change by {name} · {time}',
   confirmDeleteObject: 'Delete “{name}” for the whole group?',
   sos: 'SOS',
+  sosElsewhere: 'SOS in “{group}”, heard by radio',
+  openGroup: 'Open the group',
   sosTitle: 'Send an SOS',
   sosKind: 'What is happening',
   sosGeneral: 'Emergency',

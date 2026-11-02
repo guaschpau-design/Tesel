@@ -7,6 +7,7 @@
 import { SvelteSet } from 'svelte/reactivity';
 
 import { basemapUrl, defaultServerUrl } from '../config.ts';
+import { alarmedSos } from '../incidents/alarmed-sos.ts';
 import { registerContourProtocol } from '../map/style/contours.ts';
 import { findTile, registerTileProtocol, tileArchives } from '../map/tiles/protocol.ts';
 import { openTileStore } from '../map/tiles/store.ts';
@@ -78,6 +79,8 @@ export class Startup {
         this.db = database;
         if (server !== null) this.weather = WeatherFeed.start(database, server);
         await radio.useStorage(database);
+        // Before any group opens: what was alarmed for before does not sound again.
+        await alarmedSos.useStorage(database);
         const preferences = await loadPreferences(database);
         this.preferences = preferences;
         if (fullscreenSupported && preferences.fullscreen.value) {

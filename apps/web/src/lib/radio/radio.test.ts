@@ -5,10 +5,11 @@ import { RadioError } from '@tesel/radio';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadEvents } from '../events/event-log.ts';
-import { createGroup } from '../groups/group.ts';
+import { createGroup, groupId } from '../groups/group.ts';
 import { saveGroup } from '../groups/group-store.ts';
 import { openAppDb } from '../storage/app-db.ts';
 import { FakeFeed, FakeLink, sealedFor } from './fake-radio.ts';
+import type { SosElsewhere } from './heard-elsewhere.ts';
 import { RadioSession } from './radio.svelte.ts';
 
 const chat: TeselEvent = {
@@ -291,6 +292,20 @@ describe('an own SOS when another group is opened', () => {
     link.hear(sealedFor(ack));
     await vi.advanceTimersByTimeAsync(10 * 60_000);
     expect(link.sent).toHaveLength(2);
+  });
+
+  it('tells of an SOS heard on the channel of a group that is not open, for the alarm', async () => {
+    const link = new FakeLink();
+    const radio = new RadioSession(() => Promise.resolve(link));
+    const heard: SosElsewhere[] = [];
+    radio.onSosElsewhere((call) => heard.push(call));
+    await radio.connect();
+    await radio.useFeed(new FakeFeed('otro', OTHER));
+    link.hear(sealedFor(sosBytes));
+    link.hear(sealedFor(bytes));
+    expect(heard).toMatchObject([
+      { groupId: groupId(SECRET_OF_FEED), event: { type: 'sos', seq: sos.seq } },
+    ]);
   });
 
   it('stops repeating once its group is left', async () => {
