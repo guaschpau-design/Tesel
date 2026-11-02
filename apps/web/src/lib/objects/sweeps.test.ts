@@ -1,11 +1,13 @@
-import { offsetMeters, stateOf } from '@tesel/core';
+import { offsetMeters, reduce, stateOf, type GroupState } from '@tesel/core';
 import { ShapeStyleCode, type NodeId, type TeselEvent } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
 import { translator } from '../i18n/index.ts';
+import { restyledShape } from '../sync/member-events.ts';
 import { objectName } from './object-names.ts';
 import {
   areasToClear,
+  ClearingMarks,
   isStripDone,
   stripOf,
   stripPath,
@@ -161,5 +163,74 @@ describe('sweeps', () => {
     // The second strip not arrived yet over the radio: only the first is known.
     const late = stateOf([...PLANNED.filter((event) => event.seq !== 3), task(14, 2, 'done', ANA)]);
     expect(areasToClear(late, ANA)).toEqual([]);
+  });
+});
+
+describe('marking a swept area cleared', () => {
+  /** Ana's clock is an hour ahead: she renames the area while Berta finishes the last strip. */
+  const AHEAD = 3600;
+  const FINISHED = [
+    ...PLANNED,
+    task(14, 2, 'done', ANA),
+    task(15, 3, 'done', BERTA),
+    { ...AREA, seq: 20, time: T0 + AHEAD, label: 'Ladera norte' },
+  ];
+
+  /** Berta's device: what it publishes as it marks what is due, as the app does at each change. */
+  function berta(start: GroupState) {
+    const marks = new ClearingMarks();
+    let state = start;
+    let seq = 30;
+    let chatSeq = 100;
+    const published: TeselEvent[] = [];
+    return {
+      published,
+      get state() {
+        return state;
+      },
+      /** Marks what is due at `now`, in seconds, then takes a chat line from Ana. */
+      run(now: number): void {
+        for (const area of marks.due(state, BERTA, () => now * 1000)) {
+          const mark = restyledShape(
+            area,
+            ShapeStyleCode.SEARCH_CLEARED,
+          )({
+            origin: BERTA,
+            seq: seq++,
+            time: now,
+          });
+          published.push(mark);
+          state = reduce(state, mark);
+        }
+        state = reduce(state, { type: 'chat', origin: ANA, seq: chatSeq++, time: now, text: '…' });
+      },
+    };
+  }
+
+  it('waits for its clock to pass the area’s latest change, then marks it once and wins', () => {
+    const device = berta(stateOf(FINISHED));
+    for (let second = 16; second < 26; second++) device.run(T0 + second);
+    expect(device.published).toEqual([]);
+    device.run(T0 + AHEAD + 1);
+    expect(device.published).toHaveLength(1);
+    expect(device.state.objects.get(`${ANA}:1`)).toMatchObject({
+      style: ShapeStyleCode.SEARCH_CLEARED,
+      label: 'Ladera norte',
+    });
+    for (let second = 2; second < 12; second++) device.run(T0 + AHEAD + second);
+    expect(device.published).toHaveLength(1);
+  });
+
+  it('marks a change once while the mark is on its way, and again only if it was not sent', () => {
+    const state = stateOf(FINISHED);
+    const marks = new ClearingMarks();
+    const later = () => (T0 + AHEAD + 1) * 1000;
+    const areas = marks.due(state, BERTA, later);
+    expect(areas).toHaveLength(1);
+    expect(marks.due(state, BERTA, later)).toEqual([]);
+    const [area] = areas;
+    if (area === undefined) throw new Error('no area');
+    marks.failed(area);
+    expect(marks.due(state, BERTA, later)).toEqual([area]);
   });
 });

@@ -182,6 +182,42 @@ export function areasToClear(state: GroupState, self: NodeId): ShapeEvent[] {
   });
 }
 
+/**
+ * Which change of each search area this device has marked cleared, so that it marks each change
+ * once. A mark is sent only once this device's clock is past the time of the area's latest change,
+ * so that it is the newer one (protocol §3.10) even when the device that made that change has a
+ * clock ahead: a mark that lost would leave the area to clear, and marking it again at every change
+ * of the group would publish without end. Waiting is the only way to win: an author stamps its
+ * events with its own clock, never earlier than its previous one (§3.1).
+ */
+export class ClearingMarks {
+  /** By area, the reference of the change of it that was marked. */
+  readonly #marked = new Map<string, string>();
+
+  /**
+   * The areas this device is to mark cleared now, each counted as marked from here on. `now` tells
+   * the time, in milliseconds; it is asked only while an area is still to mark, so that a caller
+   * follows the clock only while it matters.
+   */
+  due(state: GroupState, self: NodeId, now: () => number): readonly ShapeEvent[] {
+    const areas: ShapeEvent[] = [];
+    for (const area of areasToClear(state, self)) {
+      const key = eventRefKey(area.object);
+      const change = eventRefKey(area);
+      if (this.#marked.get(key) === change || now() < (area.time + 1) * 1000) continue;
+      this.#marked.set(key, change);
+      areas.push(area);
+    }
+    return areas;
+  }
+
+  /** Marking `area` failed and nothing was sent: it is to be marked again. */
+  failed(area: ShapeEvent): void {
+    const key = eventRefKey(area.object);
+    if (this.#marked.get(key) === eventRefKey(area)) this.#marked.delete(key);
+  }
+}
+
 /** Whether these are all the strips of one sweep: each of its strips, once. */
 function isWholeSweep(strips: readonly SweepEvent[]): boolean {
   const planned = strips[0]?.strips ?? 0;
