@@ -4,12 +4,13 @@ import 'fake-indexeddb/auto';
 
 import {
   RadioError,
+  type RadioFamily,
   type RadioLink,
   type RadioLinkState,
   type RadioText,
   type ReceivedFrame,
   type SendOutcome,
-} from '@tesel/meshcore/link';
+} from '@tesel/radio';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { LoraSink } from '../sync/lora-events.ts';
@@ -22,6 +23,7 @@ import { RadioSession, type RadioFeed } from './radio.svelte.ts';
 const SECRET: Uint8Array = new Uint8Array(16).fill(1);
 
 class FakeLink implements RadioLink {
+  readonly family: RadioFamily;
   state: RadioLinkState = 'disconnected';
   name: string | null = null;
   channel: string | null = null;
@@ -31,6 +33,10 @@ class FakeLink implements RadioLink {
   #receive: ((frame: ReceivedFrame) => void) | null = null;
   #stateChange: ((state: RadioLinkState) => void) | null = null;
   #text: ((message: RadioText) => void) | null = null;
+
+  constructor(family: RadioFamily = 'meshcore') {
+    this.family = family;
+  }
 
   connect(): Promise<void> {
     this.state = 'ready';
@@ -63,6 +69,10 @@ class FakeLink implements RadioLink {
     return Promise.resolve({ status: 'sent' });
   }
 
+  airtimeMs(): number {
+    return 1000;
+  }
+
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {
     this.#receive = listener;
     return () => undefined;
@@ -75,7 +85,9 @@ class FakeLink implements RadioLink {
 
   onText(listener: (message: RadioText) => void): () => void {
     this.#text = listener;
-    return () => undefined;
+    return () => {
+      this.#text = null;
+    };
   }
 
   say(message: RadioText): void {
@@ -281,6 +293,23 @@ describe('radio session', () => {
     link.connect = () => Promise.reject(new DOMException('User cancelled', 'NotFoundError'));
     await radio.connect();
     expect(radio.problem).toBeNull();
+  });
+
+  it('makes a link for each radio picked, of its kind, and follows only the last', async () => {
+    const meshcore = new FakeLink();
+    const meshtastic = new FakeLink('meshtastic');
+    const picked = [meshcore, meshtastic];
+    const radio = new RadioSession(() => Promise.resolve(picked.shift() ?? meshtastic));
+    await radio.connect();
+    expect(radio.family).toBe('meshcore');
+    // Connected already: there is nothing to pick.
+    await radio.connect();
+    expect(picked).toHaveLength(1);
+    await radio.disconnect();
+    await radio.connect();
+    expect(radio.family).toBe('meshtastic');
+    meshcore.say({ kind: 'channel', channel: null, sender: null, text: 'Antes', time: 1 });
+    expect(radio.texts).toEqual([]);
   });
 
   it('unlinks the feed when the radio goes away', async () => {

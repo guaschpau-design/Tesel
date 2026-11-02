@@ -338,8 +338,11 @@ export const SERVER_INFO_PATH = 'healthz';
 /** §8.2 Weather warnings endpoint, relative to the server base URL. */
 export const WEATHER_WARNINGS_PATH = 'v1/weather-warnings';
 
-/** §7 MeshCore application identifier, in MeshCore's development range until registered. */
+/** §7.1 MeshCore application identifier, in MeshCore's development range until registered. */
 export const MESHCORE_DATA_TYPE = 0xff4d;
+
+/** §7.2 Meshtastic port of Tesel events: PRIVATE_APP, the port Meshtastic leaves to private apps. */
+export const MESHTASTIC_PORTNUM = 256;
 
 /** §10 Log files: the value of their `tesel` field and the layout version this code writes. */
 export const LOG_FILE_KIND = 'log';

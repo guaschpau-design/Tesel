@@ -2,7 +2,7 @@
 
 import 'fake-indexeddb/auto';
 
-import type { RadioLink, RadioLinkState, ReceivedFrame, SendOutcome } from '@tesel/meshcore/link';
+import type { RadioLink, RadioLinkState, ReceivedFrame, SendOutcome } from '@tesel/radio';
 import { describe, expect, it, vi } from 'vitest';
 
 import { applyInvitation, createGroup, invitationFor } from '../groups/group.ts';
@@ -23,6 +23,7 @@ class Air {
 }
 
 class AirLink implements RadioLink {
+  readonly family = 'meshtastic';
   state: RadioLinkState = 'disconnected';
   name: string | null = 'MeshCore';
   readonly #air: Air;
@@ -53,6 +54,10 @@ class AirLink implements RadioLink {
       if (radio !== this) radio.#receive?.({ bytes, snr: 5, secret });
     }
     return Promise.resolve({ status: 'sent' });
+  }
+
+  airtimeMs(): number {
+    return 1000;
   }
 
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {

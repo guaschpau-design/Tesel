@@ -15,7 +15,7 @@ import {
   type TeselEvent,
 } from '@tesel/protocol';
 
-import { AirtimeWindow, eventAirtimeMs } from './airtime.ts';
+import { AirtimeWindow } from './airtime.ts';
 import { distanceMeters } from './geo.ts';
 import { URGENCY, urgencyOf } from './urgency.ts';
 
@@ -119,9 +119,13 @@ export class LoraScheduler {
     readonly group: number;
   } | null = null;
 
-  constructor(options: { random: () => number; airtimeMs?: (bytes: number) => number }) {
+  /**
+   * `airtimeMs` says how long an event of so many bytes keeps the air busy with the radio in use:
+   * it is asked each time a packet is weighed, so a radio linked later counts at its own rate.
+   */
+  constructor(options: { random: () => number; airtimeMs: (bytes: number) => number }) {
     this.#random = options.random;
-    this.#airtimeMs = options.airtimeMs ?? eventAirtimeMs;
+    this.#airtimeMs = options.airtimeMs;
   }
 
   /** Queues an event for LoRa. Repeated offers of the same event change nothing. */

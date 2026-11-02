@@ -1,12 +1,13 @@
-<!-- The LoRa radio in the connections panel: whether one is paired and on the group, the button to
-     pair or unpair it, and how much it is transmitting. -->
+<!-- The LoRa radio in the connections panel: whether one is paired and on the group, and of which
+     kind, the button to pair or unpair it, and how much it is transmitting. -->
 <script lang="ts">
-  import { isWebBluetoothAvailable } from '@tesel/meshcore/link';
+  import { isWebBluetoothAvailable, type RadioFamily } from '@tesel/radio';
 
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import ChannelCard from '../links/ChannelCard.svelte';
   import type { Link } from '../links/links.ts';
-  import { radio, type RadioProblem } from './radio.svelte.ts';
+  import { problemMessage } from './radio-problem.ts';
+  import { radio } from './radio.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -18,24 +19,22 @@
 
   const supported = isWebBluetoothAvailable();
 
-  const PROBLEMS: Readonly<Record<RadioProblem, MessageKey>> = {
-    unsupported: 'radioUnsupported',
-    'no-free-channel': 'radioNoFreeChannel',
-    'no-answer': 'radioNoAnswer',
-    'not-paired': 'radioNotPaired',
-    failed: 'radioFailed',
+  const FAMILIES: Readonly<Record<RadioFamily, MessageKey>> = {
+    meshcore: 'radioMeshcore',
+    meshtastic: 'radioMeshtastic',
   };
 
   /** How the radio is doing: paired and on the group's channel, waiting for a group, or not yet. */
   const card = $derived.by((): { level: Link['level'] | 'off'; status: string } => {
     const name = radio.name ?? t('radioUnnamed');
+    const kind = radio.family === null ? '' : t(FAMILIES[radio.family]);
     if (!supported) return { level: 'off', status: t('radioUnsupported') };
     if (radio.state === 'disconnected') return { level: 'off', status: t('radioOff') };
     if (radio.state === 'ready' && !groupName) {
-      return { level: 'connecting', status: t('radioWaiting', { name }) };
+      return { level: 'connecting', status: t('radioWaiting', { name, kind }) };
     }
     if (radio.state === 'ready' && radio.linked) {
-      return { level: 'ok', status: t('radioLinked', { name }) };
+      return { level: 'ok', status: t('radioLinked', { name, kind }) };
     }
     return { level: 'connecting', status: t('linkConnecting') };
   });
@@ -48,7 +47,9 @@
       {#if radio.lastSnr !== null}· {t('radioSignal', { snr: radio.lastSnr })}{/if}
     </span>
   {/if}
-  {#if radio.problem}<p class="warning">{t(PROBLEMS[radio.problem])}</p>{/if}
+  {#if radio.problem}
+    <p class="warning">{t(problemMessage(radio.problem, radio.family))}</p>
+  {/if}
   {#if radio.problem === 'not-paired'}
     <!-- The one case the user must act on outside Tesel: pairing in the system's settings. -->
     <ol class="steps">

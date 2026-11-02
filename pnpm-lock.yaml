@@ -81,9 +81,15 @@ importers:
       '@tesel/meshcore':
         specifier: workspace:*
         version: link:../../packages/meshcore
+      '@tesel/meshtastic':
+        specifier: workspace:*
+        version: link:../../packages/meshtastic
       '@tesel/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
+      '@tesel/radio':
+        specifier: workspace:*
+        version: link:../../packages/radio
       idb:
         specifier: ^8.0.4
         version: 8.0.4
@@ -148,6 +154,18 @@ importers:
       '@tesel/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@tesel/radio':
+        specifier: workspace:*
+        version: link:../radio
+
+  packages/meshtastic:
+    dependencies:
+      '@tesel/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@tesel/radio':
+        specifier: workspace:*
+        version: link:../radio
 
   packages/protocol:
     dependencies:
@@ -160,6 +178,8 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
+
+  packages/radio: {}
 
   packages/scenario:
     dependencies:

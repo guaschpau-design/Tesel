@@ -2,7 +2,7 @@
 // data, LoRa — rather than by the service: the header shows it and the connections panel details
 // each channel.
 
-import type { RadioLinkState } from '@tesel/meshcore/link';
+import type { RadioLinkState } from '@tesel/radio';
 
 import type { MessageKey } from '../i18n/index.ts';
 import type { GlyphName } from '../ui/glyphs.ts';

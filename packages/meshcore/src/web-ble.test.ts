@@ -1,7 +1,7 @@
+import { RadioError, type BleDevice } from '@tesel/radio';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { RadioError } from './radio-link.ts';
-import { openRadio, type BleDevice } from './web-ble.ts';
+import { openRadio } from './web-ble.ts';
 
 /** The radio's answer to the device query: firmware version, reserved bytes, build date, model. */
 const DEVICE_INFO = new Uint8Array([

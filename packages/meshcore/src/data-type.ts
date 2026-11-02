@@ -1,6 +1,6 @@
 import { MESHCORE_DATA_TYPE } from '@tesel/protocol';
 
-/** `data_type` of the datagrams Tesel sends (protocol §7). */
+/** `data_type` of the datagrams Tesel sends (protocol §7.1). */
 export const SEND_DATA_TYPE = MESHCORE_DATA_TYPE;
 
 /**

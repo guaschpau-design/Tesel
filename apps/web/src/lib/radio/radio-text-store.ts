@@ -1,4 +1,4 @@
-// Where heard MeshCore text messages (radio-texts.ts) are kept: a store of the app's database.
+// Where heard text messages of other apps (radio-texts.ts) are kept: a store of the app's database.
 
 import type { AppDb } from '../storage/app-db.ts';
 import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';

@@ -12,7 +12,7 @@ Pure TypeScript. Time and randomness are passed in, never read globally, so ever
 | `collections.ts`    | Immutable, idempotent updates of the collections in the state                                                                     |
 | `lora-scheduler.ts` | What goes on the air and in what order: priorities, airtime budget, position thinning, SOS repeats, ACK rule and the bridge rules |
 | `urgency.ts`        | How urgent each event type is, for the scheduler and for the app's queue of pushes to the server                                  |
-| `airtime.ts`        | LoRa time on air of an event                                                                                                      |
+| `airtime.ts`        | The airtime used in the last hour; how long one event takes is the radio link's estimate (`packages/radio`)                       |
 | `geo.ts`            | Distances, bearings and areas on the Earth                                                                                        |
 | `sweep.ts`          | The lanes of a sweep of an area, a strip's share of them, and how much of them trails have swept                                  |
 | `simplify.ts`       | Thinning a line to the few points that keep its shape (Douglas–Peucker)                                                           |

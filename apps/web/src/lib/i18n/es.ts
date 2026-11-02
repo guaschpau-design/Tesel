@@ -10,8 +10,10 @@ export const es: Messages = {
   netNoServer: 'Este grupo no usa servidor',
   netNoGroup: 'Con conexión, sin grupo',
   radioOff: 'Sin radio',
-  radioLinked: 'Conectada: {name}',
-  radioWaiting: 'Conectada: {name}. Elige un grupo para usarla.',
+  radioLinked: 'Conectada: {name} ({kind})',
+  radioWaiting: 'Conectada: {name} ({kind}). Elige un grupo para usarla.',
+  radioMeshcore: 'MeshCore',
+  radioMeshtastic: 'Meshtastic',
   radioDetails: 'Emisión {percent} % del límite',
   radioSignal: 'Señal {snr} dB',
   radioUnsupported:
@@ -490,19 +492,24 @@ export const es: Messages = {
     'La radio no tiene ningún canal libre. Borra uno en la app de MeshCore y vuelve a intentarlo.',
   radioNoAnswer:
     'La radio no responde. Comprueba que lleva el firmware MeshCore Companion Bluetooth v1.18 o posterior.',
+  radioNoFreeChannelMeshtastic:
+    'La radio no tiene ningún canal libre: usa los 8. Borra uno en la app de Meshtastic y vuelve a intentarlo.',
+  radioNoAnswerMeshtastic:
+    'La radio no responde. Comprueba que su firmware Meshtastic está al día y que la app de Meshtastic no está conectada a ella.',
   radioFailed:
     'No se pudo conectar con la radio. Comprueba que está encendida y cerca, y que ninguna otra app la está usando.',
   radioNotPaired: 'Este dispositivo aún no está emparejado con la radio. Hazlo una sola vez:',
   radioPairStep1:
-    'En los ajustes de Bluetooth del dispositivo, vincula la radio con su PIN: 123456 si no lo has cambiado.',
+    'En los ajustes de Bluetooth del dispositivo, vincula la radio con su PIN: el que muestra su pantalla o, si no tiene, 123456 si no lo has cambiado.',
   radioPairStep2: 'Apaga la radio o desenchúfala, y vuelve a encenderla.',
   radioPairStep3: 'Vuelve aquí y pulsa «Conectar radio».',
   radioConnectHint:
-    'Si te pide un PIN, el de fábrica es 123456. ¿No aparece tu radio? Apágala y vuelve a encenderla.',
+    'Si te pide un PIN, es el que muestra la pantalla de la radio o, si no tiene, el de fábrica: 123456. ¿No aparece tu radio? Apágala y vuelve a encenderla.',
   chatGroup: 'Grupo',
-  chatMeshcore: 'MeshCore',
-  meshcoreIntro: 'Mensajes de radios MeshCore cercanas. Se responden desde la app MeshCore.',
-  noMeshcoreMessages: 'Todavía no ha llegado ningún mensaje de MeshCore.',
+  chatMeshcore: 'Mesh',
+  meshcoreIntro:
+    'Mensajes de radios MeshCore y Meshtastic cercanas. Se responden desde su propia app.',
+  noMeshcoreMessages: 'Todavía no ha llegado ningún mensaje de otras radios.',
   meshcoreChannel: 'Canal {name}',
   meshcoreUnknownChannel: 'de radio',
   meshcoreDirect: 'Mensaje privado',

@@ -1,13 +1,23 @@
-// RadioLink over a MeshCore companion radio (protocol §7, ADR-0006).
+// RadioLink over a MeshCore companion radio (protocol §7.1, ADR-0006).
 //
 // The companion protocol answers commands with generic OK/ERR frames, so two commands in flight
-// at once could take each other's answers. Every command therefore goes through one queue, and
-// each has a timeout in case the radio never answers (old firmware, lost Bluetooth link). A late
-// answer could still be taken for the next command's, so a radio that misses the timeout is
-// dropped and connected again from clean. A lost connection is retried by itself, with growing
-// pauses, until the user disconnects: a radio in a pocket loses Bluetooth now and then.
+// at once could take each other's answers: the connection keeper runs them one at a time, with a
+// timeout, and connects again when the link drops (packages/radio, ADR-0043).
 
-import { channelName, chooseChannelSlot } from './channel-slot.ts';
+import {
+  channelName,
+  ConnectionKeeper,
+  RadioError,
+  type Connector,
+  type RadioLink,
+  type RadioLinkState,
+  type RadioText,
+  type ReceivedFrame,
+  type SendOutcome,
+} from '@tesel/radio';
+
+import { meshcoreAirtimeMs } from './air.ts';
+import { CHANNEL_NAME_MAX_BYTES, chooseChannelSlot } from './channel-slot.ts';
 import {
   FLOOD,
   PUSH_MSG_WAITING,
@@ -18,89 +28,56 @@ import {
   type SyncedMessage,
 } from './companion.ts';
 import { ACCEPTED_DATA_TYPES, SEND_DATA_TYPE } from './data-type.ts';
-import {
-  RadioError,
-  type RadioLink,
-  type RadioLinkState,
-  type RadioText,
-  type ReceivedFrame,
-  type SendOutcome,
-} from './radio-link.ts';
 
-/** An open connection to a radio, and how to open it again without asking the user. */
-export interface OpenedRadio {
-  readonly connection: CompanionConnection;
-  readonly name: string | null;
-  readonly reopen: () => Promise<OpenedRadio>;
-}
-
-/** Opens a connection; for Web Bluetooth this asks the user to pick a radio. */
-export type Connector = () => Promise<OpenedRadio>;
-
-const COMMAND_TIMEOUT_MS = 5000;
-/** Reconnection attempts after a lost connection: first after this long, doubling up to the cap. */
-const RECONNECT_FIRST_MS = 1000;
-const RECONNECT_MAX_MS = 30_000;
 /** MeshCore companion firmware has at most this many channel slots. */
 const MAX_CHANNELS = 40;
 
 export class MeshCoreRadio implements RadioLink {
-  readonly #connector: Connector;
-  #connection: CompanionConnection | null = null;
-  #state: RadioLinkState = 'disconnected';
-  #name: string | null = null;
-  /** How to open the same radio again; null once the user disconnects. */
-  #reopen: (() => Promise<OpenedRadio>) | null = null;
-  #reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  #reconnectDelayMs = RECONNECT_FIRST_MS;
+  readonly family = 'meshcore';
+  readonly #keeper: ConnectionKeeper<CompanionConnection>;
   #channel: number | null = null;
   /** Secrets by slot, learnt when configuring the group channel. */
   #channelSecrets = new Map<number, Uint8Array>();
-  #queue: Promise<unknown> = Promise.resolve();
   #draining = false;
   #drainRequested = false;
   readonly #receivers = new Set<(frame: ReceivedFrame) => void>();
   readonly #textListeners = new Set<(message: RadioText) => void>();
   /** Channel names by slot, learnt when configuring the group channel. */
   #channelNames = new Map<number, string>();
-  readonly #stateListeners = new Set<(state: RadioLinkState) => void>();
   readonly #onMessageWaiting = () => void this.#drain();
   readonly #onDisconnected = () => {
-    this.#lost();
+    this.#keeper.lost();
   };
 
-  constructor(connector: Connector) {
-    this.#connector = connector;
+  constructor(connector: Connector<CompanionConnection>) {
+    this.#keeper = new ConnectionKeeper(connector, {
+      opened: (connection) => {
+        connection.on(PUSH_MSG_WAITING, this.#onMessageWaiting);
+        connection.on('disconnected', this.#onDisconnected);
+      },
+      released: (connection) => {
+        connection.off(PUSH_MSG_WAITING, this.#onMessageWaiting);
+        connection.off('disconnected', this.#onDisconnected);
+        this.#channel = null;
+        this.#channelSecrets = new Map();
+      },
+    });
   }
 
   get state(): RadioLinkState {
-    return this.#state;
+    return this.#keeper.state;
   }
 
   get name(): string | null {
-    return this.#name;
+    return this.#keeper.name;
   }
 
-  async connect(): Promise<void> {
-    if (this.#state !== 'disconnected') return;
-    this.#setState('connecting');
-    let opened: OpenedRadio;
-    try {
-      opened = await this.#connector();
-    } catch (error) {
-      if (this.state === 'connecting') this.#reset('disconnected');
-      throw error;
-    }
-    // Disconnected while the radio was being opened: let it go.
-    if (this.state !== 'connecting') {
-      void opened.connection.close();
-      return;
-    }
-    this.#open(opened);
+  connect(): Promise<void> {
+    return this.#keeper.connect();
   }
 
   async configureGroupChannel(groupName: string, secret: Uint8Array): Promise<void> {
-    const connection = this.#ready();
+    const connection = this.#keeper.ready();
     const channels = await this.#listChannels(connection);
     this.#learn(channels);
     const choice = chooseChannelSlot(channels, secret);
@@ -108,11 +85,10 @@ export class MeshCoreRadio implements RadioLink {
       throw new RadioError('no-free-channel', 'every channel slot of the radio is in use');
     }
     if (choice.kind === 'empty') {
-      await this.#command(() =>
-        connection.setChannel(choice.index, channelName(groupName), secret),
-      );
+      const name = channelName(groupName, CHANNEL_NAME_MAX_BYTES);
+      await this.#command(() => connection.setChannel(choice.index, name, secret));
       this.#channelSecrets.set(choice.index, secret);
-      this.#channelNames.set(choice.index, channelName(groupName));
+      this.#channelNames.set(choice.index, name);
     }
     this.#channel = choice.index;
     // Pick up anything that arrived for the group before we were listening.
@@ -120,7 +96,7 @@ export class MeshCoreRadio implements RadioLink {
   }
 
   async forgetChannels(matches: (secret: Uint8Array) => boolean): Promise<void> {
-    const connection = this.#ready();
+    const connection = this.#keeper.ready();
     const channels = await this.#listChannels(connection);
     // Slot 0 is MeshCore's public channel: never Tesel's to clear.
     const left = channels.filter((channel) => channel.channelIdx !== 0 && matches(channel.secret));
@@ -132,7 +108,7 @@ export class MeshCoreRadio implements RadioLink {
   }
 
   async send(bytes: Uint8Array): Promise<SendOutcome> {
-    const connection = this.#connection;
+    const connection = this.#keeper.connection;
     const channel = this.#channel;
     if (connection === null || channel === null) {
       return { status: 'failed', reason: 'radio not ready' };
@@ -147,6 +123,10 @@ export class MeshCoreRadio implements RadioLink {
     }
   }
 
+  airtimeMs(eventBytes: number): number {
+    return meshcoreAirtimeMs(eventBytes);
+  }
+
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {
     this.#receivers.add(listener);
     return () => this.#receivers.delete(listener);
@@ -158,54 +138,11 @@ export class MeshCoreRadio implements RadioLink {
   }
 
   onStateChange(listener: (state: RadioLinkState) => void): () => void {
-    this.#stateListeners.add(listener);
-    return () => this.#stateListeners.delete(listener);
+    return this.#keeper.onStateChange(listener);
   }
 
-  async disconnect(): Promise<void> {
-    const connection = this.#connection;
-    this.#reopen = null;
-    this.#reset('disconnected');
-    await connection?.close();
-  }
-
-  #open(opened: OpenedRadio): void {
-    this.#connection = opened.connection;
-    this.#name = opened.name;
-    this.#reopen = opened.reopen;
-    this.#reconnectDelayMs = RECONNECT_FIRST_MS;
-    opened.connection.on(PUSH_MSG_WAITING, this.#onMessageWaiting);
-    opened.connection.on('disconnected', this.#onDisconnected);
-    this.#setState('ready');
-  }
-
-  /**
-   * The connection dropped: connect to the same radio again, unless the user disconnected. The link
-   * goes straight to `connecting`, never through `disconnected`, so the app keeps it for the group.
-   */
-  #lost(): void {
-    const reopen = this.#reopen;
-    const connection = this.#connection;
-    this.#reset(reopen === null ? 'disconnected' : 'connecting');
-    void connection?.close();
-    if (reopen !== null) this.#scheduleReconnect(reopen);
-  }
-
-  #scheduleReconnect(reopen: () => Promise<OpenedRadio>): void {
-    this.#reconnectTimer = setTimeout(() => {
-      this.#reconnectTimer = null;
-      reopen().then(
-        (opened) => {
-          if (this.#reopen === null) void opened.connection.close();
-          else this.#open(opened);
-        },
-        () => {
-          if (this.#reopen === null) return;
-          this.#reconnectDelayMs = Math.min(this.#reconnectDelayMs * 2, RECONNECT_MAX_MS);
-          this.#scheduleReconnect(reopen);
-        },
-      );
-    }, this.#reconnectDelayMs);
+  disconnect(): Promise<void> {
+    return this.#keeper.disconnect();
   }
 
   #learn(channels: readonly ChannelInfo[]): void {
@@ -256,7 +193,7 @@ export class MeshCoreRadio implements RadioLink {
   }
 
   async #drainOnce(): Promise<void> {
-    const connection = this.#connection;
+    const connection = this.#keeper.connection;
     if (connection === null) return;
     for (;;) {
       const message = await this.#command(() => connection.syncNextMessage());
@@ -280,58 +217,9 @@ export class MeshCoreRadio implements RadioLink {
     for (const listener of this.#textListeners) listener(text);
   }
 
-  /** Runs one command after the previous one has finished, with a timeout. */
+  /** One companion command through the keeper's queue. */
   #command<T>(run: () => Promise<T>): Promise<T> {
-    const connection = this.#connection;
-    const result = this.#queue.then(() => withTimeout(run()));
-    this.#queue = result.catch((error: unknown) => {
-      // A late answer could be taken for the next command's: start clean on a new connection. A
-      // command left on a connection already replaced says nothing of the current one.
-      const timedOut = error instanceof RadioError && error.code === 'timeout';
-      if (timedOut && connection !== null && connection === this.#connection) this.#lost();
-    });
-    return result;
-  }
-
-  #ready(): CompanionConnection {
-    if (this.#connection === null || this.#state !== 'ready') {
-      throw new RadioError('not-ready', 'the radio is not connected');
-    }
-    return this.#connection;
-  }
-
-  /** Lets the connection go and moves to `next`; commands of the next connection queue anew. */
-  #reset(next: RadioLinkState): void {
-    this.#connection?.off(PUSH_MSG_WAITING, this.#onMessageWaiting);
-    this.#connection?.off('disconnected', this.#onDisconnected);
-    if (this.#reconnectTimer !== null) clearTimeout(this.#reconnectTimer);
-    this.#reconnectTimer = null;
-    this.#connection = null;
-    this.#queue = Promise.resolve();
-    this.#channel = null;
-    this.#channelSecrets = new Map();
-    this.#name = null;
-    this.#setState(next);
-  }
-
-  #setState(state: RadioLinkState): void {
-    if (state === this.#state) return;
-    this.#state = state;
-    for (const listener of this.#stateListeners) listener(state);
-  }
-}
-
-async function withTimeout<T>(promise: Promise<T>): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new RadioError('timeout', 'the radio did not answer'));
-    }, COMMAND_TIMEOUT_MS);
-  });
-  try {
-    return await Promise.race([promise.catch(rethrowAsRefused), timeout]);
-  } finally {
-    clearTimeout(timer);
+    return this.#keeper.command(() => run().catch(rethrowAsRefused));
   }
 }
 

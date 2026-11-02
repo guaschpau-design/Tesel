@@ -77,7 +77,7 @@ interface AppSchema extends DBSchema {
   outbox: { key: EventKey; value: OutboxEntry; indexes: { byGroup: string } };
   /** How far this device has read each group's envelopes on its server, and in which store. */
   cursors: { key: CursorKey; value: RelayPosition };
-  /** Text messages of other MeshCore apps heard by the radio, oldest first. */
+  /** Text messages of other apps (MeshCore or Meshtastic chat) heard by the radio, oldest first. */
   radioTexts: { key: number; value: StoredRadioText };
   /** The weather warnings last read from the server, under the key `latest` (protocol §8.2). */
   weather: { key: 'latest'; value: WeatherWarnings };

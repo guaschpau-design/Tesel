@@ -7,9 +7,9 @@ import {
   MeshCoreRadio,
   type ChannelInfo,
   type CompanionConnection,
-  type OpenedRadio,
   type SyncedMessage,
 } from '@tesel/meshcore';
+import type { OpenedRadio } from '@tesel/radio';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { LoraSink } from '../sync/lora-events.ts';
@@ -64,8 +64,8 @@ class Radio implements CompanionConnection {
 }
 
 /** Opens the radios in turn: the first on connecting, the next each time the link reopens. */
-function opener(radios: Radio[]): () => Promise<OpenedRadio> {
-  const open = (): Promise<OpenedRadio> => {
+function opener(radios: Radio[]): () => Promise<OpenedRadio<CompanionConnection>> {
+  const open = (): Promise<OpenedRadio<CompanionConnection>> => {
     const radio = radios.shift();
     if (radio === undefined) return Promise.reject(new Error('radio out of range'));
     return Promise.resolve({ connection: radio, name: 'MeshCore-Radio A', reopen: open });

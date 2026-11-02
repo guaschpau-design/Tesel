@@ -1,15 +1,15 @@
 import { MESHCORE_DATA_TYPE } from '@tesel/protocol';
+import { RadioError, type OpenedRadio, type ReceivedFrame } from '@tesel/radio';
 import { describe, expect, it, vi } from 'vitest';
 
-import { channelName, chooseChannelSlot } from './channel-slot.ts';
+import { chooseChannelSlot } from './channel-slot.ts';
 import {
   PUSH_MSG_WAITING,
   type ChannelInfo,
   type CompanionConnection,
   type SyncedMessage,
 } from './companion.ts';
-import { MeshCoreRadio, type OpenedRadio } from './meshcore-radio.ts';
-import { RadioError, type ReceivedFrame } from './radio-link.ts';
+import { MeshCoreRadio } from './meshcore-radio.ts';
 
 const SECRET = new Uint8Array(16).fill(9);
 const EMPTY = new Uint8Array(16);
@@ -78,8 +78,8 @@ const slots = (...entries: [string, Uint8Array][]): ChannelInfo[] =>
   entries.map(([name, secret], channelIdx) => ({ channelIdx, name, secret }));
 
 /** Opens `fakes` in turn: the first on connecting, the next ones each time the link reopens. */
-function opener(fakes: FakeCompanion[]): () => Promise<OpenedRadio> {
-  const open = (): Promise<OpenedRadio> => {
+function opener(fakes: FakeCompanion[]): () => Promise<OpenedRadio<CompanionConnection>> {
+  const open = (): Promise<OpenedRadio<CompanionConnection>> => {
     const fake = fakes.shift();
     if (fake === undefined) return Promise.reject(new Error('radio out of range'));
     return Promise.resolve({ connection: fake, name: 'MeshCore-T1000', reopen: open });
@@ -103,13 +103,6 @@ describe('channel slots', () => {
     const channels = slots(['Public', EMPTY], ['Amigos', new Uint8Array(16).fill(1)], ['', EMPTY]);
     expect(chooseChannelSlot(channels, SECRET)).toEqual({ kind: 'empty', index: 2 });
     expect(chooseChannelSlot(channels.slice(0, 2), SECRET)).toEqual({ kind: 'full' });
-  });
-
-  it('cuts long group names to 31 bytes without splitting a character', () => {
-    expect(channelName('Protección Civil de la Comunitat Valenciana')).toBe(
-      'Protección Civil de la Comunit',
-    );
-    expect(new TextEncoder().encode(channelName('ñ'.repeat(20))).length).toBe(30);
   });
 });
 
@@ -284,7 +277,7 @@ describe('MeshCore radio', () => {
   });
 
   it('lets go of a radio that finishes opening after the user disconnected', async () => {
-    let finish: (opened: OpenedRadio) => void = () => undefined;
+    let finish: (opened: OpenedRadio<CompanionConnection>) => void = () => undefined;
     const fake = new FakeCompanion(slots(['Public', EMPTY]));
     const radio = new MeshCoreRadio(
       () =>

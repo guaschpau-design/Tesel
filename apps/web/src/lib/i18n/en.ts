@@ -11,8 +11,10 @@ export const en = {
   netNoServer: 'This group uses no server',
   netNoGroup: 'Online, no group',
   radioOff: 'No radio',
-  radioLinked: 'Connected: {name}',
-  radioWaiting: 'Connected: {name}. Choose a group to use it.',
+  radioLinked: 'Connected: {name} ({kind})',
+  radioWaiting: 'Connected: {name} ({kind}). Choose a group to use it.',
+  radioMeshcore: 'MeshCore',
+  radioMeshtastic: 'Meshtastic',
   radioDetails: 'Airtime {percent} % of the limit',
   radioSignal: 'Signal {snr} dB',
   radioUnsupported:
@@ -490,19 +492,23 @@ export const en = {
     'The radio has no free channel. Delete one in the MeshCore app and try again.',
   radioNoAnswer:
     'The radio does not answer. Check that it runs MeshCore Companion Bluetooth firmware v1.18 or later.',
+  radioNoFreeChannelMeshtastic:
+    'The radio has no free channel: all 8 are in use. Delete one in the Meshtastic app and try again.',
+  radioNoAnswerMeshtastic:
+    'The radio does not answer. Check that its Meshtastic firmware is up to date and that the Meshtastic app is not connected to it.',
   radioFailed:
     'Could not connect to the radio. Check that it is on and nearby, and that no other app is using it.',
   radioNotPaired: 'This device is not paired with the radio yet. Do it once:',
   radioPairStep1:
-    "In the device's Bluetooth settings, pair the radio with its PIN: 123456 unless you changed it.",
+    "In the device's Bluetooth settings, pair the radio with its PIN: the one on its screen or, if it has none, 123456 unless you changed it.",
   radioPairStep2: 'Turn the radio off or unplug it, and turn it on again.',
   radioPairStep3: 'Come back here and tap “Connect radio”.',
   radioConnectHint:
-    'If it asks for a PIN, the factory one is 123456. Radio not listed? Turn it off and on again.',
+    'If it asks for a PIN, it is the one on the radio’s screen or, if it has none, 123456 from the factory. Radio not listed? Turn it off and on again.',
   chatGroup: 'Group',
-  chatMeshcore: 'MeshCore',
-  meshcoreIntro: 'Messages from MeshCore radios nearby. Reply from the MeshCore app.',
-  noMeshcoreMessages: 'No MeshCore messages have arrived yet.',
+  chatMeshcore: 'Mesh',
+  meshcoreIntro: 'Messages from MeshCore and Meshtastic radios nearby. Reply from their own app.',
+  noMeshcoreMessages: 'No messages from other radio apps have arrived yet.',
   meshcoreChannel: 'Channel {name}',
   meshcoreUnknownChannel: '(unknown)',
   meshcoreDirect: 'Private message',

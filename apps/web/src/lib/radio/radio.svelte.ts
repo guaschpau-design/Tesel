@@ -1,15 +1,11 @@
 // The LoRa radio of this device: connecting it, giving it the active group's channel, and
 // feeding the group's events through the airtime scheduler (ARCHITECTURE.md §4.2–4.3,
-// ADR-0043). The MeshCore library is loaded with the first connection, not with the app.
+// ADR-0043). The code of each kind of radio is loaded when a radio of that kind is picked, not
+// with the app (radio-families.ts).
 
 import { LIMITS, LoraScheduler, type LoraPacket } from '@tesel/core';
-import {
-  RadioError,
-  type RadioLink,
-  type RadioLinkState,
-  type ReceivedFrame,
-} from '@tesel/meshcore/link';
 import { bytesEqual } from '@tesel/protocol';
+import type { RadioFamily, RadioLink, RadioLinkState, ReceivedFrame } from '@tesel/radio';
 
 import { receiveEvents } from '../events/event-log.ts';
 import { groupId } from '../groups/group.ts';
@@ -18,6 +14,8 @@ import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { LoraSink } from '../sync/lora-events.ts';
+import { pickedRadioLink } from './radio-families.ts';
+import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
 import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';
 
@@ -26,9 +24,6 @@ export type RadioFeed = Pick<
   GroupFeed,
   'groupId' | 'attachRadio' | 'receiveFromRadio' | 'radioSent' | 'radioChannel'
 >;
-
-export type RadioProblem =
-  'unsupported' | 'no-free-channel' | 'no-answer' | 'not-paired' | 'failed';
 
 /** How often the scheduler is asked for the next packet, and frames not yet stored retried. */
 const PUMP_MS = 1000;
@@ -42,15 +37,11 @@ interface Unstored {
   readonly attempts: number;
 }
 
-/** A link to a MeshCore companion radio over Web Bluetooth. */
-async function meshCoreLink(): Promise<RadioLink> {
-  const { MeshCoreRadio, webBleConnector } = await import('@tesel/meshcore');
-  return new MeshCoreRadio(webBleConnector);
-}
-
 export class RadioSession {
   state: RadioLinkState = $state('disconnected');
   name: string | null = $state(null);
+  /** The kind of the radio picked last, once one is. */
+  family: RadioFamily | null = $state(null);
   /** True once the group's channel is configured: events flow both ways. */
   linked = $state(false);
   /** True while the link to a radio that was in use is lost and being tried again. */
@@ -60,12 +51,17 @@ export class RadioSession {
   lastSnr: number | null = $state(null);
   /** Share of the legal airtime (10 % of an hour) used in the last hour, 0 to 1. */
   airtimeUsed = $state(0);
-  /** Text messages of other MeshCore apps, oldest first, the newest `MAX_RADIO_TEXTS`. */
+  /** Text messages of other apps on the radio network, oldest first, the newest `MAX_RADIO_TEXTS`. */
   texts: readonly StoredRadioText[] = $state.raw([]);
 
+  /** Asks the user to pick a radio and makes the link to it. */
   readonly #makeLink: () => Promise<RadioLink>;
-  /** The link to radios, made at the first connection. */
+  /** The link to the radio picked last; a new one is made for each radio picked. */
   #link: RadioLink | null = null;
+  /** Stops following the link, once it is replaced. */
+  #unfollow: (() => void)[] = [];
+  /** True while the user picks a radio and its link is made. */
+  #picking = false;
   readonly #scheduler: LoraScheduler;
   #feed: RadioFeed | null = null;
   #db: AppDb | null = null;
@@ -85,55 +81,62 @@ export class RadioSession {
     },
   };
 
-  constructor(makeLink: () => Promise<RadioLink> = meshCoreLink, random = Math.random) {
+  constructor(makeLink: () => Promise<RadioLink> = pickedRadioLink, random = Math.random) {
     this.#makeLink = makeLink;
-    this.#scheduler = new LoraScheduler({ random });
+    this.#scheduler = new LoraScheduler({
+      random,
+      // Each kind of radio puts an event on the air its own way. Without a radio nothing goes out.
+      airtimeMs: (bytes) => this.#link?.airtimeMs(bytes) ?? Number.POSITIVE_INFINITY,
+    });
   }
 
-  /** The link, made once; a second connection while the first is being made keeps the first. */
-  async #linkMade(): Promise<RadioLink> {
-    const made = this.#link ?? (await this.#makeLink());
-    this.#link ??= this.#follow(made);
-    return this.#link;
-  }
-
-  /** Keeps this session in step with what the link says. */
+  /** Keeps this session in step with what `link` says, and stops following the previous one. */
   #follow(link: RadioLink): RadioLink {
-    link.onStateChange((state) => {
-      const wasLinked = this.linked;
-      this.state = state;
-      this.name = link.name;
-      if (state !== 'ready') this.#unlink();
-      if (state === 'connecting' && wasLinked) this.reconnecting = true;
-      if (state === 'disconnected') this.reconnecting = false;
-      if (state === 'ready' && this.reconnecting) {
-        this.reconnecting = false;
-        void this.#linkFeed();
-      }
-    });
-    link.onReceive((frame) => {
-      this.lastSnr = frame.snr;
-      void this.#store({ frame, attempts: 0 });
-    });
-    link.onText((text) => {
-      const stored = { ...text, receivedAt: Date.now() };
-      this.texts = [...this.texts, stored].slice(-MAX_RADIO_TEXTS);
-      if (this.#db) void saveRadioText(this.#db, stored);
-    });
+    for (const stop of this.#unfollow) stop();
+    this.#link = link;
+    this.family = link.family;
+    this.#unfollow = [
+      link.onStateChange((state) => {
+        const wasLinked = this.linked;
+        this.state = state;
+        this.name = link.name;
+        if (state !== 'ready') this.#unlink();
+        if (state === 'connecting' && wasLinked) this.reconnecting = true;
+        if (state === 'disconnected') this.reconnecting = false;
+        if (state === 'ready' && this.reconnecting) {
+          this.reconnecting = false;
+          void this.#linkFeed();
+        }
+      }),
+      link.onReceive((frame) => {
+        this.lastSnr = frame.snr;
+        void this.#store({ frame, attempts: 0 });
+      }),
+      link.onText((text) => {
+        const stored = { ...text, receivedAt: Date.now() };
+        this.texts = [...this.texts, stored].slice(-MAX_RADIO_TEXTS);
+        if (this.#db) void saveRadioText(this.#db, stored);
+      }),
+    ];
     return link;
   }
 
-  /** Where heard MeshCore text messages and other groups' events are kept. */
+  /** Where heard text messages of other apps and other groups' events are kept. */
   async useStorage(db: AppDb): Promise<void> {
     this.#db = db;
     this.texts = [...(await loadRadioTexts(db)), ...this.texts].slice(-MAX_RADIO_TEXTS);
   }
 
-  /** Asks the user to pick a radio, connects and links it to the active group. */
+  /**
+   * Asks the user to pick a radio, connects and links it to the active group. While a radio is
+   * connected or being picked, there is nothing to do: it must be disconnected first.
+   */
   async connect(): Promise<void> {
+    if (this.#picking || (this.#link !== null && this.#link.state !== 'disconnected')) return;
     this.problem = null;
+    this.#picking = true;
     try {
-      await (await this.#linkMade()).connect();
+      await this.#follow(await this.#makeLink()).connect();
     } catch (error) {
       // Closing the browser's picker is not a problem worth reporting.
       if (!(error instanceof DOMException && error.name === 'NotFoundError')) {
@@ -141,6 +144,8 @@ export class RadioSession {
         this.problem = problemOf(error);
       }
       return;
+    } finally {
+      this.#picking = false;
     }
     await this.#linkFeed();
   }
@@ -285,12 +290,3 @@ export class RadioSession {
 
 /** This device's LoRa radio, linked or not (ADR-0048). */
 export const radio = new RadioSession();
-
-function problemOf(error: unknown): RadioProblem {
-  if (error instanceof RadioError) {
-    if (error.code === 'no-free-channel') return 'no-free-channel';
-    if (error.code === 'timeout') return 'no-answer';
-    if (error.code === 'not-paired') return 'not-paired';
-  }
-  return 'failed';
-}

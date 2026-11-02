@@ -1,5 +1,6 @@
 // The chat panel's tabs: the group's messages, its situation reports, and the texts of other
-// MeshCore apps the radio hears. The chat panel carries which one it shows (ui/panels.svelte.ts).
+// apps the radio hears (MeshCore or Meshtastic chat). The chat panel carries which one it shows
+// (ui/panels.svelte.ts).
 
 export type ChatTab = 'group' | 'reports' | 'meshcore';
 
