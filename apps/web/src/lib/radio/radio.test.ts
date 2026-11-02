@@ -68,6 +68,46 @@ describe('radio session', () => {
     expect(feed.attached).toBe(2);
   });
 
+  it('tries linking the group again by itself, with growing pauses, after linking failed', async () => {
+    const link = new FakeLink();
+    let refusals = 2;
+    link.configureGroupChannel = (name) => {
+      if (refusals-- > 0) return Promise.reject(new RadioError('refused', 'busy'));
+      link.channel = name;
+      return Promise.resolve();
+    };
+    const radio = new RadioSession(() => Promise.resolve(link));
+    const feed = new FakeFeed();
+    await radio.useFeed(feed);
+    await radio.connect();
+    expect(radio.linked).toBe(false);
+    expect(radio.problem).toBe('failed');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(radio.linked).toBe(false);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(radio.linked).toBe(true);
+    expect(radio.problem).toBeNull();
+    expect(feed.attached).toBe(1);
+  });
+
+  it('does not ask again a radio whose channels are all in use until it is ready again', async () => {
+    const link = new FakeLink();
+    let asked = 0;
+    link.configureGroupChannel = () => {
+      asked++;
+      return Promise.reject(new RadioError('no-free-channel', 'full'));
+    };
+    const radio = new RadioSession(() => Promise.resolve(link));
+    await radio.useFeed(new FakeFeed());
+    await radio.connect();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(radio.problem).toBe('no-free-channel');
+    expect(asked).toBe(1);
+    link.dropAndReturn();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(asked).toBe(2);
+  });
+
   it('keeps what is queued when the same group’s feed opens again, as for a new alias', async () => {
     const link = new FakeLink();
     const radio = new RadioSession(

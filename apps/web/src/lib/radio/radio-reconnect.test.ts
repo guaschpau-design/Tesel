@@ -18,13 +18,21 @@ import { RadioSession, type RadioFeed } from './radio.svelte.ts';
 const SECRET = new Uint8Array(16).fill(1);
 const EMPTY = new Uint8Array(16);
 
-/** A radio in memory with a free slot; `drop` is the Bluetooth link going. */
+/**
+ * A radio in memory with a free slot; `drop` is the Bluetooth link going. A busy one never answers
+ * the first time it is asked for a channel.
+ */
 class Radio implements CompanionConnection {
   readonly #listeners = new Map<string | number, Set<() => void>>();
+  #busy: boolean;
   channels: ChannelInfo[] = [
     { channelIdx: 0, name: 'Public', secret: EMPTY },
     { channelIdx: 1, name: '', secret: EMPTY },
   ];
+
+  constructor(busy = false) {
+    this.#busy = busy;
+  }
 
   on(event: string | number, listener: () => void): void {
     this.#listeners.set(event, (this.#listeners.get(event) ?? new Set()).add(listener));
@@ -39,6 +47,10 @@ class Radio implements CompanionConnection {
   }
 
   getChannel(index: number): Promise<ChannelInfo> {
+    if (this.#busy) {
+      this.#busy = false;
+      return new Promise(() => undefined);
+    }
     const channel = this.channels[index];
     // meshcore.js rejects with no reason when the radio answers ERR; the fake does the same.
     // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
@@ -118,6 +130,51 @@ describe('a radio whose Bluetooth link drops and comes back', () => {
     expect(feed.links).toBe(2);
     expect(feed.sink).not.toBeNull();
     expect(again.channels[1]?.secret).toEqual(SECRET);
+    await session.disconnect();
+  });
+
+  it('is linked again after a command timed out while linking it, by itself', async () => {
+    vi.useFakeTimers();
+    const first = new Radio();
+    const busy = new Radio(true);
+    const third = new Radio();
+    const session = new RadioSession(() =>
+      Promise.resolve(new MeshCoreRadio(opener([first, busy, third]))),
+    );
+    const feed = new Feed();
+    await session.useFeed(feed);
+    await session.connect();
+    first.drop();
+    // Back on the busy radio: linking it times out, and the link is dropped and made again.
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(6000);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(session.state).toBe('ready');
+    expect(session.linked).toBe(true);
+    expect(session.problem).toBeNull();
+    expect(feed.sink).not.toBeNull();
+    expect(third.channels[1]?.secret).toEqual(SECRET);
+    await session.disconnect();
+  });
+});
+
+describe('a radio that does not answer while it is first linked', () => {
+  it('is linked once it answers, without the user doing anything', async () => {
+    vi.useFakeTimers();
+    const busy = new Radio(true);
+    const again = new Radio();
+    const session = new RadioSession(() =>
+      Promise.resolve(new MeshCoreRadio(opener([busy, again]))),
+    );
+    const feed = new Feed();
+    await session.useFeed(feed);
+    const connecting = session.connect();
+    await vi.advanceTimersByTimeAsync(6000);
+    await connecting;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(session.state).toBe('ready');
+    expect(session.linked).toBe(true);
+    expect(feed.sink).not.toBeNull();
     await session.disconnect();
   });
 });

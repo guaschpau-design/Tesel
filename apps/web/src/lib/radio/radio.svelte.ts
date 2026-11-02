@@ -14,11 +14,13 @@ import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { LoraSink } from '../sync/lora-events.ts';
+import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
 import { pickedRadioLink } from './radio-families.ts';
 import { RadioFrames } from './radio-frames.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
 import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';
+import { Relinker, type LinkAttempt } from './relinker.ts';
 
 /** What the radio needs from the active group's feed. */
 export type RadioFeed = Pick<
@@ -66,6 +68,7 @@ export class RadioSession {
   /** True while the user picks a radio and its link is made. */
   #picking = false;
   readonly #scheduler: LoraScheduler;
+  readonly #relinker = new Relinker(() => this.#linkFeed());
   #feed: RadioFeed | null = null;
   #db: AppDb | null = null;
   #pump: ReturnType<typeof setInterval> | null = null;
@@ -106,16 +109,14 @@ export class RadioSession {
     this.family = link.family;
     this.#unfollow = [
       link.onStateChange((state) => {
-        const wasLinked = this.linked;
+        const was = this.state;
         this.state = state;
         this.name = link.name;
         if (state !== 'ready') this.#unlink();
-        if (state === 'connecting' && wasLinked) this.reconnecting = true;
-        if (state === 'disconnected') this.reconnecting = false;
-        if (state === 'ready' && this.reconnecting) {
-          this.reconnecting = false;
-          void this.#linkFeed();
-        }
+        // Only a radio that was ready connects again by itself; the user's first try does not.
+        this.reconnecting = state === 'connecting' && was === 'ready';
+        // Linked each time it is ready: after a drop, and after a failed link made it drop.
+        if (state === 'ready') void this.#relinker.link();
       }),
       link.onReceive(({ bytes, snr, secret }) => {
         // A frame that does not open was not sealed by the group: forged, changed on the way or
@@ -128,7 +129,11 @@ export class RadioSession {
       link.onText((text) => {
         const stored = { ...text, receivedAt: Date.now() };
         this.texts = [...this.texts, stored].slice(-MAX_RADIO_TEXTS);
-        if (this.#db) void saveRadioText(this.#db, stored);
+        if (this.#db === null) return;
+        saveRadioText(this.#db, stored).catch((error: unknown) => {
+          console.warn('Keeping a radio text failed', error);
+          storageRefusals.note(error);
+        });
       }),
     ];
     return link;
@@ -160,7 +165,8 @@ export class RadioSession {
     } finally {
       this.#picking = false;
     }
-    await this.#linkFeed();
+    // The radio, once ready, links the group by itself (`#follow`).
+    await this.#relinker.settled();
   }
 
   async disconnect(): Promise<void> {
@@ -175,12 +181,12 @@ export class RadioSession {
     this.#unlink();
     if (feed?.groupId !== this.#feed?.groupId) this.#scheduler.changeGroup();
     this.#feed = feed;
-    await this.#linkFeed();
+    await this.#relinker.link();
   }
 
   /**
    * Clears a group's channel from the radio once the group is left, now if a radio is linked,
-   * otherwise the next time one is. Only the group's id is kept for that, never its secret.
+   * otherwise the next time one is (left-channels.ts).
    */
   async forgetGroup(secret: Uint8Array): Promise<void> {
     const left = groupId(secret);
@@ -189,44 +195,36 @@ export class RadioSession {
       await link?.forgetChannels((held) => groupId(held) === left);
       return;
     }
-    // Noted first, so that a clear the radio does not finish is tried again the next time.
-    const pending = await this.#channelsToFree(this.#db);
-    if (!pending.includes(left)) {
-      await this.#db.put('settings', [...pending, left], 'radioChannelsToFree');
-    }
-    if (link !== null) await this.#freeLeftChannels(link);
+    await noteLeftChannel(this.#db, left);
+    if (link !== null) await freeLeftChannels(this.#db, link);
   }
 
-  async #linkFeed(): Promise<void> {
+  /** Gives the radio the active group's channel and the group the radio; see relinker.ts. */
+  async #linkFeed(): Promise<LinkAttempt> {
     const feed = this.#feed;
     const link = this.#link;
-    if (feed === null || link?.state !== 'ready') return;
+    if (feed === null || link?.state !== 'ready') return 'idle';
     const { name, secret } = feed.radioChannel;
     try {
-      await this.#freeLeftChannels(link);
+      if (this.#db !== null) await freeLeftChannels(this.#db, link);
       await link.configureGroupChannel(name, secret);
     } catch (error) {
       this.problem = problemOf(error);
-      return;
+      // A radio with every channel in use stays so until one is freed in its own app.
+      return this.problem === 'no-free-channel' ? 'idle' : 'failed';
     }
-    if (this.#feed !== feed) return; // The active group changed meanwhile.
+    // The active group or the radio changed meanwhile: what changed links anew.
+    if (this.#feed !== feed || this.#link !== link || this.state !== 'ready') return 'idle';
+    this.problem = null;
     this.linked = true;
     this.#pump ??= setInterval(() => void this.#tick(), PUMP_MS);
-    await feed.attachRadio(this.#sink);
-  }
-
-  /** Clears the channels of groups left while no radio was linked. */
-  async #freeLeftChannels(link: RadioLink): Promise<void> {
-    if (this.#db === null) return;
-    const left = await this.#channelsToFree(this.#db);
-    if (left.length === 0) return;
-    await link.forgetChannels((held) => left.includes(groupId(held)));
-    await this.#db.delete('settings', 'radioChannelsToFree');
-  }
-
-  async #channelsToFree(db: AppDb): Promise<string[]> {
-    const stored = await db.get('settings', 'radioChannelsToFree');
-    return Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : [];
+    try {
+      await feed.attachRadio(this.#sink);
+      return 'linked';
+    } catch (error) {
+      console.warn('Giving the group the radio failed', error);
+      return 'failed';
+    }
   }
 
   #unlink(): void {

@@ -28,6 +28,7 @@ class AirLink implements RadioLink {
   name: string | null = 'MeshCore';
   readonly #air: Air;
   #receive: ((frame: ReceivedFrame) => void) | null = null;
+  #stateChange: ((state: RadioLinkState) => void) | null = null;
   #secret: Uint8Array = new Uint8Array(16);
 
   constructor(air: Air) {
@@ -36,6 +37,7 @@ class AirLink implements RadioLink {
 
   connect(): Promise<void> {
     this.state = 'ready';
+    this.#stateChange?.('ready');
     return Promise.resolve();
   }
 
@@ -65,7 +67,8 @@ class AirLink implements RadioLink {
     return () => undefined;
   }
 
-  onStateChange(): () => void {
+  onStateChange(listener: (state: RadioLinkState) => void): () => void {
+    this.#stateChange = listener;
     return () => undefined;
   }
 
