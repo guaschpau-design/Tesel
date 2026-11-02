@@ -21,7 +21,7 @@ function position(seq: number, lat: number): TeselEvent {
 }
 
 /**
- * The group's layers as MapWorkspace puts them on the map, each reading its slices: what each
+ * The group's layers as MapLayers puts them on the map, each reading its slices: what each
  * event uploads to the map is what the test counts.
  */
 function groupOnMap(): { map: FakeMap; apply: (event: TeselEvent) => void; stop: () => void } {

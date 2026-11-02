@@ -3,21 +3,23 @@
   services, this device, the group's members, objects, tasks and incidents, drawing, measuring and
   navigating, the panels and the dock. Without an active group, only what works alone: the
   cadastre, weather warnings, the grid, the radar's rings, services, this device, coordinates,
-  measuring, navigating to a point and offline maps.
+  measuring, navigating to a point and offline maps. The layers are in MapLayers.svelte, drawing
+  and the tools in map-tools.svelte.ts.
 -->
 <script lang="ts">
   import { EMPTY_STATE } from '@tesel/core';
-  import { eventRefKey, type LatLon, type NodeId, type Place } from '@tesel/protocol';
+  import { eventRefKey, type LatLon, type Place } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
   import { onMount, untrack } from 'svelte';
 
   import { CADASTRE_CREDITS } from '../cadastre/cadastre.ts';
-  import CadastreLayer from '../cadastre/CadastreLayer.svelte';
-  import MgrsGridLayer from '../coordinates/MgrsGridLayer.svelte';
+  import ChatNotice from '../chat/ChatNotice.svelte';
+  import { useChatUnread } from '../chat/chat-unread.svelte.ts';
+  import GroupNews from '../groups/GroupNews.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
+  import SosAlarm from '../incidents/SosAlarm.svelte';
   import SosCall from '../incidents/SosCall.svelte';
-  import SosLayer from '../incidents/SosLayer.svelte';
   import { MAP_LAYERS, type MapLayer } from '../map/layers.ts';
   import { showPoint } from '../map/geometry.ts';
   import { useStyleCredits } from '../map/style/style-credits.svelte.ts';
@@ -27,13 +29,9 @@
   import MapControl from '../map/MapControl.svelte';
   import MapCredits from '../map/MapCredits.svelte';
   import MapScale from '../map/MapScale.svelte';
-  import MemberLayer from '../members/MemberLayer.svelte';
-  import TrailLayer from '../members/TrailLayer.svelte';
-  import { navigation, stopNavigating } from '../navigation/navigation.svelte.ts';
-  import { DRAFT_NAMES, draftGeometry, type DraftKind } from '../objects/draft.ts';
-  import { Drawing } from '../objects/drawing.svelte.ts';
+  import { navigation } from '../navigation/navigation.svelte.ts';
+  import { DRAFT_NAMES, draftGeometry } from '../objects/draft.ts';
   import ObjectForm from '../objects/ObjectForm.svelte';
-  import ObjectLayer from '../objects/ObjectLayer.svelte';
   import { operationAreas } from '../objects/operation-areas.ts';
   import { useSweepCompletion } from '../objects/sweep-completion.svelte.ts';
   import { useSelfState } from '../me/self-state.svelte.ts';
@@ -41,33 +39,23 @@
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import LocateButton from '../position/LocateButton.svelte';
   import SelfLayer from '../position/SelfLayer.svelte';
-  import SosAlarm from '../incidents/SosAlarm.svelte';
   import { radio } from '../radio/radio.svelte.ts';
-  import ReportLayer from '../reports/ReportLayer.svelte';
-  import type { TappedService } from '../services/services.ts';
-  import ServicesLayer from '../services/ServicesLayer.svelte';
-  import RadarLayer from '../radar/RadarLayer.svelte';
   import type { Preferences } from '../settings/preferences.ts';
-  import { storageRefusals } from '../storage/storage-space.svelte.ts';
   import { noticeSent } from '../sync/sent-notice.ts';
-  import MapTasks from '../tasks/MapTasks.svelte';
   import { myPendingCount, placePoint, type TaskEditing } from '../tasks/tasks.ts';
-  import ChatNotice from '../chat/ChatNotice.svelte';
-  import { fromOthers } from '../chat/unread.ts';
   import Pictogram from '../ui/Pictogram.svelte';
-  import { deviceClock } from '../sync/device-clock.svelte.ts';
-  import { useStandingNotice } from '../ui/notices.svelte.ts';
   import { closePanel, isOpen, openPanel, panels, togglePanel } from '../ui/panels.svelte.ts';
   import { keepScreenAwake } from '../ui/screen-awake.svelte.ts';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
-  import WeatherLayer from '../weather/WeatherLayer.svelte';
+  import { useDeviceNotices } from './device-notices.svelte.ts';
   import Dock from './Dock.svelte';
-  import GroupNews from '../groups/GroupNews.svelte';
   import GroupPanels from './GroupPanels.svelte';
+  import MapLayers from './MapLayers.svelte';
   import MapPanels from './MapPanels.svelte';
   import MapStatus from './MapStatus.svelte';
+  import { useMapTools } from './map-tools.svelte.ts';
   import { stateSlices } from './state-slices.svelte.ts';
-  import type { MapTool, SelfName, WorkspaceGroup } from './workspace.ts';
+  import type { SelfName, WorkspaceGroup } from './workspace.ts';
 
   interface Props {
     t: Translate;
@@ -108,25 +96,10 @@
     () => preferences.keepScreenOn.value || navigation.target !== null || radio.linked,
   );
 
-  const drawing = new Drawing();
-  let tool: MapTool | null = $state.raw(null);
-  /** Drawing or a tool: taps on the map add points instead of opening what they hit. */
-  const drawingOrMeasuring = $derived(drawing.draft !== null || tool !== null);
+  const tools = useMapTools(() => group?.feed.groupId ?? null);
+  const { drawing } = tools;
   /** Every tap on the map goes to one owner: the tool in use, or what is drawn on top. */
-  const taps = new MapTaps(() => !drawingOrMeasuring);
-  // What was drawn, picked or followed in one group means nothing in another: changing groups, or
-  // leaving the last one, ends it. Guidance to a point of the map goes on.
-  let shownGroup: string | null = null;
-  $effect(() => {
-    const id = group?.feed.groupId ?? null;
-    untrack(() => {
-      if (id === shownGroup) return;
-      shownGroup = id;
-      drawing.stop();
-      tool = null;
-      if (navigation.target !== null && navigation.target.kind !== 'point') stopNavigating();
-    });
-  });
+  const taps = new MapTaps(() => !tools.drawingOrMeasuring);
   /** The group's state slice by slice: each layer redraws only when its own slices change. */
   const slices = stateSlices(() => group?.feed.state ?? EMPTY_STATE);
   /** Which map layers are shown, by layer. */
@@ -142,60 +115,16 @@
   );
   let sosOpen = $state(false);
 
-  useStandingNotice(() => (radio.reconnecting ? { text: t('radioReconnecting') } : null));
+  useDeviceNotices(() => t);
   useSweepCompletion(() => group);
   useSelfState(
     () => group?.feed ?? null,
     () => preferences,
   );
+  const chatUnread = useChatUnread(() => group);
 
-  useStandingNotice(() => {
-    const minutes = deviceClock.wrongByMinutes;
-    if (minutes === null) return null;
-    return { text: t(minutes > 0 ? 'clockAhead' : 'clockBehind', { minutes: Math.abs(minutes) }) };
-  });
-
-  useStandingNotice(() => {
-    if (deviceLocation.problem === null) return null;
-    return {
-      text: deviceLocation.problem === 'denied' ? t('locationDenied') : t('locationUnavailable'),
-    };
-  });
-
-  /** Chat lines and reports of others in the group, and how many of them are new here. */
-  const chatFromOthers = $derived(group ? fromOthers(group.feed.state, group.self) : 0);
-  const chatUnread = $derived(group ? Math.max(0, chatFromOthers - group.feed.chatSeen) : 0);
-
-  // While the chat is open, what arrives in it is seen.
-  $effect(() => {
-    if (group === null || !isOpen('chat')) return;
-    const { feed } = group;
-    const seen = chatFromOthers;
-    untrack(() => feed.markChatSeen(seen)).catch((error: unknown) => {
-      storageRefusals.note(error);
-      console.warn('Keeping what the chat has shown failed', error);
-    });
-  });
-
-  function startDrawing(kind: DraftKind): void {
-    closePanel();
-    tool = null;
-    drawing.start(kind);
-  }
-
-  /** Starts a marker at a point and goes straight to describing it. */
-  function markAt(at: LatLon): void {
-    startDrawing('marker');
-    drawing.add(at);
-  }
-
-  function inspect(at: LatLon, name = t('mapPoint')): void {
-    openPanel({ name: 'point', at, title: name });
-  }
-
-  /** A service of the base map tapped: its point, under its name or its kind. */
-  function inspectService(service: TappedService): void {
-    inspect(service.at, service.name ?? t(service.kind.label));
+  function inspect(at: LatLon): void {
+    openPanel({ name: 'point', at, title: t('mapPoint') });
   }
 
   /** A coordinate typed in the panel: shown on the map. */
@@ -255,97 +184,18 @@
     drawing.stop();
     noticeSent(t, group.feed, t(DRAFT_NAMES[draft.kind]));
   }
-
-  function select(key: string): void {
-    openPanel({ name: 'object', key });
-  }
-
-  function selectMember(member: NodeId): void {
-    openPanel({ name: 'member', member });
-  }
-
-  function startTool(next: MapTool): void {
-    closePanel();
-    drawing.stop();
-    tool = next;
-  }
 </script>
 
-{#if preferences.cadastre.value}
-  <CadastreLayer {map} />
-{/if}
-{#if preferences.grid.value}
-  <MgrsGridLayer {map} />
-{/if}
-{#if preferences.radar.value}
-  <RadarLayer
-    {map}
-    {locale}
-    group={group ? { positions: slices.positions, self: group.self } : null}
-  />
-{/if}
-{#if weather}
-  <WeatherLayer {map} regions={weather.regions} visible={shown.weather} />
-{/if}
-<ServicesLayer {map} {taps} {locale} visible={shown.services} onselect={inspectService} />
+<MapLayers {t} {locale} {map} {taps} {group} {slices} {shown} {preferences} {weather} />
 
 {#if group}
   {@const { feed, self, role } = group}
-  <TrailLayer {map} trails={slices.trails} {self} visible={shown.trails} />
-  <ObjectLayer
-    {map}
-    {taps}
-    objects={slices.objects}
-    tasks={slices.tasks}
-    teams={slices.teams}
-    visible={shown.objects}
-    onselect={select}
-  />
   {#key feed}
-    <MapTasks
-      {t}
-      {map}
-      {taps}
-      tasks={slices.tasks}
-      objects={slices.objects}
-      members={slices.members}
-      teams={slices.teams}
-      {self}
-      visible={shown.tasks}
-    />
     {#if role === 'coordinator'}
       <GroupNews {t} {locale} state={slices} {self} />
     {/if}
     <ChatNotice {t} chat={slices.chat} members={slices.members} {self} open={isOpen('chat')} />
   {/key}
-  <ReportLayer
-    {t}
-    {map}
-    {taps}
-    reports={slices.reports}
-    objects={slices.objects}
-    visible={shown.reports}
-  />
-  <MemberLayer
-    {map}
-    {taps}
-    positions={slices.positions}
-    members={slices.members}
-    memberStates={slices.memberStates}
-    teams={slices.teams}
-    sos={slices.sos}
-    sosCancels={slices.sosCancels}
-    {self}
-    visible={shown.members}
-    onselect={selectMember}
-  />
-  <SosLayer
-    {map}
-    sos={slices.sos}
-    sosCancels={slices.sosCancels}
-    members={slices.members}
-    positions={slices.positions}
-  />
 
   {#if drawing.draft && drawing.describing}
     <ObjectForm
@@ -369,10 +219,10 @@
     {preferences}
     onplace={showPlace}
     onplansweep={(area: string) => {
-      startTool({ kind: 'sweep', area });
+      tools.startTool({ kind: 'sweep', area });
     }}
     onpicktaskplace={(editing: TaskEditing) => {
-      startTool({ kind: 'task-place', editing });
+      tools.startTool({ kind: 'task-place', editing });
     }}
   />
 
@@ -391,7 +241,7 @@
   weather={shown.weather ? weather : null}
   {credits}
   onfind={find}
-  onmark={markAt}
+  onmark={tools.markAt}
 />
 <SelfLayer {map} label={t('youOnMap')} />
 
@@ -418,11 +268,11 @@
   {group}
   {slices}
   {drawing}
-  {tool}
-  {drawingOrMeasuring}
+  tool={tools.tool}
+  drawingOrMeasuring={tools.drawingOrMeasuring}
   weather={shown.weather ? weather : null}
   {offline}
-  onclosetool={() => (tool = null)}
+  onclosetool={tools.closeTool}
   dutyActive={preferences.dutyStatus.value === 'active'}
   {groupless}
 />
@@ -450,11 +300,11 @@
   {t}
   sharing={group?.sharing ?? null}
   onsos={() => (sosOpen = true)}
-  ondraw={startDrawing}
+  ondraw={tools.startDrawing}
   onmeasure={() => {
-    startTool({ kind: 'measure' });
+    tools.startTool({ kind: 'measure' });
   }}
   tasksForMe={group ? myPendingCount(group.feed.state, group.self) : 0}
-  {chatUnread}
-  {drawingOrMeasuring}
+  chatUnread={chatUnread.count}
+  drawingOrMeasuring={tools.drawingOrMeasuring}
 />
