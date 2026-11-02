@@ -1,6 +1,9 @@
 // How long this device has been left untouched, which saving energy goes by (ADR-0097): awake, at
 // rest after a minute (the screen goes dark) and deep at rest after ten (the GPS runs at
-// intervals). A touch, a key or a wheel wakes it; so does anything important that arrives.
+// intervals). A touch, a key or a wheel wakes it; so does anything important that arrives. The
+// touch that wakes the screen only wakes it: nothing under the black screen feels it.
+
+import { WakingTouch } from './waking-touch.ts';
 
 export type Rest = 'awake' | 'resting' | 'deep';
 
@@ -25,11 +28,25 @@ export class Activity {
    * something is being typed, the device counts as touched: no rest in the middle of a task.
    */
   follow(held: () => boolean): () => void {
-    const touched = () => {
+    const waking = new WakingTouch(() => {
+      this.wake();
+    });
+    const unlisten = waking.listen();
+    const touched = (event: Event) => {
+      if (this.rest !== 'awake' && event.type !== 'wheel') {
+        // A key or a touch that wakes the screen does nothing else.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        // A finger wakes it as it lifts (waking-touch.ts).
+        if (event.type === 'pointerdown') {
+          waking.begin();
+          return;
+        }
+      }
       this.wake();
     };
     for (const type of TOUCHES) {
-      window.addEventListener(type, touched, { capture: true, passive: true });
+      window.addEventListener(type, touched, { capture: true, passive: type === 'wheel' });
     }
     const timer = setInterval(() => {
       if (held() || isTyping()) this.#touched = Date.now();
@@ -39,6 +56,7 @@ export class Activity {
     return () => {
       clearInterval(timer);
       for (const type of TOUCHES) window.removeEventListener(type, touched, { capture: true });
+      unlisten();
       this.wake();
     };
   }

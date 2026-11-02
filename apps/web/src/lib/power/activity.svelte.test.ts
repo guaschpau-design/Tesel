@@ -30,7 +30,32 @@ describe('how long the device has been left untouched', () => {
     vi.advanceTimersByTime(9 * 60_000);
     expect(activity.rest).toBe('deep');
     target.dispatchEvent(new Event('pointerdown'));
+    target.dispatchEvent(new Event('pointerup'));
     expect(activity.rest).toBe('awake');
+    stop();
+  });
+
+  it('keeps the touch that wakes the screen from what is under it', () => {
+    const activity = new Activity();
+    const stop = activity.follow(() => false);
+    const under = vi.fn();
+    for (const type of ['pointerdown', 'pointerup', 'click']) target.addEventListener(type, under);
+    vi.advanceTimersByTime(65_000);
+    expect(activity.rest).toBe('resting');
+
+    // The screen stays while the finger is down, to take its lift, and goes as it lifts.
+    target.dispatchEvent(new Event('pointerdown', { cancelable: true }));
+    expect(activity.rest).toBe('resting');
+    target.dispatchEvent(new Event('pointerup', { cancelable: true }));
+    expect(activity.rest).toBe('awake');
+    vi.advanceTimersByTime(300);
+    target.dispatchEvent(new Event('click', { cancelable: true }));
+    expect(under).not.toHaveBeenCalled();
+
+    // The next touch is the user's as ever, however soon it comes.
+    target.dispatchEvent(new Event('pointerdown', { cancelable: true }));
+    target.dispatchEvent(new Event('click', { cancelable: true }));
+    expect(under).toHaveBeenCalledTimes(2);
     stop();
   });
 
