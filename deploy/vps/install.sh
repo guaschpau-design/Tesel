@@ -10,6 +10,12 @@
 # Safe to run again: it converges to the same setup, which is also how configuration changes
 # in this folder reach an existing server. See deploy/README.md for what it does and why.
 
+# Run as `curl … | bash`, the script comes on standard input, which the commands it runs share:
+# one that reads its input (`docker compose run` or `exec`) would take the rest of the script,
+# which would then never run. Bash reads a group in braces whole before running it, so the whole
+# script is one, closed on its last line.
+{
+
 set -euo pipefail
 
 REPO_RAW="https://raw.githubusercontent.com/guaschpau-design/Tesel"
@@ -292,11 +298,8 @@ if ! "$INSTALL_DIR/update.sh" "$INSTALL_DIR"; then
 on GitHub (github.com/guaschpau-design → Packages → tesel-server → Package settings) and signed
 by the repository's CI."
 fi
-# Caddy reads its configuration only when it starts: apply what was installed above. Run as
-# `curl … | bash`, this script is read from standard input, which `exec` would otherwise take:
-# the rest of the script would go to Caddy and never run.
-docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile \
-  </dev/null
+# Caddy reads its configuration only when it starts: apply what was installed above.
+docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 # Enabled only now: a timer whose boot delay has passed fires at once, and its own update would
 # wait for the one above for nothing.
 systemctl enable --now tesel-update.timer tesel-backup.timer >/dev/null
@@ -312,3 +315,4 @@ for _ in $(seq 1 60); do
 done
 fail "the server did not answer on https://$DOMAIN within 5 minutes.
 See what happened with: cd $INSTALL_DIR && docker compose logs"
+}
