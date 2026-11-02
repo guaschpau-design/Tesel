@@ -11,7 +11,7 @@ Some switches carry a line on what they do: saving energy, the "Are you still OK
 
 - A choice whose name is not enough has a small (i) beside its name, grey to the eye and as large as a fingertip to tap (`ui/InfoButton.svelte`). Tapping it shows what the choice does underneath; tapping it again hides it. Switches have it in `ui/SwitchRow.svelte`, anything else in `ui/Explained.svelte`.
 - The same goes for how a part of the app works, read once: what a team is (beside "New team"), the radio's PIN and what to do when it does not appear (beside "Connect radio"), what downloaded maps are for and which areas the extra layers cover (in offline maps), and which coordinate formats can be typed.
-- The radio tab of the chat says what it is for while it is empty, and no more once messages have arrived. The line on what an operation area is for stays in sight: it is short and shows only when that kind of area is chosen.
+- Menus and empty screens say no more than a name or a few words: the "Add" menu shows each thing's pictogram and name, and an empty chat, radio tab, task list or report list says only that there is nothing yet. The line on what an operation area is for stays in sight: it is short and shows only when that kind of area is chosen.
 - The explanation stays until it is hidden, never on a timer: someone reading slowly, or looking away in the field, would lose it mid-sentence.
 - Tapping the (i) leaves the switch as it was. Screen readers hear the explanation with the switch, shown or not.
 - This is the one way the app offers a second level of information. Warnings that keep someone safe, such as who may join with an invitation, stay in plain sight.
