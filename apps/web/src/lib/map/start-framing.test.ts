@@ -1,7 +1,8 @@
 import { stateOf } from '@tesel/core';
-import type { NodeId } from '@tesel/protocol';
+import { MAX_CIRCLE_RADIUS_M, ShapeStyleCode, type NodeId } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
+import { operationAreas } from '../objects/operation-areas.ts';
 import { FakeMap } from './fake-map.ts';
 import { groupPoints, StartFraming } from './start-framing.ts';
 
@@ -76,5 +77,39 @@ describe('framing the group at start', () => {
         ['area-0-ne', { lat: 39.5, lon: -0.3 }],
       ]),
     );
+  });
+
+  it('frames the largest circle near a pole within the world’s edges', () => {
+    const map = new FakeMap();
+    const state = stateOf([
+      {
+        type: 'shape',
+        origin: ANA,
+        seq: 1,
+        time: T0,
+        object: { origin: ANA, seq: 1 },
+        style: ShapeStyleCode.OPERATION_AREA,
+        label: 'Ártico',
+        geometry: { kind: 'circle', center: { lat: 85, lon: 0 }, radius: MAX_CIRCLE_RADIUS_M },
+      },
+    ]);
+    const areas = operationAreas(state).map((area) => area.bounds);
+    new StartFraming(map.map, true).show(groupPoints(new Map(), ANA, null, T0, areas));
+    const [[west, south], [east, north]] = map.fitted[0] as [[number, number], [number, number]];
+    expect(north).toBe(90);
+    expect(south).toBeCloseTo(76, 0);
+    expect(west).toBeGreaterThanOrEqual(-180);
+    expect(east).toBeLessThanOrEqual(180);
+  });
+
+  it('skips bounds that are no place on the Earth instead of throwing', () => {
+    const map = new FakeMap();
+    const framing = new StartFraming(map.map, true);
+    expect(() => {
+      framing.show(new Map([['self', { lat: Number.NaN, lon: 0 }]]));
+    }).not.toThrow();
+    expect(map.fitted).toEqual([]);
+    framing.show(new Map([[BERTA, VALENCIA]]));
+    expect(map.fitted).toHaveLength(1);
   });
 });

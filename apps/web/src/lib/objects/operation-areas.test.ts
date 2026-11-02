@@ -49,4 +49,15 @@ describe('operation areas', () => {
     } as const;
     expect(operationAreas(stateOf([area(1, ShapeStyleCode.OPERATION_AREA), deleted]))).toEqual([]);
   });
+
+  it('keeps the bounds of a circle near a pole within the world’s edges', () => {
+    const circle: ShapeEvent = {
+      ...area(1, ShapeStyleCode.OPERATION_AREA),
+      geometry: { kind: 'circle', center: { lat: 85, lon: 170 }, radius: 1_000_000 },
+    };
+    const [found] = operationAreas(stateOf([circle]));
+    expect(found?.bounds).toMatchObject({ north: 90, east: 180 });
+    expect(found?.bounds.west).toBeCloseTo(67, 0);
+    expect(found?.bounds.south).toBeCloseTo(76, 0);
+  });
 });

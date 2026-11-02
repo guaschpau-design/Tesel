@@ -11,6 +11,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - OpenStreetMap vector base map, installable as an app and usable offline.
 - This device on the map where it is now, with its accuracy, and a button that keeps the map centred on it. The GPS runs only while something uses it.
 - Coordinates in decimal degrees, degrees-minutes-seconds, UTM and MGRS ([ADR-0021](docs/decisions/0021-coordinate-formats.md)): a long press on the map shows a point's coordinates, ready to copy, and coordinates typed as they were dictated are found on the map. Markers and circles show theirs.
+- A circle is at most 1 000 km in radius, and none breaks the map: a larger one is refused when sent and discarded when received, and near a pole a circle's ring and bounds stop at the pole, where MapLibre threw for every member of the group (protocol §3.7, [ADR-0105](docs/decisions/0105-circles-stay-on-the-earth.md)).
 - Distance and bearing from this device to any point, marker, circle or member, while the app may use the location, and guidance to it: a card with the distance, the bearing and an arrow that points the way on the map, and a line to follow. The target moves with a member and the guidance ends if it leaves the map.
 - A measuring tool for distances along a path and the area it encloses; lines, areas and circles show their length, area or radius.
 - Members on the map can be tapped for who they are, their last position and the way there.

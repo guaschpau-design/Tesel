@@ -8,9 +8,9 @@ import type { GroupState } from '@tesel/core';
 import type { LatLon, NodeId } from '@tesel/protocol';
 import type { Map as MapLibreMap, MapLibreEvent } from 'maplibre-gl';
 
-import { toPosition } from './geometry.ts';
+import { fitPoints } from './geometry.ts';
 import { STALE_AFTER_S } from '../members/member-features.ts';
-import { boundsAround, type Bounds } from './tiles/math.ts';
+import type { Bounds } from './tiles/math.ts';
 
 /** Closer than this the map would show one person's street, not where the group is. */
 const MAX_ZOOM = 15;
@@ -45,15 +45,18 @@ export class StartFraming {
     if (openedWide) map.on('moveend', this.#moved);
   }
 
-  /** Who should be in view, by who they are: frames them all if any of them is new. */
+  /**
+   * Who should be in view, by who they are: frames them all if any of them is new, unless their
+   * bounds are no place on the Earth (geometry.ts).
+   */
   show(points: ReadonlyMap<string, LatLon>): void {
     if (this.#view === null) return;
     const newcomers = [...points.keys()].filter((who) => !this.#framed.has(who));
     if (newcomers.length === 0) return;
     for (const who of newcomers) this.#framed.add(who);
-    const { west, south, east, north } = boundsAround([...points.values()]);
-    this.#map.fitBounds(
-      [toPosition({ lat: south, lon: west }), toPosition({ lat: north, lon: east })],
+    fitPoints(
+      this.#map,
+      [...points.values()],
       { padding: PADDING_PX, maxZoom: MAX_ZOOM, linear: true, duration: GLIDE_MS },
       { [FRAMING]: true },
     );

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   boundsAround,
   containsBounds,
+  isOnEarth,
   countTiles,
   positionInTile,
   tileAt,
@@ -54,6 +55,22 @@ describe('bounds', () => {
       { lat: 39.47, lon: -0.4 },
     ];
     expect(boundsAround(points)).toEqual(valencia);
+  });
+
+  it('takes points beyond the world’s edges to the edge', () => {
+    const bounds = boundsAround([
+      { lat: 94, lon: -200 },
+      { lat: -95, lon: 190 },
+    ]);
+    expect(bounds).toEqual({ west: -180, south: -90, east: 180, north: 90 });
+    expect(isOnEarth(bounds)).toBe(true);
+  });
+
+  it('tells bounds that are no place on the Earth', () => {
+    expect(isOnEarth(valencia)).toBe(true);
+    expect(isOnEarth(boundsAround([{ lat: Number.NaN, lon: 0 }]))).toBe(false);
+    expect(isOnEarth(boundsAround([]))).toBe(false);
+    expect(isOnEarth({ ...valencia, north: 91 })).toBe(false);
   });
 
   it('tells whether one area holds another', () => {

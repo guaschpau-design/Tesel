@@ -102,14 +102,34 @@ export function tileKey(tile: TileCoord): string {
   return `${tile.z}/${tile.x}/${tile.y}`;
 }
 
-/** The smallest bounds around some points; they must not cross the antimeridian. */
+/** The world's edges, in degrees: ±180° of longitude and ±90° of latitude. */
+const HALF_TURN = 180;
+const QUARTER_TURN = 90;
+
+/**
+ * The smallest bounds around some points; they must not cross the antimeridian. Points beyond the
+ * world's edges, as those worked out around a circle near a pole can be, are taken to the edge.
+ */
 export function boundsAround(points: readonly LatLon[]): Bounds {
+  const clamp = (value: number, edge: number) => Math.min(edge, Math.max(-edge, value));
   return {
-    west: Math.min(...points.map((point) => point.lon)),
-    south: Math.min(...points.map((point) => point.lat)),
-    east: Math.max(...points.map((point) => point.lon)),
-    north: Math.max(...points.map((point) => point.lat)),
+    west: clamp(Math.min(...points.map((point) => point.lon)), HALF_TURN),
+    south: clamp(Math.min(...points.map((point) => point.lat)), QUARTER_TURN),
+    east: clamp(Math.max(...points.map((point) => point.lon)), HALF_TURN),
+    north: clamp(Math.max(...points.map((point) => point.lat)), QUARTER_TURN),
   };
+}
+
+/** Whether bounds are a place on the Earth: four numbers within the world's edges, west of east. */
+export function isOnEarth({ west, south, east, north }: Bounds): boolean {
+  return (
+    -HALF_TURN <= west &&
+    west <= east &&
+    east <= HALF_TURN &&
+    -QUARTER_TURN <= south &&
+    south <= north &&
+    north <= QUARTER_TURN
+  );
 }
 
 /** Whether a point is within the bounds, edges included. */

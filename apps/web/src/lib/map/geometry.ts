@@ -2,9 +2,9 @@
 
 import { offsetMeters } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
-import type { Map as MapLibreMap } from 'maplibre-gl';
+import type { FitBoundsOptions, Map as MapLibreMap } from 'maplibre-gl';
 
-import { boundsAround, type Bounds } from './tiles/math.ts';
+import { boundsAround, isOnEarth, type Bounds } from './tiles/math.ts';
 
 /** A circle as a closed ring of [lon, lat] positions, for drawing. */
 export function circleRing(center: LatLon, radius: number, steps = 48): [number, number][] {
@@ -50,11 +50,28 @@ const SHOW_PADDING_PX = 80;
 
 /** Frames some points, not closer than a street's detail. */
 export function showPoints(map: MapLibreMap, points: readonly LatLon[]): void {
-  const { west, south, east, north } = boundsAround(points);
-  map.fitBounds([toPosition({ lat: south, lon: west }), toPosition({ lat: north, lon: east })], {
-    padding: SHOW_PADDING_PX,
-    maxZoom: SHOW_ZOOM,
-  });
+  fitPoints(map, points, { padding: SHOW_PADDING_PX, maxZoom: SHOW_ZOOM });
+}
+
+/**
+ * Frames some points as `options` say, with `eventData` for the map's events. Nothing happens
+ * when their bounds are no place on the Earth, a coordinate that is not a number, at which
+ * MapLibre would throw.
+ */
+export function fitPoints(
+  map: MapLibreMap,
+  points: readonly LatLon[],
+  options: FitBoundsOptions,
+  eventData?: object,
+): void {
+  const bounds = boundsAround(points);
+  if (!isOnEarth(bounds)) return;
+  const { west, south, east, north } = bounds;
+  map.fitBounds(
+    [toPosition({ lat: south, lon: west }), toPosition({ lat: north, lon: east })],
+    options,
+    eventData,
+  );
 }
 
 /** What the map's view shows, edge to edge. */

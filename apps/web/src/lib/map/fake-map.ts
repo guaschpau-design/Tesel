@@ -71,14 +71,20 @@ export class FakeMap {
     return this.#view.bearing;
   }
 
-  /** Goes to the middle of the bounds at once, a zoom deeper each time. */
+  /**
+   * Goes to the middle of the bounds at once, a zoom deeper each time; throws as MapLibre does at
+   * a latitude that is not one.
+   */
   fitBounds(
     bounds: [[number, number], [number, number]],
     _options: unknown,
     eventData: object,
   ): void {
-    this.fitted.push(bounds);
     const [[west, south], [east, north]] = bounds;
+    if (![south, north].every((lat) => lat >= -90 && lat <= 90)) {
+      throw new Error('Invalid LngLat latitude value: must be between -90 and 90');
+    }
+    this.fitted.push(bounds);
     this.moveTo(
       { lat: (south + north) / 2, lon: (west + east) / 2, zoom: this.#view.zoom + 1 },
       eventData,

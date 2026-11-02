@@ -83,4 +83,25 @@ describe('map object features', () => {
     expect(polygon?.properties.tone).toBe('red');
     expect(circle?.properties.tone).toBe('slate');
   });
+
+  it('draws the largest circle near a pole with no point past it', () => {
+    const polar = stateOf([
+      {
+        type: 'shape',
+        origin: ANA,
+        seq: 1,
+        time: T0,
+        object: { origin: ANA, seq: 1 },
+        style: 1,
+        label: '',
+        geometry: { kind: 'circle', center: { lat: 85, lon: 0 }, radius: 1_000_000 },
+      },
+    ]);
+    const [circle] = shapeFeatures(polar).features;
+    const ring = circle?.geometry.type === 'Polygon' ? circle.geometry.coordinates[0] : [];
+    const lats = (ring ?? []).map(([, lat]) => lat ?? Number.NaN);
+    expect(lats.length).toBeGreaterThan(0);
+    expect(Math.max(...lats)).toBe(90);
+    expect(lats.every((lat) => lat >= -90 && lat <= 90)).toBe(true);
+  });
 });
