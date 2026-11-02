@@ -102,13 +102,13 @@ Sin conexión no se puede instalar la app ni descargar mapas. Por eso la app gui
 
 ## 8. Límites técnicos que condicionan el diseño
 
-| Límite                                                  | Valor                                                                    | Consecuencia                                                                                             |
-| ------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| Tamaño máximo de un mensaje de datos MeshCore por canal | 165 bytes                                                                | Protocolo binario compacto; textos de chat de hasta 151 bytes (unos 150 caracteres sin acentos) por LoRa |
-| Ciclo de trabajo legal en 869,4–869,65 MHz (UE)         | 10 % del tiempo                                                          | Posiciones por LoRa cada pocos minutos, no cada segundo                                                  |
-| Bluetooth desde la web                                  | Solo Chrome y Edge (Android, Windows, macOS, Linux)                      | iPhone: solo modo internet o vía puesto de mando                                                         |
-| HTTPS obligatorio para instalar la app y usar Bluetooth | —                                                                        | El puesto de mando local necesita un certificado preparado de antemano                                   |
-| Mapas OpenStreetMap                                     | La política de uso de los servidores públicos prohíbe la descarga masiva | Servimos nuestros propios mapas vectoriales (PMTiles) desde el VPS                                       |
+| Límite                                                  | Valor                                                                    | Consecuencia                                                                                                                                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tamaño máximo de un mensaje de datos MeshCore por canal | 165 bytes                                                                | Protocolo binario compacto; Tesel sella cada mensaje de radio con 12 bytes propios, así que cada evento cabe en 153 bytes y los textos de chat en 139 (unos 140 caracteres sin acentos) |
+| Ciclo de trabajo legal en 869,4–869,65 MHz (UE)         | 10 % del tiempo                                                          | Posiciones por LoRa cada pocos minutos, no cada segundo                                                                                                                                 |
+| Bluetooth desde la web                                  | Solo Chrome y Edge (Android, Windows, macOS, Linux)                      | iPhone: solo modo internet o vía puesto de mando                                                                                                                                        |
+| HTTPS obligatorio para instalar la app y usar Bluetooth | —                                                                        | El puesto de mando local necesita un certificado preparado de antemano                                                                                                                  |
+| Mapas OpenStreetMap                                     | La política de uso de los servidores públicos prohíbe la descarga masiva | Servimos nuestros propios mapas vectoriales (PMTiles) desde el VPS                                                                                                                      |
 
 ## 9. Principios de calidad del código
 
