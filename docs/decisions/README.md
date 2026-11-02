@@ -11,11 +11,11 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0003](0003-event-log-last-writer-wins.md)           | Event log with last-writer-wins instead of a CRDT library                                   | Accepted, amended by 0044, 0055                         |
 | [0004](0004-one-binary-format-every-transport.md)    | One binary event format for every transport                                                 | Accepted                                                |
 | [0005](0005-group-secret-trust-boundary.md)          | The group secret is the trust boundary; the server is zero-knowledge                        | Accepted, amended by 0052                               |
-| [0006](0006-meshcore-first-channel-datagrams.md)     | MeshCore first, through channel data datagrams                                              | Accepted, amended by 0098                               |
+| [0006](0006-meshcore-first-channel-datagrams.md)     | MeshCore first, through channel data datagrams                                              | Accepted, amended by 0098, 0099                         |
 | [0007](0007-self-hosted-vector-maps.md)              | Self-hosted vector maps for offline use                                                     | Accepted, partly superseded by 0011                     |
 | [0008](0008-one-server-vps-and-command-post.md)      | One server program for the VPS and the local command post                                   | Superseded by 0058                                      |
 | [0009](0009-toolchain.md)                            | Toolchain: TypeScript, pnpm workspace, Svelte, Vitest                                       | Accepted                                                |
-| [0010](0010-lora-link-security.md)                   | Rely on MeshCore channel encryption for LoRa in v0.1, knowing its limits                    | Accepted, amended by 0098                               |
+| [0010](0010-lora-link-security.md)                   | Rely on MeshCore channel encryption for LoRa in v0.1, knowing its limits                    | Superseded by 0099                                      |
 | [0011](0011-client-side-area-download.md)            | Download offline areas tile by tile in the browser                                          | Accepted, amended by 0056                               |
 | [0012](0012-invitation-links-under-a-base-path.md)   | Invitation links work under a base path                                                     | Accepted, amended by 0017                               |
 | [0013](0013-self-updating-vps.md)                    | A self-updating VPS behind Caddy, installed by one script                                   | Accepted, partly superseded by 0049                     |
@@ -57,7 +57,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0049](0049-signed-images-and-checked-updates.md)    | Run only signed server images, and check every update                                       | Accepted, amended by 0068                               |
 | [0050](0050-post-certificates-from-the-server.md)    | Command posts get their certificate from the server                                         | Superseded by 0058                                      |
 | [0051](0051-satellite-mosaic-licence.md)             | Name the satellite mosaic's licence, and let a build change the mosaic                      | Accepted                                                |
-| [0052](0052-authorship-is-not-proven.md)             | Members are trusted: protocol version 1 does not prove who wrote an event                   | Accepted                                                |
+| [0052](0052-authorship-is-not-proven.md)             | Members are trusted: protocol version 1 does not prove who wrote an event                   | Accepted, amended by 0099                               |
 | [0053](0053-load-heavy-parts-on-demand.md)           | Load the heavy parts of the app on demand, MapLibre in a file of its own                    | Accepted, amended by 0098                               |
 | [0054](0054-frame-the-group-at-start.md)             | Bring the group into view at start, until the user chooses a view                           | Accepted                                                |
 | [0055](0055-forget-outlived-positions.md)            | Forget the positions the trails have outlived                                               | Accepted                                                |
@@ -67,7 +67,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0059](0059-routes.md)                               | Routes: drawn or read from a file, followed leg by leg, and a task's place may be an object | Accepted, amended by 0077                               |
 | [0060](0060-sweeps.md)                               | Sweeps: parallel lanes over a search area, one strip per team, sent as a recipe             | Accepted                                                |
 | [0061](0061-member-state.md)                         | What members tell about themselves: one event, one card                                     | Accepted, amended by 0069, 0071, 0079                   |
-| [0062](0062-teams.md)                                | Teams: one event per team, and a task for a team is each member's                           | Accepted                                                |
+| [0062](0062-teams.md)                                | Teams: one event per team, and a task for a team is each member's                           | Accepted, amended by 0099                               |
 | [0063](0063-situation-reports.md)                    | Situation reports: a fixed form in one radio message, pinned in the chat                    | Accepted, amended by 0065, 0070                         |
 | [0064](0064-check-in.md)                             | A safety check-in that asks only when it must                                               | Accepted                                                |
 | [0065](0065-room-for-what-is-read.md)                | Give the room to what is read; what is used now and then waits in a menu                    | Accepted, amended by 0070, 0082                         |
@@ -103,4 +103,5 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |
 | [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted                                                |
 | [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted                                                |
-| [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted                                                |
+| [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
+| [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted                                                |

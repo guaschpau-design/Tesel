@@ -18,7 +18,9 @@ Keywords MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 
 ## 2. Size budget
 
-The largest MeshCore channel datagram payload is **165 bytes**; a Meshtastic packet carries more. Every event, on every transport, MUST be at most 165 bytes once encoded. Encoders MUST refuse to produce larger events; the user interface is responsible for keeping text short enough.
+The largest MeshCore channel datagram payload is **165 bytes**; a Meshtastic packet carries more. On the radio each event travels sealed in a frame 12 bytes longer than the event (§5.2), so every event, on every transport, MUST be at most **153 bytes** once encoded. Encoders MUST refuse to produce larger events; the user interface is responsible for keeping text short enough. The sizes of text fields in §3 are those an encoder writes.
+
+Before radio frames were sealed, an event could take the whole 165 bytes, and such events are kept on devices and servers. Decoders MUST accept events of up to 165 bytes, and in them each text field whose room is what the event has left (`CHAT`, `MARKER`, `SOS`, `ALERT`, `TASK`, `ROLL_CALL` and `REPORT`) up to 12 bytes longer than §3 gives. Such an event travels over the internet (§8) and in log files (§10) as any other, but does not fit a radio frame: senders MUST NOT put it on the air.
 
 ## 3. Events
 
@@ -34,7 +36,7 @@ Every event starts with a 14-byte header:
 | 6      | 4    | `seq`     | `u32`, per-origin sequence number, starting at 1                |
 | 10     | 4    | `time`    | `u32`, seconds since 1970-01-01 UTC, when the event was created |
 
-The payload follows, up to 151 bytes.
+The payload follows, up to 139 bytes.
 
 - A device MUST persist its last `seq` and MUST NOT reuse a value. It SHOULD increase `seq` by exactly one per event, so receivers can detect gaps. `seq` `0` is invalid.
 - A device MUST NOT stamp an event with a `time` earlier than that of its previous event: if its clock has gone back, it uses the previous event's `time`. So, among one author's events, the newest by `(time, origin, seq)` is always the last one written.
@@ -99,7 +101,7 @@ Encoded size: 28 bytes. An event whose `heading` is from 360 to `0xFFFE` is disc
 
 | Size  | Field             |
 | ----- | ----------------- |
-| 1–151 | `text`, text-rest |
+| 1–139 | `text`, text-rest |
 
 ### 3.6 `MARKER`
 
@@ -111,7 +113,7 @@ Creates or replaces a point object.
 | 2     | `symbol` | `u16`, see §4               |
 | 4     | `lat`    | Coordinate                  |
 | 4     | `lon`    | Coordinate                  |
-| 0–133 | `label`  | text-rest                   |
+| 0–121 | `label`  | text-rest                   |
 
 ### 3.7 `SHAPE`
 
@@ -136,7 +138,7 @@ Creates or replaces a line, polygon or circle.
 
 A decoder reconstructs point _i_ as point _i − 1_ plus `delta × 100` in coordinate units. An encoder MUST compute each delta from the previously reconstructed point, not from the original one, so rounding errors do not accumulate. If two consecutive points are more than 0.32767° apart on either axis, the encoder MUST insert intermediate points or reject the shape. Polygons are implicitly closed; the last point MUST NOT repeat the first.
 
-With an empty label, a shape holds up to 33 points.
+With an empty label, a shape holds up to 30 points; with a 32-byte label, up to 22.
 
 **Circle geometry:**
 
@@ -154,7 +156,7 @@ With an empty label, a shape holds up to 33 points.
 | 4     | `lat`      | Coordinate                                                                                                |
 | 4     | `lon`      | Coordinate                                                                                                |
 | 2     | `accuracy` | `u16`, metres, `0xFFFF` unknown                                                                           |
-| 0–140 | `text`     | text-rest                                                                                                 |
+| 0–128 | `text`     | text-rest                                                                                                 |
 
 A sender without a position MUST NOT hold the call back for one: it sends `lat` and `lon` `0` with `accuracy` `0xFFFF`, which receivers MUST read as "no place" and not as a point at 0°, 0°. Its `POSITION` follows as soon as it has one, whatever its sharing setting, and receivers SHOULD show it as where the caller is.
 
@@ -167,7 +169,7 @@ An `SOS` stays active until a `SOS_CANCEL` referencing it is received. Any membe
 | Size  | Field   | Notes                                                                       |
 | ----- | ------- | --------------------------------------------------------------------------- |
 | 1     | `level` | `0` information, `1` warning, `2` critical; reserved values read as warning |
-| 1–150 | `text`  | text-rest                                                                   |
+| 1–138 | `text`  | text-rest                                                                   |
 
 ### 3.10 Objects
 
@@ -190,7 +192,7 @@ Creates or replaces a task: a short text and, optionally, who should do it and w
 | 4     | `assignee` | Node ID of the member who should do it, or ID of the team (§3.15); `00000000` means anyone |
 | 1     | `place`    | `0` none, `1` point, `2` object; reserved values read as none                              |
 | 8     | `where`    | See below; zeros when `place` is none                                                      |
-| 1–129 | `text`     | text-rest                                                                                  |
+| 1–117 | `text`     | text-rest                                                                                  |
 
 `where` holds, for a point, its `lat` and `lon` (4 bytes each, as coordinates); for an object, the object's reference (§3.10). A task at an object follows it: it is wherever the object is now, and has no place once the object is deleted. A route (a polyline with the Route style, §4.2) as the place of a task is the way to go.
 
@@ -209,7 +211,7 @@ Asks every member of the group to say they are well.
 
 | Size  | Field  | Notes                                                                                  |
 | ----- | ------ | -------------------------------------------------------------------------------------- |
-| 0–151 | `text` | text-rest; empty for the usual question, which each receiver words in its own language |
+| 0–139 | `text` | text-rest; empty for the usual question, which each receiver words in its own language |
 
 - Each member answers once, with an `ACK` referencing the `ROLL_CALL`. A member who needs help sends an `SOS` instead.
 - The newest `ROLL_CALL` by `(time, origin, seq)` is the current one; older ones are history.
@@ -268,7 +270,7 @@ Creates or replaces a team: a name, a colour and the members in it. Teams are ho
 - A team ID is 4 bytes in the space of node IDs, so `TASK.assignee` can name a team. The member who creates a team picks it at random, never `00000000` and never the node ID of a member the group knows.
 - To change a team, any member sends a new `TEAM` with the same `team` and every field filled in; the newest by `(time, origin, seq)` is the team's current state.
 - A member is in one team at a time. A device that moves a member sends both teams; should two teams list the same member, the newest of them counts.
-- With the longest name, a team holds up to 28 members.
+- With the longest name, a team holds up to 25 members.
 
 ### 3.16 `REPORT`
 
@@ -283,7 +285,7 @@ A situation report from the scene, in the order emergency services use (METHANE)
 | 1     | `access`     | `0` unknown, `1` clear, `2` difficult, `3` blocked; reserved values read as unknown                                                                                     |
 | 4     | `casualties` | One `u8` each for the triage categories red, yellow, green and black: how many, 0–254; `255` unknown                                                                    |
 | 2     | `resources`  | `u16` of bits, from the lowest: ambulance, firefighters, police, rescue, helicopter, machinery, more people, supplies, shelter; other bits are ignored                  |
-| 0–131 | `note`       | text-rest                                                                                                                                                               |
+| 0–119 | `note`       | text-rest                                                                                                                                                               |
 
 ### 3.17 `CHECK_IN_TIMER`
 
@@ -351,6 +353,8 @@ A group is a 16-byte random **group secret** `S`, generated with a cryptographic
 | Content key           | `HKDF-SHA256(ikm = S, salt = "tesel/v1", info = "content-key")` | 32 bytes |
 | Event-key MAC key     | `HKDF-SHA256(ikm = S, salt = "tesel/v1", info = "event-key")`   | 32 bytes |
 | Nonce key             | `HKDF-SHA256(ikm = S, salt = "tesel/v1", info = "nonce-key")`   | 32 bytes |
+| Radio key             | `HKDF-SHA256(ikm = S, salt = "tesel/v1", info = "radio-key")`   | 32 bytes |
+| Radio MAC key         | `HKDF-SHA256(ikm = S, salt = "tesel/v1", info = "radio-mac")`   | 32 bytes |
 | Event key of an event | `HMAC-SHA256(eventKeyMacKey, origin ‖ seq as u32)`, truncated   | 16 bytes |
 
 Strings are ASCII. The group ID is public; the others are secret.
@@ -364,9 +368,33 @@ envelope = nonce (12 bytes) ‖ AES-256-GCM(contentKey, nonce, event, aad = grou
 nonce    = HMAC-SHA256(nonceKey, event), truncated to 12 bytes
 ```
 
-The ciphertext includes the 16-byte GCM tag, so an envelope is at most 12 + 165 + 16 = 193 bytes. A receiver that fails to open an envelope MUST discard it silently.
+The ciphertext includes the 16-byte GCM tag, so an envelope is at most 12 + 165 + 16 = 193 bytes, 165 bytes being the largest event a decoder accepts (§2). A receiver that fails to open an envelope MUST discard it silently.
 
 The nonce is derived from the event, so the same event always gives the same envelope: a retry, a re-push or a bridge forwarding an event the server already has adds nothing to the server's store (§8). Different events get unrelated nonces, as random ones would be, so a group SHOULD stay well below 2³² distinct events under one secret (the AES-GCM bound for random nonces). An envelope reveals only that it carries the same event as another, which its event key (§5) already does. Receivers do not check how the nonce was made: envelopes sealed by earlier versions, with random nonces, open the same way ([ADR-0067](decisions/0067-envelope-nonce-from-the-event.md)). Key rotation is future work.
+
+### 5.2 Radio frame
+
+Events sent by radio (§7) are sealed in a frame, inside the radio's own channel encryption, which is weak (§7.1, §7.2):
+
+```
+frame = siv (12 bytes) ‖ AES-256-CTR(radioKey, siv ‖ 00000000, event)
+siv   = HMAC-SHA256(radioMacKey, event), truncated to 12 bytes
+```
+
+- `siv ‖ 00000000` is the 16-byte initial counter block: the synthetic IV followed by a 32-bit counter starting at zero, incremented once per 16-byte block as a big-endian integer. An event is at most 153 bytes, 10 blocks, so the counter never carries into the IV, and implementations that increment the whole block as a 128-bit integer produce the same keystream.
+- There is no padding: the encrypted event is as long as the event, and a frame is 12 bytes longer, at most 165 bytes.
+- To open a frame, a receiver takes `siv` from its first 12 bytes, decrypts the rest with the counter block `siv ‖ 00000000`, computes `HMAC-SHA256(radioMacKey, event)` over the result and compares its first 12 bytes with `siv` in constant time. A frame that does not match, that is 12 bytes or shorter, or longer than 165, MUST be discarded silently, as if it had not been heard: no member made it, so it is not a damaged event of the group (§3.1).
+
+This is a synthetic-IV (SIV) construction: the IV is a keyed hash of the event, so the same event always gives the same frame, as SOS repeats (§3.8) and bridges expect, and a frame changed by a single bit, or made up, by someone without the group secret is caught with odds of 2⁻⁹⁶ per try. A frame reveals only that it carries the same event as another, which a repeat already shows. Two different events share keystream only if their 96-bit IVs collide, which a group sending far fewer than 2⁴⁸ events never sees. The radio keys are used for nothing else, so the radio's keystream never meets that of the envelopes (§5.1), whose nonces are derived from the event the same way under other keys. A frame binds no channel and no time: one recorded and played back later is a copy of an event the group already has, which receivers de-duplicate (§3.1).
+
+Test vector, with `S` the bytes `00` to `0f` and the event `0104a1b2c3d4010000000013fc68486f6c61` (a `CHAT` of "Hola"):
+
+| Value         | Hex                                                                |
+| ------------- | ------------------------------------------------------------------ |
+| Radio key     | `8f6190993b81066d7e5228ba72d26c3fcf07cfbae9e5163db6ad9b8245815ba3` |
+| Radio MAC key | `d1ab2c84971ed71eb7a29f33e8563561196a123c197fe278ed94b7c8d08c01bc` |
+| `siv`         | `84dd396abe8d9912086dd31e`                                         |
+| Frame         | `84dd396abe8d9912086dd31e9a8247df5620923964ee97393acb3b269cc0`     |
 
 ## 6. Invitations
 
@@ -395,22 +423,22 @@ Decoders MUST accept only secure URLs with no query whose last path segment is e
 
 ## 7. Transport: LoRa radios
 
-A device reaches the LoRa mesh through a radio of one of two kinds, by the firmware it runs. Both carry the same event bytes; a radio of one kind does not hear one of the other, since their packets differ on the air.
+A device reaches the LoRa mesh through a radio of one of two kinds, by the firmware it runs. Both carry the same frames: each event sealed as §5.2 says, with the keys of the group whose channel it travels on. A frame heard on a group's channel is opened with that group's keys, and discarded if it does not open. An event too large for a frame (§2) is not sent by radio. A radio of one kind does not hear one of the other, since their packets differ on the air.
 
 ### 7.1 MeshCore
 
 - The group secret is written to a channel slot of the companion radio with `CMD_SET_CHANNEL`. The channel name is the group name, truncated to 31 bytes at a code-point boundary. Implementations MUST reuse a slot that already holds the secret, otherwise take the first empty slot (empty name, all-zero secret) other than slot 0, and MUST NOT overwrite any other channel.
-- Each event is sent with `CMD_SEND_CHANNEL_DATA` on that channel, flood routing (`path_len = 0xFF`), `data_type = 0xFF4D`, payload = the event bytes. The radio encrypts it with the channel key.
-- Inbound `RESP_CODE_CHANNEL_DATA_RECV` frames on that channel with `data_type = 0xFF4D` are decoded as events. Other `data_type` values are ignored.
-- The radio encrypts channel traffic with AES-128 in ECB mode and authenticates it with a 2-byte truncated HMAC. That protects against casual listening, not against a determined attacker; see [ADR-0010](decisions/0010-lora-link-security.md).
-- `0xFF4D` is in MeshCore's development range. A permanent value will be registered before the first public release; implementations SHOULD accept both during the transition.
+- Each event is sent with `CMD_SEND_CHANNEL_DATA` on that channel, flood routing (`path_len = 0xFF`), `data_type = 0xFF4E`, payload = the event's frame (§5.2). The radio encrypts it with the channel key.
+- Inbound `RESP_CODE_CHANNEL_DATA_RECV` frames on that channel with `data_type = 0xFF4E` are opened (§5.2) and decoded as events. Other `data_type` values are ignored, `0xFF4D` among them: development versions sent events with it unsealed.
+- The radio encrypts channel traffic with AES-128 in ECB mode and authenticates it with a 2-byte truncated HMAC. That alone protects against casual listening only; Tesel's seal (§5.2) keeps events private and unaltered against anyone who does not hold the group secret ([ADR-0010](decisions/0010-lora-link-security.md), [ADR-0099](decisions/0099-sealed-radio-frames.md)).
+- `0xFF4E` is in MeshCore's development range. A permanent value will be registered before the first public release; implementations SHOULD accept both during the transition.
 
 ### 7.2 Meshtastic
 
 - The group secret is the key (PSK) of one of the radio's secondary channels, set with an `AdminMessage.set_channel` sent to the radio's own node number on `ADMIN_APP`. The channel name is the group name, truncated to 11 bytes at a code-point boundary. Implementations MUST reuse a secondary channel whose 16-byte key is the secret, otherwise take the first disabled channel, and MUST NOT change the primary channel or any other channel. With all eight in use, the group cannot use the radio.
-- Each event is sent as a `MeshPacket` to the broadcast address (`0xFFFFFFFF`) on that channel's index, with the radio's configured hop limit (3 if it reports none) and no acknowledgement requested. Its `Data` has `portnum = 256` (`PRIVATE_APP`) and `payload` = the event bytes. The radio encrypts it with the channel key.
-- Inbound packets with `portnum = 256`, decoded by the radio on a secondary channel whose key is 16 bytes, are decoded as events of the group with that secret. Other ports are not Tesel events.
-- The radio encrypts with AES-128 in CTR mode keyed with the channel key, and adds no message authentication: anyone can flip bits of a packet unnoticed, and only Tesel's strict decoder stands between a forged packet and the log. That protects against casual listening, not against a determined attacker; see [ADR-0098](decisions/0098-meshtastic-radios.md).
+- Each event is sent as a `MeshPacket` to the broadcast address (`0xFFFFFFFF`) on that channel's index, with the radio's configured hop limit (3 if it reports none) and no acknowledgement requested. Its `Data` has `portnum = 256` (`PRIVATE_APP`) and `payload` = the event's frame (§5.2). The radio encrypts it with the channel key.
+- Inbound packets with `portnum = 256`, decoded by the radio on a secondary channel whose key is 16 bytes, are opened (§5.2) with the keys of the group with that secret and decoded as its events; a payload that does not open is discarded. Other ports are not Tesel events.
+- The radio encrypts with AES-128 in CTR mode keyed with the channel key, and adds no message authentication: anyone can flip bits of a packet unnoticed. Tesel's seal (§5.2) catches any such change, and any packet made up by someone who does not hold the group secret ([ADR-0098](decisions/0098-meshtastic-radios.md), [ADR-0099](decisions/0099-sealed-radio-frames.md)).
 - Meshtastic and MeshCore radios do not hear each other. A group whose members carry both kinds reaches all of them only through members who bridge to the internet (ARCHITECTURE.md §4.3).
 
 ## 8. Transport: internet
@@ -483,7 +511,7 @@ Only warnings that have not expired are listed, at the time of the request. The 
 
 ## 9. Versioning
 
-This document describes protocol version 1. Adding event types, symbol codes or style codes does not change the version. Version 1 is frozen with the first release, v0.1.0; until then it still changed in place: the `env` message gained `key`, and §8.1 was added; command posts, servers that replicated another (§8.2 and §8.3 then), were added and later removed ([ADR-0058](decisions/0058-no-command-posts.md)); §3.1 gained the rules on an author's times and on damaged events, and §3.8 the SOS without a place; envelope nonces became derived from the event (§5.1); `synced` gained the store identity, servers keep every distinct envelope, the error `unavailable` was added, and `healthz` gained `time`, and `ping` and `pong` were added (§8). Changing any existing layout, derivation or transport rule requires version 2, a new ADR and a migration plan.
+This document describes protocol version 1. Adding event types, symbol codes or style codes does not change the version. Version 1 is frozen with the first release, v0.1.0; until then it still changed in place: the `env` message gained `key`, and §8.1 was added; command posts, servers that replicated another (§8.2 and §8.3 then), were added and later removed ([ADR-0058](decisions/0058-no-command-posts.md)); §3.1 gained the rules on an author's times and on damaged events, and §3.8 the SOS without a place; envelope nonces became derived from the event (§5.1); `synced` gained the store identity, servers keep every distinct envelope, the error `unavailable` was added, and `healthz` gained `time`, and `ping` and `pong` were added (§8); radio frames were sealed with keys of their own, events shrank from 165 to 153 bytes to make room for the seal, those written before still decoding, and MeshCore's `data_type` moved from `0xFF4D` to `0xFF4E` (§2, §5, §7). Changing any existing layout, derivation or transport rule requires version 2, a new ADR and a migration plan.
 
 ## 10. Log files
 

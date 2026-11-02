@@ -1,6 +1,6 @@
 # 0052. Members are trusted: protocol version 1 does not prove who wrote an event
 
-- Status: Accepted
+- Status: Accepted, amended by [0099](0099-sealed-radio-frames.md) (LoRa keeps 153 of its 165 bytes for content)
 - Date: 2026-10-28
 
 ## Context

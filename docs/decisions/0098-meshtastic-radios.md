@@ -1,6 +1,6 @@
 # 0098. Meshtastic radios, in code of our own, on one radio contract
 
-- Status: Accepted
+- Status: Accepted, amended by [0099](0099-sealed-radio-frames.md) (radio frames sealed by Tesel, so Meshtastic events are authenticated)
 - Date: 2026-11-02
 
 ## Context

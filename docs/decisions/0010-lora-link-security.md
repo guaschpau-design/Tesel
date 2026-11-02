@@ -1,6 +1,6 @@
 # 0010. Rely on MeshCore channel encryption for LoRa in v0.1, knowing its limits
 
-- Status: Accepted, amended by [0098](0098-meshtastic-radios.md) (Meshtastic links, protected less)
+- Status: Superseded by [0099](0099-sealed-radio-frames.md) (Tesel seals every radio frame); amended before by [0098](0098-meshtastic-radios.md) (Meshtastic links, protected less)
 - Date: 2026-10-25
 
 ## Context

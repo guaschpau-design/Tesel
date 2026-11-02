@@ -1,6 +1,6 @@
 # 0006. MeshCore first, through channel data datagrams
 
-- Status: Accepted, amended by [0098](0098-meshtastic-radios.md) (Meshtastic radios as a second kind)
+- Status: Accepted, amended by [0098](0098-meshtastic-radios.md) (Meshtastic radios as a second kind), [0099](0099-sealed-radio-frames.md) (sealed frames on `data_type` 0xFF4E)
 - Date: 2026-10-25
 
 ## Context

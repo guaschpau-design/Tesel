@@ -1,6 +1,6 @@
 # 0062. Teams: one event per team, and a task for a team is each member's
 
-- Status: Accepted
+- Status: Accepted, amended by [0099](0099-sealed-radio-frames.md) (25 members, as events shrank to 153 bytes)
 - Date: 2026-10-28
 
 ## Context
