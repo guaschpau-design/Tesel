@@ -292,8 +292,11 @@ if ! "$INSTALL_DIR/update.sh" "$INSTALL_DIR"; then
 on GitHub (github.com/guaschpau-design → Packages → tesel-server → Package settings) and signed
 by the repository's CI."
 fi
-# Caddy reads its configuration only when it starts: apply what was installed above.
-docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+# Caddy reads its configuration only when it starts: apply what was installed above. Run as
+# `curl … | bash`, this script is read from standard input, which `exec` would otherwise take:
+# the rest of the script would go to Caddy and never run.
+docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile \
+  </dev/null
 # Enabled only now: a timer whose boot delay has passed fires at once, and its own update would
 # wait for the one above for nothing.
 systemctl enable --now tesel-update.timer tesel-backup.timer >/dev/null
