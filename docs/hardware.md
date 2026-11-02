@@ -1,6 +1,8 @@
 # Supported radios
 
-Tesel talks to a MeshCore radio running the **Companion Bluetooth** firmware (v1.18 or later), as described in [`protocol.md`](protocol.md) §7. These are the devices the project supports and tests in v0.1.
+Tesel talks to a MeshCore radio running the **Companion Bluetooth** firmware (v1.18 or later), as described in [`protocol.md`](protocol.md) §7.1. These are the devices the project supports and tests in v0.1.
+
+Radios running **Meshtastic** firmware with Bluetooth work too ([`protocol.md`](protocol.md) §7.2, [ADR-0098](decisions/0098-meshtastic-radios.md)); they have not been tested with Tesel in the field yet. Each radio below that Meshtastic supports can run either firmware; a radio of one kind does not hear one of the other.
 
 | Device                                      | MCU · LoRa chip   | Screen and keyboard    | Firmware to flash                               | Notes                                                                                                                        |
 | ------------------------------------------- | ----------------- | ---------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |

@@ -4,7 +4,7 @@ All notable changes to Tesel. The format follows [Keep a Changelog](https://keep
 
 ## [0.1.0] - Unreleased
 
-The first version: a shared map for a group, over the internet and over MeshCore LoRa radios, with the web app as the only client ([ADR-0016](docs/decisions/0016-web-app-and-native-shells.md)).
+The first version: a shared map for a group, over the internet and over MeshCore or Meshtastic LoRa radios, with the web app as the only client ([ADR-0016](docs/decisions/0016-web-app-and-native-shells.md)).
 
 ### Map
 
@@ -89,6 +89,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Each device keeps its own events in order even if its clock goes back, and says when its clock differs from the server's by more than two minutes ([ADR-0044](docs/decisions/0044-clocks-and-damaged-events.md)).
 - MeshCore LoRa through a companion radio over Web Bluetooth (protocol §7), with priorities, a legal airtime budget, position thinning, SOS repeats and bridging between radio and internet by any member who has both ([ADR-0015](docs/decisions/0015-lora-airtime-policy.md)). What was written without a radio goes on the air once one is linked; an SOS repeats until it is acknowledged or cancelled, also after the radio refuses a repeat, and one answered while there was no radio is not sent again; a position never goes out after a newer one or a hiding; a damaged frame never stands in for the event it claims to be; open SOS calls are bridged however old; answers to them go first; a lost Bluetooth link comes back by itself; frames of the device's other groups are kept for them; and leaving a group frees its channel in the radio ([ADR-0043](docs/decisions/0043-radio-delivery.md)).
 - Text messages of other MeshCore apps are kept, read-only, in a chat tab.
+- Meshtastic radios, as a second kind beside MeshCore: "Connect radio" lists radios of both kinds and loads only the code of the one picked; the group is a secondary channel of the radio whose key is the group secret, set without touching any other, and events travel to everyone on it on Meshtastic's `PRIVATE_APP` port (protocol §7.2). Pairing, reconnecting by itself and freeing a left group's channel work as for MeshCore; the radio card names the kind of radio, and Meshtastic chat joins MeshCore's in the chat tab of other radios. The airtime budget counts each packet at the Meshtastic radio's own LoRa settings. Written without Meshtastic's GPL libraries, with a protobuf codec of Tesel's own, on one radio contract, `packages/radio`, which both kinds share ([ADR-0098](docs/decisions/0098-meshtastic-radios.md)). The names and positions of Meshtastic nodes heard are available to the app, not shown yet.
 - Connecting a radio asks for its PIN inside the connection, by reading what the radio protects, where Chrome on Android never asked; a connection that fails says why within seconds, and a radio not paired yet shows the three steps to pair it in the system's settings ([ADR-0090](docs/decisions/0090-pairing-a-radio-from-the-app.md)).
 - The top bar names what the device reaches its group through — WiFi, 4G/5G, LoRa, several at once — with a green, orange or red dot, and opens a panel with one card per connection. Browsers that do not say whether they use Wi-Fi or mobile data show "WiFi/5G".
 
@@ -118,6 +119,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.
 - iPhones cannot pair a radio from Safari: they pair one from the Bluefy browser, or use the internet and reach the radios through any member who bridges both.
 - Members are trusted: the app does not prove who wrote an event, so a member could write as another ([ADR-0052](docs/decisions/0052-authorship-is-not-proven.md)).
-- Over LoRa, members can impersonate each other and channel encryption is weak ([ADR-0010](docs/decisions/0010-lora-link-security.md)).
+- Over LoRa, members can impersonate each other and channel encryption is weak ([ADR-0010](docs/decisions/0010-lora-link-security.md)); Meshtastic's adds no authentication at all ([ADR-0098](docs/decisions/0098-meshtastic-radios.md)).
+- Meshtastic and MeshCore radios do not hear each other: a group with both needs a member online to join them. Tesel events use Meshtastic's shared `PRIVATE_APP` port.
 - MeshCore `data_type` 0xFF4D is in the development range until registered.
-- Radios have been tested in software only; field tests are pending ([`docs/prueba-de-campo.md`](docs/prueba-de-campo.md)).
+- Radios have been tested in software only, Meshtastic ones without any real radio yet; field tests are pending ([`docs/prueba-de-campo.md`](docs/prueba-de-campo.md)).

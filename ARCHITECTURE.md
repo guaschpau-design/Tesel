@@ -6,7 +6,7 @@ This document explains how Tesel is put together: the pieces, what each one owns
 
 ## 1. The idea in one paragraph
 
-A group shares a map. Every change to that map — a position, a chat line, a marker, an SOS — is an **event**: a small, immutable, binary record with an author and a sequence number. Devices keep a local log of events and derive the current picture from it. Events travel over whatever link is available — the internet through a server, or LoRa through a MeshCore radio — and are **byte-for-byte the same on every link**. Any device that has two links forwards events between them. There is no authority: whoever holds the group secret can read and write, and the server only ever sees ciphertext.
+A group shares a map. Every change to that map — a position, a chat line, a marker, an SOS — is an **event**: a small, immutable, binary record with an author and a sequence number. Devices keep a local log of events and derive the current picture from it. Events travel over whatever link is available — the internet through a server, or LoRa through a MeshCore or Meshtastic radio — and are **byte-for-byte the same on every link**. Any device that has two links forwards events between them. There is no authority: whoever holds the group secret can read and write, and the server only ever sees ciphertext.
 
 ## 2. Components
 
@@ -23,24 +23,28 @@ A group shares a map. Every change to that map — a position, a chat line, a ma
 │        ▼                                                              │
 │  packages/protocol: event codec · crypto · invitations                │
 │        │                                   │                          │
-│  internet transport (WebSocket)     packages/meshcore (Web Bluetooth) │
+│        │                          packages/radio: radio contract      │
+│        │                                   │                          │
+│  internet transport (WebSocket)   packages/meshcore, .../meshtastic   │
 └────────┼───────────────────────────────────┼──────────────────────────┘
          │                                   │ BLE
          ▼                                   ▼
-   apps/server (VPS)                   MeshCore companion radio
+   apps/server (VPS)              MeshCore or Meshtastic radio
                                         ⇄ LoRa mesh ⇄ other radios
 ```
 
-| Path                | Owns                                                                                                                                 | Must not depend on                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `packages/protocol` | Binary event format, key derivation, envelope encryption, invitation links                                                           | Anything else in the repo; the DOM; Node APIs        |
-| `packages/core`     | State reducer; LoRa airtime scheduler, which decides what goes on the air and in what order, bridged events included                 | The DOM, Svelte, BLE, network APIs                   |
-| `packages/meshcore` | Talking to a MeshCore companion radio: connect, configure channel, send and receive datagrams                                        | `packages/core`, the UI                              |
-| `packages/scenario` | Staged operations as data, planned into the events their members send                                                                | The DOM, Node APIs, any transport                    |
-| `apps/web`          | UI, map; each group's event log, outbox and sync cursors in IndexedDB; the group feed, which ties the log to the relay and the radio | Server code                                          |
-| `apps/server`       | Storing and relaying encrypted envelopes; serving the landing page and the web app (ADR-0017)                                        | Plaintext event contents (it can never decrypt them) |
-| `apps/site`         | The landing page at tesel.eu: static HTML and CSS, Spanish and English                                                               | Any build step or third-party request                |
-| `tools/simulator`   | Scenarios played by simulated devices through the relay, for demos, load tests and screenshots                                       | The apps: it reaches them only through the protocol  |
+| Path                  | Owns                                                                                                                                                                     | Must not depend on                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `packages/protocol`   | Binary event format, key derivation, envelope encryption, invitation links                                                                                               | Anything else in the repo; the DOM; Node APIs        |
+| `packages/core`       | State reducer; LoRa airtime scheduler, which decides what goes on the air and in what order, bridged events included                                                     | The DOM, Svelte, BLE, network APIs                   |
+| `packages/radio`      | The contract between the app and a radio (`RadioLink`), and what every kind of radio shares: picking one over Web Bluetooth, pairing, the connection keeper, time on air | Anything else in the repo; the UI                    |
+| `packages/meshcore`   | Talking to a MeshCore companion radio: connect, configure channel, send and receive datagrams                                                                            | `packages/core`, the UI                              |
+| `packages/meshtastic` | Talking to a Meshtastic radio, with a protobuf codec of its own (ADR-0098): connect, configure channel, send and receive packets, the nodes it hears                     | `packages/core`, the UI, Meshtastic's GPL libraries  |
+| `packages/scenario`   | Staged operations as data, planned into the events their members send                                                                                                    | The DOM, Node APIs, any transport                    |
+| `apps/web`            | UI, map; each group's event log, outbox and sync cursors in IndexedDB; the group feed, which ties the log to the relay and the radio                                     | Server code                                          |
+| `apps/server`         | Storing and relaying encrypted envelopes; serving the landing page and the web app (ADR-0017)                                                                            | Plaintext event contents (it can never decrypt them) |
+| `apps/site`           | The landing page at tesel.eu: static HTML and CSS, Spanish and English                                                                                                   | Any build step or third-party request                |
+| `tools/simulator`     | Scenarios played by simulated devices through the relay, for demos, load tests and screenshots                                                                           | The apps: it reaches them only through the protocol  |
 
 The dependency direction is strictly downwards in the diagram. `protocol` and `core` are pure TypeScript with no I/O, so they run unchanged in the browser, in Node and in tests. This is what keeps the hard parts testable.
 
@@ -69,7 +73,7 @@ A group is defined by a random 16-byte **group secret**. Everything else is deri
 
 | Derived value          | Used for                                                               |
 | ---------------------- | ---------------------------------------------------------------------- |
-| The secret itself      | MeshCore channel key; the radio encrypts LoRa traffic with it          |
+| The secret itself      | Radio channel key; the radio encrypts LoRa traffic with it             |
 | Group ID (16 bytes)    | Public routing identifier on servers; reveals nothing about the secret |
 | Content key (32 bytes) | AES-256-GCM encryption of events sent over the internet                |
 | Event key (HMAC)       | Lets the server de-duplicate envelopes without learning who sent them  |
@@ -153,14 +157,19 @@ A new capability is a new event type (protocol §3.2 and §9: no version change)
 
 The web app keeps a WebSocket to the active group's server; groups that are not active sync when they are opened. Each event is sealed into an **envelope** — AES-256-GCM ciphertext plus an opaque event key — and pushed. The server assigns each envelope a per-group **cursor** (an increasing integer), stores it, and fans it out to the group's other connections. On reconnect a client asks for everything after the last cursor it saw. Envelopes that arrive together are handled in batches of up to a thousand: each batch is stored in one transaction together with its cursor, which therefore never runs ahead of the log, and applied to the state in one update. A device back after hours without coverage catches up in seconds rather than one envelope per screen frame. The server cannot read, forge or alter events; it can only drop them.
 
-### 4.2 LoRa (MeshCore)
+### 4.2 LoRa (MeshCore and Meshtastic)
 
-The web app connects to a MeshCore companion radio over Web Bluetooth (Chrome and Edge only), stores the group secret in one of the radio's channel slots, and sends each event's raw bytes as a **channel data datagram** with Tesel's `data_type`. The radio floods it through the mesh and encrypts it with the channel key; other radios on the same channel deliver it to their apps. See [ADR-0006](docs/decisions/0006-meshcore-first-channel-datagrams.md).
+The web app connects to a radio over Web Bluetooth (Chrome and Edge; Bluefy on the iPhone). One picker lists radios of both kinds Tesel speaks, and the radio's Bluetooth service says which it is; only that kind's package is then loaded ([ADR-0098](docs/decisions/0098-meshtastic-radios.md)). Every kind implements one contract, `RadioLink` in `packages/radio`, on one connection keeper: commands one at a time with a time limit, and a lost link connected again by itself.
+
+- A **MeshCore** companion radio stores the group secret in one of its channel slots, and each event's raw bytes go out as a **channel data datagram** with Tesel's `data_type`. The radio floods it through the mesh and encrypts it with the channel key; other radios on the same channel deliver it to their apps. See [ADR-0006](docs/decisions/0006-meshcore-first-channel-datagrams.md).
+- A **Meshtastic** radio holds the group secret as the key of one of its secondary channels, named after the group, and each event goes out as a packet to everyone on that channel, on the `PRIVATE_APP` port. Tesel speaks to it with a protobuf codec of its own, since Meshtastic's libraries are GPL ([ADR-0098](docs/decisions/0098-meshtastic-radios.md)). The link also tells the names and positions of the other Meshtastic nodes it hears, for people who carry a radio without Tesel.
+
+The two kinds do not hear each other: a group with both reaches all its members through those who bridge to the internet (§4.3).
 
 LoRa is slow and legally limited to 10 % airtime in the EU 869.4–869.65 MHz sub-band, so outgoing LoRa traffic goes through a **scheduler** in `packages/core` ([ADR-0015](docs/decisions/0015-lora-airtime-policy.md)) that:
 
 1. Orders events by urgency, given for every event type in `packages/core/src/urgency.ts`: the SOS and its cancellation first, then alerts and roll calls, hiding a position, acknowledgements, chat and tasks, map objects, member information and, last, positions. `POSITION_HIDDEN` is never thinned or delayed, and it drops any position still queued: a user who stops sharing must disappear from the map promptly.
-2. Estimates each packet's airtime from the radio preset and keeps a rolling one-hour budget: 5 % of the hour for ordinary traffic, the legal 10 % for events as urgent as an alert or more (`SOS`, `SOS_CANCEL`, `ALERT`, `ROLL_CALL`, and an `ACK` of an SOS, a critical alert or a roll call).
+2. Estimates each packet's airtime as the linked radio says (`RadioLink.airtimeMs`: MeshCore's EU narrow preset, or the Meshtastic radio's own LoRa settings) and keeps a rolling one-hour budget: 5 % of the hour for ordinary traffic, the legal 10 % for events as urgent as an alert or more (`SOS`, `SOS_CANCEL`, `ALERT`, `ROLL_CALL`, and an `ACK` of an SOS, a critical alert or a roll call).
 3. Thins own positions: at most one every 2 minutes, and only after moving 50 m or 10 minutes passing. A position older than the member's newest position or hiding, sent or heard, is never sent.
 4. Repeats an own `SOS` with back-off (30 s, doubling to 5 minutes) until an `ACK` or a `SOS_CANCEL` arrives over any transport.
 5. Applies the protocol's ACK rule: an own `ACK` waits 2–30 s and is dropped if another member's `ACK` is heard first, except the answer to a roll call, which every member sends. A bridged `ACK` of the same event is dropped too: the sender heard the one on the air.
@@ -168,7 +177,7 @@ LoRa is slow and legally limited to 10 % airtime in the EU 869.4–869.65 MHz su
 
 When a radio links to a group, the group feed gives it what it missed while there was none (`catchUpPackets` in `apps/web/src/lib/sync/lora-events.ts`, [ADR-0043](docs/decisions/0043-radio-delivery.md)): the device's own latest `MEMBER_INFO`, so members who only hear the radio learn its alias; its own SOS calls still open that nobody has answered; and its own events still in the outbox that have not been on the air. Before that, the scheduler learns the group's SOS calls and their cancellations (`standingEvents`), so that acknowledgements of them are urgent however long ago they were sent; the app no longer sends alerts or roll calls ([ADR-0070](docs/decisions/0070-a-simpler-app.md)). A frame that does not decode and is not of an unknown type is damaged: it is neither kept nor taken as heard, so it cannot stand in for the real event. An own event sent by radio is marked as aired and stays in the outbox until a server stores it; for a group with no server, the radio send is the delivery.
 
-While connected, Tesel reads every message the radio holds. A frame heard on the channel of another of this device's groups goes to that group's log, and to its outbox if the group has a server. Text messages of other MeshCore apps are kept on the device and shown, read-only, in a MeshCore tab of the chat, so they are not lost.
+While connected, Tesel reads every message the radio holds. A frame heard on the channel of another of this device's groups goes to that group's log, and to its outbox if the group has a server. Text messages of other apps, MeshCore or Meshtastic chat, are kept on the device and shown, read-only, in a tab of the chat of their own, so they are not lost.
 
 ### 4.3 Bridging
 
@@ -214,7 +223,7 @@ Two more base maps cover Spain, Portugal and southern France, from open national
 | Threat                                 | Mitigation in v0.1                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Server operator reads the group's data | Not from what it relays: events are end-to-end encrypted with a key the server never sees                                                                                                                                                                                                                                                                                       |
-| Eavesdropper on LoRa                   | MeshCore encrypts channel traffic with the group secret, but with AES-128-ECB and a 2-byte MAC: enough against casual listening, weak against a determined attacker (see [ADR-0010](docs/decisions/0010-lora-link-security.md))                                                                                                                                                 |
+| Eavesdropper on LoRa                   | The radio encrypts channel traffic with the group secret: MeshCore with AES-128-ECB and a 2-byte MAC, Meshtastic with AES-128-CTR and no MAC. Enough against casual listening, weak against a determined attacker (see [ADR-0010](docs/decisions/0010-lora-link-security.md), [ADR-0098](docs/decisions/0098-meshtastic-radios.md))                                             |
 | Outsider joins the group               | Requires the secret, which only travels inside invitations                                                                                                                                                                                                                                                                                                                      |
 | Member impersonates another member     | **Not prevented in protocol version 1** — anyone with the secret can forge any origin; members are trusted as the group is, and the interface never shows an author as verified ([ADR-0052](docs/decisions/0052-authorship-is-not-proven.md))                                                                                                                                   |
 | Server serves a changed app            | Whoever serves the app's code is trusted, as with any web app. Servers run only images signed by the project's CI and check them before updating ([ADR-0049](docs/decisions/0049-signed-images-and-checked-updates.md)); the app's Content-Security-Policy keeps it from loading code from elsewhere; an installed app runs the version it has until its user accepts an update |
@@ -232,7 +241,9 @@ apps/site/           Landing page (static)
 brand/               Mark, wordmark and lockups (SVG) and the script that builds them
 packages/protocol/   Wire format, crypto, invitations (pure TS)
 packages/core/       Reducer, LoRa scheduler with its bridge rules (pure TS)
+packages/radio/      The radio contract and what every kind of radio shares
 packages/meshcore/   MeshCore radio adapter
+packages/meshtastic/ Meshtastic radio adapter
 packages/scenario/   Staged operations as data and their plan (pure TS), for the simulator
 tools/simulator/     Scenarios played by simulated devices: demos, load tests, screenshots
 docs/                Briefing, protocol spec, decisions
