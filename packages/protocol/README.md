@@ -1,6 +1,6 @@
 # @tesel/protocol
 
-The single implementation of [`docs/protocol.md`](../../docs/protocol.md): event encoding and decoding, group key derivation, internet envelopes, the relay's messages, invitation links, log files and the weather warnings a server publishes.
+The single implementation of [`docs/protocol.md`](../../docs/protocol.md): event encoding and decoding, group key derivation, internet envelopes, sealed radio frames, the relay's messages, invitation links, log files and the weather warnings a server publishes.
 
 Pure TypeScript. No DOM, no Node APIs, no network. Runs unchanged in the browser, in Node and in tests. It defines the bytes; keeping them is not its job. The event log and the outbox live in the app (`apps/web/src/lib/events/event-log.ts`), and what goes on the radio is decided in `packages/core`.
 
@@ -17,7 +17,7 @@ Pure TypeScript. No DOM, no Node APIs, no network. Runs unchanged in the browser
 | `fields.ts`     | §3 payload fields: references, texts, measurements, enumerations, shape geometry |
 | `geometry.ts`   | §1, §3.7 coordinates and delta-encoded point lists                               |
 | `sos-place.ts`  | §3.8 where an SOS was called from, or no place                                   |
-| `crypto.ts`     | §1, §5 identity, key derivation, envelopes                                       |
+| `crypto.ts`     | §1, §5 identity, key derivation, envelopes, sealed radio frames                  |
 | `invitation.ts` | §6 invitation links                                                              |
 | `relay.ts`      | §8 messages of the internet transport and server information                     |
 | `weather.ts`    | §8.2 weather warnings                                                            |

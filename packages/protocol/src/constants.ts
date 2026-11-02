@@ -18,8 +18,24 @@ import type {
 /** §3.1 Protocol version carried in every event header. */
 export const PROTOCOL_VERSION = 1;
 
-/** §2 Largest MeshCore channel datagram payload, and therefore the largest event. */
-export const MAX_EVENT_SIZE = 165;
+/** §2 Largest MeshCore channel datagram payload: the room of one radio frame. */
+export const MAX_RADIO_PAYLOAD = 165;
+
+/** §5.2 What Tesel's seal adds to an event on the radio: the synthetic IV. */
+export const RADIO_SEAL_SIZE = 12;
+
+/** §5.2 AES block size, which is also the size of the CTR counter block. */
+export const AES_BLOCK_SIZE = 16;
+
+/** §2 The largest event an encoder writes: one that, sealed, fills a radio frame. */
+export const MAX_EVENT_SIZE = MAX_RADIO_PAYLOAD - RADIO_SEAL_SIZE;
+
+/**
+ * §2 The largest event a decoder accepts. Events written before radio frames were sealed had the
+ * seal's room too, the whole frame; those already kept on devices and servers still decode and
+ * travel over the internet, but never go on the air again.
+ */
+export const MAX_DECODABLE_EVENT_SIZE = MAX_EVENT_SIZE + RADIO_SEAL_SIZE;
 
 /** §3.1 Size of the event header. */
 export const HEADER_SIZE = 14;
@@ -95,11 +111,21 @@ export const ALIAS_MAX_BYTES = 32;
 /** §3.7 Shape label length in bytes. */
 export const SHAPE_LABEL_MAX_BYTES = 32;
 
+/** §3.7 Each point of a line or polygon after the first: an `i16` delta of latitude and longitude. */
+const SHAPE_DELTA_SIZE = 4;
+
 /**
- * §3.7 Most points a line or a polygon of the app may have: a shape holds up to 33 points with an
- * empty label but 25 with the longest one; 25 keeps every label possible.
+ * §3.7 What a line or a polygon with the longest label holds before its points: the object, the
+ * kind, the style (u16), the label with its length byte and the count of points.
  */
-export const SHAPE_MAX_POINTS = 25;
+const SHAPE_FIXED_SIZE = EVENT_REF_SIZE + KIND_SIZE + 2 + 1 + SHAPE_LABEL_MAX_BYTES + 1;
+
+/**
+ * §3.7 Most points a line or a polygon of the app may have: as many as fit in one event with the
+ * longest label (22), so that every label stays possible; with an empty label a shape holds 30.
+ */
+export const SHAPE_MAX_POINTS =
+  1 + Math.floor((MAX_EVENT_SIZE - HEADER_SIZE - SHAPE_FIXED_SIZE - POINT_SIZE) / SHAPE_DELTA_SIZE);
 
 /**
  * §3.13 Most lanes a sweep may have: an area wider than this many times the spacing has none, so
@@ -306,6 +332,8 @@ export const CONTENT_KEY_SIZE = 32;
 export const EVENT_KEY_SIZE = 16;
 export const EVENT_KEY_MAC_KEY_SIZE = 32;
 export const NONCE_KEY_SIZE = 32;
+export const RADIO_KEY_SIZE = 32;
+export const RADIO_MAC_KEY_SIZE = 32;
 
 /** §5 HKDF salt and info strings. */
 export const KDF_SALT = 'tesel/v1';
@@ -313,11 +341,16 @@ export const KDF_INFO_GROUP_ID = 'group-id';
 export const KDF_INFO_CONTENT_KEY = 'content-key';
 export const KDF_INFO_EVENT_KEY = 'event-key';
 export const KDF_INFO_NONCE_KEY = 'nonce-key';
+export const KDF_INFO_RADIO_KEY = 'radio-key';
+export const KDF_INFO_RADIO_MAC_KEY = 'radio-mac';
 
-/** §5.1 AES-GCM nonce and tag sizes, and the resulting largest envelope. */
+/**
+ * §5.1 AES-GCM nonce and tag sizes, and the resulting largest envelope: that of the largest event
+ * a decoder accepts, since events written before radio frames were sealed still travel this way.
+ */
 export const ENVELOPE_NONCE_SIZE = 12;
 export const ENVELOPE_TAG_SIZE = 16;
-export const MAX_ENVELOPE_SIZE = ENVELOPE_NONCE_SIZE + MAX_EVENT_SIZE + ENVELOPE_TAG_SIZE;
+export const MAX_ENVELOPE_SIZE = ENVELOPE_NONCE_SIZE + MAX_DECODABLE_EVENT_SIZE + ENVELOPE_TAG_SIZE;
 /** §5.1 The smallest envelope: an event with an empty payload. */
 export const MIN_ENVELOPE_SIZE = ENVELOPE_NONCE_SIZE + HEADER_SIZE + ENVELOPE_TAG_SIZE;
 
@@ -338,8 +371,11 @@ export const SERVER_INFO_PATH = 'healthz';
 /** §8.2 Weather warnings endpoint, relative to the server base URL. */
 export const WEATHER_WARNINGS_PATH = 'v1/weather-warnings';
 
-/** §7.1 MeshCore application identifier, in MeshCore's development range until registered. */
-export const MESHCORE_DATA_TYPE = 0xff4d;
+/**
+ * §7.1 MeshCore application identifier of sealed frames, in MeshCore's development range until
+ * registered. It follows 0xFF4D, which carried events unsealed and is now ignored.
+ */
+export const MESHCORE_DATA_TYPE = 0xff4e;
 
 /** §7.2 Meshtastic port of Tesel events: PRIVATE_APP, the port Meshtastic leaves to private apps. */
 export const MESHTASTIC_PORTNUM = 256;

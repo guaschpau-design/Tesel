@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { decodeEvent, encodeEvent, isKeepable, peekHeader } from './codec.ts';
-import { EventTypeCode, MAX_EVENT_SIZE, TEAM_MAX_MEMBERS } from './constants.ts';
+import {
+  EventTypeCode,
+  MAX_DECODABLE_EVENT_SIZE,
+  MAX_EVENT_SIZE,
+  SHAPE_MAX_POINTS,
+  TEAM_MAX_MEMBERS,
+} from './constants.ts';
 import type { NodeId, ShapeEvent, TeselEvent } from './events.ts';
 import { TASK_TEXT_MAX_BYTES } from './fields.ts';
 import { EVENT_TYPES, PAYLOADS } from './payloads.ts';
@@ -138,7 +144,7 @@ describe('event codec', () => {
         origin: BOB,
         seq: 1,
         time: T0,
-        text: 'x'.repeat(151),
+        text: 'x'.repeat(139),
       };
       expect(encodeOrFail(event).length).toBe(MAX_EVENT_SIZE);
     });
@@ -149,7 +155,7 @@ describe('event codec', () => {
         origin: BOB,
         seq: 1,
         time: T0,
-        text: 'x'.repeat(152),
+        text: 'x'.repeat(140),
       };
       const result = encodeEvent(event);
       expect(result.ok ? null : result.error.code).toBe('too-large');
@@ -161,9 +167,21 @@ describe('event codec', () => {
         origin: BOB,
         seq: 1,
         time: T0,
-        text: 'ñ'.repeat(76),
+        text: 'ñ'.repeat(70),
       };
-      expect(encodeEvent(event).ok).toBe(false); // 152 bytes
+      expect(encodeEvent(event).ok).toBe(false); // 140 bytes
+    });
+
+    it('decodes events written before radio frames were sealed, up to their larger size', () => {
+      const chat = (length: number): Uint8Array =>
+        Uint8Array.from([
+          ...hex('0104a1b2c3d4010000000013fc68'),
+          ...new Uint8Array(length).fill(0x78),
+        ]);
+      expect(MAX_DECODABLE_EVENT_SIZE).toBe(165);
+      const earlier = decodeEvent(chat(151));
+      expect(earlier.ok && earlier.value).toMatchObject({ type: 'chat', text: 'x'.repeat(151) });
+      expect(decodeError(chat(152))).toBe('too-large');
     });
 
     it('refuses sequence number 0', () => {
@@ -208,12 +226,21 @@ describe('event codec', () => {
       return { ...baseShape, geometry: { kind: 'polyline', points } };
     }
 
-    it('fits 33 points with an empty label', () => {
-      expect(encodeOrFail(line(33, 0.001)).length).toBe(163);
+    it('fits 30 points with an empty label', () => {
+      expect(encodeOrFail(line(30, 0.001)).length).toBe(151);
     });
 
-    it('refuses a 34th point', () => {
-      expect(encodeEvent(line(34, 0.001)).ok).toBe(false);
+    it('refuses a 31st point', () => {
+      expect(encodeEvent(line(31, 0.001)).ok).toBe(false);
+    });
+
+    it('fits the points the app allows with the longest label', () => {
+      expect(SHAPE_MAX_POINTS).toBe(22);
+      const longest = { ...line(SHAPE_MAX_POINTS, 0.001), label: 'x'.repeat(32) };
+      expect(encodeOrFail(longest).length).toBeLessThanOrEqual(MAX_EVENT_SIZE);
+      expect(encodeEvent({ ...line(SHAPE_MAX_POINTS + 1, 0.001), label: 'x'.repeat(32) }).ok).toBe(
+        false,
+      );
     });
 
     it('refuses consecutive points too far apart for a 16-bit delta', () => {
@@ -499,7 +526,7 @@ describe('reports', () => {
   it('refuses a count of casualties above 254, and fits the longest note', () => {
     const casualties = { red: 255, yellow: 0, green: 0, black: 0 };
     expect(encodeEvent({ ...report, casualties }).ok).toBe(false);
-    expect(encodeOrFail({ ...report, note: 'x'.repeat(131) }).length).toBe(MAX_EVENT_SIZE);
+    expect(encodeOrFail({ ...report, note: 'x'.repeat(119) }).length).toBe(MAX_EVENT_SIZE);
   });
 });
 
@@ -527,8 +554,8 @@ describe('teams', () => {
     expect(encodeEvent({ ...team, name: '' }).ok).toBe(false);
   });
 
-  it('holds 28 members with the longest name', () => {
-    expect(TEAM_MAX_MEMBERS).toBe(28);
+  it('holds 25 members with the longest name', () => {
+    expect(TEAM_MAX_MEMBERS).toBe(25);
     const members = Array.from(
       { length: TEAM_MAX_MEMBERS },
       (_, index) => (0x10000000 + index).toString(16) as NodeId,

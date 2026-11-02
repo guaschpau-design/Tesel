@@ -43,6 +43,7 @@ import {
   enumValue,
   MARKER_LABEL_MAX_BYTES,
   REPORT_NOTE_MAX_BYTES,
+  readableMaxBytes,
   readAssignee,
   readFlags,
   readGeometry,
@@ -129,7 +130,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
     read: (reader, header) => ({
       ...header,
       type: 'chat',
-      text: reader.textRest(1, CHAT_MAX_BYTES, 'chat text'),
+      text: reader.textRest(1, readableMaxBytes(CHAT_MAX_BYTES), 'chat text'),
     }),
   },
   // §3.6
@@ -145,7 +146,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       const object = readRef(reader);
       const symbol = reader.u16();
       const point = readPoint(reader);
-      const label = reader.textRest(0, MARKER_LABEL_MAX_BYTES, 'marker label');
+      const label = reader.textRest(0, readableMaxBytes(MARKER_LABEL_MAX_BYTES), 'marker label');
       return { ...header, type: 'marker', object, symbol, ...point, label };
     },
   },
@@ -188,7 +189,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       const kind = enumValue(SosKindCode, reader.u8(), 'general');
       const point = readPoint(reader);
       const accuracy = readMeasurement(reader, ACCURACY_SCALE);
-      const text = reader.textRest(0, SOS_TEXT_MAX_BYTES, 'SOS text');
+      const text = reader.textRest(0, readableMaxBytes(SOS_TEXT_MAX_BYTES), 'SOS text');
       return { ...header, type: 'sos', kind, ...point, accuracy, text };
     },
   },
@@ -209,7 +210,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
     },
     read(reader, header) {
       const level = enumValue(AlertLevelCode, reader.u8(), 'warning');
-      const text = reader.textRest(1, ALERT_TEXT_MAX_BYTES, 'alert text');
+      const text = reader.textRest(1, readableMaxBytes(ALERT_TEXT_MAX_BYTES), 'alert text');
       return { ...header, type: 'alert', level, text };
     },
   },
@@ -236,7 +237,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       const status = enumValue(TaskStatusCode, reader.u8(), 'open');
       const assignee = readAssignee(reader);
       const place = readPlace(reader);
-      const text = reader.textRest(1, TASK_TEXT_MAX_BYTES, 'task text');
+      const text = reader.textRest(1, readableMaxBytes(TASK_TEXT_MAX_BYTES), 'task text');
       return { ...header, type: 'task', task, status, assignee, place, text };
     },
   },
@@ -249,7 +250,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
     read: (reader, header) => ({
       ...header,
       type: 'roll-call',
-      text: reader.textRest(0, ROLL_CALL_TEXT_MAX_BYTES, 'roll call text'),
+      text: reader.textRest(0, readableMaxBytes(ROLL_CALL_TEXT_MAX_BYTES), 'roll call text'),
     }),
   },
   // §3.13
@@ -311,7 +312,7 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
         black: black ?? null,
       };
       const resources = readFlags(reader, ResourceBit, 2);
-      const note = reader.textRest(0, REPORT_NOTE_MAX_BYTES, 'report note');
+      const note = reader.textRest(0, readableMaxBytes(REPORT_NOTE_MAX_BYTES), 'report note');
       return {
         ...header,
         type: 'report',

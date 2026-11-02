@@ -2,7 +2,12 @@
 // payloads.ts, and the field helpers in fields.ts.
 
 import { ByteReader, ByteWriter, ProtocolFailure } from './bytes.ts';
-import { MAX_EVENT_SIZE, NODE_ID_SIZE, PROTOCOL_VERSION } from './constants.ts';
+import {
+  MAX_DECODABLE_EVENT_SIZE,
+  MAX_EVENT_SIZE,
+  NODE_ID_SIZE,
+  PROTOCOL_VERSION,
+} from './constants.ts';
 import type { EventHeader, TeselEvent } from './events.ts';
 import { nodeIdFromBytes, nodeIdToBytes } from './node-id.ts';
 import { payloadOf, payloadOfCode } from './payloads.ts';
@@ -13,7 +18,10 @@ export interface RawHeader extends EventHeader {
   readonly typeCode: number;
 }
 
-/** Encodes an event. Fails if a field is out of range or the result exceeds 165 bytes. */
+/**
+ * Encodes an event. Fails if a field is out of range or the result exceeds MAX_EVENT_SIZE, the
+ * room an event has once sealed for the radio (§2).
+ */
 export function encodeEvent(event: TeselEvent): Result<Uint8Array, ProtocolError> {
   return catchFailure(() => {
     const writer = new ByteWriter();
@@ -81,8 +89,9 @@ function writeHeader(writer: ByteWriter, event: TeselEvent, typeCode: number): v
     .u32(event.time);
 }
 
+/** Accepts events up to the larger size of those written before radio frames were sealed (§2). */
 function readHeader(reader: ByteReader, totalLength: number): RawHeader {
-  if (totalLength > MAX_EVENT_SIZE) {
+  if (totalLength > MAX_DECODABLE_EVENT_SIZE) {
     throw new ProtocolFailure('too-large', `input is ${totalLength} bytes`);
   }
   const version = reader.u8();

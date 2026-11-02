@@ -7,6 +7,7 @@ import {
   EVENT_REF_SIZE,
   HEADER_SIZE,
   KIND_SIZE,
+  MAX_DECODABLE_EVENT_SIZE,
   MAX_EVENT_SIZE,
   NODE_ID_SIZE,
   PLACE_SIZE,
@@ -33,6 +34,14 @@ export const TASK_TEXT_MAX_BYTES =
   PAYLOAD_BUDGET - EVENT_REF_SIZE - KIND_SIZE - NODE_ID_SIZE - KIND_SIZE - PLACE_SIZE; // §3.11
 export const ROLL_CALL_TEXT_MAX_BYTES = PAYLOAD_BUDGET; // §3.12
 export const REPORT_NOTE_MAX_BYTES = PAYLOAD_BUDGET - REPORT_FIXED_SIZE; // §3.16
+
+/**
+ * The longest text a decoder accepts in a field limited above: events written before radio frames
+ * were sealed had the larger budget of MAX_DECODABLE_EVENT_SIZE, and still decode (§2).
+ */
+export function readableMaxBytes(maxBytes: number): number {
+  return maxBytes + MAX_DECODABLE_EVENT_SIZE - MAX_EVENT_SIZE;
+}
 
 // --- Enumerations ------------------------------------------------------------------------
 // Each value's code is written out in constants.ts (RoleCode and the like), never taken from an
