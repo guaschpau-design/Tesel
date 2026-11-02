@@ -2,7 +2,7 @@
      under "Advanced options", which most people never open: folded, it says only whether it is
      Tesel's. -->
 <script lang="ts">
-  import { GROUP_NAME_MAX_BYTES } from '@tesel/protocol';
+  import { GROUP_NAME_MAX_BYTES, isWellFormedText } from '@tesel/protocol';
 
   import { defaultServerUrl } from '../config.ts';
   import type { Translate } from '../i18n/index.ts';
@@ -22,7 +22,7 @@
 
   let newName = $state('');
   const groupName = $derived(normalizeGroupName(newName));
-  const nameTooLong = $derived(newName.trim() !== '' && groupName === null);
+  const nameInvalid = $derived(newName.trim() !== '' && groupName === null);
   const proposed = defaultServerUrl() ?? '';
   let serverText = $state(proposed);
   const server = $derived(normalizeServerUrl(serverText));
@@ -55,7 +55,9 @@
     <!-- svelte-ignore a11y_autofocus -->
     <input bind:value={newName} maxlength={GROUP_NAME_MAX_BYTES} autofocus />
   </label>
-  {#if nameTooLong}<p class="warning">{t('nameInvalid')}</p>{/if}
+  {#if nameInvalid}
+    <p class="warning">{isWellFormedText(newName) ? t('nameInvalid') : t('nameBroken')}</p>
+  {/if}
   <Fold title={t('advancedOptions')} summary={serverSummary} open={server === undefined}>
     <label>
       {t('server')}

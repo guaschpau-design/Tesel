@@ -13,6 +13,11 @@ describe('local identity', () => {
     expect(normalizeAlias('x'.repeat(33))).toBeNull();
   });
 
+  it('refuses an alias with half of an emoji, which no event could carry', () => {
+    expect(normalizeAlias('Pau 🚒')).toBe('Pau 🚒');
+    expect(normalizeAlias(`Pau ${'🚒'.slice(1)}`)).toBeNull();
+  });
+
   it('survives a restart of the app', async () => {
     const db = await openAppDb('identity-test');
     expect(await loadIdentity(db)).toBeUndefined();

@@ -19,11 +19,16 @@ const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }); // keep a leading U+FEFF: decoding must be lossless
 
 /**
- * A text as UTF-8. Half of a surrogate pair cannot be written in UTF-8 and would silently become
- * U+FFFD, sending other text than was meant: it is refused instead.
+ * Whether a text can be written in UTF-8: it holds no half of a surrogate pair, which would
+ * silently become U+FFFD and send other text than was meant.
  */
+export function isWellFormedText(text: string): boolean {
+  return !/\p{Cs}/u.test(text);
+}
+
+/** A text as UTF-8; a text that is not well formed (isWellFormedText) is refused. */
 export function encodeUtf8(text: string): Uint8Array {
-  if (/\p{Cs}/u.test(text)) {
+  if (!isWellFormedText(text)) {
     throw new ProtocolFailure('invalid-utf8', 'text holds half of a surrogate pair');
   }
   return utf8Encoder.encode(text);

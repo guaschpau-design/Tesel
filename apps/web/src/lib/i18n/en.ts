@@ -99,6 +99,7 @@ export const en = {
   aliasLabel: 'Your name in the group',
   aliasHint: 'Short: a name or a nickname.',
   nameInvalid: 'Write a shorter name.',
+  nameBroken: 'The name has a broken character, such as half an emoji: delete it.',
   continue: 'Continue',
   invitedTo: 'You have been invited to “{group}” as {role}.',
   joinNamed: 'Join “{group}”',

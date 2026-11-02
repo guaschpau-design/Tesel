@@ -55,6 +55,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 ### Groups
 
 - Local identity with no accounts: an alias and a key pair generated on the device.
+- A name with a broken character, such as half an emoji cut off by the field's length, is refused with that reason, for a person and for a group, whose invitations could not be made.
 - Groups with coordinator and member roles; invitations by link or QR code, scanned in any browser.
 - Groups in one panel: the group in use with its members, shown by their initials with signs for a live position and for radio, and «Invitar»; for whoever coordinates, teams and the check-in fold under «Organizar»; leaving is at the bottom. With no group, a «Para empezar» card on the map offers creating one or joining one; the server of a new group is proposed and tucked away ([ADR-0070](docs/decisions/0070-a-simpler-app.md)).
 - Leaving a group forgets all it left on the device, including what was still being written for it as it was left, cleared the next time the app opens. A group that cannot be opened says so, with a button to try again.

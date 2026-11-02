@@ -97,6 +97,7 @@ export const es: Messages = {
   aliasLabel: 'Tu nombre en el grupo',
   aliasHint: 'Corto: un nombre o un apodo.',
   nameInvalid: 'Escribe un nombre más corto.',
+  nameBroken: 'El nombre tiene un carácter roto, como medio emoji: bórralo.',
   continue: 'Continuar',
   invitedTo: 'Te han invitado a «{group}» como {role}.',
   joinNamed: 'Entrar en «{group}»',

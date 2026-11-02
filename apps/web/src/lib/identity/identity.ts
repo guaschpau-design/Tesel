@@ -5,6 +5,7 @@ import {
   ALIAS_MAX_BYTES,
   ALIAS_MIN_BYTES,
   generateIdentity,
+  isWellFormedText,
   utf8ByteLength,
   type Identity,
   type RandomSource,
@@ -16,11 +17,16 @@ export interface LocalIdentity extends Identity {
   readonly createdAt: number;
 }
 
-/** Trims an alias and returns it, or null if it does not fit the protocol's limits. */
+/**
+ * Trims an alias and returns it, or null if it does not fit the protocol's limits or holds half of
+ * a surrogate pair, which no event could carry.
+ */
 export function normalizeAlias(text: string): string | null {
   const alias = text.trim();
   const size = utf8ByteLength(alias);
-  return size >= ALIAS_MIN_BYTES && size <= ALIAS_MAX_BYTES ? alias : null;
+  return isWellFormedText(alias) && size >= ALIAS_MIN_BYTES && size <= ALIAS_MAX_BYTES
+    ? alias
+    : null;
 }
 
 export function createLocalIdentity(

@@ -1,7 +1,8 @@
 <!-- The name the group sees this person by: typed on first launch (Onboarding) and changed in Me.
-     Says when it is too long for the protocol. -->
+     Says when it is too long for the protocol, or holds a broken character, half of an emoji cut
+     off by the field's length. -->
 <script lang="ts">
-  import { ALIAS_MAX_BYTES } from '@tesel/protocol';
+  import { ALIAS_MAX_BYTES, isWellFormedText } from '@tesel/protocol';
 
   import type { Translate } from '../i18n/index.ts';
   import { normalizeAlias } from './identity.ts';
@@ -14,7 +15,7 @@
 
   let { t, text, ontext }: Props = $props();
 
-  const tooLong = $derived(text.trim() !== '' && normalizeAlias(text) === null);
+  const invalid = $derived(text.trim() !== '' && normalizeAlias(text) === null);
 </script>
 
 <label>
@@ -31,6 +32,12 @@
     autofocus
   />
 </label>
-<p class:warning={tooLong} class:hint={!tooLong}>
-  {tooLong ? t('nameInvalid') : t('aliasHint')}
+<p class:warning={invalid} class:hint={!invalid}>
+  {#if !invalid}
+    {t('aliasHint')}
+  {:else if isWellFormedText(text)}
+    {t('nameInvalid')}
+  {:else}
+    {t('nameBroken')}
+  {/if}
 </p>

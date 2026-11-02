@@ -87,4 +87,10 @@ describe('groups', () => {
     expect(normalizeGroupName('ñ'.repeat(16))).toBe('ñ'.repeat(16));
     expect(normalizeGroupName('ñ'.repeat(17))).toBeNull();
   });
+
+  it('refuses a group name with half of an emoji, which no invitation could carry', () => {
+    const fire = '🔥';
+    expect(normalizeGroupName(`Incendio ${fire}`)).toBe(`Incendio ${fire}`);
+    expect(normalizeGroupName(`Incendio ${fire.slice(0, 1)}`)).toBeNull();
+  });
 });

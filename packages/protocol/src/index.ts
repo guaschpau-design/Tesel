@@ -1,5 +1,5 @@
 export * from './base64url.ts';
-export { bytesEqual, compareBytes, utf8ByteLength } from './bytes.ts';
+export { bytesEqual, compareBytes, isWellFormedText, utf8ByteLength } from './bytes.ts';
 export {
   compareEncodings,
   decodeEvent,

@@ -6,6 +6,7 @@ import {
   generateGroupSecret,
   GROUP_NAME_MAX_BYTES,
   isSecureUrl,
+  isWellFormedText,
   SERVER_URL_MAX_BYTES,
   toBase64url,
   utf8ByteLength,
@@ -35,11 +36,14 @@ export interface StoredGroup {
 /** What joining through an invitation did. */
 export type JoinOutcome = 'joined' | 'promoted' | 'already-member';
 
-/** Trims a group name and returns it, or null if it does not fit the protocol's limits. */
+/**
+ * Trims a group name and returns it, or null if it does not fit the protocol's limits or holds
+ * half of a surrogate pair, which no invitation could carry.
+ */
 export function normalizeGroupName(text: string): string | null {
   const name = text.trim();
   const size = utf8ByteLength(name);
-  return size >= 1 && size <= GROUP_NAME_MAX_BYTES ? name : null;
+  return isWellFormedText(name) && size >= 1 && size <= GROUP_NAME_MAX_BYTES ? name : null;
 }
 
 /**
