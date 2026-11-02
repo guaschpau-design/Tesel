@@ -17,7 +17,7 @@
   import { formatDistance } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
-  import type { ReportFields } from '../sync/group-feed.svelte.ts';
+  import type { ReportFields } from '../sync/event-fields.ts';
   import Fold from '../ui/Fold.svelte';
   import { Submission } from '../ui/submission.svelte.ts';
   import { ACCESS, HAZARDS, INCIDENTS, labelOf, RESOURCES, TRIAGE } from './report-catalog.ts';

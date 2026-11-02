@@ -4,7 +4,8 @@
 
 import type { MessageKey, Translate } from '../i18n/index.ts';
 import { notices, type NoticeAction } from '../ui/notices.svelte.ts';
-import type { Delivery, GroupFeed } from './group-feed.svelte.ts';
+import type { GroupFeed } from './group-feed.svelte.ts';
+import type { Delivery } from './group-sync.svelte.ts';
 
 const SENT: Readonly<Record<Delivery, MessageKey>> = {
   group: 'sentToGroup',

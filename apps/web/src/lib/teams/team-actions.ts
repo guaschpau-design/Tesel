@@ -3,7 +3,8 @@
 
 import { TEAM_MAX_MEMBERS, type TeamEvent } from '@tesel/protocol';
 
-import type { GroupFeed, TeamFields } from '../sync/group-feed.svelte.ts';
+import type { TeamFields } from '../sync/event-fields.ts';
+import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import { fieldsOf as taskFields, isPending } from '../tasks/tasks.ts';
 import { activeTeams } from './teams.ts';
 

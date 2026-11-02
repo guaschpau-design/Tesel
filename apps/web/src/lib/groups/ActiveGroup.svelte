@@ -6,7 +6,8 @@
   import type { Translate } from '../i18n/index.ts';
   import { CHECK_IN_MINUTES } from '../me/check-in.ts';
   import MemberList from '../members/MemberList.svelte';
-  import type { GroupFeed, TeamFields } from '../sync/group-feed.svelte.ts';
+  import type { TeamFields } from '../sync/event-fields.ts';
+  import type { GroupFeed } from '../sync/group-feed.svelte.ts';
   import { dissolveTeam, saveTeam } from '../teams/team-actions.ts';
   import TeamForm from '../teams/TeamForm.svelte';
   import Fold from '../ui/Fold.svelte';

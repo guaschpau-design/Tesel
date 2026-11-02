@@ -1,149 +1,73 @@
-// The live picture of one group: its event log on this device, kept in sync with the group's
-// server, and the actions that add events to it. Components read `state` and `status`.
+// The live picture of one group and what this device does in it. Its log, kept in sync with the
+// group's server and radio, is a GroupSync (group-sync.svelte.ts); the events of each action are
+// built in member-events.ts. Components read `state` and `status`.
 
-import {
-  EMPTY_STATE,
-  isOutlived,
-  outlivedEvents,
-  reduceAll,
-  type GroupState,
-  type LoraEvent,
-} from '@tesel/core';
-import {
-  bytesEqual,
-  decodeEvent,
-  deriveGroupKeys,
-  eventKey,
-  eventRefKey,
-  NO_SOS_PLACE,
-  openEnvelope,
-  peekHeader,
-  sealEnvelope,
-  toBase64url,
-  type EventHeader,
-  type EventRef,
-  type GroupKeys,
-  type LatLon,
-  type MarkerEvent,
-  type MemberStateEvent,
-  type ObjectRef,
-  type ReportEvent,
-  type ShapeEvent,
-  type ShapeGeometry,
-  type SosKind,
-  type TeamEvent,
-  type TeselEvent,
+import type { GroupState, LoraEvent } from '@tesel/core';
+import type {
+  EventRef,
+  LatLon,
+  MarkerEvent,
+  ObjectRef,
+  ShapeEvent,
+  ShapeGeometry,
+  SosKind,
 } from '@tesel/protocol';
-import { SvelteSet } from 'svelte/reactivity';
 
-import {
-  confirmStored,
-  forgetEvents,
-  loadEvents,
-  markAired,
-  pendingEvents,
-  publishEvent,
-  receiveEvents,
-  requeueOwnEvents,
-} from '../events/event-log.ts';
 import type { StoredGroup } from '../groups/group.ts';
 import { setChatSeen } from '../groups/group-store.ts';
 import type { LocalIdentity } from '../identity/identity.ts';
-import { hear, NOTHING_HEARD, type Channel, type Heard } from '../links/heard.ts';
+import type { Heard } from '../links/heard.ts';
 import type { DeviceFix } from '../position/device-location.svelte.ts';
-import type { AppDb, GroupEventRef } from '../storage/app-db.ts';
+import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { TaskFields } from '../tasks/tasks.ts';
-import { loadPosition, savePosition } from './cursor-store.ts';
 import {
-  RelayClient,
-  type ReceivedEnvelope,
-  type RelayStatus,
-  type SocketLike,
-} from './relay-client.ts';
-import { openLogFile, sealLogFile, type LogImport } from './log-file.ts';
+  isUntold,
+  sameState,
+  type MemberStateFields,
+  type ReportFields,
+  type TeamFields,
+} from './event-fields.ts';
+import { GroupSync, type Delivery, type FeedStatus } from './group-sync.svelte.ts';
+import type { LogImport } from './log-file.ts';
+import type { LoraSink } from './lora-events.ts';
 import {
-  catchUpPackets,
-  loraEventOf,
-  peekType,
-  standingEvents,
-  type LoraSink,
-} from './lora-events.ts';
-import { checkServerClock } from './server-clock.ts';
-
-/** `local-only` when the group has no server: events stay on this device (and LoRa, later). */
-export type FeedStatus = RelayStatus | 'local-only';
-
-/**
- * Where what this device has just sent is: with the group (through the server), on its way by
- * radio, or waiting on the device for a way out.
- */
-export type Delivery = 'group' | 'radio' | 'waiting';
+  ack,
+  chat,
+  checkInTimer,
+  editedObject,
+  memberInfo,
+  memberState,
+  newMarker,
+  newShape,
+  objectDelete,
+  position,
+  positionHidden,
+  report,
+  restyledShape,
+  sos,
+  sosCancel,
+  sweepStrip,
+  task,
+  team,
+} from './member-events.ts';
+import type { SocketLike } from './relay-client.ts';
 
 export class GroupFeed {
-  state: GroupState = $state.raw(EMPTY_STATE);
-  status: FeedStatus = $state('local-only');
-  /** What this device has heard from each member, by channel, since the feed opened. */
-  heard: Heard = $state.raw(NOTHING_HEARD);
   /** How many chat lines and reports of others this device has shown (chat/unread.ts). */
   chatSeen = $state(0);
-  /**
-   * Own events neither stored by a relay nor put on the air, by event reference key.
-   */
-  get undelivered(): ReadonlySet<string> {
-    return this.#undelivered;
-  }
-  readonly #undelivered = new SvelteSet<string>();
 
   readonly #db: AppDb;
   readonly #group: StoredGroup;
   #identity: LocalIdentity;
-  readonly #keys: GroupKeys;
-  readonly #client: RelayClient | null;
-  /** Outbox entries pushed on this connection, by event key, until the server stores them. */
-  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping, never rendered
-  readonly #pushed = new Map<string, GroupEventRef>();
-  readonly #retry = () => this.#client?.retryNow();
-  #lora: LoraSink | null = null;
+  readonly #sync: GroupSync;
 
-  private constructor(
-    db: AppDb,
-    group: StoredGroup,
-    identity: LocalIdentity,
-    createSocket: ((url: string) => SocketLike) | undefined,
-  ) {
+  private constructor(db: AppDb, group: StoredGroup, identity: LocalIdentity, sync: GroupSync) {
     this.#db = db;
     this.#group = group;
     this.chatSeen = group.chatSeen ?? 0;
     this.#identity = identity;
-    this.#keys = deriveGroupKeys(group.secret);
-    const server = group.server;
-    this.#client =
-      server === null
-        ? null
-        : new RelayClient({
-            server,
-            group: this.#keys.groupId,
-            ...(createSocket ? { createSocket } : {}),
-            handlers: {
-              position: () => loadPosition(db, group.id, server),
-              onEnvelopes: (batch, store) => this.#receive(batch, server, store),
-              onSynced: async (position) => {
-                await savePosition(db, group.id, server, position);
-                await this.#flushOutbox();
-              },
-              onStoreChanged: async (store) => {
-                await savePosition(db, group.id, server, { cursor: 0, store });
-                await requeueOwnEvents(db, group.id, identity.nodeId);
-              },
-              onStored: (key) => this.#confirm(key),
-              onStatus: (status) => {
-                this.status = status;
-                // Each try to connect checks this device's clock against the server's.
-                if (status === 'connecting') void checkServerClock(server);
-              },
-            },
-          });
+    this.#sync = sync;
   }
 
   /**
@@ -157,26 +81,37 @@ export class GroupFeed {
     identity: LocalIdentity,
     createSocket?: (url: string) => SocketLike,
   ): Promise<GroupFeed> {
-    const feed = new GroupFeed(db, group, identity, createSocket);
-    await feed.#apply(await loadEvents(db, group.id));
-    // The outbox also holds other members' events this device heard by radio and forwards: those
-    // are not its to deliver.
-    for (const { entry } of await pendingEvents(db, group.id)) {
-      if (entry.origin === identity.nodeId && entry.aired !== true) {
-        feed.#undelivered.add(eventRefKey(entry));
-      }
-    }
+    const sync = await GroupSync.load(db, group, identity.nodeId, createSocket);
+    const feed = new GroupFeed(db, group, identity, sync);
     // Opening does not depend on announcing: a device whose storage is full still shows the group.
     await feed.#announceSelf().catch((error: unknown) => {
       storageRefusals.note(error);
       console.warn('Announcing this device to the group failed', error);
     });
-    if (feed.#client) {
-      window.addEventListener('online', feed.#retry);
-      document.addEventListener('visibilitychange', feed.#retry);
-      feed.#client.start();
-    }
+    sync.connect();
     return feed;
+  }
+
+  get state(): GroupState {
+    return this.#sync.state;
+  }
+
+  get status(): FeedStatus {
+    return this.#sync.status;
+  }
+
+  /** What this device has heard from each member, by channel, since the feed opened. */
+  get heard(): Heard {
+    return this.#sync.heard;
+  }
+
+  /** Own events neither stored by a relay nor put on the air, by event reference key. */
+  get undelivered(): ReadonlySet<string> {
+    return this.#sync.undelivered;
+  }
+
+  get delivery(): Delivery {
+    return this.#sync.delivery;
   }
 
   get groupId(): string {
@@ -192,85 +127,33 @@ export class GroupFeed {
     return { name: this.#group.name, secret: this.#group.secret };
   }
 
-  /**
-   * Connects the feed to a radio, or disconnects it with null. While connected, own events go
-   * on the air too, and so do events from the server: this device bridges them (ARCHITECTURE.md
-   * §4.3). On connecting, the radio is given what it missed while there was none
-   * (`catchUpPackets`).
-   */
-  async attachRadio(sink: LoraSink | null): Promise<void> {
-    this.#lora = sink;
-    if (sink === null) return;
-    const pending = await pendingEvents(this.#db, this.#group.id);
-    // The radio may have gone while the outbox was read: what it missed waits for the next one.
-    if (this.#lora !== sink) return;
-    for (const event of standingEvents(this.state)) sink.observe(event);
-    for (const packet of catchUpPackets(this.state, this.#identity.nodeId, pending)) {
-      sink.offer(packet, 'own');
-    }
+  /** Connects the feed to a radio, or disconnects it with null (`GroupSync.attachRadio`). */
+  attachRadio(sink: LoraSink | null): Promise<void> {
+    return this.#sync.attachRadio(sink);
   }
 
-  /**
-   * An event this device put on the air. For a group without a server the radio is the only way
-   * out, so the event leaves the outbox; otherwise the server still has to store it.
-   */
-  async radioSent(event: LoraEvent): Promise<void> {
-    if (event.origin !== this.#identity.nodeId) return;
-    const entry = { groupId: this.#group.id, origin: event.origin, seq: event.seq };
-    this.#undelivered.delete(eventRefKey(entry));
-    if (this.#group.server === null) await confirmStored(this.#db, entry);
-    else await markAired(this.#db, entry);
+  /** An event this device put on the air. */
+  radioSent(event: LoraEvent): Promise<void> {
+    return this.#sync.radioSent(event);
   }
 
   /** An event heard over the radio. */
-  async receiveFromRadio(bytes: Uint8Array): Promise<void> {
-    const heard = loraEventOf(bytes);
-    if (heard) this.#lora?.heard(heard);
-    this.#hear('radio', [bytes]);
-    await this.#take([bytes]);
+  receiveFromRadio(bytes: Uint8Array): Promise<void> {
+    return this.#sync.receiveFromRadio(bytes);
   }
 
-  /**
-   * The group's log as a log file: every event this device keeps, which is all but the positions
-   * its state has outlived (ADR-0055).
-   */
-  async exportLog(): Promise<string> {
-    return sealLogFile(this.#keys, await loadEvents(this.#db, this.#group.id));
+  /** The group's log as a log file. */
+  exportLog(): Promise<string> {
+    return this.#sync.exportLog();
   }
 
   /** Takes the events of a log file of this group that this device is missing. */
-  async importLog(text: string): Promise<LogImport> {
-    const opened = openLogFile(this.#keys, text);
-    if (!Array.isArray(opened)) return opened;
-    const received = await this.#take(opened);
-    return { kind: 'loaded', added: received, total: opened.length };
+  importLog(text: string): Promise<LogImport> {
+    return this.#sync.importLog(text);
   }
 
   close(): void {
-    if (this.#client === null) return;
-    window.removeEventListener('online', this.#retry);
-    document.removeEventListener('visibilitychange', this.#retry);
-    this.#client.stop();
-  }
-
-  async sendChat(text: string): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'chat', text }));
-  }
-
-  async sharePosition({ at, accuracy, heading, speed }: DeviceFix): Promise<void> {
-    await this.#publish((header) => ({
-      ...header,
-      type: 'position',
-      ...at,
-      accuracy,
-      heading,
-      speed,
-    }));
-  }
-
-  get delivery(): Delivery {
-    if (this.status === 'synced') return 'group';
-    return this.#lora === null ? 'waiting' : 'radio';
+    this.#sync.close();
   }
 
   /** The chat has been shown up to `seen` lines and reports of others; kept for the next visit. */
@@ -285,104 +168,71 @@ export class GroupFeed {
     return this.state.positions.get(this.#identity.nodeId)?.type === 'position';
   }
 
-  /** Tells the group to stop showing this device's position; returns the event's reference. */
-  hidePosition(): Promise<EventRef> {
-    return this.#publish((header) => ({ ...header, type: 'position-hidden' }));
+  async sendChat(text: string): Promise<void> {
+    await this.#sync.publish(chat(text));
   }
 
-  /** Creates a marker; the event's own reference becomes the object's (protocol §3.10). */
+  async sharePosition(fix: DeviceFix): Promise<void> {
+    await this.#sync.publish(position(fix));
+  }
+
+  /** Tells the group to stop showing this device's position; returns the event's reference. */
+  hidePosition(): Promise<EventRef> {
+    return this.#sync.publish(positionHidden());
+  }
+
   async placeMarker(at: LatLon, symbol: number, label: string): Promise<void> {
-    await this.#publish((header) => ({
-      ...header,
-      type: 'marker',
-      object: { origin: header.origin, seq: header.seq },
-      symbol,
-      ...at,
-      label,
-    }));
+    await this.#sync.publish(newMarker(at, symbol, label));
   }
 
   async drawShape(geometry: ShapeGeometry, style: number, label: string): Promise<void> {
-    await this.#publish((header) => ({
-      ...header,
-      type: 'shape',
-      object: { origin: header.origin, seq: header.seq },
-      style,
-      label,
-      geometry,
-    }));
+    await this.#sync.publish(newShape(geometry, style, label));
   }
 
-  /** Gives a shape another style, keeping all else (protocol §3.10). */
   async restyleShape(shape: ShapeEvent, style: number): Promise<void> {
-    const { object, label, geometry } = shape;
-    await this.#publish((header) => ({ ...header, type: 'shape', object, style, label, geometry }));
+    await this.#sync.publish(restyledShape(shape, style));
   }
 
-  /** Creates one strip of a sweep of `area` (protocol §3.13) and returns its object reference. */
+  /** Creates one strip of a sweep of `area` and returns its object reference. */
   async addSweepStrip(
     area: ObjectRef,
     recipe: { readonly spacing: number; readonly heading: number },
     strip: number,
     strips: number,
   ): Promise<ObjectRef> {
-    return this.#publish((header) => ({
-      ...header,
-      type: 'sweep',
-      object: { origin: header.origin, seq: header.seq },
-      area,
-      ...recipe,
-      strip,
-      strips,
-    }));
+    return this.#sync.publish(sweepStrip(area, recipe, strip, strips));
   }
 
   /** Changes the label and the symbol or style of a marker or a shape, keeping where it is. */
   async editObject(record: MarkerEvent | ShapeEvent, code: number, label: string): Promise<void> {
-    await this.#publish((header) =>
-      record.type === 'marker'
-        ? { ...record, ...header, symbol: code, label }
-        : { ...record, ...header, style: code, label },
-    );
+    await this.#sync.publish(editedObject(record, code, label));
   }
 
   async deleteObject(object: ObjectRef): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'object-delete', object }));
+    await this.#sync.publish(objectDelete(object));
   }
 
-  /**
-   * Calls for help from `at`, or with no place when this device has no position (§3.8); returns
-   * the call's reference.
-   */
+  /** Calls for help, from `at` if this device has a position; returns the call's reference. */
   sendSos(
     kind: SosKind,
     at: LatLon | null,
     accuracy: number | null,
     text: string,
   ): Promise<EventRef> {
-    const place = at === null ? NO_SOS_PLACE : { ...at, accuracy };
-    return this.#publish((header) => ({ ...header, type: 'sos', kind, ...place, text }));
+    return this.#sync.publish(sos(kind, at, accuracy, text));
   }
 
-  async cancelSos(sos: EventRef): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'sos-cancel', sos }));
+  async cancelSos(call: EventRef): Promise<void> {
+    await this.#sync.publish(sosCancel(call));
   }
 
   async acknowledge(target: EventRef): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'ack', target }));
+    await this.#sync.publish(ack(target));
   }
 
-  /**
-   * Creates a task, or changes the task `task` refers to; a new task's reference is its own event's
-   * (protocol §3.11).
-   */
-  async writeTask(task: EventRef | null, fields: TaskFields): Promise<void> {
-    await this.#publish((header) => ({
-      ...header,
-      type: 'task',
-      task: task ?? { origin: header.origin, seq: header.seq },
-      ...fields,
-    }));
+  /** Creates a task, or changes the task `ref` refers to. */
+  async writeTask(ref: EventRef | null, fields: TaskFields): Promise<void> {
+    await this.#sync.publish(task(ref, fields));
   }
 
   /**
@@ -392,22 +242,21 @@ export class GroupFeed {
   async shareState(state: MemberStateFields): Promise<void> {
     const known = this.state.memberStates.get(this.#identity.nodeId);
     if (known === undefined ? isUntold(state) : sameState(known, state)) return;
-    await this.#publish((header) => ({ ...header, type: 'member-state', ...state }));
+    await this.#sync.publish(memberState(state));
   }
 
-  /** Turns the group's safety check-in on after `minutes`, or off with 0 (protocol §3.17). */
+  /** Turns the group's safety check-in on after `minutes`, or off with 0. */
   async setCheckInTimer(minutes: number): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'check-in-timer', minutes }));
+    await this.#sync.publish(checkInTimer(minutes));
   }
 
-  /** Sends a situation report (protocol §3.16). */
-  async sendReport(report: ReportFields): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'report', ...report }));
+  async sendReport(fields: ReportFields): Promise<void> {
+    await this.#sync.publish(report(fields));
   }
 
-  /** Creates or changes a team (protocol §3.15). */
-  async writeTeam(team: TeamFields): Promise<void> {
-    await this.#publish((header) => ({ ...header, type: 'team', ...team }));
+  /** Creates or changes a team. */
+  async writeTeam(fields: TeamFields): Promise<void> {
+    await this.#sync.publish(team(fields));
   }
 
   /** This device goes by another name from now on: the group is told (MEMBER_INFO). */
@@ -420,178 +269,6 @@ export class GroupFeed {
   async #announceSelf(): Promise<void> {
     const known = this.state.members.get(this.#identity.nodeId);
     if (known?.alias === this.#identity.alias && known.role === this.#group.role) return;
-    await this.#publish((header) => ({
-      ...header,
-      type: 'member-info',
-      role: this.#group.role,
-      publicKey: this.#identity.publicKey,
-      alias: this.#identity.alias,
-    }));
+    await this.#sync.publish(memberInfo(this.#group.role, this.#identity));
   }
-
-  /** Creates an event of this device, sends it every way there is, and returns its reference. */
-  async #publish(build: (header: EventHeader) => TeselEvent): Promise<EventRef> {
-    const header = { origin: this.#identity.nodeId, time: Math.floor(Date.now() / 1000) };
-    const { entry, bytes } = await publishEvent(this.#db, this.#group.id, build, header);
-    this.#undelivered.add(eventRefKey(entry));
-    const [event] = await this.#apply([bytes]);
-    this.#push(entry, bytes);
-    if (event) this.#lora?.offer({ event, bytes }, 'own');
-    return { origin: entry.origin, seq: entry.seq };
-  }
-
-  /**
-   * Events that did not come from the group's server (by radio or from a file):
-   * the new ones are stored, applied and, with a server, passed on to it. Returns how many were new.
-   */
-  async #take(batch: readonly Uint8Array[]): Promise<number> {
-    const forward = this.#client !== null;
-    const received = await receiveEvents(this.#db, this.#group.id, this.#current(batch), {
-      forward,
-    });
-    await this.#apply(received.map(({ bytes }) => bytes));
-    for (const { entry, bytes } of received) this.#push(entry, bytes);
-    return received.length;
-  }
-
-  /**
-   * A batch from the group's server: stored with its cursor, then applied to the picture at once.
-   * If it cannot be stored, the cursor stays behind it and the server sends it again on
-   * reconnecting; a full storage is told to the user meanwhile.
-   */
-  async #receive(
-    batch: readonly ReceivedEnvelope[],
-    server: string,
-    store: string | null,
-  ): Promise<void> {
-    const last = batch.at(-1);
-    if (last === undefined) return;
-    const opened = batch.flatMap(({ key, env }) => this.#open(key, env) ?? []);
-    this.#hear('internet', opened);
-    const readTo = { server, position: { cursor: last.cursor, store } };
-    const received = await receiveEvents(this.#db, this.#group.id, this.#current(opened), {
-      readTo,
-    }).catch((error: unknown) => {
-      storageRefusals.note(error);
-      throw error;
-    });
-    await this.#apply(received.map(({ bytes }) => bytes));
-    for (const { bytes } of received) {
-      // Types this version does not know are bridged too (protocol §3.1).
-      const event = loraEventOf(bytes);
-      if (event) this.#lora?.offer({ event, bytes }, 'bridged');
-    }
-  }
-
-  /**
-   * The event in an envelope from a relay, or null for one not sealed with this group's key, or
-   * stored under another event's key: the server cannot tell, so the reader checks (protocol §8).
-   */
-  #open(key: Uint8Array, env: Uint8Array): Uint8Array | null {
-    const bytes = openEnvelope(this.#keys, env);
-    if (bytes === null) return null;
-    const header = peekHeader(bytes);
-    if (!header.ok) return null;
-    return bytesEqual(eventKey(this.#keys, header.value), key) ? bytes : null;
-  }
-
-  /** Notes the members heard through a channel; own events are not news about anyone. */
-  #hear(channel: Channel, batch: readonly Uint8Array[]): void {
-    const headers = batch.flatMap((bytes) => {
-      const header = peekHeader(bytes);
-      return header.ok && header.value.origin !== this.#identity.nodeId ? [header.value] : [];
-    });
-    this.heard = hear(this.heard, channel, headers);
-  }
-
-  async #flushOutbox(): Promise<void> {
-    for (const { entry, bytes } of await pendingEvents(this.#db, this.#group.id)) {
-      this.#push(entry, bytes);
-    }
-  }
-
-  #push(entry: GroupEventRef, bytes: Uint8Array): void {
-    if (this.#client === null) return;
-    const key = eventKey(this.#keys, entry);
-    const type = peekType(bytes);
-    if (this.#client.push(key, sealEnvelope(this.#keys, bytes), type)) {
-      this.#pushed.set(toBase64url(key), entry);
-    }
-  }
-
-  async #confirm(key: Uint8Array): Promise<void> {
-    const id = toBase64url(key);
-    const entry = this.#pushed.get(id);
-    if (entry === undefined) return;
-    this.#pushed.delete(id);
-    this.#undelivered.delete(eventRefKey(entry));
-    await confirmStored(this.#db, entry);
-  }
-
-  /**
-   * Leaves out of a batch the positions the state has outlived (ADR-0055). They change nothing, and
-   * may be copies of positions this device has already forgotten, which must not count as new.
-   */
-  #current(batch: readonly Uint8Array[]): Uint8Array[] {
-    return batch.filter((bytes) => {
-      const event = decodeEvent(bytes);
-      return !(event.ok && isOutlived(this.state, event.value));
-    });
-  }
-
-  /**
-   * Adds events to the picture in one update, so the map redraws once per batch, then forgets what
-   * the new picture has outlived (ADR-0055). Returns the events decoded; those of types this
-   * version does not know are kept in the log only.
-   */
-  async #apply(batch: readonly Uint8Array[]): Promise<TeselEvent[]> {
-    const events = batch.flatMap((bytes) => {
-      const event = decodeEvent(bytes);
-      return event.ok ? [event.value] : [];
-    });
-    if (events.length === 0) return events;
-    const before = this.state;
-    this.state = reduceAll(before, events);
-    const outlived = outlivedEvents(before, this.state, events);
-    if (outlived.length > 0) {
-      for (const event of outlived) this.#undelivered.delete(eventRefKey(event));
-      // Housekeeping: if it fails, the events stay until the group opens again and forgets them.
-      await forgetEvents(this.#db, this.#group.id, outlived).catch((error: unknown) => {
-        console.warn('Forgetting outlived events failed', error);
-      });
-    }
-    return events;
-  }
-}
-
-/** What REPORT holds besides its header (protocol §3.16). */
-export type ReportFields = Omit<ReportEvent, keyof EventHeader | 'type'>;
-
-/** What TEAM holds besides its header (protocol §3.15). */
-export type TeamFields = Pick<TeamEvent, 'team' | 'colour' | 'dissolved' | 'members' | 'name'>;
-
-/** What MEMBER_STATE tells about a member (protocol §3.14). */
-export type MemberStateFields = Pick<
-  MemberStateEvent,
-  'profile' | 'status' | 'battery' | 'equipment'
->;
-
-/** Nothing set: what the group assumes of a member who has said nothing. */
-function isUntold(state: MemberStateFields): boolean {
-  return (
-    state.profile === 'unspecified' &&
-    state.status === 'active' &&
-    state.battery === null &&
-    state.equipment.length === 0
-  );
-}
-
-function sameState(a: MemberStateFields, b: MemberStateFields): boolean {
-  return (
-    a.profile === b.profile &&
-    a.status === b.status &&
-    a.battery === b.battery &&
-    a.equipment.length === b.equipment.length &&
-    a.equipment.every((item) => b.equipment.includes(item))
-  );
 }

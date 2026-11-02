@@ -17,7 +17,8 @@
   import { radio } from '../radio/radio.svelte.ts';
   import ReportForm from '../reports/ReportForm.svelte';
   import type { Preferences } from '../settings/preferences.ts';
-  import type { GroupFeed, ReportFields } from '../sync/group-feed.svelte.ts';
+  import type { ReportFields } from '../sync/event-fields.ts';
+  import type { GroupFeed } from '../sync/group-feed.svelte.ts';
   import { noticeSent } from '../sync/sent-notice.ts';
   import { newTask } from '../tasks/task-editor.ts';
   import TasksPanel from '../tasks/TasksPanel.svelte';

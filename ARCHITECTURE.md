@@ -49,7 +49,10 @@ The event log and the outbox, the queue of events waiting for the server, are st
 | File                                         | Job                                                                                                      |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `apps/web/src/lib/events/event-log.ts`       | Keeps each group's log and its outbox in IndexedDB                                                       |
-| `apps/web/src/lib/sync/group-feed.svelte.ts` | Ties the log to the relay and the radio: stores what arrives, pushes the outbox, offers events to LoRa   |
+| `apps/web/src/lib/sync/group-feed.svelte.ts` | What the app holds of an open group: its picture, and the actions of this device, which publish events   |
+| `apps/web/src/lib/sync/member-events.ts`     | The event each action publishes, built from its header                                                   |
+| `apps/web/src/lib/sync/group-sync.svelte.ts` | Ties the log to the relay and the radio: stores what arrives, pushes the outbox, offers events to LoRa   |
+| `apps/web/src/lib/sync/feed-relay.ts`        | The relay side of it: opens what the server sends, seals and pushes the outbox, confirms what is stored  |
 | `apps/web/src/lib/sync/lora-events.ts`       | What a radio is given when it connects (`catchUpPackets`)                                                |
 | `packages/core/src/lora-scheduler.ts`        | Decides what goes on the air and in what order, bridge rules included, so it can be tested with no radio |
 | `apps/web/src/lib/sync/log-file.ts`          | Saves a group's log to a file and loads one back (protocol §10)                                          |
@@ -142,7 +145,7 @@ A new capability is a new event type (protocol §3.2 and §9: no version change)
 2. **Protocol:** the type in `packages/protocol/src/events.ts`, the code in `constants.ts`, and its layout (writer next to reader) in `payloads.ts`, whose record is keyed by every event type. A round-trip sample goes in `test-helpers.ts`; a test fails while a type has none.
 3. **State:** a slice in `packages/core/src/state/`, or an existing slice that also reads the type, listed in `reducer.ts`. A test fails while a known type has no slice.
 4. **Radio:** its urgency in `packages/core/src/urgency.ts`, a record keyed by every event type.
-5. **App:** the action that publishes it in `GroupFeed` (`apps/web/src/lib/sync/group-feed.svelte.ts`) and the UI that shows it, with texts in both languages.
+5. **App:** the action that publishes it in `GroupFeed` (`apps/web/src/lib/sync/group-feed.svelte.ts`), with the event it builds in `member-events.ts` beside it, and the UI that shows it, with texts in both languages.
 
 ## 4. Transports
 

@@ -14,7 +14,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
-  import type { TeamFields } from '../sync/group-feed.svelte.ts';
+  import type { TeamFields } from '../sync/event-fields.ts';
   import { confirmations } from '../ui/confirmations.svelte.ts';
   import Dialog from '../ui/Dialog.svelte';
   import { Submission } from '../ui/submission.svelte.ts';

@@ -29,11 +29,17 @@ export interface Received {
   readonly bytes: Uint8Array;
 }
 
+/** How far the group's server has been read with some events. */
+export interface ServerRead {
+  readonly server: string;
+  readonly position: RelayPosition;
+}
+
 export interface ReceiveOptions {
   /** The events were heard over the radio and this device bridges them: queue them for the server. */
   readonly forward?: boolean;
   /** How far the group's server has been read with these events; saved with them, never ahead. */
-  readonly readTo?: { readonly server: string; readonly position: RelayPosition };
+  readonly readTo?: ServerRead;
 }
 
 /**

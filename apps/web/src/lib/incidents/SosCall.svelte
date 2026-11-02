@@ -5,7 +5,7 @@
   import type { LatLon, SosKind } from '@tesel/protocol';
 
   import type { MessageKey, Translate } from '../i18n/index.ts';
-  import type { Delivery } from '../sync/group-feed.svelte.ts';
+  import type { Delivery } from '../sync/group-sync.svelte.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { closePanel } from '../ui/panels.svelte.ts';
   import type { WorkspaceGroup } from '../workspace/workspace.ts';
