@@ -501,7 +501,7 @@ export const es: Messages = {
   radioConnectHint:
     'Si te pide un PIN, es el que muestra la pantalla de la radio o, si no tiene, el de fábrica: 123456. ¿No aparece tu radio? Apágala y vuelve a encenderla.',
   chatGroup: 'Grupo',
-  chatMesh: 'Mesh',
+  chatMesh: 'Mesh pública',
   noMeshMessages: 'Todavía no ha llegado ningún mensaje de otras radios.',
   meshcoreChannel: 'Canal {name}',
   meshcoreUnknownChannel: 'de radio',
