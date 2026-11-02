@@ -1,7 +1,7 @@
 // SOS calls as the interface shows them: who, what, where, and who has acknowledged them.
 
 import { openSosCalls, type GroupState } from '@tesel/core';
-import { sosPlace, type LatLon, type NodeId, type SosEvent } from '@tesel/protocol';
+import { eventRefKey, sosPlace, type LatLon, type NodeId, type SosEvent } from '@tesel/protocol';
 
 import { aliasOf } from '../members/alias.ts';
 import { STALE_AFTER_S } from '../members/member-features.ts';
@@ -22,7 +22,10 @@ export type SosWhere =
   | { readonly kind: 'unknown' };
 
 export interface SosView extends Acknowledgement {
+  /** The call's own key, which tells it apart from a rival under the same reference. */
   readonly key: string;
+  /** The call's reference key, which cancellations and acknowledgements point to. */
+  readonly ref: string;
   readonly event: SosEvent;
   readonly author: string;
   readonly mine: boolean;
@@ -43,13 +46,15 @@ export function whereSos(state: Pick<GroupState, 'positions'>, event: SosEvent):
 export function activeSos(state: GroupState, self: NodeId): SosView[] {
   const views: SosView[] = [];
   for (const [key, event] of openSosCalls(state)) {
+    const ref = eventRefKey(event);
     views.push({
       key,
+      ref,
       event,
       author: aliasOf(state, event.origin),
       mine: event.origin === self,
       where: whereSos(state, event),
-      ...acknowledgement(state, key, self),
+      ...acknowledgement(state, ref, self),
     });
   }
   return views.sort((a, b) => b.event.time - a.event.time);
@@ -60,8 +65,8 @@ export function hasOwnSos(state: GroupState, self: NodeId): boolean {
   return activeSos(state, self).some((call) => call.mine);
 }
 
-function acknowledgement(state: GroupState, key: string, self: NodeId): Acknowledgement {
-  const acks = state.acks.get(key);
+function acknowledgement(state: GroupState, ref: string, self: NodeId): Acknowledgement {
+  const acks = state.acks.get(ref);
   if (acks === undefined) return { by: [], bySelf: false };
   return {
     by: [...acks.keys()].map((id) => aliasOf(state, id)).sort((a, b) => a.localeCompare(b)),

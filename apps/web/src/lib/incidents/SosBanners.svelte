@@ -65,7 +65,7 @@
       {#if !call.mine && where.kind !== 'unknown'}
         <FromHere {t} {locale} at={where.at} />
       {/if}
-      {#if call.mine && undelivered.has(call.key)}
+      {#if call.mine && undelivered.has(call.ref)}
         <p class="warning">{t('sosNotSentYet')}</p>
       {/if}
       <p class="acks">

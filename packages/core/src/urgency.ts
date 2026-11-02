@@ -1,5 +1,6 @@
 // How urgent each kind of event is, for every transport that has to choose what goes first: the
-// LoRa scheduler, and the outbox when it catches up with a server (ARCHITECTURE.md §4.2).
+// LoRa scheduler, and the outbox when it catches up with a server (ARCHITECTURE.md §4.2); and which
+// events nothing may keep from the group (ADR-0103).
 
 import type { EventType } from '@tesel/protocol';
 
@@ -28,4 +29,16 @@ export const URGENCY: Readonly<Record<EventType, number>> = {
 /** Urgency of an event type this version may not know: after every known one. */
 export function urgencyOf(type: EventType | null): number {
   return type === null ? 9 : URGENCY[type];
+}
+
+/**
+ * Whether an event of this type is an SOS, its cancellation or an acknowledgement: what may save a
+ * life, and must reach the group whatever else goes wrong. A full storage does not keep it from the
+ * picture or the server, a backlog does not hold it back, and an event forged under its `(origin,
+ * seq)` does not hide it (protocol §3.1, ADR-0103). Every acknowledgement counts, whatever it
+ * answers: whether its target is an SOS may not be known yet where this is decided, and the app
+ * acknowledges nothing else (ADR-0070).
+ */
+export function isLifeSafety(type: EventType | null): boolean {
+  return type === 'sos' || type === 'sos-cancel' || type === 'ack';
 }

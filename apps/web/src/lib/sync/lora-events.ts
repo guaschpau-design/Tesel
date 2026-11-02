@@ -12,6 +12,7 @@ import {
 import {
   decodeEvent,
   encodeEvent,
+  eventRefKey,
   peekHeader,
   type EventType,
   type NodeId,
@@ -56,7 +57,7 @@ export function peekType(bytes: Uint8Array): EventType | null {
  * longer bridged.
  */
 export function standingEvents(state: GroupState): TeselEvent[] {
-  return [...state.sos.values(), ...state.sosCancels.values()];
+  return [...[...state.sos.values()].flat(), ...state.sosCancels.values()];
 }
 
 /**
@@ -73,8 +74,9 @@ export function catchUpPackets(
   const due: TeselEvent[] = [];
   const announcement = state.members.get(self);
   if (announcement !== undefined) due.push(announcement);
-  for (const [key, call] of openSosCalls(state)) {
-    const answered = [...(state.acks.get(key)?.keys() ?? [])].some((member) => member !== self);
+  for (const [, call] of openSosCalls(state)) {
+    const acks = state.acks.get(eventRefKey(call));
+    const answered = [...(acks?.keys() ?? [])].some((member) => member !== self);
     if (call.origin === self && !answered) due.push(call);
   }
   const packets = due.flatMap((event): LoraPacket[] => {

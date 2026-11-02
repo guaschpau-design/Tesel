@@ -76,13 +76,13 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
       case 'sos':
         return withText(t('diarySos', { kind: t(SOS_KINDS[event.kind].label) }), event.text);
       case 'sos-cancel': {
-        const sos = state.sos.get(eventRefKey(event.sos));
+        const sos = state.sos.get(eventRefKey(event.sos))?.[0];
         return sos ? t('diarySosCancelled', { name: aliasOf(state, sos.origin) }) : null;
       }
       case 'ack': {
         // What was received, once it has arrived here too; until then the line waits.
         const target = eventRefKey(event.target);
-        const sos = state.sos.get(target);
+        const sos = state.sos.get(target)?.[0];
         return sos ? t('diaryAckSos', { name: aliasOf(state, sos.origin) }) : null;
       }
       // The app neither sends nor shows alerts and roll calls (ADR-0070).

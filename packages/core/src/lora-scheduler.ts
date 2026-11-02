@@ -17,6 +17,7 @@ import {
 
 import { AirtimeWindow } from './airtime.ts';
 import { distanceMeters } from './geo.ts';
+import { rivalKey } from './rivals.ts';
 import { URGENCY, urgencyOf } from './urgency.ts';
 
 /** Where an event came from: this device, or the server (this device is bridging it). */
@@ -97,11 +98,15 @@ interface Pending<Packet extends LoraPacket> {
 export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   readonly #random: () => number;
   readonly #airtimeMs: (bytes: number) => number;
+  /**
+   * Queued packets, by rival key (rivals.ts): an SOS, a cancellation or an acknowledgement forged
+   * under the `(origin, seq)` of another is aired as well as the genuine one, not instead of it.
+   */
   readonly #pending = new Map<string, Pending<Packet>>();
-  /** Event keys sent by us or heard on LoRa in the last hour, with when: not put on the air again. */
+  /** Rival keys sent by us or heard on LoRa in the last hour, with when: not put on the air again. */
   readonly #onAir = new Map<string, number>();
-  /** Own SOS calls still waiting for an acknowledgement or a cancellation. */
-  readonly #openSos = new Set<string>();
+  /** Own SOS calls still waiting for an acknowledgement or a cancellation: rival → reference key. */
+  readonly #openSos = new Map<string, string>();
   /** Roll calls seen: each member answers them, so their ACKs are never dropped (§3.12). */
   readonly #rollCalls = new Set<string>();
   /** SOS calls, critical alerts and roll calls seen: their acknowledgements are urgent too. */
@@ -139,7 +144,7 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   /** Queues an event for LoRa. Repeated offers of the same event change nothing. */
   offer(packet: Packet, source: LoraSource, now: number): void {
     const { event } = packet;
-    const key = eventRefKey(event);
+    const key = rivalKey(event);
     this.observe(event);
     if (this.#onAir.has(key) || this.#pending.has(key)) return;
     if (event.type === 'ack' && this.#ackedOnAir.has(eventRefKey(event.target))) return;
@@ -148,7 +153,7 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     for (const [otherKey, other] of this.#pending) {
       if (this.#superseded(other.packet.event)) this.#pending.delete(otherKey);
     }
-    if (event.type === 'sos' && source === 'own') this.#openSos.add(key);
+    if (event.type === 'sos' && source === 'own') this.#openSos.set(key, eventRefKey(event));
     this.#pending.set(key, {
       key,
       packet,
@@ -164,7 +169,7 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
    * heard back from another bridge still repeats until someone answers it.
    */
   heard(event: LoraEvent, now: number): void {
-    const key = eventRefKey(event);
+    const key = rivalKey(event);
     this.#onAir.set(key, now);
     if (!this.#openSos.has(key)) this.#pending.delete(key);
     this.observe(event);
@@ -387,10 +392,14 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     return (this.#newestLocation.get(event.origin) ?? -1) > event.seq;
   }
 
-  #closeSos(key: string): void {
-    if (!this.#openSos.delete(key)) return;
-    const pending = this.#pending.get(key);
-    if (pending !== undefined && pending.sends > 0) this.#pending.delete(key);
+  /** An own SOS was answered or cancelled: every call under its reference stops repeating. */
+  #closeSos(reference: string): void {
+    for (const [key, call] of this.#openSos) {
+      if (call !== reference) continue;
+      this.#openSos.delete(key);
+      const pending = this.#pending.get(key);
+      if (pending !== undefined && pending.sends > 0) this.#pending.delete(key);
+    }
   }
 
   #forgetOnAirBefore(time: number): void {

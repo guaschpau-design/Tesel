@@ -306,7 +306,7 @@ describe('group state', () => {
 
   it('records who cancelled an SOS first and who acknowledged it once', () => {
     const state = stateOf(EVENTS);
-    expect(state.sos.get(`${BOB}:8`)?.kind).toBe('medical');
+    expect(state.sos.get(`${BOB}:8`)?.map((call) => call.kind)).toEqual(['medical']);
     expect(state.sosCancels.get(`${BOB}:8`)?.origin).toBe(BOB);
     const acks = state.acks.get(`${BOB}:8`);
     expect([...(acks?.keys() ?? [])]).toEqual([ALICE]);

@@ -38,7 +38,7 @@ export function insertOrdered<T extends TeselEvent>(list: readonly T[], event: T
     else low = middle + 1;
   }
   const atPosition = list[low];
-  if (atPosition?.origin === event.origin && atPosition.seq === event.seq) return list;
+  if (atPosition !== undefined && compareEvents(atPosition, event) === 0) return list;
   return [...list.slice(0, low), event, ...list.slice(low)];
 }
 
@@ -77,22 +77,18 @@ function keepAll<K, T extends TeselEvent>(
   return next ?? current;
 }
 
-/** `insertOrdered` for many events at once: one sort, instead of a copy per event. */
+/**
+ * `insertOrdered` for many events at once: one sort, instead of a copy per event. The list is
+ * sorted already, so sorting it with the new events costs little more than merging them.
+ */
 export function insertAllOrdered<T extends TeselEvent>(
   list: readonly T[],
   events: readonly T[],
 ): readonly T[] {
-  const known = new Set(list.map(orderKey));
-  const added = events.filter((event) => {
-    const key = orderKey(event);
-    if (known.has(key)) return false;
-    known.add(key);
-    return true;
-  });
-  return added.length === 0 ? list : [...list, ...added].sort(compareEvents);
-}
-
-/** What `compareEvents` orders by: two events with the same key are the same place in a list. */
-function orderKey(event: TeselEvent): string {
-  return `${String(event.time)}|${event.origin}|${String(event.seq)}`;
+  const unique: T[] = [];
+  for (const event of [...list, ...events].sort(compareEvents)) {
+    const last = unique.at(-1);
+    if (last === undefined || compareEvents(last, event) !== 0) unique.push(event);
+  }
+  return unique.length === list.length ? list : unique;
 }

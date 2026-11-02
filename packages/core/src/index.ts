@@ -45,4 +45,5 @@ export {
   type SweepLanes,
 } from './sweep.ts';
 export { TokenBucket } from './token-bucket.ts';
-export { urgencyOf } from './urgency.ts';
+export { keptRivals } from './rivals.ts';
+export { isLifeSafety, urgencyOf } from './urgency.ts';

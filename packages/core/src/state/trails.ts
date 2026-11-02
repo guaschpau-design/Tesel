@@ -5,7 +5,7 @@
 // only its newest TRAIL_POINTS positions; which ones those are does not depend on the order in
 // which events arrive, so every device draws the same trail.
 
-import type { EventHeader, NodeId, PositionEvent, PositionHiddenEvent } from '@tesel/protocol';
+import type { NodeId, PositionEvent, PositionHiddenEvent } from '@tesel/protocol';
 
 import { insertOrdered } from '../collections.ts';
 import { compareEvents, newerOf } from '../ordering.ts';
@@ -41,7 +41,7 @@ export const trails = defineSlice({
  * only move a trail forward, so no state that holds this trail's events can show that position
  * again, and a device need not keep it (ADR-0055).
  */
-export function hasOutlived(trails: Trails, position: EventHeader): boolean {
+export function hasOutlived(trails: Trails, position: PositionEvent): boolean {
   const trail = trails.get(position.origin);
   if (trail === undefined) return false;
   if (trail.hidden !== null && compareEvents(position, trail.hidden) <= 0) return true;

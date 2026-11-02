@@ -110,7 +110,9 @@ describe('the radio path', () => {
     await vi.waitFor(
       () => {
         expect(bertaFeed.state.chat.map((line) => line.text)).toEqual(['¿Me oís por radio?']);
-        expect([...bertaFeed.state.sos.values()].map((call) => call.text)).toEqual(['Tobillo']);
+        expect([...bertaFeed.state.sos.values()].flat().map((call) => call.text)).toEqual([
+          'Tobillo',
+        ]);
         // Berta learnt Ana's alias from her announcement, which travelled by radio too.
         expect(bertaFeed.state.members.get(ana.nodeId)?.alias).toBe('Ana');
       },
@@ -149,7 +151,9 @@ describe('the radio path', () => {
 
     await vi.waitFor(
       () => {
-        expect([...bertaFeed.state.sos.values()].map((call) => call.text)).toEqual(['Atrapada']);
+        expect([...bertaFeed.state.sos.values()].flat().map((call) => call.text)).toEqual([
+          'Atrapada',
+        ]);
         expect(anaFeed.undelivered.size).toBe(0);
       },
       { timeout: 10_000, interval: 200 },

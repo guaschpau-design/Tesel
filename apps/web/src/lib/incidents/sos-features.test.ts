@@ -40,9 +40,15 @@ describe('SOS features', () => {
   ]);
 
   it('draws only the calls still open, each where its caller is', () => {
-    expect(sosFeatures(state).features.map((f) => [f.properties, f.geometry.coordinates])).toEqual([
-      [{ key: `${ANA}:2`, label: 'Ana' }, [-0.37, 39.47]],
-      [{ key: `${BERTA}:1`, label: BERTA }, [-0.4, 39.5]],
+    const drawn = sosFeatures(state).features.map(({ properties, geometry }) => [
+      // A call's key starts with its reference, and tells it apart from a rival (core rivals.ts).
+      properties.key.split('/')[0],
+      properties.label,
+      geometry.coordinates,
+    ]);
+    expect(drawn).toEqual([
+      [`${ANA}:2`, 'Ana', [-0.37, 39.47]],
+      [`${BERTA}:1`, BERTA, [-0.4, 39.5]],
     ]);
   });
 });
