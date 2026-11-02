@@ -1,6 +1,6 @@
 # 0047. Raise the alarm, and say what happened
 
-- Status: Accepted, amended by [0070](0070-a-simpler-app.md) (only SOS calls raise the alarm)
+- Status: Accepted, amended by [0070](0070-a-simpler-app.md) (only SOS calls raise the alarm), [0104](0104-sos-across-drops-and-groups.md) (calls of groups not open, each once)
 - Date: 2026-10-27
 
 ## Context

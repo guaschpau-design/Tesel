@@ -48,11 +48,11 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0040](0040-dictated-messages.md)                    | Dictate chat messages with the browser's speech recognition                                 | Accepted                                                |
 | [0041](0041-satellite-mosaic-and-national-photos.md) | One Sentinel-2 mosaic from afar, each country's photographs close up                        | Accepted, amended by 0051                               |
 | [0042](0042-remove-radio-line-of-sight.md)           | Remove the radio line of sight                                                              | Accepted                                                |
-| [0043](0043-radio-delivery.md)                       | Deliver over the radio until someone has it                                                 | Accepted                                                |
+| [0043](0043-radio-delivery.md)                       | Deliver over the radio until someone has it                                                 | Accepted, amended by 0104                               |
 | [0044](0044-clocks-and-damaged-events.md)            | Keep each author's events in order, and say when a clock is wrong                           | Accepted                                                |
 | [0045](0045-server-keeps-every-distinct-envelope.md) | The server keeps every distinct envelope pushed under a key                                 | Accepted, amended by 0067                               |
 | [0046](0046-store-identity.md)                       | A server's store has an identity, and cursors belong to it                                  | Accepted                                                |
-| [0047](0047-alarms-and-notices.md)                   | Raise the alarm, and say what happened                                                      | Accepted, amended by 0070                               |
+| [0047](0047-alarms-and-notices.md)                   | Raise the alarm, and say what happened                                                      | Accepted, amended by 0070, 0104                         |
 | [0048](0048-how-the-app-shares-state.md)             | One rule for sharing state in the web app, and panels that carry what they show             | Accepted                                                |
 | [0049](0049-signed-images-and-checked-updates.md)    | Run only signed server images, and check every update                                       | Accepted, amended by 0068                               |
 | [0050](0050-post-certificates-from-the-server.md)    | Command posts get their certificate from the server                                         | Superseded by 0058                                      |
@@ -108,3 +108,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |
 | [0101](0101-explanations-on-asking.md)               | What a choice does is shown on asking                                                       | Accepted                                                |
 | [0102](0102-ground-in-3d.md)                         | The ground raised in 3D, on asking                                                          | Accepted                                                |
+| [0104](0104-sos-across-drops-and-groups.md)          | Keep the radio and SOS calls going across drops and group changes                           | Accepted                                                |

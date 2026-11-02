@@ -1,6 +1,6 @@
 # 0043. Deliver over the radio until someone has it
 
-- Status: Accepted
+- Status: Accepted, amended by [0104](0104-sos-across-drops-and-groups.md) (own SOS calls outlive a change of group; the reconnection pause)
 - Date: 2026-10-27
 
 ## Context
