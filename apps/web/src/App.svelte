@@ -14,6 +14,8 @@
   import { radioLinkOf } from './lib/links/links.ts';
   import { mapLibreLocale } from './lib/map/style/maplibre-locale.ts';
   import MapView from './lib/map/MapView.svelte';
+  import { activity } from './lib/power/activity.svelte.ts';
+  import RestScreen from './lib/power/RestScreen.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { activeSos } from './lib/incidents/incidents.ts';
   import Announcer from './lib/ui/Announcer.svelte';
@@ -227,6 +229,9 @@
       <StartupProblem {t} failure={startup.failure} />
     {/if}
   </main>
+  {#if startup.preferences?.energySaving.value && activity.rest !== 'awake'}
+    <RestScreen {t} {locale} {linkInput} />
+  {/if}
 </div>
 
 <style>

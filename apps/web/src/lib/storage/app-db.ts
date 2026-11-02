@@ -49,6 +49,7 @@ export type SettingKey =
   | 'radar'
   | 'cadastre'
   | 'hiddenLayers'
+  | 'energySaving'
   | 'keepScreenOn'
   | 'fullscreen'
   | 'language'

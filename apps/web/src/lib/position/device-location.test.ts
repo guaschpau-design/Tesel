@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DeviceLocation } from './device-location.svelte.ts';
 import { FakeGps } from './fake-gps.ts';
@@ -54,5 +54,31 @@ describe('device location', () => {
     expect(location.problem).toBeNull();
     release();
     expect(location.fix).toBeNull();
+  });
+
+  it('runs the GPS at intervals while paced, keeping the latest fix between them', () => {
+    vi.useFakeTimers();
+    const gps = new FakeGps();
+    const location = new DeviceLocation(gps);
+    const fixes: number[] = [];
+    const release = location.use((fix) => fixes.push(fix.at.lat));
+    location.pace(60_000);
+    expect(gps.watching).toBe(1);
+    gps.fix(39.47, -0.37, 1_000, 8);
+    // A good fix ends the round: off until the next one, the fix kept.
+    expect(gps.watching).toBe(0);
+    expect(location.fix?.at.lat).toBe(39.47);
+    vi.advanceTimersByTime(60_000);
+    expect(gps.watching).toBe(1);
+    // No good fix in time: off anyway, with what it had.
+    gps.fix(39.48, -0.37, 2_000, 60);
+    vi.advanceTimersByTime(20_000);
+    expect(gps.watching).toBe(0);
+    expect(fixes).toEqual([39.47, 39.48]);
+    location.pace(null);
+    expect(gps.watching).toBe(1);
+    release();
+    expect(gps.watching).toBe(0);
+    vi.useRealTimers();
   });
 });

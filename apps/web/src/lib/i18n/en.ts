@@ -288,6 +288,10 @@ export const en = {
   layersOfMap: 'Map information',
   downloadAlso: 'Also download',
   downloadAlsoHint: 'Spain, Portugal and southern France. Satellite takes far more space.',
+  energySaving: 'Energy saving',
+  energySavingHint:
+    'After 1 minute untouched the screen goes dark; after 10, the GPS turns on once a minute. Everything else keeps working.',
+  restTapToWake: 'Tap to come back',
   keepScreenOn: 'Screen always on',
   fullscreen: 'Full screen',
   diary: 'Operation diary',

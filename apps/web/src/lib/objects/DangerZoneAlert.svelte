@@ -9,6 +9,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
+  import { callAttention } from '../power/attention.ts';
   import { announcer } from '../ui/announcer.svelte.ts';
   import MapCard from '../ui/MapCard.svelte';
   import { dangerZones, zonesAt } from './danger-zones.ts';
@@ -41,6 +42,7 @@
     if (entered.length > 0) {
       // Safari has no vibration API.
       if ('vibrate' in navigator) navigator.vibrate([500, 200, 500]);
+      callAttention();
       const names = entered.map((zone) => zone.label || t('styleDanger')).join(' · ');
       announcer.say(`${t('dangerZoneEntered')}: ${names}`);
     }

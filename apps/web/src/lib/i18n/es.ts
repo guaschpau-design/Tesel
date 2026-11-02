@@ -288,6 +288,10 @@ export const es: Messages = {
   layersOfMap: 'Información del mapa',
   downloadAlso: 'Descargar también',
   downloadAlsoHint: 'España, Portugal y el sur de Francia. El satélite ocupa mucho más.',
+  energySaving: 'Ahorro de energía',
+  energySavingHint:
+    'Tras 1 minuto sin tocarla, la pantalla se queda en negro; tras 10, el GPS se enciende una vez por minuto. Todo lo demás sigue funcionando.',
+  restTapToWake: 'Toca para volver',
   keepScreenOn: 'Pantalla siempre encendida',
   fullscreen: 'Pantalla completa',
   diary: 'Diario de la operación',

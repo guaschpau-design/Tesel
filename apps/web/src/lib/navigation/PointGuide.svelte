@@ -33,7 +33,7 @@
   {t}
   {map}
   title={t('navigatingTo', { name })}
-  bearing={leg && !leg.arrived ? leg.bearing : null}
+  leg={leg && !leg.arrived ? leg : null}
   {onstop}
 >
   <p>

@@ -1,6 +1,7 @@
 // Where this device is: the one reading of the GPS that everything uses (sharing the position,
 // following it on the map, navigating). The GPS runs only while something uses it, so nothing
-// asks for the location, or spends battery on it, unless the user turned that something on.
+// asks for the location, or spends battery on it, unless the user turned that something on. To
+// save energy it can also run at intervals (`pace`): on for a fix every so often, off between.
 
 import type { LatLon } from '@tesel/protocol';
 import { untrack } from 'svelte';
@@ -22,6 +23,11 @@ export type LocationProblem = 'denied' | 'unavailable';
 /** The part of the browser's Geolocation API this module uses, so tests can stand in for it. */
 export type GeolocationSource = Pick<Geolocation, 'watchPosition' | 'clearWatch'>;
 
+/** How long the GPS may take for a fix when it runs at intervals. */
+const FIX_WINDOW_MS = 20_000;
+/** A fix this sure ends a round at intervals at once: the GPS has the sky. */
+const GOOD_FIX_M = 20;
+
 export class DeviceLocation {
   /** The latest fix while the GPS runs; null before the first one and once it stops. */
   fix: DeviceFix | null = $state.raw(null);
@@ -33,9 +39,33 @@ export class DeviceLocation {
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping, never rendered
   readonly #users = new Set<{ readonly onfix: ((fix: DeviceFix) => void) | undefined }>();
   #watch: number | null = null;
+  /** Milliseconds between fixes while the GPS runs at intervals; null while it runs on. */
+  #every: number | null = null;
+  #nextFix: ReturnType<typeof setTimeout> | undefined;
+  #giveUp: ReturnType<typeof setTimeout> | undefined;
 
   constructor(source: GeolocationSource = navigator.geolocation) {
     this.#source = source;
+  }
+
+  /**
+   * Runs the GPS at intervals, `every` milliseconds, while something uses it: on until it has a
+   * good fix or for FIX_WINDOW_MS at most, then off until the next one. Null runs it on again.
+   * The latest fix stays meanwhile, so what shows where the device is does not go blank.
+   */
+  pace(every: number | null): void {
+    if (every === this.#every) return;
+    this.#every = every;
+    clearTimeout(this.#nextFix);
+    clearTimeout(this.#giveUp);
+    if (this.#users.size === 0) return;
+    if (every === null) {
+      this.#start();
+      return;
+    }
+    // A fix is taken at once, then every interval from it.
+    this.#pause();
+    this.#start();
   }
 
   /**
@@ -59,6 +89,12 @@ export class DeviceLocation {
 
   #start(): void {
     if (this.#watch !== null) return;
+    if (this.#every !== null) {
+      clearTimeout(this.#giveUp);
+      this.#giveUp = setTimeout(() => {
+        this.#rest();
+      }, FIX_WINDOW_MS);
+    }
     this.#watch = this.#source.watchPosition(
       (position) => {
         this.#receive(position);
@@ -71,10 +107,29 @@ export class DeviceLocation {
   }
 
   #stop(): void {
-    if (this.#watch !== null) this.#source.clearWatch(this.#watch);
-    this.#watch = null;
+    clearTimeout(this.#nextFix);
+    clearTimeout(this.#giveUp);
+    this.#pause();
     this.fix = null;
     this.problem = null;
+  }
+
+  /** Turns the GPS off, keeping the latest fix. */
+  #pause(): void {
+    if (this.#watch !== null) this.#source.clearWatch(this.#watch);
+    this.#watch = null;
+  }
+
+  /** Between two fixes at intervals: off until the next one is due. */
+  #rest(): void {
+    const every = this.#every;
+    if (every === null || this.#users.size === 0) return;
+    clearTimeout(this.#giveUp);
+    this.#pause();
+    clearTimeout(this.#nextFix);
+    this.#nextFix = setTimeout(() => {
+      this.#start();
+    }, every);
   }
 
   #receive(position: GeolocationPosition): void {
@@ -89,6 +144,8 @@ export class DeviceLocation {
     this.fix = fix;
     this.problem = null;
     for (const { onfix } of this.#users) onfix?.(fix);
+    // At intervals, a fix as good as the GPS gives in the open ends this round early.
+    if (this.#every !== null && fix.accuracy !== null && fix.accuracy <= GOOD_FIX_M) this.#rest();
   }
 }
 

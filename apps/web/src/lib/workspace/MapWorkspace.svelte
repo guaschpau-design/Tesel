@@ -18,6 +18,7 @@
   import { useChatUnread } from '../chat/chat-unread.svelte.ts';
   import GroupNews from '../groups/GroupNews.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
+  import { activeSos } from '../incidents/incidents.ts';
   import SosAlarm from '../incidents/SosAlarm.svelte';
   import SosCall from '../incidents/SosCall.svelte';
   import { MAP_LAYERS, type MapLayer } from '../map/layers.ts';
@@ -37,6 +38,7 @@
   import { useSelfState } from '../me/self-state.svelte.ts';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
+  import { useEnergySaving } from '../power/energy-saving.svelte.ts';
   import LocateButton from '../position/LocateButton.svelte';
   import SelfLayer from '../position/SelfLayer.svelte';
   import { radio } from '../radio/radio.svelte.ts';
@@ -91,9 +93,14 @@
 
   // Kept on when the user asks, and always while guiding to a target.
   // A phone that carries the radio for the group must not sleep: with the screen off the browser
-  // stops it, and with it the bridge between the radio and the server.
+  // stops it, and with it the bridge between the radio and the server. Saving energy keeps it on
+  // too, dark at rest, so that the app goes on working (power/).
   keepScreenAwake(
-    () => preferences.keepScreenOn.value || navigation.target !== null || radio.linked,
+    () =>
+      preferences.keepScreenOn.value ||
+      preferences.energySaving.value ||
+      navigation.target !== null ||
+      radio.linked,
   );
 
   const tools = useMapTools(() => group?.feed.groupId ?? null);
@@ -114,6 +121,12 @@
     preferences.cadastre.value ? [...styleCredits.list, ...CADASTRE_CREDITS] : styleCredits.list,
   );
   let sosOpen = $state(false);
+  useEnergySaving({
+    enabled: () => preferences.energySaving.value,
+    busy: () => tools.drawingOrMeasuring || sosOpen,
+    calling: () =>
+      group !== null && activeSos(group.feed.state, group.self).some((call) => call.mine),
+  });
 
   useDeviceNotices(() => t);
   useSweepCompletion(() => group);

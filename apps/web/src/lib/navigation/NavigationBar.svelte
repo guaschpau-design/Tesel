@@ -5,6 +5,8 @@
   import { onMount, untrack, type Snippet } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
+  import type { Leg } from './leg.ts';
+  import { navigation } from './navigation.svelte.ts';
   import MapCard from '../ui/MapCard.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
 
@@ -12,8 +14,8 @@
     t: Translate;
     map: MapLibreMap;
     title: string;
-    /** The way to go, in degrees clockwise from true north; null hides the arrow. */
-    bearing: number | null;
+    /** The way to go now, how far and which way; null hides the arrow. */
+    leg: Leg | null;
     /** A colour of meaning for the card's edge, as MapCard takes it. */
     edge?: string | undefined;
     /** What the guidance says. */
@@ -23,7 +25,16 @@
     onstop: () => void;
   }
 
-  let { t, map, title, bearing, edge, children, actions, onstop }: Props = $props();
+  let { t, map, title, leg, edge, children, actions, onstop }: Props = $props();
+  const bearing = $derived(leg?.bearing ?? null);
+
+  // The screen at rest shows the way too (power/RestScreen.svelte).
+  $effect(() => {
+    navigation.leg = leg;
+    return () => {
+      navigation.leg = null;
+    };
+  });
 
   /** The map may be turned; the arrow points the way on the map as it is shown. */
   let mapBearing = $state(0);

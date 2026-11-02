@@ -63,6 +63,13 @@
         onclick={() => void toggleNotifications()}
       />
     {/if}
+    <SwitchRow
+      icon="battery"
+      label={t('energySaving')}
+      hint={t('energySavingHint')}
+      on={preferences.energySaving.value}
+      onclick={() => void preferences.energySaving.set(!preferences.energySaving.value)}
+    />
     {#if screenWakeSupported}
       <SwitchRow
         icon="screen"

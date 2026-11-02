@@ -8,6 +8,7 @@
   import { onMount, untrack } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
+  import { activity } from '../power/activity.svelte.ts';
   import { announcer } from '../ui/announcer.svelte.ts';
   import { prepareAlarmSound, raiseAlarm, type AlarmChoices, type AlarmMessage } from './alarm.ts';
   import { activeSos } from './incidents.ts';
@@ -46,6 +47,8 @@
     const fresh = current.filter(({ tag }) => !previous.has(tag));
     if (fresh.length === 0) return;
     raiseAlarm(fresh, choices);
+    // A screen at rest lights up for it (power/).
+    activity.wake();
     announcer.say(fresh.map(({ title, body }) => `${title}. ${body}`).join(' '));
     untrack(oninterrupt);
   });

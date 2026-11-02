@@ -10,6 +10,7 @@
   import { RECENT_S } from '../groups/group-news.ts';
   import type { Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
+  import { nudge } from '../power/attention.ts';
   import { shorten } from '../text.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { openPanel } from '../ui/panels.svelte.ts';
@@ -53,6 +54,7 @@
       text: shorten(latest.text, PREVIEW),
     });
     withdraw();
+    nudge();
     shown = notices.show(said, {
       action: {
         label: t('view'),

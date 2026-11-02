@@ -157,5 +157,5 @@ test('members are offered the map of the operation area their coordinator marks'
   await offer.getByRole('button', { name: 'Descargar' }).click();
   await expect(offer).toBeHidden();
   await openMore(berta, 'Mapas sin conexión');
-  await expect(berta.getByText('Sector norte')).toBeVisible();
+  await expect(berta.getByText('Sector norte', { exact: true })).toBeVisible();
 });

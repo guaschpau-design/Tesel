@@ -8,6 +8,7 @@
   import type { Translate } from '../i18n/index.ts';
   import { aliasOf, nameOf } from '../members/alias.ts';
   import type { MapTaps } from '../map/taps.ts';
+  import { callAttention } from '../power/attention.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { editTask } from './task-editor.ts';
   import TaskLayer from './TaskLayer.svelte';
@@ -39,6 +40,7 @@
     const name = aliasOf({ members }, handed.origin);
     const { assignee, text } = handed;
     const key = eventRefKey(handed.task);
+    callAttention();
     notices.show(
       assignee === self || assignee === null
         ? t('taskHandedToYou', { name, text })

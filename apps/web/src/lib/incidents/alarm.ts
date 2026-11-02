@@ -50,27 +50,41 @@ export function raiseAlarm(messages: readonly AlarmMessage[], choices: AlarmChoi
   }
 }
 
-/** Plays the tone; audio the system suspended meanwhile (the phone locked, a call) resumes first. */
+/** The alarm's tone, three times over. */
 function soundAlarm(): void {
+  play((context) => {
+    playTone(context, REPEATS * TONES_HZ.length);
+  });
+}
+
+/** One short two-tone beep: something to look at, less than an SOS (power/attention.ts). */
+export function chime(): void {
+  play((context) => {
+    playTone(context, TONES_HZ.length);
+  });
+}
+
+/** Plays a sound; audio the system suspended meanwhile (the phone locked, a call) resumes first. */
+function play(sound: (context: AudioContext) => void): void {
   const context = audio;
   if (context === null) return;
   if (context.state === 'running') {
-    playTone(context);
+    sound(context);
     return;
   }
   context
     .resume()
     .then(() => {
-      if (context.state === 'running') playTone(context);
+      if (context.state === 'running') sound(context);
     })
     .catch((error: unknown) => {
-      console.warn('The alarm could not sound', error);
+      console.warn('A sound could not play', error);
     });
 }
 
-function playTone(context: AudioContext): void {
+function playTone(context: AudioContext, beeps: number): void {
   const start = context.currentTime;
-  for (let index = 0; index < REPEATS * TONES_HZ.length; index++) {
+  for (let index = 0; index < beeps; index++) {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     oscillator.type = 'square';

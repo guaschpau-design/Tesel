@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
 
   import type { Translate } from '../i18n/index.ts';
+  import { callAttention } from '../power/attention.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import type { Placed } from '../position/movement.ts';
   import MapCard from '../ui/MapCard.svelte';
@@ -41,7 +42,10 @@
   function tick(): void {
     const now = Date.now();
     const due = check.tick(now, minutes * 60_000);
-    if (due === 'ask' && 'vibrate' in navigator) navigator.vibrate([300, 200, 300]);
+    if (due === 'ask') {
+      if ('vibrate' in navigator) navigator.vibrate([300, 200, 300]);
+      callAttention();
+    }
     if (due === 'call') {
       onsos().catch((error: unknown) => {
         console.warn('The check-in could not call for help', error);

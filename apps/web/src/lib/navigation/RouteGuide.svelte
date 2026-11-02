@@ -51,7 +51,7 @@
   {t}
   {map}
   title={t('followingRoute', { name })}
-  bearing={leg?.bearing ?? null}
+  {leg}
   edge={progress?.stage === 'off-route' ? 'var(--warning)' : undefined}
   {onstop}
 >

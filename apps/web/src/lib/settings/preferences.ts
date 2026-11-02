@@ -44,6 +44,11 @@ const PREFERENCES = {
   cadastre: flag('cadastre', false),
   /** Map layers the user has hidden: none at first. */
   hiddenLayers: subset('hiddenLayers', MAP_LAYERS, []),
+  /**
+   * Saving energy: the screen goes dark after a minute untouched and the GPS runs at intervals
+   * after ten, the app still working (power/). On, since phones must last an operation.
+   */
+  energySaving: flag('energySaving', true),
   /** Keep the screen on while the app is open: off, to spare the battery. */
   keepScreenOn: flag('keepScreenOn', false),
   /** The app over the whole screen, where a browser tab allows it: on, until switched off in More. */
