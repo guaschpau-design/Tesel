@@ -1,12 +1,8 @@
 import { encodeRelayMessage, parseClientMessage, type ServerMessage } from '@tesel/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  RelayClient,
-  type RelayPosition,
-  type RelayStatus,
-  type SocketLike,
-} from './relay-client.ts';
+import { RelayClient } from './relay-client.ts';
+import type { RelayPosition, RelayStatus, SocketLike } from './relay-types.ts';
 
 class FakeSocket implements SocketLike {
   readonly url: string;
@@ -43,7 +39,12 @@ const flush = () => vi.advanceTimersByTimeAsync(0);
 
 const SERVER = 'https://relay.example/';
 
-function setup(cursor = 0, failingBatches = 0, store: string | null = null) {
+function setup(
+  cursor = 0,
+  failingBatches = 0,
+  store: string | null = null,
+  takeBatch: () => Promise<void> = () => Promise.resolve(),
+) {
   let failures = failingBatches;
   /** What the device has stored for the group. */
   let position: RelayPosition = { cursor, store };
@@ -54,7 +55,8 @@ function setup(cursor = 0, failingBatches = 0, store: string | null = null) {
   const envelopes: number[][] = [];
   /** Batches and syncs in the order they were handled. */
   const handled: string[] = [];
-  const synced: number[] = [];
+  const synced: (number | null)[] = [];
+  let joined = 0;
   const client = new RelayClient({
     server: SERVER,
     group: GROUP,
@@ -66,16 +68,22 @@ function setup(cursor = 0, failingBatches = 0, store: string | null = null) {
     },
     handlers: {
       position: () => Promise.resolve(position),
-      onEnvelopes: (batch) => {
-        if (failures-- > 0) return Promise.reject(new Error('disk full'));
-        envelopes.push(batch.map((envelope) => envelope.cursor));
-        handled.push(`batch of ${String(batch.length)}`);
+      onJoined: () => {
+        joined++;
         return Promise.resolve();
       },
+      onEnvelopes: async (batch) => {
+        if (failures-- > 0) throw new Error('disk full');
+        await takeBatch();
+        envelopes.push(batch.map((envelope) => envelope.cursor));
+        handled.push(`batch of ${String(batch.length)}`);
+        // As the feed does, the cursor is stored with the batch.
+        position = { cursor: batch.at(-1)?.cursor ?? position.cursor, store: STORE };
+      },
       onSynced: (at) => {
-        position = at;
-        synced.push(at.cursor);
-        handled.push(`synced at ${String(at.cursor)}`);
+        if (at !== null) position = at;
+        synced.push(at?.cursor ?? null);
+        handled.push(`synced at ${String(at?.cursor ?? null)}`);
         return Promise.resolve();
       },
       onStoreChanged: (changed) => {
@@ -87,7 +95,16 @@ function setup(cursor = 0, failingBatches = 0, store: string | null = null) {
       onStatus: (status) => statuses.push(status),
     },
   });
-  return { client, sockets, statuses, envelopes, handled, synced, storeChanges };
+  return {
+    client,
+    sockets,
+    statuses,
+    envelopes,
+    handled,
+    synced,
+    storeChanges,
+    joined: () => joined,
+  };
 }
 
 beforeEach(() => {
@@ -146,7 +163,7 @@ describe('relay client', () => {
     expect(handled).toEqual(['batch of 1000', 'batch of 1', 'synced at 1001', 'batch of 1']);
   });
 
-  it('joins again from the stored cursor when a batch cannot be taken', async () => {
+  it('still syncs when a batch cannot be taken, then joins again from the stored cursor', async () => {
     const { client, sockets, envelopes, synced, statuses } = setup(7, 1);
     client.start();
     await flush();
@@ -155,11 +172,13 @@ describe('relay client', () => {
     first.open();
     await flush();
     first.receive({ t: 'env', cursor: 8, key: new Uint8Array(16), env: new Uint8Array(50) });
-    first.receive({ t: 'synced', cursor: 8, store: STORE });
+    first.receive({ t: 'env', cursor: 9, key: new Uint8Array(16), env: new Uint8Array(50) });
+    first.receive({ t: 'synced', cursor: 9, store: STORE });
     await flush();
-    // The sync after the lost batch must not store a cursor past it.
-    expect(synced).toEqual([]);
-    expect(statuses.at(-1)).toBe('disconnected');
+    // Synced, so the outbox goes, but with no cursor past the lost batch.
+    expect(synced).toEqual([null]);
+    expect(statuses.at(-1)).toBe('synced');
+    expect(client.push(new Uint8Array(16), new Uint8Array(50), 'chat')).toBe(true);
     await vi.advanceTimersByTimeAsync(1000);
     const second = sockets[1];
     if (!second) throw new Error('no second socket');
@@ -170,10 +189,52 @@ describe('relay client', () => {
       value: { t: 'join', group: GROUP, after: 7 },
     });
     second.receive({ t: 'env', cursor: 8, key: new Uint8Array(16), env: new Uint8Array(50) });
-    second.receive({ t: 'synced', cursor: 8, store: STORE });
+    second.receive({ t: 'env', cursor: 9, key: new Uint8Array(16), env: new Uint8Array(50) });
+    second.receive({ t: 'synced', cursor: 9, store: STORE });
     await flush();
-    expect(envelopes).toEqual([[8]]);
-    expect(synced).toEqual([8]);
+    expect(envelopes).toEqual([[8, 9]]);
+    expect(synced).toEqual([null, 9]);
+  });
+
+  it('takes no more of a backlog while it stores slowly, and reads the rest again', async () => {
+    let release: () => void = () => undefined;
+    const slow = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const { client, sockets, envelopes } = setup(0, 0, null, slow);
+    client.start();
+    await flush();
+    const first = sockets[0];
+    if (!first) throw new Error('no socket');
+    first.open();
+    await flush();
+    const env = (cursor: number) => ({
+      t: 'env' as const,
+      cursor,
+      key: new Uint8Array(16),
+      env: new Uint8Array(50),
+    });
+    // A batch is being stored when five more batches' worth arrive.
+    for (let cursor = 1; cursor <= 1000; cursor++) first.receive(env(cursor));
+    await flush();
+    for (let cursor = 1001; cursor <= 6000; cursor++) first.receive(env(cursor));
+    await flush();
+    for (let batch = 0; batch < 5; batch++) {
+      release();
+      await flush();
+    }
+    // The first batch and the four that could wait are in; nothing more was kept.
+    expect(envelopes.flat()).toEqual(Array.from({ length: 5000 }, (_, i) => i + 1));
+    // The link was let go and joined again from where the stored cursor is.
+    const second = sockets[1];
+    if (!second) throw new Error('no second socket');
+    second.open();
+    await flush();
+    expect(parseClientMessage(second.sent[0] ?? '')).toEqual({
+      ok: true,
+      value: { t: 'join', group: GROUP, after: 5000 },
+    });
   });
 
   it('starts over when the relay has another store than the one it read from', async () => {
@@ -232,15 +293,21 @@ describe('relay client', () => {
     expect(sockets).toHaveLength(2);
   });
 
-  it('only pushes once synced', async () => {
-    const { client, sockets } = setup();
+  it('pushes an SOS, a cancellation or an acknowledgement once joined, the rest once synced', async () => {
+    const { client, sockets, joined } = setup();
     client.start();
     await flush();
     const socket = sockets[0];
     if (!socket) throw new Error('no socket');
+    expect(client.push(new Uint8Array(16), new Uint8Array(50), 'sos')).toBe(false);
     socket.open();
     await flush();
+    expect(joined()).toBe(1);
     expect(client.push(new Uint8Array(16), new Uint8Array(50), 'chat')).toBe(false);
+    for (const [n, type] of (['sos', 'sos-cancel', 'ack'] as const).entries()) {
+      expect(client.push(new Uint8Array(16).fill(n), new Uint8Array(50), type)).toBe(true);
+    }
+    expect(socket.sent.filter((text) => text.includes('"push"'))).toHaveLength(3);
     socket.receive({ t: 'synced', cursor: 0, store: STORE });
     await flush();
     expect(client.push(new Uint8Array(16), new Uint8Array(50), 'chat')).toBe(true);

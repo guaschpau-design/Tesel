@@ -41,7 +41,7 @@ import { FeedRelay } from './feed-relay.ts';
 import { openLogFile, sealLogFile, type LogImport } from './log-file.ts';
 import { catchUpPackets, loraEventOf, standingEvents, type LoraSink } from './lora-events.ts';
 import type { EventBuilder } from './member-events.ts';
-import type { RelayStatus, SocketLike } from './relay-client.ts';
+import type { RelayStatus, SocketLike } from './relay-types.ts';
 
 /** `local-only` when the group has no server: events stay on this device (and LoRa, later). */
 export type FeedStatus = RelayStatus | 'local-only';

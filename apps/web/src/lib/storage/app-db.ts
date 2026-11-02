@@ -8,7 +8,7 @@ import { openDB, unwrap, type DBSchema, type IDBPDatabase } from 'idb';
 import type { StoredGroup } from '../groups/group.ts';
 import type { LocalIdentity } from '../identity/identity.ts';
 import type { StoredRadioText } from '../radio/radio-texts.ts';
-import type { RelayPosition } from '../sync/relay-client.ts';
+import type { RelayPosition } from '../sync/relay-types.ts';
 import { IGNORE_VERSION_CHANGE, type VersionChange } from './version-change.ts';
 
 /** An event of a group, by the group and the event's reference: how the log and outbox key it. */

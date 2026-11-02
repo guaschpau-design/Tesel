@@ -1,7 +1,9 @@
 // Pushes waiting for a relay (protocol §8): the most urgent first, and paced below the server's
 // per-connection rate limit, so catching up after hours offline neither gets refused nor holds
 // an SOS behind a backlog of positions. A push the server refuses for going too fast goes again
-// a little later; the outbox keeps everything until the server confirms it.
+// a little later; the outbox keeps everything until the server confirms it. A key may carry more
+// than one envelope, when someone wrote under another's name (protocol §3.1): each is pushed, and
+// the server answers pushes in order, so a reply under a key is for the first of them sent.
 
 import { TokenBucket, urgencyOf } from '@tesel/core';
 import { toBase64url, type EventType } from '@tesel/protocol';
@@ -15,7 +17,10 @@ const PACE_MS = 500;
 const REFUSED_WAIT_MS = 5000;
 
 interface Push {
+  /** The event key, which the server's replies name. */
   readonly id: string;
+  /** The envelope, which tells apart pushes under one key. */
+  readonly envelope: string;
   readonly key: Uint8Array;
   readonly env: Uint8Array;
   readonly urgency: number;
@@ -27,8 +32,8 @@ export class PushQueue {
   readonly #bucket: TokenBucket;
   /** Not sent yet, most urgent first and in arrival order within the same urgency. */
   #waiting: Push[] = [];
-  /** Sent, until the server stores or refuses them. */
-  readonly #sent = new Map<string, Push>();
+  /** Sent, until the server stores or refuses them, in the order they were sent. */
+  #sent: Push[] = [];
   /** Pushes refused for going too fast, waiting to queue again. */
   readonly #retries = new Set<ReturnType<typeof setTimeout>>();
   #paceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -40,22 +45,22 @@ export class PushQueue {
   }
 
   add(key: Uint8Array, env: Uint8Array, type: EventType | null): void {
-    const id = toBase64url(key);
-    if (this.#sent.has(id) || this.#waiting.some((push) => push.id === id)) return;
-    this.#insert({ id, key, env, urgency: urgencyOf(type) });
+    const push = { id: toBase64url(key), envelope: toBase64url(env), key, env };
+    const same = (other: Push) => other.id === push.id && other.envelope === push.envelope;
+    if (this.#sent.some(same) || this.#waiting.some(same)) return;
+    this.#insert({ ...push, urgency: urgencyOf(type) });
     this.#drain();
   }
 
-  stored(key: Uint8Array): void {
-    this.#sent.delete(toBase64url(key));
+  /** The server stored a push under `key`: returns its envelope, or null if none was sent. */
+  stored(key: Uint8Array): Uint8Array | null {
+    return this.#answered(key)?.env ?? null;
   }
 
   /** The server could not take a push now (too fast, or no room): it goes again a little later. */
   tryLater(key: Uint8Array): void {
-    const id = toBase64url(key);
-    const push = this.#sent.get(id);
+    const push = this.#answered(key);
     if (push === undefined) return;
-    this.#sent.delete(id);
     const timer = setTimeout(() => {
       this.#retries.delete(timer);
       this.#insert(push);
@@ -67,11 +72,19 @@ export class PushQueue {
   /** The connection is gone: what was not stored goes again from the outbox after the next sync. */
   clear(): void {
     this.#waiting = [];
-    this.#sent.clear();
+    this.#sent = [];
     for (const timer of this.#retries) clearTimeout(timer);
     this.#retries.clear();
     if (this.#paceTimer !== null) clearTimeout(this.#paceTimer);
     this.#paceTimer = null;
+  }
+
+  /** Takes out of those sent the first push under `key`, which a reply of the server is for. */
+  #answered(key: Uint8Array): Push | undefined {
+    const id = toBase64url(key);
+    const push = this.#sent.find((sent) => sent.id === id);
+    if (push !== undefined) this.#sent = this.#sent.filter((sent) => sent !== push);
+    return push;
   }
 
   #insert(push: Push): void {
@@ -84,7 +97,7 @@ export class PushQueue {
     while (this.#waiting.length > 0 && this.#bucket.take(this.#now())) {
       const push = this.#waiting.shift();
       if (push === undefined) break;
-      this.#sent.set(push.id, push);
+      this.#sent.push(push);
       this.#send(push.key, push.env);
     }
     if (this.#waiting.length > 0 && this.#paceTimer === null) {

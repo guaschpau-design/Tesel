@@ -51,7 +51,7 @@ import {
   task,
   team,
 } from './member-events.ts';
-import type { SocketLike } from './relay-client.ts';
+import type { SocketLike } from './relay-types.ts';
 
 export class GroupFeed {
   /** How many chat lines and reports of others this device has shown (chat/unread.ts). */

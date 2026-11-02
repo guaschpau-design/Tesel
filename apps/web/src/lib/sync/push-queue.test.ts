@@ -63,4 +63,17 @@ describe('push queue', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(sent).toEqual([1]);
   });
+
+  it('pushes every envelope under one key, and matches the replies to them in order', () => {
+    const { queue, sent } = setup();
+    const forged = new Uint8Array(50).fill(1);
+    const genuine = new Uint8Array(50).fill(2);
+    queue.add(key(7), forged, 'sos');
+    queue.add(key(7), genuine, 'sos');
+    queue.add(key(7), genuine, 'sos');
+    expect(sent).toEqual([7, 7]);
+    expect(queue.stored(key(7))).toEqual(forged);
+    expect(queue.stored(key(7))).toEqual(genuine);
+    expect(queue.stored(key(7))).toBeNull();
+  });
 });

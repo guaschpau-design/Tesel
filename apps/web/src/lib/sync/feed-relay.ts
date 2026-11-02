@@ -22,12 +22,8 @@ import {
 import type { AppDb, GroupEventRef } from '../storage/app-db.ts';
 import { loadPosition, savePosition } from './cursor-store.ts';
 import { peekType } from './lora-events.ts';
-import {
-  RelayClient,
-  type ReceivedEnvelope,
-  type RelayStatus,
-  type SocketLike,
-} from './relay-client.ts';
+import { RelayClient } from './relay-client.ts';
+import type { ReceivedEnvelope, RelayStatus, SocketLike } from './relay-types.ts';
 import { checkServerClock } from './server-clock.ts';
 
 interface FeedRelayOptions {
@@ -55,8 +51,12 @@ export class FeedRelay {
   readonly #onEvents: FeedRelayOptions['onEvents'];
   readonly #onStored: FeedRelayOptions['onStored'];
   readonly #client: RelayClient;
-  /** Outbox entries pushed on this connection, by event key, until the server stores them. */
-  readonly #pushed = new Map<string, GroupEventRef>();
+  /**
+   * Outbox entries pushed on this connection, by event key, with their envelopes the server has
+   * not stored yet: more than one under a key that has rivals (protocol §3.1). The entry leaves
+   * the outbox once every one is stored.
+   */
+  readonly #pushed = new Map<string, { entry: GroupEventRef; waiting: Set<string> }>();
   readonly #retry = () => {
     this.#client.retryNow();
   };
@@ -74,20 +74,25 @@ export class FeedRelay {
       ...(createSocket ? { createSocket } : {}),
       handlers: {
         position: () => loadPosition(db, groupId, server),
+        // What the outbox holds of SOS calls, cancellations and acknowledgements goes at once.
+        onJoined: () => this.#flushOutbox(),
         onEnvelopes: (batch, store) => this.#receive(batch, server, store),
         onSynced: async (position) => {
-          await savePosition(db, groupId, server, position);
+          if (position !== null) await savePosition(db, groupId, server, position);
           await this.#flushOutbox();
         },
         onStoreChanged: async (store) => {
           await savePosition(db, groupId, server, { cursor: 0, store });
           await requeueOwnEvents(db, groupId, self);
         },
-        onStored: (key) => this.#confirm(key),
+        onStored: (key, env) => this.#confirm(key, env),
         onStatus: (status) => {
           onStatus(status);
+          if (status !== 'connecting') return;
+          // What a link that is gone pushed goes again from the outbox on the next.
+          this.#pushed.clear();
           // Each try to connect checks this device's clock against the server's.
-          if (status === 'connecting') void checkServerClock(server);
+          void checkServerClock(server);
         },
       },
     });
@@ -106,13 +111,15 @@ export class FeedRelay {
     this.#client.stop();
   }
 
-  /** Seals an event of the outbox and pushes it, if the connection takes pushes now. */
+  /** Seals an event of the outbox and pushes it, if the connection takes it now. */
   push(entry: GroupEventRef, bytes: Uint8Array): void {
     const key = eventKey(this.#keys, entry);
-    const type = peekType(bytes);
-    if (this.#client.push(key, sealEnvelope(this.#keys, bytes), type)) {
-      this.#pushed.set(toBase64url(key), entry);
-    }
+    const env = sealEnvelope(this.#keys, bytes);
+    if (!this.#client.push(key, env, peekType(bytes))) return;
+    const id = toBase64url(key);
+    const pushed = this.#pushed.get(id) ?? { entry, waiting: new Set<string>() };
+    pushed.waiting.add(toBase64url(env));
+    this.#pushed.set(id, pushed);
   }
 
   /**
@@ -148,12 +155,14 @@ export class FeedRelay {
     }
   }
 
-  async #confirm(key: Uint8Array): Promise<void> {
+  async #confirm(key: Uint8Array, env: Uint8Array): Promise<void> {
     const id = toBase64url(key);
-    const entry = this.#pushed.get(id);
-    if (entry === undefined) return;
+    const pushed = this.#pushed.get(id);
+    if (pushed === undefined) return;
+    pushed.waiting.delete(toBase64url(env));
+    if (pushed.waiting.size > 0) return;
     this.#pushed.delete(id);
-    this.#onStored(entry);
-    await confirmStored(this.#db, entry);
+    this.#onStored(pushed.entry);
+    await confirmStored(this.#db, pushed.entry);
   }
 }

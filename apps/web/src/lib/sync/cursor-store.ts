@@ -4,7 +4,7 @@
 import { serverBaseUrl } from '@tesel/protocol';
 
 import type { AppDb } from '../storage/app-db.ts';
-import type { RelayPosition } from './relay-client.ts';
+import type { RelayPosition } from './relay-types.ts';
 
 /** Where a group starts on a server it never synced with. */
 export const START: RelayPosition = { cursor: 0, store: null };

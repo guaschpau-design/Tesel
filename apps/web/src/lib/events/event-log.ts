@@ -15,7 +15,7 @@ import {
 
 import type { AppDb, EventKey, GroupEventRef, OutboxEntry } from '../storage/app-db.ts';
 import { cursorKey, groupCursors } from '../sync/cursor-store.ts';
-import type { RelayPosition } from '../sync/relay-client.ts';
+import type { RelayPosition } from '../sync/relay-types.ts';
 
 /** Largest sequence number: the field is an unsigned 32-bit integer (protocol §2). */
 const MAX_SEQ = 0xffff_ffff;
