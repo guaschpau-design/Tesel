@@ -8,7 +8,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | [0001](0001-record-decisions-and-language.md)        | Record decisions as ADRs; English for code and technical docs                               | Accepted                                                |
 | [0002](0002-pwa-only-client.md)                      | A progressive web app is the only client in v0.1                                            | Superseded after v0.1 by 0016                           |
-| [0003](0003-event-log-last-writer-wins.md)           | Event log with last-writer-wins instead of a CRDT library                                   | Accepted, amended by 0044, 0055                         |
+| [0003](0003-event-log-last-writer-wins.md)           | Event log with last-writer-wins instead of a CRDT library                                   | Accepted, amended by 0044, 0055, 0103                   |
 | [0004](0004-one-binary-format-every-transport.md)    | One binary event format for every transport                                                 | Accepted                                                |
 | [0005](0005-group-secret-trust-boundary.md)          | The group secret is the trust boundary; the server is zero-knowledge                        | Accepted, amended by 0052                               |
 | [0006](0006-meshcore-first-channel-datagrams.md)     | MeshCore first, through channel data datagrams                                              | Accepted, amended by 0098, 0099                         |
@@ -49,7 +49,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0041](0041-satellite-mosaic-and-national-photos.md) | One Sentinel-2 mosaic from afar, each country's photographs close up                        | Accepted, amended by 0051                               |
 | [0042](0042-remove-radio-line-of-sight.md)           | Remove the radio line of sight                                                              | Accepted                                                |
 | [0043](0043-radio-delivery.md)                       | Deliver over the radio until someone has it                                                 | Accepted, amended by 0104                               |
-| [0044](0044-clocks-and-damaged-events.md)            | Keep each author's events in order, and say when a clock is wrong                           | Accepted                                                |
+| [0044](0044-clocks-and-damaged-events.md)            | Keep each author's events in order, and say when a clock is wrong                           | Accepted, amended by 0103                               |
 | [0045](0045-server-keeps-every-distinct-envelope.md) | The server keeps every distinct envelope pushed under a key                                 | Accepted, amended by 0067                               |
 | [0046](0046-store-identity.md)                       | A server's store has an identity, and cursors belong to it                                  | Accepted                                                |
 | [0047](0047-alarms-and-notices.md)                   | Raise the alarm, and say what happened                                                      | Accepted, amended by 0070, 0104                         |
@@ -61,7 +61,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0053](0053-load-heavy-parts-on-demand.md)           | Load the heavy parts of the app on demand, MapLibre in a file of its own                    | Accepted, amended by 0098                               |
 | [0054](0054-frame-the-group-at-start.md)             | Bring the group into view at start, until the user chooses a view                           | Accepted                                                |
 | [0055](0055-forget-outlived-positions.md)            | Forget the positions the trails have outlived                                               | Accepted                                                |
-| [0056](0056-storage-and-offline-maps.md)             | Keep room for the log, resume downloads, and never show a blank map                         | Accepted                                                |
+| [0056](0056-storage-and-offline-maps.md)             | Keep room for the log, resume downloads, and never show a blank map                         | Accepted, amended by 0103                               |
 | [0057](0057-accessible-interface.md)                 | Meet WCAG 2.1 AA in the app's colours, keyboard use and texts                               | Accepted                                                |
 | [0058](0058-no-command-posts.md)                     | Drop command posts: one server per group, radios when there is no internet                  | Accepted                                                |
 | [0059](0059-routes.md)                               | Routes: drawn or read from a file, followed leg by leg, and a task's place may be an object | Accepted, amended by 0077                               |
@@ -108,4 +108,5 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |
 | [0101](0101-explanations-on-asking.md)               | What a choice does is shown on asking                                                       | Accepted                                                |
 | [0102](0102-ground-in-3d.md)                         | The ground raised in 3D, on asking                                                          | Accepted                                                |
+| [0103](0103-rivals-full-storage-and-urgent-sync.md)  | Rivals under one event reference, a full storage, and an SOS that does not wait             | Accepted                                                |
 | [0104](0104-sos-across-drops-and-groups.md)          | Keep the radio and SOS calls going across drops and group changes                           | Accepted                                                |

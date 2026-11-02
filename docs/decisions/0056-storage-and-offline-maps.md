@@ -1,6 +1,6 @@
 # 0056. Keep room for the log, resume downloads, and never show a blank map
 
-- Status: Accepted
+- Status: Accepted, amended by [0103](0103-rivals-full-storage-and-urgent-sync.md) (a log write refused for lack of room frees the tiles seen and goes again; an SOS goes out unstored)
 - Date: 2026-10-28
 
 ## Context

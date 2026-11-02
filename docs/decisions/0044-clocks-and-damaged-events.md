@@ -1,6 +1,6 @@
 # 0044. Keep each author's events in order, and say when a clock is wrong
 
-- Status: Accepted
+- Status: Accepted, amended by [0103](0103-rivals-full-storage-and-urgent-sync.md) (the previous time is kept to only within an hour of the clock)
 - Date: 2026-10-27
 
 ## Context
@@ -25,6 +25,6 @@ ADR-0003's last consequence is corrected accordingly.
 
 ## Consequences
 
-- A phone that went back in time keeps its own edits in order; others still see its events with the times it stamped, which may be in the past.
+- A phone that went back in time by an hour or less keeps its own edits in order; others still see its events with the times it stamped, which may be in the past. One that went back further goes by its clock, since the time it kept to was more likely stamped by a clock that ran ahead and was set right: keeping to it held every later event at that wrong time ([ADR-0103](0103-rivals-full-storage-and-urgent-sync.md)).
 - A phone whose clock runs ahead still wins concurrent edits until it is set right; with no server reachable, nothing tells it so.
 - Older versions of the app may still hold damaged events; they are dropped only as new copies arrive, not cleaned up.
