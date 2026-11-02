@@ -63,7 +63,10 @@
     <SwitchRow
       icon="person"
       label={t('inviteAsCoordinator')}
-      hint={t('inviteAsCoordinatorHint')}
+      hint={{
+        text: t('inviteAsCoordinatorHint'),
+        label: t('aboutThis', { name: t('inviteAsCoordinator') }),
+      }}
       on={role === 'coordinator'}
       onclick={() => (role = role === 'coordinator' ? 'member' : 'coordinator')}
     />

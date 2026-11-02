@@ -688,5 +688,6 @@ export const es: Messages = {
   warningSource: 'Fuente:',
   warningThrough: 'a través de',
   details: 'Detalles',
+  aboutThis: 'Qué es «{name}»',
   thirdPartyLicences: 'Licencias de terceros',
 };

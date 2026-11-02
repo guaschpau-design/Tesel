@@ -106,3 +106,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
 | [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted                                                |
 | [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |
+| [0101](0101-explanations-on-asking.md)               | What a choice does is shown on asking                                                       | Accepted                                                |

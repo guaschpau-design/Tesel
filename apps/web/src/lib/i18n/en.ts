@@ -688,6 +688,7 @@ export const en = {
   warningSource: 'Source:',
   warningThrough: 'through',
   details: 'Details',
+  aboutThis: 'What “{name}” is',
   thirdPartyLicences: 'Third-party licences',
 } as const;
 

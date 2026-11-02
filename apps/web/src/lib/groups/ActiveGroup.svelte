@@ -71,7 +71,10 @@
     <SwitchRow
       icon="person"
       label={t('checkInSwitch')}
-      hint={t('checkInHint', { minutes: CHECK_IN_MINUTES })}
+      hint={{
+        text: t('checkInHint', { minutes: CHECK_IN_MINUTES }),
+        label: t('aboutThis', { name: t('checkInSwitch') }),
+      }}
       on={checkIn}
       onclick={() => {
         attempt(() => current.setCheckInTimer(checkIn ? 0 : CHECK_IN_MINUTES), t('actionFailed'));

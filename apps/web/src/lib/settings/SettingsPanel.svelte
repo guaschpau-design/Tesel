@@ -66,7 +66,7 @@
     <SwitchRow
       icon="battery"
       label={t('energySaving')}
-      hint={t('energySavingHint')}
+      hint={{ text: t('energySavingHint'), label: t('aboutThis', { name: t('energySaving') }) }}
       on={preferences.energySaving.value}
       onclick={() => void preferences.energySaving.set(!preferences.energySaving.value)}
     />
