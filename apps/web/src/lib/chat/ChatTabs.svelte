@@ -21,7 +21,7 @@
   let { t, tab, ontab, showRadioTab, reportCount, radioTextCount }: Props = $props();
 
   const tabs: readonly ChatTab[] = $derived(
-    showRadioTab ? ['group', 'reports', 'meshcore'] : ['group', 'reports'],
+    showRadioTab ? ['group', 'reports', 'mesh'] : ['group', 'reports'],
   );
 
   /** Arrow keys, Home and End move between the tabs, as in any tab list. */
@@ -60,7 +60,7 @@
         {t('reportsTab')}
         {#if reportCount > 0}<span class="count">{reportCount}</span>{/if}
       {:else}
-        {t('chatMeshcore')}
+        {t('chatMesh')}
         {#if radioTextCount > 0}<span class="count">{radioTextCount}</span>{/if}
       {/if}
     </button>

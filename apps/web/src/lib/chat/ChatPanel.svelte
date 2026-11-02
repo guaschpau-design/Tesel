@@ -135,11 +135,11 @@
         <Pictogram name="pushpin" size={18} />
         {t('reportNew')}
       </button>
-    {:else if tab === 'meshcore' && showRadioTab}
+    {:else if tab === 'mesh' && showRadioTab}
       <div class="scroll stack">
-        <p class="hint">{t('meshcoreIntro')}</p>
+        <p class="hint">{t('meshIntro')}</p>
         {#if radioTexts.length === 0}
-          <p class="hint">{t('noMeshcoreMessages')}</p>
+          <p class="hint">{t('noMeshMessages')}</p>
         {:else}
           <ol class="messages">
             {#each radioTexts as message, index (index)}

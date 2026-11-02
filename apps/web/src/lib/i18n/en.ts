@@ -506,9 +506,9 @@ export const en = {
   radioConnectHint:
     'If it asks for a PIN, it is the one on the radio’s screen or, if it has none, 123456 from the factory. Radio not listed? Turn it off and on again.',
   chatGroup: 'Group',
-  chatMeshcore: 'Mesh',
-  meshcoreIntro: 'Messages from MeshCore and Meshtastic radios nearby. Reply from their own app.',
-  noMeshcoreMessages: 'No messages from other radio apps have arrived yet.',
+  chatMesh: 'Mesh',
+  meshIntro: 'Messages from MeshCore and Meshtastic radios nearby. Reply from their own app.',
+  noMeshMessages: 'No messages from other radio apps have arrived yet.',
   meshcoreChannel: 'Channel {name}',
   meshcoreUnknownChannel: '(unknown)',
   meshcoreDirect: 'Private message',

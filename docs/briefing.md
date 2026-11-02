@@ -8,7 +8,7 @@
 
 ## 1. Qué es
 
-Tesel es una aplicación libre, gratuita y de código abierto de **consciencia situacional para la sociedad civil europea**: un mapa compartido en tiempo real donde un grupo ve a sus miembros, se comunica y marca lo que ocurre sobre el terreno, **también cuando no hay internet**, gracias a las redes de radio LoRa (MeshCore y, más adelante, Meshtastic).
+Tesel es una aplicación libre, gratuita y de código abierto de **consciencia situacional para la sociedad civil europea**: un mapa compartido en tiempo real donde un grupo ve a sus miembros, se comunica y marca lo que ocurre sobre el terreno, **también cuando no hay internet**, gracias a las redes de radio LoRa (MeshCore y Meshtastic).
 
 Es la respuesta europea y abierta a lo que ATAK hace en Estados Unidos, con tres diferencias de principio:
 
@@ -45,7 +45,7 @@ Para toda la sociedad civil, sin excluir a nadie:
 | Plataforma                | Aplicación web (principal) y apps de Android e iPhone hechas con el mismo código, a partir de la v0.1 (ADR-0016)                                                |
 | Comunicaciones v0.1       | Internet + LoRa MeshCore (Bluetooth desde Chrome/Edge)                                                                                                          |
 | Radios soportadas v0.1    | Elecrow ThinkNode M9, SenseCAP MeshTracker X1, LilyGO T-Deck Plus y SenseCAP T1000-E, con firmware MeshCore Companion Bluetooth (detalle en `docs/hardware.md`) |
-| Comunicaciones después    | LoRa Meshtastic; compatibilidad con ATAK (protocolo CoT)                                                                                                        |
+| Comunicaciones después    | Compatibilidad con ATAK (protocolo CoT)                                                                                                                         |
 | Infraestructura           | Funciona sin servidor; si hay servidor, sincroniza con él                                                                                                       |
 | Servidor de pruebas       | VPS en IONOS (España), `tesel.eu`                                                                                                                               |
 | Código                    | GitHub                                                                                                                                                          |

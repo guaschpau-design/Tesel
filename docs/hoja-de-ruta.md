@@ -70,6 +70,6 @@ Lo previsto en el briefing más lo aprendido de ATAK. Cada fase se detalla al em
 4. Exportar el mapa (objetos y recorridos) a KML y GeoJSON para otras herramientas.
 5. Mapa náutico, e imagen de satélite fuera de España.
 6. Simbología OTAN APP-6.
-7. Radios Meshtastic.
+7. Radios Meshtastic: hecha la primera fase (Tesel usa radios Meshtastic como las MeshCore, ADR-0098); falta mostrar en el mapa a quien lleva una radio Meshtastic sin Tesel.
 8. Compatibilidad con ATAK (CoT).
 9. Apps de Android e iPhone con el mismo código: segundo plano, radio en iPhone y avisos con la app cerrada. Aplazadas a propósito: primero la app web completa.

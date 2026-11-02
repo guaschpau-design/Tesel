@@ -2,7 +2,7 @@
 // apps the radio hears (MeshCore or Meshtastic chat). The chat panel carries which one it shows
 // (ui/panels.svelte.ts).
 
-export type ChatTab = 'group' | 'reports' | 'meshcore';
+export type ChatTab = 'group' | 'reports' | 'mesh';
 
 /** The chat panel on the group's messages: what its button opens. */
 export const CHAT = { name: 'chat', tab: 'group' } as const;
