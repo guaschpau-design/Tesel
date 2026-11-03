@@ -5,7 +5,6 @@
   import {
     TEAM_MAX_MEMBERS,
     TEAM_NAME_MAX_BYTES,
-    utf8ByteLength,
     type NodeId,
     type TeamColour,
     type TeamEvent,
@@ -14,6 +13,8 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
+  import { nameFault, NAME_FAULT_MESSAGES } from '../names/names.ts';
+  import { shownText } from '../text.ts';
   import type { TeamFields } from '../sync/event-fields.ts';
   import { confirmations } from '../ui/confirmations.svelte.ts';
   import Dialog from '../ui/Dialog.svelte';
@@ -39,7 +40,9 @@
   let chosen: NodeId[] = $state([...(initial?.members ?? [])]);
   const submission = new Submission();
 
-  const tooLong = $derived(utf8ByteLength(name.trim()) > TEAM_NAME_MAX_BYTES);
+  const fault = $derived(
+    name.trim() === '' ? null : nameFault(name.trim(), 1, TEAM_NAME_MAX_BYTES),
+  );
   /** No one more fits in the team (§3.15). */
   const full = $derived(chosen.length >= TEAM_MAX_MEMBERS);
   /** More than fit: a team written when events could be larger, before radio frames were sealed. */
@@ -90,7 +93,7 @@
       {t('teamName')}
       <input bind:value={name} required autocomplete="off" />
     </label>
-    {#if tooLong}<p class="warning">{t('nameInvalid')}</p>{/if}
+    {#if fault}<p class="warning">{t(NAME_FAULT_MESSAGES[fault])}</p>{/if}
     <fieldset>
       <legend>{t('teamColour')}</legend>
       <div class="colours">
@@ -123,7 +126,7 @@
               />
               {person.alias}
               {#if person.team && person.team.team !== initial?.team}
-                <span class="hint">· {person.team.name}</span>
+                <span class="hint">· {shownText(person.team.name)}</span>
               {/if}
             </label>
           </li>
@@ -136,7 +139,8 @@
       <button
         type="submit"
         class="primary"
-        disabled={submission.busy || name.trim() === '' || tooLong || overFull}>{t('save')}</button
+        disabled={submission.busy || name.trim() === '' || fault !== null || overFull}
+        >{t('save')}</button
       >
       <button type="button" onclick={onclose}>{t('cancel')}</button>
       {#if initial}

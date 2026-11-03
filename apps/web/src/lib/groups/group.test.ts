@@ -5,6 +5,7 @@ import {
   applyInvitation,
   canInvite,
   createGroup,
+  groupNameFault,
   invitationFor,
   normalizeGroupName,
   normalizeServerUrl,
@@ -92,5 +93,10 @@ describe('groups', () => {
     const fire = '🔥';
     expect(normalizeGroupName(`Incendio ${fire}`)).toBe(`Incendio ${fire}`);
     expect(normalizeGroupName(`Incendio ${fire.slice(0, 1)}`)).toBeNull();
+  });
+
+  it('refuses a group name with a character that is not seen, and says so', () => {
+    expect(normalizeGroupName('Rescate\u2067')).toBeNull();
+    expect(groupNameFault('Res\u200Bcate')).toBe('hidden');
   });
 });

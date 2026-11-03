@@ -6,6 +6,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { activeTeams } from '../teams/teams.ts';
+  import { shownText } from '../text.ts';
   import { aliasOf } from './alias.ts';
 
   interface Props {
@@ -39,7 +40,7 @@
   {#if teams.length > 0}
     <optgroup label={t('teamsTitle')}>
       {#each teams as team (team.team)}
-        <option value={team.team}>{team.name}</option>
+        <option value={team.team}>{shownText(team.name)}</option>
       {/each}
     </optgroup>
   {/if}

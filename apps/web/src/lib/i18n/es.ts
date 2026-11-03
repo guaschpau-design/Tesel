@@ -98,6 +98,8 @@ export const es: Messages = {
   aliasHint: 'Corto: un nombre o un apodo.',
   nameInvalid: 'Escribe un nombre más corto.',
   nameBroken: 'El nombre tiene un carácter roto, como medio emoji: bórralo.',
+  nameHidden:
+    'El nombre tiene un carácter invisible o que da la vuelta al texto: escríbelo de nuevo.',
   continue: 'Continuar',
   invitedTo: 'Te han invitado a «{group}» como {role}.',
   joinNamed: 'Entrar en «{group}»',

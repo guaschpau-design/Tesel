@@ -24,6 +24,7 @@ import { objectAnchor } from '../objects/object-anchor.ts';
 import { objectName } from '../objects/object-names.ts';
 import { reportLine } from '../reports/report-summary.ts';
 import { placePoint } from '../tasks/tasks.ts';
+import { shownText } from '../text.ts';
 
 export interface DiaryLine {
   /** The event's reference key. */
@@ -54,7 +55,8 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
         key: eventRefKey(event),
         time: event.time,
         author: aliasOf(state, event.origin),
-        text,
+        // Written from what members wrote: shown without the characters no one sees (ADR-0110).
+        text: shownText(text),
         at: placeOf(event, objects),
       },
     ];

@@ -25,6 +25,7 @@
   import { editTask } from '../tasks/task-editor.ts';
   import type { TaskRow } from '../tasks/tasks.ts';
   import { TEAM_COLOURS } from '../teams/teams.ts';
+  import { shownText } from '../text.ts';
   import Fold from '../ui/Fold.svelte';
   import StatusDot from '../ui/StatusDot.svelte';
   import {
@@ -152,7 +153,7 @@
   {#if team}
     <p class="line">
       <span class="swatch" style:--swatch="var(--tone-{TEAM_COLOURS[team.colour].tone})"></span>
-      {t('teamOf', { name: team.name })}
+      {t('teamOf', { name: shownText(team.name) })}
     </p>
   {/if}
   {#if edits}
@@ -194,7 +195,7 @@
                   editTask(row.key);
                 }}
               >
-                <span>{row.fields.text}</span>
+                <span>{shownText(row.fields.text)}</span>
                 {#if row.fields.status === 'in-progress'}
                   <span class="hint">{t('taskInProgress')}</span>
                 {/if}

@@ -5,6 +5,7 @@ import type { LatLon, ShapeEvent } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Geometry, LineString, Point } from 'geojson';
 
 import { circleRing, toPosition } from '../map/geometry.ts';
+import { shownText } from '../text.ts';
 import type { Tone } from '../ui/theme.ts';
 import { styleInfo, symbolImageName } from './catalog.ts';
 import { stripOf, stripPath, stripWalker, walkerTone } from './sweeps.ts';
@@ -33,7 +34,7 @@ export function markerFeatures(
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: toPosition(record) },
-      properties: { key, label: record.label, icon: symbolImageName(record.symbol) },
+      properties: { key, label: shownText(record.label), icon: symbolImageName(record.symbol) },
     });
   }
   return { type: 'FeatureCollection', features };
@@ -48,7 +49,7 @@ export function shapeFeatures(
     features.push({
       type: 'Feature',
       geometry: shapeGeometry(record),
-      properties: { key, label: record.label, tone: styleInfo(record.style).tone },
+      properties: { key, label: shownText(record.label), tone: styleInfo(record.style).tone },
     });
   }
   return { type: 'FeatureCollection', features };

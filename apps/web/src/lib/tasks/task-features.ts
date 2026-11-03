@@ -5,7 +5,7 @@ import type { GroupState } from '@tesel/core';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 
 import { toPosition } from '../map/geometry.ts';
-import { shorten } from '../text.ts';
+import { shorten, shownText } from '../text.ts';
 import { isPending, placePoint } from './tasks.ts';
 
 /** Longer texts are cut on the map; the whole text is in the tasks panel. */
@@ -30,7 +30,7 @@ export function taskFeatures(
       geometry: { type: 'Point', coordinates: toPosition(at) },
       properties: {
         key,
-        label: shorten(task.text, LABEL_LENGTH),
+        label: shorten(shownText(task.text), LABEL_LENGTH),
         started: task.status === 'in-progress',
       },
     });

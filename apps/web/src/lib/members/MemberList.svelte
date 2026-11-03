@@ -9,7 +9,7 @@
 
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import type { Heard } from '../links/heard.ts';
-  import { initialOf } from '../text.ts';
+  import { initialOf, shownText } from '../text.ts';
   import { clockEvery } from '../ui/now.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { ROLE_LABELS } from '../groups/role-label.ts';
@@ -91,7 +91,7 @@
         {@const team = group.team}
         <h4>
           <span class="swatch" style:--swatch="var(--tone-{TEAM_COLOURS[team.colour].tone})"></span>
-          {team.name}
+          {shownText(team.name)}
           <span class="hint">· {group.rows.length}</span>
           {#if onteam}
             <button

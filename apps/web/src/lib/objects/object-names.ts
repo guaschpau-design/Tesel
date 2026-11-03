@@ -1,10 +1,12 @@
 // What the app calls a map object, wherever it names one: a panel's title, a task's place, a line
-// of the diary. A strip of a sweep is named by its area and its place among the strips.
+// of the diary. A strip of a sweep is named by its area and its place among the strips. Labels are
+// shown without the characters no one sees (ADR-0110).
 
 import type { GroupState } from '@tesel/core';
 import { eventRefKey, type MarkerEvent, type ShapeEvent, type SweepEvent } from '@tesel/protocol';
 
 import type { Translate } from '../i18n/index.ts';
+import { shownText } from '../text.ts';
 import { objectKind } from './catalog.ts';
 
 type MapObject = MarkerEvent | ShapeEvent | SweepEvent;
@@ -16,7 +18,7 @@ export function objectTitle(
   t: Translate,
 ): string {
   if (object.type === 'sweep') return stripName(object, objects, t);
-  return object.label || t(objectKind(object));
+  return shownText(object.label) || t(objectKind(object));
 }
 
 /** What it is and its label, as lists and the diary say it: Ruta «Senda norte». */
@@ -27,7 +29,8 @@ export function objectName(
 ): string {
   if (object.type === 'sweep') return stripName(object, objects, t);
   const kind = t(objectKind(object));
-  return object.label ? `${kind} «${object.label}»` : kind;
+  const label = shownText(object.label);
+  return label ? `${kind} «${label}»` : kind;
 }
 
 function stripName(sweep: SweepEvent, objects: GroupState['objects'], t: Translate): string {
@@ -36,5 +39,5 @@ function stripName(sweep: SweepEvent, objects: GroupState['objects'], t: Transla
   if (area === undefined || area.type === 'object-delete' || area.type === 'sweep') {
     return t('stripNameAlone', place);
   }
-  return t('stripName', { ...place, area: area.label || t(objectKind(area)) });
+  return t('stripName', { ...place, area: shownText(area.label) || t(objectKind(area)) });
 }

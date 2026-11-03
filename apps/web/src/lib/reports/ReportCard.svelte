@@ -10,6 +10,7 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
   import { placePoint } from '../tasks/tasks.ts';
+  import { shownText } from '../text.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { reportLines } from './report-summary.ts';
 
@@ -45,7 +46,7 @@
     </summary>
     <div class="told">
       {#each told as line (line)}<p>{line}</p>{/each}
-      {#if report.note}<p class="note">«{report.note}»</p>{/if}
+      {#if report.note}<p class="note">«{shownText(report.note)}»</p>{/if}
       {#if report.place && placePoint(report.place, groupState.objects)}
         {@const place = report.place}
         <button

@@ -1,7 +1,10 @@
 <!-- One line of a chat list, as a bubble: who wrote it or where it was heard, the text with its
      time at the end, and a word while it has reached no one yet. The user's own lines sit at the
-     end of the row. It is the list item itself, so the list scrolls to it as to any item. -->
+     end of the row. It is the list item itself, so the list scrolls to it as to any item. What
+     others wrote, or other radio apps sent, is shown without the characters no one sees. -->
 <script lang="ts">
+  import { shownText } from '../text.ts';
+
   interface Props {
     text: string;
     /** When it was written or heard, as shown. */
@@ -19,9 +22,9 @@
 </script>
 
 <li class:own class:follows>
-  {#if meta !== undefined}<span class="meta">{meta}</span>{/if}
+  {#if meta !== undefined}<span class="meta">{shownText(meta)}</span>{/if}
   <span class="line">
-    <span class="text">{text}</span>
+    <span class="text">{shownText(text)}</span>
     <span class="time">{time}</span>
   </span>
   {#if pending !== undefined}<span class="pending">{pending}</span>{/if}

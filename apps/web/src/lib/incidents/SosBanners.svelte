@@ -8,6 +8,7 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import FromHere from '../navigation/FromHere.svelte';
   import { confirmations } from '../ui/confirmations.svelte.ts';
+  import { shownText } from '../text.ts';
   import MapCard from '../ui/MapCard.svelte';
   import { activeSos } from './incidents.ts';
   import { SOS_KINDS } from './sos-kinds.ts';
@@ -56,7 +57,7 @@
     <MapCard label="SOS" edge="var(--danger)">
       <strong class="caller">SOS · {call.author} · {t(SOS_KINDS[call.event.kind].label)}</strong>
       <span class="when">{formatTime(call.event.time * 1000, locale)}</span>
-      {#if call.event.text}<p>{call.event.text}</p>{/if}
+      {#if call.event.text}<p>{shownText(call.event.text)}</p>{/if}
       {#if where.kind === 'shared'}
         <p class="where">{t('sosPlaceShared', { time: formatTime(where.time * 1000, locale) })}</p>
       {:else if where.kind === 'unknown'}

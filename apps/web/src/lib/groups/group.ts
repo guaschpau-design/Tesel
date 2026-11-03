@@ -6,7 +6,6 @@ import {
   generateGroupSecret,
   GROUP_NAME_MAX_BYTES,
   isSecureUrl,
-  isWellFormedText,
   SERVER_URL_MAX_BYTES,
   toBase64url,
   utf8ByteLength,
@@ -15,6 +14,8 @@ import {
   type RandomSource,
   type Role,
 } from '@tesel/protocol';
+
+import { nameFault, type NameFault } from '../names/names.ts';
 
 export interface StoredGroup {
   /** Group ID (protocol §5) in base64url: public, safe to use as a key and in logs. */
@@ -36,14 +37,14 @@ export interface StoredGroup {
 /** What joining through an invitation did. */
 export type JoinOutcome = 'joined' | 'promoted' | 'already-member';
 
-/**
- * Trims a group name and returns it, or null if it does not fit the protocol's limits or holds
- * half of a surrogate pair, which no invitation could carry.
- */
+/** What is wrong with a group name as typed, once trimmed (names.ts), or null. */
+export function groupNameFault(text: string): NameFault | null {
+  return nameFault(text.trim(), 1, GROUP_NAME_MAX_BYTES);
+}
+
+/** Trims a group name and returns it, or null if it cannot be used (groupNameFault). */
 export function normalizeGroupName(text: string): string | null {
-  const name = text.trim();
-  const size = utf8ByteLength(name);
-  return isWellFormedText(name) && size >= 1 && size <= GROUP_NAME_MAX_BYTES ? name : null;
+  return groupNameFault(text) === null ? text.trim() : null;
 }
 
 /**

@@ -13,6 +13,7 @@
   import Fold from '../ui/Fold.svelte';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
+  import { shownText } from '../text.ts';
   import { attempt } from '../ui/submission.svelte.ts';
   import { editTask, newTask, stopEditingTask } from './task-editor.ts';
   import TaskForm from './TaskForm.svelte';
@@ -98,7 +99,7 @@
         editTask(row.key);
       }}
     >
-      <span class="text">{row.fields.text}</span>
+      <span class="text">{shownText(row.fields.text)}</span>
       {#if showDoer || row.fields.status === 'in-progress'}
         <span class="meta">
           {#if showDoer}{doerName(doerOf(row))}{/if}

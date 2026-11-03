@@ -39,6 +39,11 @@ describe('what to call a member', () => {
     expect(aliasOf(state, LUIS)).toBe('Luis');
   });
 
+  it('tells apart a name that only looks the same, and shows it without hidden characters', () => {
+    const state = stateOf(info(MARTA, 'Marta', 10), info(OTHER, 'Mar\u200Bta\u202E', 20));
+    expect(aliasOf(state, OTHER)).toBe('Marta \u2461');
+  });
+
   it('calls a member it has no name for by their node ID', () => {
     expect(aliasOf(stateOf(), MARTA)).toBe(MARTA);
   });

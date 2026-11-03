@@ -11,6 +11,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { activity } from '../power/activity.svelte.ts';
+  import { shownText } from '../text.ts';
   import { announcer } from '../ui/announcer.svelte.ts';
   import { alarmedSos } from './alarmed-sos.ts';
   import { prepareAlarmSound, raiseAlarm, type AlarmChoices, type AlarmMessage } from './alarm.ts';
@@ -37,7 +38,9 @@
       .filter((call) => !call.mine)
       .map((call): AlarmMessage => ({
         title: `${t('sos')} · ${call.author}`,
-        body: [t(SOS_KINDS[call.event.kind].label), call.event.text].filter(Boolean).join(' · '),
+        body: [t(SOS_KINDS[call.event.kind].label), shownText(call.event.text)]
+          .filter(Boolean)
+          .join(' · '),
         tag: call.key,
       })),
   );

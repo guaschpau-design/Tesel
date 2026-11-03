@@ -100,6 +100,7 @@ export const en = {
   aliasHint: 'Short: a name or a nickname.',
   nameInvalid: 'Write a shorter name.',
   nameBroken: 'The name has a broken character, such as half an emoji: delete it.',
+  nameHidden: 'The name has a character that is not seen or turns the text around: type it again.',
   continue: 'Continue',
   invitedTo: 'You have been invited to “{group}” as {role}.',
   joinNamed: 'Join “{group}”',

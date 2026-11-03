@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { openAppDb } from '../storage/app-db.ts';
 import { loadIdentity, saveIdentity } from './identity-store.ts';
-import { createLocalIdentity, normalizeAlias } from './identity.ts';
+import { aliasFault, createLocalIdentity, normalizeAlias } from './identity.ts';
 
 describe('local identity', () => {
   it('accepts aliases of 1 to 32 bytes after trimming', () => {
@@ -16,6 +16,12 @@ describe('local identity', () => {
   it('refuses an alias with half of an emoji, which no event could carry', () => {
     expect(normalizeAlias('Pau 🚒')).toBe('Pau 🚒');
     expect(normalizeAlias(`Pau ${'🚒'.slice(1)}`)).toBeNull();
+  });
+
+  it('refuses an alias with a character that is not seen, and says so', () => {
+    expect(normalizeAlias('Pau\u202E')).toBeNull();
+    expect(aliasFault('Pa\u200Bu')).toBe('hidden');
+    expect(aliasFault('Pau')).toBeNull();
   });
 
   it('survives a restart of the app', async () => {

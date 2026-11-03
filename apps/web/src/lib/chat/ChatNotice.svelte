@@ -11,7 +11,7 @@
   import type { Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
   import { nudge } from '../power/attention.ts';
-  import { shorten } from '../text.ts';
+  import { shorten, shownText } from '../text.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { openPanel } from '../ui/panels.svelte.ts';
   import { CHAT } from './chat-tabs.ts';
@@ -51,7 +51,7 @@
     if (latest === undefined || untrack(() => open)) return;
     const said = t('chatNotice', {
       name: aliasOf({ members }, latest.origin),
-      text: shorten(latest.text, PREVIEW),
+      text: shorten(shownText(latest.text), PREVIEW),
     });
     withdraw();
     nudge();
