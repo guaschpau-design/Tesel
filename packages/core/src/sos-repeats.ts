@@ -3,25 +3,38 @@
 
 import { LIMITS } from './lora-limits.ts';
 
-/** Own SOS calls still waiting for an acknowledgement or a cancellation. */
-export class SosRepeats {
-  /** By rival key (rivals.ts), the reference key of the call. */
-  readonly #open = new Map<string, string>();
+/** An own SOS call that repeats: its reference, and the group it was made in, if the caller says. */
+interface OpenCall {
+  readonly reference: string;
+  readonly group: string | undefined;
+}
 
-  /** An own SOS was queued: it repeats until a call under `reference` is answered. */
-  open(key: string, reference: string): void {
-    this.#open.set(key, reference);
+/**
+ * Own SOS calls still waiting for an acknowledgement or a cancellation. Each group numbers this
+ * device's events on its own (protocol §3.1, ADR-0111), so a call is answered only by what is
+ * heard in its own group.
+ */
+export class SosRepeats {
+  /** By rival key (rivals.ts). */
+  readonly #open = new Map<string, OpenCall>();
+
+  /** An own SOS was queued: it repeats until a call under `reference` in `group` is answered. */
+  open(key: string, reference: string, group: string | undefined): void {
+    this.#open.set(key, { reference, group });
   }
 
   isOpen(key: string): boolean {
     return this.#open.has(key);
   }
 
-  /** A call under `reference` was answered or cancelled: returns the keys that stop repeating. */
-  close(reference: string): string[] {
+  /**
+   * A call under `reference` was answered or cancelled in `group`: returns the keys that stop
+   * repeating.
+   */
+  close(reference: string, group: string | undefined): string[] {
     const closed: string[] = [];
     for (const [key, call] of this.#open) {
-      if (call !== reference) continue;
+      if (call.reference !== reference || call.group !== group) continue;
       this.#open.delete(key);
       closed.push(key);
     }

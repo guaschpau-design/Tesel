@@ -202,7 +202,7 @@ export async function storeHeld(db: AppDb, groupId: string): Promise<boolean> {
     if (rest.length > 0) await receiveEvents(db, groupId, rest);
     for (const { bytes } of held.filter(({ own }) => own)) {
       const header = peekHeader(bytes);
-      if (header.ok) await skipSequence(db, header.value.seq);
+      if (header.ok) await skipSequence(db, groupId, header.value.seq);
     }
   } catch (error) {
     console.warn('Storing what was held for lack of room failed', error);

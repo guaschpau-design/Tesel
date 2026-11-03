@@ -69,6 +69,13 @@ export type SettingKey =
 
 type EventKey = [groupId: string, origin: NodeId, seq: number];
 
+/** Where the sequence store keeps the next sequence number of this device in a group. */
+export type GroupSequenceKey = `next/${string}`;
+
+export function sequenceKey(groupId: string): GroupSequenceKey {
+  return `next/${groupId}`;
+}
+
 /** Where the log and the outbox keep an event of a group. */
 export function eventKeyOf(entry: GroupEventRef): EventKey {
   return [entry.groupId, entry.origin, entry.seq];
@@ -84,10 +91,12 @@ interface AppSchema extends DBSchema {
   /** The active group and the preferences of this device (settings/preferences.ts). */
   settings: { key: SettingKey; value: unknown };
   /**
-   * The next sequence number this device will use (ARCHITECTURE.md §3.3), and the time of its
-   * last event, below which no later event is stamped (protocol §3.1).
+   * The next sequence number this device will use in each group (ARCHITECTURE.md §3.3), under
+   * `sequenceKey`; under `next`, where each group's numbers start: the one number of every group
+   * before version 8. And the time of its last event, below which no later event is stamped
+   * (protocol §3.1).
    */
-  sequence: { key: 'next' | 'lastTime'; value: number };
+  sequence: { key: 'next' | 'lastTime' | GroupSequenceKey; value: number };
   events: { key: EventKey; value: StoredEvent; indexes: { byGroup: string } };
   outbox: { key: EventKey; value: OutboxEntry; indexes: { byGroup: string } };
   /** How far this device has read each group's envelopes on its server, and in which store. */
@@ -101,7 +110,7 @@ interface AppSchema extends DBSchema {
 export type AppDb = IDBPDatabase<AppSchema>;
 
 const DB_NAME = 'tesel';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 export async function openAppDb(
   name: string = DB_NAME,
@@ -157,6 +166,9 @@ export async function openAppDb(
         const stores = unwrap(database);
         if (stores.objectStoreNames.contains('servers')) stores.deleteObjectStore('servers');
       }
+      // Version 8 changes no store: sequence numbers are kept per group from it on (ADR-0111),
+      // starting above the one number all groups shared. A window of an older version, which
+      // would go on numbering with that one, has to let the database go first.
     },
   });
   return db;

@@ -67,14 +67,17 @@ export class RadioSender {
     });
   }
 
-  /** The radio carries another group now; see `LoraScheduler.changeGroup`. */
-  changeGroup(): void {
-    this.#scheduler.changeGroup();
+  /** The radio carries the group of `groupId` now, or none; see `LoraScheduler.changeGroup`. */
+  changeGroup(groupId: string | undefined): void {
+    this.#scheduler.changeGroup(groupId);
   }
 
-  /** An event arrived by any way: an answer ends the repeats of the SOS it answers. */
-  observe(event: LoraEvent): void {
-    this.#scheduler.observe(event);
+  /**
+   * An event of the active group arrived by any way, or one of the group of `groupId` by radio:
+   * an answer ends the repeats of the SOS it answers in that group.
+   */
+  observe(event: LoraEvent, groupId?: string): void {
+    this.#scheduler.observe(event, groupId);
   }
 
   /**

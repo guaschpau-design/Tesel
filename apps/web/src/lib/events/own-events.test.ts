@@ -34,15 +34,25 @@ const timeOf = (bytes: Uint8Array) => {
 };
 
 describe('own events', () => {
-  it('numbers own events from 1 across every group, and never reuses a number', async () => {
+  it('numbers own events from 1 in each group on its own, and never reuses a number', async () => {
     const db = await freshDb();
     const a = await publishEvent(db, 'group-a', chat('uno'), { origin: ME, time: 1000 });
     const b = await publishEvent(db, 'group-b', chat('dos'), { origin: ME, time: 1001 });
-    expect([a.entry.seq, b.entry.seq]).toEqual([1, 2]);
+    expect([a.entry.seq, b.entry.seq]).toEqual([1, 1]);
     db.close();
     const reopened = await openAppDb(db.name);
     const c = await publishEvent(reopened, 'group-a', chat('tres'), { origin: ME, time: 1002 });
-    expect(c.entry.seq).toBe(3);
+    expect(c.entry.seq).toBe(2);
+  });
+
+  it('starts each group above the one number every group shared before, so none is used twice', async () => {
+    const db = await freshDb();
+    // Before version 8 of the database, one counter numbered every group.
+    await db.put('sequence', 41, 'next');
+    const a = await publishEvent(db, 'group-a', chat(), { origin: ME, time: 1000 });
+    const b = await publishEvent(db, 'group-b', chat(), { origin: ME, time: 1001 });
+    const again = await publishEvent(db, 'group-a', chat(), { origin: ME, time: 1002 });
+    expect([a.entry.seq, b.entry.seq, again.entry.seq]).toEqual([41, 41, 42]);
   });
 
   it('never stamps an own event earlier than the one before, if the clock goes back', async () => {
@@ -87,6 +97,9 @@ describe('own events', () => {
       { origin: ME, time: 1003 },
     );
     expect(cancel.entry.seq).toBe(3);
+    // Another group's numbers are its own.
+    const elsewhere = await publishEvent(db, 'other', sos, { origin: ME, time: 1003 });
+    expect(elsewhere.entry.seq).toBe(1);
     storage.room();
     expect(await storeHeld(db, 'group')).toBe(true);
     expect(await loadEvents(db, 'group')).toHaveLength(3);
@@ -99,9 +112,11 @@ describe('own events', () => {
   it('skips a number someone else took under this device name, and says whether it was unused', async () => {
     const db = await freshDb();
     await publishEvent(db, 'group', chat(), { origin: ME, time: 1000 });
-    expect(await skipSequence(db, 1)).toBe(false);
-    expect(await skipSequence(db, 5)).toBe(true);
+    expect(await skipSequence(db, 'group', 1)).toBe(false);
+    expect(await skipSequence(db, 'group', 5)).toBe(true);
     const next = await publishEvent(db, 'group', sos, { origin: ME, time: 1001 });
     expect(next.entry.seq).toBe(6);
+    const elsewhere = await publishEvent(db, 'other', sos, { origin: ME, time: 1001 });
+    expect(elsewhere.entry.seq).toBe(1);
   });
 });

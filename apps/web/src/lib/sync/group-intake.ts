@@ -104,6 +104,8 @@ export class GroupIntake {
     for (const { origin } of rivalled) this.impersonated.add(origin);
     const own = added.filter(({ entry }) => entry.origin === this.#self);
     const last = Math.max(0, ...own.map(({ entry }) => entry.seq));
-    if (last > 0 && (await skipSequence(this.#db, last))) this.impersonated.add(this.#self);
+    if (last > 0 && (await skipSequence(this.#db, this.#groupId, last))) {
+      this.impersonated.add(this.#self);
+    }
   }
 }

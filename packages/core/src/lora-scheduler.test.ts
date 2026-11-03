@@ -377,6 +377,23 @@ describe('LoRa scheduler', () => {
     expect(drain(lora, 60 * 60_000)).toEqual([]);
   });
 
+  it('ends the repeats of an own SOS only with an answer heard in its own group', () => {
+    const lora = scheduler();
+    lora.changeGroup('rescate');
+    const call = sos();
+    lora.offer(call, 'own', 0);
+    expect(drain(lora, 0)).toEqual(['sos']);
+    lora.changeGroup('amigos');
+    // Each group numbers this device's events on its own: the same number in another group is
+    // another event.
+    const answer = { type: 'ack', origin: OTHER, seq: 900, time: T0, target: call.event } as const;
+    lora.observe(answer);
+    lora.observe(answer, 'otro');
+    expect(drain(lora, LIMITS.sosFirstRepeatMs)).toEqual(['sos']);
+    lora.observe(answer, 'rescate');
+    expect(drain(lora, 60 * 60_000)).toEqual([]);
+  });
+
   it('forgets what is queued for a group that was left, own SOS calls included', () => {
     const lora = scheduler();
     lora.offer(sos(), 'own', 0);

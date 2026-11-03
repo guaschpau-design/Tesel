@@ -53,6 +53,8 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   readonly #airtime = new AirtimeWindow(LIMITS.windowMs);
   /** Counts group changes, so a packet in flight across one is not put back on the new group. */
   #group = 0;
+  /** The group the radio carries now, as the caller names it (`changeGroup`). */
+  #current: string | undefined;
   /** The packet handed out by `next`, until the caller reports how sending it went. */
   #inFlight: {
     readonly pending: Pending<Packet>;
@@ -81,7 +83,9 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     for (const [otherKey, other] of this.#pending) {
       if (this.#news.superseded(other.packet.event)) this.#pending.delete(otherKey);
     }
-    if (event.type === 'sos' && source === 'own') this.#sos.open(key, eventRefKey(event));
+    if (event.type === 'sos' && source === 'own') {
+      this.#sos.open(key, eventRefKey(event), this.#current);
+    }
     this.#pending.set(key, {
       key,
       packet,
@@ -115,12 +119,18 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     }
   }
 
-  /** An event arrived over any transport: acknowledgements and cancellations end SOS repeats. */
-  observe(event: LoraEvent): void {
+  /**
+   * An event arrived over any transport: acknowledgements and cancellations end the repeats of
+   * own SOS calls of its group, which is the group the radio carries unless `group` names another
+   * where an own call may still repeat (ADR-0104).
+   */
+  observe(event: LoraEvent, group = this.#current): void {
     const key = eventRefKey(event);
+    if (event.type === 'ack') this.#closeSos(eventRefKey(event.target), group);
+    if (event.type === 'sos-cancel') this.#closeSos(eventRefKey(event.sos), group);
+    // What follows is about the traffic of the group the radio carries.
+    if (group !== this.#current) return;
     this.#news.observe(event);
-    if (event.type === 'ack') this.#closeSos(eventRefKey(event.target));
-    if (event.type === 'sos-cancel') this.#closeSos(eventRefKey(event.sos));
     if (event.type === 'roll-call') this.#rollCalls.add(key);
     if (
       event.type === 'sos' ||
@@ -133,13 +143,15 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
 
   /**
    * Forgets the traffic of the group the radio carried until now, when it changes to another
-   * group's channel: nothing queued for one group may go out on another's. Own SOS calls still
-   * open are kept: they repeat on their own group's channel until answered (ADR-0104), and the
-   * caller tells the acknowledgements and cancellations it hears for them (`observe`). The airtime
-   * spent stays, since the budget belongs to the radio, and so does that of a packet in flight.
+   * group's channel, `group`: nothing queued for one group may go out on another's. Own SOS calls
+   * still open are kept: they repeat on their own group's channel until answered (ADR-0104), and
+   * the caller tells the acknowledgements and cancellations it hears for them, naming their group
+   * (`observe`). The airtime spent stays, since the budget belongs to the radio, and so does that
+   * of a packet in flight.
    */
-  changeGroup(): void {
+  changeGroup(group?: string): void {
     this.#group += 1;
+    this.#current = group;
     for (const key of this.#pending.keys()) {
       if (!this.#sos.isOpen(key)) this.#pending.delete(key);
     }
@@ -290,8 +302,8 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   }
 
   /** An own SOS was answered or cancelled: every call under its reference stops repeating. */
-  #closeSos(reference: string): void {
-    for (const key of this.#sos.close(reference)) {
+  #closeSos(reference: string, group: string | undefined): void {
+    for (const key of this.#sos.close(reference, group)) {
       const pending = this.#pending.get(key);
       if (pending !== undefined && pending.sends > 0) this.#pending.delete(key);
     }

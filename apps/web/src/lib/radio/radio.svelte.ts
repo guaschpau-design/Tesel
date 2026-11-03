@@ -202,7 +202,10 @@ export class RadioSession {
    */
   async useFeed(feed: RadioFeed | null): Promise<void> {
     this.#unlink();
-    if (feed?.groupId !== this.#feed?.groupId) this.#sender.changeGroup();
+    if (feed?.groupId !== this.#feed?.groupId) {
+      // Named as the groups of channels heard are, by their secret (`#heardElsewhere`).
+      this.#sender.changeGroup(feed === null ? undefined : groupId(feed.radioChannel.secret));
+    }
     this.#feed = feed;
     await this.#relinker.link();
   }
@@ -270,9 +273,10 @@ export class RadioSession {
   #heardElsewhere(secret: Uint8Array, bytes: Uint8Array): void {
     const event = sosNewsIn(bytes);
     if (event === null) return;
-    if (event.type !== 'sos') this.#sender.observe(event);
+    const group = groupId(secret);
+    if (event.type !== 'sos') this.#sender.observe(event, group);
     if (event.type === 'ack') return;
-    const call: SosElsewhere = { groupId: groupId(secret), event };
+    const call: SosElsewhere = { groupId: group, event };
     for (const listener of this.#sosListeners) listener(call);
   }
 

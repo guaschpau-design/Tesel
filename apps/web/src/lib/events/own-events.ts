@@ -1,12 +1,18 @@
-// This device's own events (ARCHITECTURE.md §3.3): each takes the next sequence number and a time no
-// earlier than the last one's, and is stored in the log and the outbox in one transaction, so a
-// crash never loses or reuses a number. An SOS, its cancellation or an acknowledgement goes out even
-// when there is no room to store it (ADR-0103).
+// This device's own events (ARCHITECTURE.md §3.3): each takes the next sequence number of its group
+// and a time no earlier than the last one's, and is stored in the log and the outbox in one
+// transaction, so a crash never loses or reuses a number. Each group has a counter of its own, so
+// members of one group cannot count this device's events in another (ADR-0111). An SOS, its
+// cancellation or an acknowledgement goes out even when there is no room to store it (ADR-0103).
 
 import { isLifeSafety } from '@tesel/core';
 import { encodeEvent, peekHeader, type EventHeader, type TeselEvent } from '@tesel/protocol';
 
-import type { AppDb, OutboxEntry } from '../storage/app-db.ts';
+import {
+  sequenceKey,
+  type AppDb,
+  type GroupSequenceKey,
+  type OutboxEntry,
+} from '../storage/app-db.ts';
 import { storageRefusals, withRoom } from '../storage/storage-space.svelte.ts';
 import { peekType } from '../sync/lora-events.ts';
 import { hold } from './held-events.ts';
@@ -33,9 +39,9 @@ export interface OwnEvent {
 
 /**
  * Numbers and times taken by own events not stored yet, by database: while the app runs, no later
- * event takes a number or a time below them, whatever the storage says.
+ * event takes a number of its group or a time below them, whatever the storage says.
  */
-const taken = new WeakMap<AppDb, { readonly next: number; readonly lastTime: number }>();
+const taken = new WeakMap<AppDb, { readonly next: Map<string, number>; lastTime: number }>();
 
 /**
  * Creates an event of this device. If it cannot be stored, an SOS, a cancellation or an
@@ -61,25 +67,26 @@ export async function publishEvent(
     const event = tried.event;
     if (event === null || !isLifeSafety(peekType(event.bytes))) throw error;
     storageRefusals.note(error);
-    take(db, event.bytes);
+    take(db, groupId, event.bytes);
     hold(db, [{ groupId, bytes: event.bytes, outbox: true, own: true }]);
     return { ...event, stored: false };
   }
 }
 
 /**
- * Moves this device's next sequence number past `seq`: one an event under this device's name
- * took, written by someone else or held in memory before. Returns whether this device had not used
- * `seq` yet, as when someone writes under its name ahead of it. With no room to store it, the
- * number is kept from use while the app runs.
+ * Moves this device's next sequence number in a group past `seq`: one an event under this device's
+ * name took there, written by someone else or held in memory before. Returns whether this device
+ * had not used `seq` yet, as when someone writes under its name ahead of it. With no room to store
+ * it, the number is kept from use while the app runs.
  */
-export async function skipSequence(db: AppDb, seq: number): Promise<boolean> {
-  const taking = taken.get(db)?.next ?? 1;
-  takeNumber(db, seq + 1, 0);
+export async function skipSequence(db: AppDb, groupId: string, seq: number): Promise<boolean> {
+  const taking = taken.get(db)?.next.get(groupId) ?? 1;
+  takeNumber(db, groupId, seq + 1, 0);
   try {
     const tx = db.transaction('sequence', 'readwrite');
-    const next = (await tx.store.get('next')) ?? 1;
-    await Promise.all([next <= seq ? tx.store.put(seq + 1, 'next') : undefined, tx.done]);
+    const next = await nextInGroup(tx.store, groupId);
+    const writes = [next <= seq ? tx.store.put(seq + 1, sequenceKey(groupId)) : undefined];
+    await Promise.all([...writes, tx.done]);
     return seq >= Math.max(next, taking);
   } catch (error) {
     storageRefusals.note(error);
@@ -99,9 +106,12 @@ async function numberEvent(
 ): Promise<{ event: OwnEvent; stored: Promise<unknown> }> {
   const tx = db.transaction(['sequence', 'events', 'outbox'], 'readwrite');
   const sequence = tx.objectStore('sequence');
-  const [next = 1, last = 0] = await Promise.all([sequence.get('next'), sequence.get('lastTime')]);
+  const [next, last = 0] = await Promise.all([
+    nextInGroup(sequence, groupId),
+    sequence.get('lastTime'),
+  ]);
   const memory = taken.get(db);
-  const seq = Math.max(next, memory?.next ?? 1);
+  const seq = Math.max(next, memory?.next.get(groupId) ?? 1);
   if (seq > MAX_SEQ) throw new RangeError('this device has used every sequence number');
   const time = stampTime(header.time, Math.max(last, memory?.lastTime ?? 0));
   const encoded = encodeEvent(build({ ...header, time, seq }));
@@ -114,7 +124,7 @@ async function numberEvent(
   const event = { entry, bytes: encoded.value, stored: true };
   try {
     const stored = Promise.all([
-      sequence.put(seq + 1, 'next'),
+      sequence.put(seq + 1, sequenceKey(groupId)),
       sequence.put(time, 'lastTime'),
       tx.objectStore('events').put({ ...entry, bytes: encoded.value }),
       tx.objectStore('outbox').put(entry),
@@ -140,16 +150,31 @@ function stampTime(clock: number, previous: number): number {
   return previous > clock && previous - clock <= KEEP_TO_PREVIOUS_S ? previous : clock;
 }
 
-/** Keeps the number and time of an event that went out unstored from being used again. */
-function take(db: AppDb, bytes: Uint8Array): void {
-  const header = peekHeader(bytes);
-  if (header.ok) takeNumber(db, header.value.seq + 1, header.value.time);
+/**
+ * The next number of a group as stored: its own counter, which starts above every number this
+ * device used before counters were kept per group, when one counter served every group: that one,
+ * under `next`, is no longer moved, and is where the counter of each group starts.
+ */
+async function nextInGroup(
+  sequence: { get(key: 'next' | GroupSequenceKey): Promise<number | undefined> },
+  groupId: string,
+): Promise<number> {
+  const [own, shared] = await Promise.all([
+    sequence.get(sequenceKey(groupId)),
+    sequence.get('next'),
+  ]);
+  return Math.max(own ?? 1, shared ?? 1);
 }
 
-function takeNumber(db: AppDb, next: number, time: number): void {
-  const known = taken.get(db);
-  taken.set(db, {
-    next: Math.max(next, known?.next ?? 1),
-    lastTime: Math.max(time, known?.lastTime ?? 0),
-  });
+/** Keeps the number and time of an event that went out unstored from being used again. */
+function take(db: AppDb, groupId: string, bytes: Uint8Array): void {
+  const header = peekHeader(bytes);
+  if (header.ok) takeNumber(db, groupId, header.value.seq + 1, header.value.time);
+}
+
+function takeNumber(db: AppDb, groupId: string, next: number, time: number): void {
+  const known = taken.get(db) ?? { next: new Map<string, number>(), lastTime: 0 };
+  known.next.set(groupId, Math.max(next, known.next.get(groupId) ?? 1));
+  known.lastTime = Math.max(time, known.lastTime);
+  taken.set(db, known);
 }
