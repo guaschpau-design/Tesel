@@ -110,8 +110,9 @@ export async function openAppDb(
   const db: AppDb = await openDB<AppSchema>(name, DB_VERSION, {
     blocked: change.onBlocked,
     blocking() {
-      db.close();
-      change.onReplaced();
+      change.onReplaced(() => {
+        db.close();
+      });
     },
     upgrade(database, oldVersion) {
       // Each step upgrades from the previous version; a new install runs all of them.

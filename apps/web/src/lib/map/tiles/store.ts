@@ -81,8 +81,9 @@ export async function openTileStore(
   const db: IDBPDatabase<MapDb> = await openDB<MapDb>(name, DB_VERSION, {
     blocked: change.onBlocked,
     blocking() {
-      db.close();
-      change.onReplaced();
+      change.onReplaced(() => {
+        db.close();
+      });
     },
     upgrade(database, oldVersion, _newVersion, transaction) {
       if (oldVersion < 1) {

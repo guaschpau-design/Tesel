@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 
 import { openDB } from 'idb';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { openAppDb } from './app-db.ts';
 
@@ -68,5 +68,25 @@ describe('app database', () => {
     expect(await db.get('sequence', 'next')).toBe(8);
     expect(await db.getAll('cursors')).toEqual([]);
     expect([...db.objectStoreNames]).not.toContain('servers');
+  });
+
+  it('lets a newer version have the database only once this window lets it go', async () => {
+    const handOvers: (() => void)[] = [];
+    await openAppDb('handed-over', {
+      onBlocked: () => undefined,
+      onReplaced: (letGo) => handOvers.push(letGo),
+    });
+    let blocked = false;
+    const newer = openDB('handed-over', 100, {
+      blocked: () => {
+        blocked = true;
+      },
+    });
+    await vi.waitFor(() => {
+      expect(blocked).toBe(true);
+    });
+    expect(handOvers).toHaveLength(1);
+    for (const letGo of handOvers) letGo();
+    expect((await newer).version).toBe(100);
   });
 });

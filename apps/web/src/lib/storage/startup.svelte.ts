@@ -2,7 +2,8 @@
 // for each (offline maps and relief; preferences, the session, position sharing, the radio's texts
 // and weather warnings). What it opens is reactive, so that what waits for it runs whatever order
 // it comes in. A database another window holds, or has taken over, stops the app with a reason
-// (version-change.ts) instead of leaving it waiting.
+// (version-change.ts) instead of leaving it waiting; one a newer window wants is handed over only
+// once nothing holds this window (`hold`).
 
 import { SvelteSet } from 'svelte/reactivity';
 
@@ -41,6 +42,23 @@ export class Startup {
   failure: StartupFailure | null = $state(null);
 
   readonly #archives = tileArchives(basemapUrl());
+  /** Whether this window must not stop now (`hold`). */
+  #holding = false;
+  /** Databases a newer window waits for, handed over once nothing holds this window. */
+  #handOver: (() => void)[] = [];
+
+  /**
+   * Says whether this window must not stop now: an own SOS is open or a radio is linked. A newer
+   * version of the app in another window then waits for the databases, and says so there, until
+   * neither holds this one, as reloads wait (ADR-0093, ADR-0111).
+   */
+  hold(holding: boolean): void {
+    this.#holding = holding;
+    if (holding) return;
+    const handOver = this.#handOver;
+    this.#handOver = [];
+    for (const letGo of handOver) letGo();
+  }
 
   /** Opens both databases and what waits for them; returns what stops what was started. */
   start(): () => void {
@@ -51,7 +69,14 @@ export class Startup {
         blocked.add(database);
         this.failure = 'blocked';
       },
-      onReplaced: () => (this.failure = 'replaced'),
+      onReplaced: (letGo) => {
+        const handOver = () => {
+          letGo();
+          this.failure = 'replaced';
+        };
+        if (this.#holding) this.#handOver.push(handOver);
+        else handOver();
+      },
     });
     const failed = (error: unknown) => {
       console.error('Tesel could not start', error);

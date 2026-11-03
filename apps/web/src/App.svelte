@@ -128,6 +128,10 @@
       ? hasOwnSos(feed.state, startup.session.identity.nodeId)
       : false,
   );
+  // Nor may a newer version in another window take the databases from it, or from a linked radio.
+  $effect(() => {
+    startup.hold(ownSosOpen || radio.linked);
+  });
 
   const workspaceGroup = $derived(
     feed && startup.sharing && startup.session?.identity && startup.session.activeGroup
