@@ -1,4 +1,4 @@
-# 0111. Keep the radio's airtime across restarts, drive it from one window, and number events per group
+# 0111. Keep the radio's airtime, one window on the radio, and numbers per group
 
 - Status: Accepted
 - Date: 2026-11-03
