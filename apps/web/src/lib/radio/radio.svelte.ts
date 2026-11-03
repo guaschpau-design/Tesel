@@ -7,9 +7,7 @@
 import { bytesEqual } from '@tesel/protocol';
 import type { RadioFamily, RadioLink, RadioLinkState } from '@tesel/radio';
 
-import { receiveEvents } from '../events/event-log.ts';
 import { groupId } from '../groups/group.ts';
-import { getGroup } from '../groups/group-store.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
@@ -17,6 +15,7 @@ import { sosNewsIn, type SosElsewhere } from './heard-elsewhere.ts';
 import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
 import { pickedRadioLink } from './radio-families.ts';
 import { RadioFrames } from './radio-frames.ts';
+import { RadioIntake } from './radio-intake.ts';
 import { claimRadio, type RadioRelease } from './radio-lock.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { RadioSender } from './radio-sender.svelte.ts';
@@ -32,17 +31,6 @@ export type RadioFeed = Pick<
 
 /** How often the scheduler is asked for the next packet, and frames not yet stored retried. */
 const PUMP_MS = 1000;
-/** Frames heard but not stored yet, at most: storage that keeps failing cannot fill memory. */
-const MAX_UNSTORED = 200;
-/** Times a frame is tried before it is given up: one that cannot be stored at all must not loop. */
-const STORE_ATTEMPTS = 5;
-
-/** An event heard by radio, opened, with the secret of the channel it came on. */
-interface Unstored {
-  readonly secret: Uint8Array;
-  readonly event: Uint8Array;
-  readonly attempts: number;
-}
 
 export class RadioSession {
   state: RadioLinkState = $state('disconnected');
@@ -74,8 +62,8 @@ export class RadioSession {
   #feed: RadioFeed | null = null;
   #db: AppDb | null = null;
   #pump: ReturnType<typeof setInterval> | null = null;
-  /** Events whose storing failed, tried again on the next pump: none is lost to a busy disk. */
-  #unstored: Unstored[] = [];
+  /** Stores what is heard; what could not be stored is tried again on the next pump. */
+  readonly #intake = new RadioIntake({ feed: () => this.#feed, db: () => this.#db });
   readonly #frames = new RadioFrames();
   readonly #sender: RadioSender;
   #sosListeners: readonly ((call: SosElsewhere) => void)[] = [];
@@ -128,7 +116,7 @@ export class RadioSession {
         if (feed === null || !bytesEqual(secret, feed.radioChannel.secret)) {
           this.#heardElsewhere(secret, event);
         }
-        void this.#store({ secret, event, attempts: 0 });
+        void this.#intake.take(secret, event);
       }),
       link.onText((text) => {
         const stored = { ...text, receivedAt: Date.now() };
@@ -280,37 +268,8 @@ export class RadioSession {
     for (const listener of this.#sosListeners) listener(call);
   }
 
-  /**
-   * An event heard on a group's channel: the active group's goes to its feed; another group's,
-   * one this device belongs to and whose channel the radio still holds, goes to that group's log
-   * for when it is opened.
-   */
-  async #store({ secret, event, attempts }: Unstored): Promise<void> {
-    try {
-      const feed = this.#feed;
-      if (feed !== null && bytesEqual(secret, feed.radioChannel.secret)) {
-        await feed.receiveFromRadio(event);
-        return;
-      }
-      const db = this.#db;
-      const group = db === null ? undefined : await getGroup(db, groupId(secret));
-      if (db === null || group === undefined) return;
-      await receiveEvents(db, group.id, [event], { forward: group.server !== null });
-    } catch (error) {
-      console.warn('Storing a radio frame failed', error);
-      storageRefusals.note(error);
-      if (attempts + 1 < STORE_ATTEMPTS) {
-        this.#unstored = [...this.#unstored, { secret, event, attempts: attempts + 1 }].slice(
-          -MAX_UNSTORED,
-        );
-      }
-    }
-  }
-
   async #tick(): Promise<void> {
-    const unstored = this.#unstored;
-    this.#unstored = [];
-    for (const item of unstored) await this.#store(item);
+    await this.#intake.retry();
     if (this.linked) await this.#sender.sendNext();
   }
 }
