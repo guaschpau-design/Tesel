@@ -107,7 +107,8 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted                                                |
 | [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |
 | [0101](0101-explanations-on-asking.md)               | What a choice does is shown on asking                                                       | Accepted                                                |
-| [0102](0102-ground-in-3d.md)                         | The ground raised in 3D, on asking                                                          | Accepted                                                |
+| [0102](0102-ground-in-3d.md)                         | The ground raised in 3D, on asking                                                          | Accepted, amended by 0106                               |
 | [0103](0103-rivals-full-storage-and-urgent-sync.md)  | Rivals under one event reference, a full storage, and an SOS that does not wait             | Accepted                                                |
 | [0104](0104-sos-across-drops-and-groups.md)          | Keep the radio and SOS calls going across drops and group changes                           | Accepted                                                |
 | [0105](0105-circles-stay-on-the-earth.md)            | Keep circles to 1 000 km, and their points on the Earth                                     | Accepted                                                |
+| [0106](0106-ground-in-3d-that-reads.md)              | A ground in 3D that reads as raised                                                         | Accepted                                                |

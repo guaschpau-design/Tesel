@@ -7,6 +7,7 @@ import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
   HillshadeLayerSpecification,
   LayerSpecification,
+  SkySpecification,
   SourceSpecification,
   StyleSpecification,
 } from 'maplibre-gl';
@@ -44,10 +45,11 @@ const OSM_ATTRIBUTION =
 
 const ORTHO_SOURCE = 'ortho';
 const RELIEF_SOURCE = 'terrain';
-/** The same elevation tiles again for the ground raised in 3D, as MapLibre advises. */
+/**
+ * The same elevation tiles again for the ground raised in 3D, as MapLibre advises. How high it is
+ * raised goes with the zoom (map/ground.svelte.ts), so the style leaves it to the map.
+ */
 const GROUND_SOURCE = 'terrain-3d';
-/** How much higher than they are mountains are raised, so that gentle ground still shows. */
-const GROUND_EXAGGERATION = 1.5;
 
 export interface StyleChoice {
   readonly base: BaseMap;
@@ -71,7 +73,9 @@ interface BaseMapLayers {
 
 export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecification {
   const { sources, ground, lines, names } = baseMapLayers(choice);
-  const relief = choice.relief ? reliefShading(choice.theme) : null;
+  // The ground raised in 3D is shaded too, whether or not the relief layer is on: without
+  // shadows, raised ground reads as flat (ADR-0106).
+  const relief = choice.relief || choice.threeD ? reliefShading(choice) : null;
   // Labels over photographs read best light on dark, whatever the app's theme.
   const sprite = choice.base === 'aerial' ? 'dark' : choice.theme;
   return {
@@ -84,9 +88,7 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
       ...(choice.threeD ? { [GROUND_SOURCE]: elevationSource() } : {}),
     },
     layers: [...ground, ...(relief ? [relief.layer] : []), ...lines, ...names],
-    ...(choice.threeD
-      ? { terrain: { source: GROUND_SOURCE, exaggeration: GROUND_EXAGGERATION } }
-      : {}),
+    ...(choice.threeD ? { terrain: { source: GROUND_SOURCE }, sky: groundSky() } : {}),
   };
 }
 
@@ -165,8 +167,28 @@ function protomapsLayers(flavor: Flavor, lang: string): Omit<BaseMapLayers, 'sou
   return { ground: all.slice(0, at), lines: [], names: all.slice(at) };
 }
 
-/** Shading of the terrain from the elevation tiles (tiles/sources.ts). */
-function reliefShading(theme: MapTheme): {
+/**
+ * The sky over the raised ground, with a haze that thickens towards the horizon: the depth that
+ * makes far ridges read as far.
+ */
+function groundSky(): SkySpecification {
+  return {
+    'sky-color': themeColor('map-sky'),
+    'horizon-color': themeColor('map-horizon'),
+    'fog-color': themeColor('map-horizon'),
+    'sky-horizon-blend': 0.6,
+    'horizon-fog-blend': 0.6,
+    'fog-ground-blend': 0.75,
+    'atmosphere-blend': 0,
+  };
+}
+
+/**
+ * Shading of the terrain from the elevation tiles (tiles/sources.ts). Over raised ground it is
+ * deeper, and lit from the north-west of the land rather than of the screen, so shadows stay on
+ * the slopes that cast them as the view turns.
+ */
+function reliefShading({ theme, threeD }: StyleChoice): {
   source: SourceSpecification;
   layer: HillshadeLayerSpecification;
 } {
@@ -177,8 +199,9 @@ function reliefShading(theme: MapTheme): {
       type: 'hillshade',
       source: RELIEF_SOURCE,
       paint: {
-        'hillshade-exaggeration': theme === 'dark' ? 0.35 : 0.45,
+        'hillshade-exaggeration': (theme === 'dark' ? 0.35 : 0.45) + (threeD ? 0.2 : 0),
         'hillshade-shadow-color': themeColor('map-relief'),
+        'hillshade-illumination-anchor': threeD ? 'map' : 'viewport',
       },
     },
   };

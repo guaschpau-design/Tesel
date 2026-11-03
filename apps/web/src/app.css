@@ -60,6 +60,9 @@
   --map-text: var(--ink);
   --map-halo: #ffffff;
   --map-relief: #3d4a52;
+  /* Over the ground raised in 3D: the sky, and the haze along the horizon. */
+  --map-sky: #9fcbec;
+  --map-horizon: #e4ecf1;
   /* The topographic map: contour lines and their heights, names of the terrain, springs. */
   --map-contour: #a8754c;
   --map-terrain: #6e5038;
@@ -119,6 +122,8 @@
     --map-text: var(--pale);
     --map-halo: #0a161f;
     --map-relief: #000000;
+    --map-sky: #0a1824;
+    --map-horizon: #22343f;
     --map-contour: #b08a68;
     --map-terrain: #d8c3ad;
     --map-spring: #7fc3e6;

@@ -1,6 +1,6 @@
 # 0102. The ground raised in 3D, on asking
 
-- Status: Accepted
+- Status: Accepted, amended by [0106](0106-ground-in-3d-that-reads.md) (shadows, a sky, leaning to 80°, height with the zoom)
 - Date: 2026-11-02
 
 ## Context
