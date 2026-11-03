@@ -27,8 +27,13 @@ export class KeyedBuckets {
     this.#refillMs = (capacity / perSecond) * 1000;
   }
 
-  /** Takes a token from the key's bucket if it has one. */
-  take(key: string, now: number): boolean {
+  /** Whether the key's bucket holds `count` tokens, without taking them. */
+  has(key: string, now: number, count = 1): boolean {
+    return this.#entries.get(key)?.bucket.has(now, count) ?? count <= this.#capacity;
+  }
+
+  /** Takes `count` tokens from the key's bucket if it has that many. */
+  take(key: string, now: number, count = 1): boolean {
     this.#sweep(now);
     let entry = this.#entries.get(key);
     if (entry === undefined) {
@@ -36,7 +41,7 @@ export class KeyedBuckets {
       this.#entries.set(key, entry);
     }
     entry.lastTakeAt = now;
-    return entry.bucket.take(now);
+    return entry.bucket.take(now, count);
   }
 
   /** Number of keys with a bucket that is not yet full again. */

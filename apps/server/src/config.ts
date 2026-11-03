@@ -1,6 +1,6 @@
 // Server configuration, read once from the environment.
 
-import { DEFAULT_LIMITS, type RelayLimits } from './relay-limits.ts';
+import { DEFAULT_LIMITS, LEAST_UNREAD_BYTES, type RelayLimits } from './relay-limits.ts';
 import { FEED_URLS } from './weather/meteoalarm.ts';
 
 export interface ServerConfig {
@@ -22,7 +22,9 @@ export interface ServerConfig {
   readonly minFreeDiskMegabytes: number;
   /**
    * The reverse proxies whose X-Forwarded-For header is believed: addresses, ranges, or the
-   * names `loopback`, `linklocal` and `uniquelocal` (private networks, Docker's among them).
+   * names `loopback`, `linklocal` and `uniquelocal` (private networks, Docker's among them). Only
+   * loopback by default: a client that reaches the server from a private network directly could
+   * otherwise name any address it likes, and dodge the limits per address.
    */
   readonly trustedProxies: readonly string[];
 }
@@ -42,47 +44,46 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     weatherCountries: countries(env, 'TESEL_WEATHER', 'ES,PT'),
     // Warnings are gathered every 10 minutes: an hour more of failures is tolerated.
     weatherMaxAgeMinutes: integer(env, 'TESEL_WEATHER_MAX_AGE_MINUTES', 70, 10, 7 * 24 * 60),
-    limits: {
-      ...DEFAULT_LIMITS,
-      maxConnections: integer(
-        env,
-        'TESEL_MAX_CONNECTIONS',
-        DEFAULT_LIMITS.maxConnections,
-        1,
-        1_000_000,
-      ),
-      maxConnectionsPerAddress: integer(
-        env,
-        'TESEL_MAX_CONNECTIONS_PER_IP',
-        DEFAULT_LIMITS.maxConnectionsPerAddress,
-        1,
-        1_000_000,
-      ),
-      newGroupsPerAddressPerHour: integer(
-        env,
-        'TESEL_NEW_GROUPS_PER_IP_PER_HOUR',
-        DEFAULT_LIMITS.newGroupsPerAddressPerHour,
-        1,
-        1_000_000,
-      ),
-      serverPerSecond: integer(
-        env,
-        'TESEL_PUSHES_PER_SECOND',
-        DEFAULT_LIMITS.serverPerSecond,
-        1,
-        1_000_000,
-      ),
-      addressPerSecond: integer(
-        env,
-        'TESEL_PUSHES_PER_IP_PER_SECOND',
-        DEFAULT_LIMITS.addressPerSecond,
-        1,
-        1_000_000,
-      ),
-    },
+    limits: limits(env),
     minFreeDiskMegabytes: integer(env, 'TESEL_MIN_FREE_DISK_MB', 500, 0, 1_000_000),
-    trustedProxies: list(env, 'TESEL_TRUSTED_PROXIES', 'loopback,uniquelocal'),
+    trustedProxies: list(env, 'TESEL_TRUSTED_PROXIES', 'loopback'),
   };
+}
+
+/** What clients may ask of the relay; what is not set here is DEFAULT_LIMITS'. */
+function limits(env: NodeJS.ProcessEnv): RelayLimits {
+  const value = (name: string, fallback: number) => integer(env, name, fallback, 1, 1_000_000);
+  const relay: RelayLimits = {
+    ...DEFAULT_LIMITS,
+    maxConnections: value('TESEL_MAX_CONNECTIONS', DEFAULT_LIMITS.maxConnections),
+    maxConnectionsPerAddress: value(
+      'TESEL_MAX_CONNECTIONS_PER_IP',
+      DEFAULT_LIMITS.maxConnectionsPerAddress,
+    ),
+    unreadMegabytes: value('TESEL_UNREAD_MB', DEFAULT_LIMITS.unreadMegabytes),
+    newGroupsPerAddressPerHour: value(
+      'TESEL_NEW_GROUPS_PER_IP_PER_HOUR',
+      DEFAULT_LIMITS.newGroupsPerAddressPerHour,
+    ),
+    serverPerSecond: value('TESEL_PUSHES_PER_SECOND', DEFAULT_LIMITS.serverPerSecond),
+    addressPerSecond: value('TESEL_PUSHES_PER_IP_PER_SECOND', DEFAULT_LIMITS.addressPerSecond),
+    megabytesPerAddressPerDay: value(
+      'TESEL_MB_PER_IP_PER_DAY',
+      DEFAULT_LIMITS.megabytesPerAddressPerDay,
+    ),
+    megabytesPerGroupFirstDay: value(
+      'TESEL_MB_PER_GROUP_FIRST_DAY',
+      DEFAULT_LIMITS.megabytesPerGroupFirstDay,
+    ),
+  };
+  // Each connection must be able to leave a few envelopes unread, even with all of them open.
+  const most = Math.floor((relay.unreadMegabytes * 1024 * 1024) / LEAST_UNREAD_BYTES);
+  if (relay.maxConnections > most) {
+    throw new Error(
+      `TESEL_MAX_CONNECTIONS may be at most ${String(most)} with TESEL_UNREAD_MB at ${String(relay.unreadMegabytes)}; raise it with the server's memory`,
+    );
+  }
+  return relay;
 }
 
 /** A setting's text, or undefined when it is left out or set to nothing. */

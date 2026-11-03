@@ -15,7 +15,7 @@ describe('configuration', () => {
       weatherMaxAgeMinutes: 70,
       limits: DEFAULT_LIMITS,
       minFreeDiskMegabytes: 500,
-      trustedProxies: ['loopback', 'uniquelocal'],
+      trustedProxies: ['loopback'],
     });
   });
 
@@ -34,6 +34,9 @@ describe('configuration', () => {
         'TESEL_NEW_GROUPS_PER_IP_PER_HOUR',
         'TESEL_PUSHES_PER_SECOND',
         'TESEL_PUSHES_PER_IP_PER_SECOND',
+        'TESEL_MB_PER_IP_PER_DAY',
+        'TESEL_MB_PER_GROUP_FIRST_DAY',
+        'TESEL_UNREAD_MB',
         'TESEL_MIN_FREE_DISK_MB',
         'TESEL_TRUSTED_PROXIES',
       ].map((name) => [name, '']),
@@ -55,6 +58,9 @@ describe('configuration', () => {
       TESEL_NEW_GROUPS_PER_IP_PER_HOUR: '3',
       TESEL_PUSHES_PER_SECOND: '40',
       TESEL_PUSHES_PER_IP_PER_SECOND: '20',
+      TESEL_MB_PER_IP_PER_DAY: '64',
+      TESEL_MB_PER_GROUP_FIRST_DAY: '32',
+      TESEL_UNREAD_MB: '8',
       TESEL_MIN_FREE_DISK_MB: '0',
       TESEL_TRUSTED_PROXIES: 'none',
     });
@@ -65,6 +71,9 @@ describe('configuration', () => {
       newGroupsPerAddressPerHour: 3,
       serverPerSecond: 40,
       addressPerSecond: 20,
+      megabytesPerAddressPerDay: 64,
+      megabytesPerGroupFirstDay: 32,
+      unreadMegabytes: 8,
     });
     expect(config.minFreeDiskMegabytes).toBe(0);
     expect(config.trustedProxies).toEqual([]);
@@ -72,6 +81,17 @@ describe('configuration', () => {
     expect(() => readConfig({ TESEL_PUSHES_PER_IP_PER_SECOND: '0' })).toThrow(
       /TESEL_PUSHES_PER_IP_PER_SECOND/,
     );
+  });
+
+  it('refuses more connections than what clients may leave unread can be shared among', () => {
+    // 96 MB shared out in parts of 8 KB.
+    expect(readConfig({ TESEL_MAX_CONNECTIONS: '12288' }).limits.maxConnections).toBe(12_288);
+    expect(() => readConfig({ TESEL_MAX_CONNECTIONS: '12289' })).toThrow(/TESEL_UNREAD_MB/);
+    expect(readConfig({ TESEL_MAX_CONNECTIONS: '20000', TESEL_UNREAD_MB: '160' }).limits).toEqual({
+      ...DEFAULT_LIMITS,
+      maxConnections: 20_000,
+      unreadMegabytes: 160,
+    });
   });
 
   it('rejects an invalid port or retention', () => {

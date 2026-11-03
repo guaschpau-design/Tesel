@@ -1,68 +1,19 @@
 // The relay over real WebSockets, with the server listening on a random local port.
 
-import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { EnvelopeStore } from './envelope-store.ts';
-import { DEFAULT_LIMITS } from './relay-limits.ts';
-import type { RelayOptions } from './relay.ts';
-import { TestClient as Client } from './test-client.ts';
-import { listen, testServer } from './test-server.ts';
-
-const GROUP = new Uint8Array(16).fill(7);
-const OTHER_GROUP = new Uint8Array(16).fill(8);
-/** A distinct key and envelope for every n. */
-const key = (n: number) => numbered(16, n);
-const env = (n: number) => numbered(60, n);
-
-function numbered(size: number, n: number): Uint8Array {
-  const bytes = new Uint8Array(size);
-  new DataView(bytes.buffer).setUint32(0, n);
-  return bytes;
-}
-
-/** Reads a client's backlog up to synced; returns the cursors it was sent. */
-async function untilSynced(client: Client): Promise<number[]> {
-  const cursors: number[] = [];
-  for (;;) {
-    const message = await client.next(10_000);
-    if (message.t === 'synced') return cursors;
-    if (message.t === 'env') cursors.push(message.cursor);
-  }
-}
-
-let app: FastifyInstance | null = null;
-const clients: Client[] = [];
-
-interface Server {
-  readonly store: EnvelopeStore;
-  readonly connect: () => Promise<Client>;
-  readonly join: (after?: number, group?: Uint8Array) => Promise<Client>;
-}
-
-async function start(options: RelayOptions = {}): Promise<Server> {
-  const server = await testServer({ relay: options });
-  app = server.app;
-  const { store } = server;
-  const address = await listen(server);
-  const url = `${address.replace('http', 'ws')}/v1/ws`;
-  const connect = async () => {
-    const client = await Client.connect(url);
-    clients.push(client);
-    return client;
-  };
-  const join = async (after = 0, group: Uint8Array = GROUP) => {
-    const client = await connect();
-    client.send({ t: 'join', group, after });
-    return client;
-  };
-  return { store, connect, join };
-}
+import {
+  env,
+  GROUP,
+  key,
+  OTHER_GROUP,
+  startRelay as start,
+  stopRelay,
+  untilSynced,
+} from './test-relay.ts';
 
 afterEach(async () => {
-  for (const client of clients.splice(0)) client.close();
-  await app?.close();
-  app = null;
+  await stopRelay();
   vi.restoreAllMocks();
 });
 
@@ -153,35 +104,6 @@ describe('relay', () => {
     expect(await bob.next()).toEqual({ t: 'synced', cursor: 1, store: store.id });
   });
 
-  it('sends a long backlog a page at a time to a slow reader, losing nothing stored meanwhile', async () => {
-    const { store, join } = await start();
-    // Envelopes of the largest size, so the backlog is more than the system's socket buffers
-    // can take in for a reader that has stopped.
-    const backlog = 60_000;
-    for (let n = 1; n <= backlog; n++) store.append(GROUP, key(n), numbered(193, n), 0);
-
-    const slow = await join();
-    slow.pause();
-    const sockets = () => [...(app?.websocketServer.clients ?? [])];
-    // The socket buffers are full once the server holds something it cannot send yet.
-    await expect
-      .poll(() => sockets().some((socket) => socket.bufferedAmount > 0), { timeout: 10_000 })
-      .toBe(true);
-    // Only about a page waits in the server's memory, not the whole backlog.
-    for (const socket of sockets()) expect(socket.bufferedAmount).toBeLessThan(1024 * 1024);
-    // The server keeps serving others meanwhile, and what they store reaches the slow reader.
-    const alice = await join(backlog);
-    await alice.next();
-    alice.send({ t: 'push', key: key(backlog + 1), env: env(1) });
-    expect(await alice.next()).toEqual({ t: 'stored', key: key(backlog + 1) });
-
-    slow.resume();
-    const cursors = await untilSynced(slow);
-    expect(cursors).toEqual(Array.from({ length: backlog + 1 }, (_, i) => i + 1));
-    alice.send({ t: 'push', key: key(backlog + 2), env: env(2) });
-    expect(await slow.next()).toMatchObject({ t: 'env', cursor: backlog + 2 });
-  }, 60_000);
-
   it('refuses pushes before joining and a second join', async () => {
     const { connect } = await start();
     const client = await connect();
@@ -237,120 +159,5 @@ describe('relay failures', () => {
     });
     const client = await join();
     expect(await client.closed()).toBe(1011);
-  });
-});
-
-describe('relay limits', () => {
-  it('rate-limits a connection that pushes too fast', async () => {
-    const { join } = await start({ limits: { ...DEFAULT_LIMITS, connectionPerSecond: 0.2 } });
-    const client = await join();
-    await client.next();
-    for (let n = 1; n <= 3; n++) client.send({ t: 'push', key: key(n), env: env(n) });
-    expect(await client.next()).toEqual({ t: 'stored', key: key(1) });
-    expect(await client.next()).toEqual({ t: 'stored', key: key(2) });
-    expect(await client.next()).toEqual({ t: 'error', code: 'rate-limited', key: key(3) });
-  });
-
-  it('rate-limits a group as a whole, across its connections and after they leave', async () => {
-    const { join } = await start({ limits: { ...DEFAULT_LIMITS, groupPerSecond: 0.2 } });
-    const alice = await join();
-    const bob = await join();
-    await alice.next();
-    await bob.next();
-    alice.send({ t: 'push', key: key(1), env: env(1) });
-    expect(await alice.next()).toEqual({ t: 'stored', key: key(1) });
-    await bob.next();
-    bob.send({ t: 'push', key: key(2), env: env(2) });
-    expect(await bob.next()).toEqual({ t: 'stored', key: key(2) });
-    await alice.next();
-    alice.close();
-    bob.close();
-
-    const carol = await join();
-    await untilSynced(carol);
-    carol.send({ t: 'push', key: key(3), env: env(3) });
-    expect(await carol.next()).toEqual({ t: 'error', code: 'rate-limited', key: key(3) });
-  });
-
-  it('rate-limits one address across its connections and groups', async () => {
-    const { join } = await start({ limits: { ...DEFAULT_LIMITS, addressPerSecond: 0.2 } });
-    const alice = await join();
-    const stranger = await join(0, OTHER_GROUP);
-    await alice.next();
-    await stranger.next();
-    alice.send({ t: 'push', key: key(1), env: env(1) });
-    expect(await alice.next()).toEqual({ t: 'stored', key: key(1) });
-    stranger.send({ t: 'push', key: key(2), env: env(2) });
-    expect(await stranger.next()).toEqual({ t: 'stored', key: key(2) });
-    alice.send({ t: 'push', key: key(3), env: env(3) });
-    expect(await alice.next()).toEqual({ t: 'error', code: 'rate-limited', key: key(3) });
-  });
-
-  it('rate-limits pushes to the whole server', async () => {
-    const { join } = await start({ limits: { ...DEFAULT_LIMITS, serverPerSecond: 0.1 } });
-    const alice = await join();
-    const stranger = await join(0, OTHER_GROUP);
-    await alice.next();
-    await stranger.next();
-    alice.send({ t: 'push', key: key(1), env: env(1) });
-    expect(await alice.next()).toEqual({ t: 'stored', key: key(1) });
-    stranger.send({ t: 'push', key: key(2), env: env(2) });
-    expect(await stranger.next()).toEqual({ t: 'error', code: 'rate-limited', key: key(2) });
-  });
-
-  it('refuses connections beyond its limit, in all and per address', async () => {
-    const total = await start({ limits: { ...DEFAULT_LIMITS, maxConnections: 2 } });
-    await total.connect();
-    await total.connect();
-    await expect(total.connect()).rejects.toThrow(/503/);
-    for (const client of clients.splice(0)) client.close();
-    await app?.close();
-
-    const perAddress = await start({ limits: { ...DEFAULT_LIMITS, maxConnectionsPerAddress: 1 } });
-    const first = await perAddress.connect();
-    await expect(perAddress.connect()).rejects.toThrow(/503/);
-    first.close();
-    await first.closed();
-    await expect
-      .poll(() =>
-        perAddress.connect().then(
-          () => true,
-          () => false,
-        ),
-      )
-      .toBe(true);
-  });
-
-  it('counts the address a trusted proxy names, not the proxy', async () => {
-    const limits = { ...DEFAULT_LIMITS, maxConnectionsPerAddress: 1 };
-    const server = await testServer({ relay: { limits }, app: { trustedProxies: ['loopback'] } });
-    app = server.app;
-    const url = `${(await listen(server)).replace('http', 'ws')}/v1/ws`;
-    const from = async (address: string) => {
-      const client = await Client.connect(url, { 'X-Forwarded-For': address });
-      clients.push(client);
-    };
-    await from('192.0.2.1');
-    await from('192.0.2.2');
-    await expect(from('192.0.2.1')).rejects.toThrow(/503/);
-  });
-
-  it('closes a connection that does not join in time', async () => {
-    const { connect } = await start({ limits: { ...DEFAULT_LIMITS, joinTimeoutMs: 100 } });
-    const client = await connect();
-    expect(await client.closed()).toBe(1008);
-  });
-
-  it('limits the new groups one address may open, but not joining known ones', async () => {
-    const { join } = await start({
-      limits: { ...DEFAULT_LIMITS, newGroupsPerAddressPerHour: 1 },
-    });
-    const first = await join(0, GROUP);
-    await first.next();
-    const known = await join(0, GROUP);
-    expect(await known.next()).toMatchObject({ t: 'synced' });
-    const another = await join(0, OTHER_GROUP);
-    expect(await another.next()).toEqual({ t: 'error', code: 'rate-limited', key: null });
-    expect(await another.closed()).toBe(1013);
   });
 });
