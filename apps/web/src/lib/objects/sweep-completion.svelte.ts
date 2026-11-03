@@ -30,7 +30,10 @@ export function useSweepCompletion(
     const { feed, self } = current;
     const marks = marksOf(feed);
     // While an area waits for this device's clock, the effect runs again as the clock moves on.
-    for (const area of marks.due(feed.state, self, () => clock.seconds * 1000)) {
+    // The clock is read so that the effect runs again as it moves on; the time is taken now, not
+    // as the clock last ticked, up to ten seconds before.
+    const now = (): number => Math.max(clock.seconds * 1000, Date.now());
+    for (const area of marks.due(feed.state, self, now)) {
       feed.restyleShape(area, ShapeStyleCode.SEARCH_CLEARED).catch((error: unknown) => {
         console.warn('A swept area could not be marked cleared:', error);
         marks.failed(area);

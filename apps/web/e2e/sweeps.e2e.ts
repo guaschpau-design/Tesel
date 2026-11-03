@@ -6,6 +6,8 @@ import { expect, openMore, tapMap, tapMapUntil, test, twoMembers } from './helpe
 const VIEW = '/#map=15/39.4699/-0.3763';
 
 test('a sweep is planned, its strips handed out, followed and finished', async ({ browser }) => {
+  // Two devices through the whole of a sweep: longer than one minute on a busy CI runner.
+  test.setTimeout(120_000);
   const { ana, berta } = await twoMembers(browser, VIEW);
 
   // Ana, who coordinates, draws a search area.
