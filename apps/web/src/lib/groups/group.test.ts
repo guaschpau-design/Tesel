@@ -6,7 +6,10 @@ import {
   canInvite,
   createGroup,
   groupNameFault,
+  groupNames,
   invitationFor,
+  isUsableServer,
+  lookAlikeGroup,
   normalizeGroupName,
   normalizeServerUrl,
 } from './group.ts';
@@ -76,10 +79,21 @@ describe('groups', () => {
   });
 
   it('accepts a secure server address, or none', () => {
-    expect(normalizeServerUrl('  https://relay.example  ')).toBe('https://relay.example');
-    expect(normalizeServerUrl('')).toBeNull();
-    expect(normalizeServerUrl('http://relay.example')).toBeUndefined();
-    expect(normalizeServerUrl('relay.example')).toBeUndefined();
+    const app = 'tesel.eu';
+    expect(normalizeServerUrl('  https://relay.example  ', app)).toBe('https://relay.example');
+    expect(normalizeServerUrl('', app)).toBeNull();
+    expect(normalizeServerUrl('http://relay.example', app)).toBeUndefined();
+    expect(normalizeServerUrl('relay.example', app)).toBeUndefined();
+    expect(normalizeServerUrl('https://relay.example/?', app)).toBeUndefined();
+  });
+
+  it('uses a server on this very device only in an app that runs on it too', () => {
+    expect(isUsableServer('http://127.0.0.1:631/', 'tesel.eu')).toBe(false);
+    expect(isUsableServer('http://localhost:8080', 'tesel.eu')).toBe(false);
+    expect(isUsableServer('https://127.0.0.2:631/', 'tesel.eu')).toBe(false);
+    expect(isUsableServer('https://[::1]/', 'tesel.eu')).toBe(false);
+    expect(isUsableServer('http://localhost:8080', 'localhost')).toBe(true);
+    expect(isUsableServer('https://relay.example', 'localhost')).toBe(true);
   });
 
   it('accepts group names of 1 to 32 bytes after trimming', () => {
@@ -98,5 +112,24 @@ describe('groups', () => {
   it('refuses a group name with a character that is not seen, and says so', () => {
     expect(normalizeGroupName('Rescate\u2067')).toBeNull();
     expect(groupNameFault('Res\u200Bcate')).toBe('hidden');
+  });
+
+  it('tells apart groups whose names look the same, the first joined keeping its name', () => {
+    const first = createGroup('Rescate', null, NOW, () => new Uint8Array(16).fill(1));
+    const second = createGroup('RESCATE\u200B', null, NOW + 1, () => new Uint8Array(16).fill(2));
+    const other = createGroup('Bomberos', null, NOW + 2, () => new Uint8Array(16).fill(3));
+    const names = groupNames([second, other, first]);
+    expect(names.get(first.id)).toBe('Rescate');
+    expect(names.get(second.id)).toBe('RESCATE \u2461');
+    expect(names.get(other.id)).toBe('Bomberos');
+  });
+
+  it('finds the group of the same name as an invitation to another group', () => {
+    const mine = createGroup('Rescate', null, NOW, () => new Uint8Array(16).fill(1));
+    const outsider = createGroup('R\u0435scate', 'https://evil.example', NOW, fixedRandom);
+    const lure = invitationFor(outsider, 'coordinator', ISSUER);
+    expect(lookAlikeGroup([mine], lure)).toBe(mine);
+    expect(lookAlikeGroup([mine], invitationFor(mine, 'member', ISSUER))).toBeUndefined();
+    expect(lookAlikeGroup([mine, outsider], lure)).toBeUndefined();
   });
 });

@@ -16,11 +16,13 @@
   interface Props {
     t: Translate;
     group: StoredGroup;
+    /** What the group is called, told apart from others of the same name. */
+    name: string;
     issuer: NodeId;
     onclose: () => void;
   }
 
-  let { t, group, issuer, onclose }: Props = $props();
+  let { t, group, name, issuer, onclose }: Props = $props();
 
   let role: Role = $state('member');
   const canShare = 'share' in navigator;
@@ -35,7 +37,7 @@
 
   async function share(text: string): Promise<void> {
     try {
-      await navigator.share({ title: t('inviteTitle', { group: group.name }), url: text });
+      await navigator.share({ title: t('inviteTitle', { group: name }), url: text });
     } catch {
       // The user closed the share sheet.
     }
@@ -43,7 +45,7 @@
 </script>
 
 <div class="stack section">
-  <h3>{t('inviteTitle', { group: group.name })}</h3>
+  <h3>{t('inviteTitle', { group: name })}</h3>
 
   {#if link.ok}
     <QrCode text={link.value} label={t('invitationQr')} />

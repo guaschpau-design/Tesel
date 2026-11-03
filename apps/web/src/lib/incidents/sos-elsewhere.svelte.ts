@@ -12,6 +12,7 @@ import { activity } from '../power/activity.svelte.ts';
 import type { SosElsewhere } from '../radio/heard-elsewhere.ts';
 import { radio } from '../radio/radio.svelte.ts';
 import type { Session } from '../session.svelte.ts';
+import { shownText } from '../text.ts';
 import { announcer } from '../ui/announcer.svelte.ts';
 import { notices } from '../ui/notices.svelte.ts';
 import { attempt } from '../ui/submission.svelte.ts';
@@ -72,13 +73,14 @@ function alarm(
   session: Session,
   choices: AlarmChoices,
 ): void {
-  const title = `${t('sos')} · ${group.name}`;
-  const body = [t(SOS_KINDS[event.kind].label), event.text].filter(Boolean).join(' · ');
+  const name = session.nameOfGroup(group);
+  const title = `${t('sos')} · ${name}`;
+  const body = [t(SOS_KINDS[event.kind].label), shownText(event.text)].filter(Boolean).join(' · ');
   raiseAlarm([{ title, body, tag: eventRefKey(event) }], choices);
   // A screen at rest lights up for it (power/).
   activity.wake();
   announcer.say(`${title}. ${body}`);
-  const text = t('sosElsewhere', { group: group.name });
+  const text = t('sosElsewhere', { group: name });
   // The group being opened again shows the call once open: there is nothing to open.
   if (group.id === session.activeGroupId) {
     notices.show(text, { stays: true });

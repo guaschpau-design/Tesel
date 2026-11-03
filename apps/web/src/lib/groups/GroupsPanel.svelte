@@ -61,14 +61,14 @@
     const current = session.activeGroup;
     const self = session.identity?.nodeId;
     if (current && self && activeFeed && hasOwnSos(activeFeed.state, self)) {
-      const text = t('confirmSwitchWithSos', { group: current.name });
+      const text = t('confirmSwitchWithSos', { group: session.nameOfGroup(current) });
       if (!(await confirmations.ask({ text, confirm: t('switchGroup') }))) return;
     }
     attempt(() => session.activate(group.id), t('actionFailed'));
   }
 
   async function leave(group: StoredGroup): Promise<void> {
-    const text = t('confirmLeave', { group: group.name });
+    const text = t('confirmLeave', { group: session.nameOfGroup(group) });
     if (!(await confirmations.ask({ text, confirm: t('leave') }))) return;
     attempt(async () => {
       if (activeFeed?.groupId === group.id) await hidePositionAndWait(activeFeed);
@@ -83,7 +83,7 @@
     <ul class="others" aria-label={t('otherGroups')}>
       {#each others as group (group.id)}
         <li>
-          <span>{group.name}</span>
+          <span>{session.nameOfGroup(group)}</span>
           <button onclick={() => use(group)}>{t('use')}</button>
         </li>
       {/each}
@@ -110,7 +110,13 @@
   {:else if view.kind === 'scan'}
     <QrScanner {t} onresult={scanned} oncancel={home} />
   {:else if view.kind === 'invite' && session.identity}
-    <InviteView {t} group={view.group} issuer={session.identity.nodeId} onclose={home} />
+    <InviteView
+      {t}
+      group={view.group}
+      name={session.nameOfGroup(view.group)}
+      issuer={session.identity.nodeId}
+      onclose={home}
+    />
   {:else}
     <div class="stack section">
       {#if session.activeGroup && session.identity}
@@ -118,6 +124,7 @@
         <ActiveGroup
           {t}
           {group}
+          name={session.nameOfGroup(group)}
           feed={activeFeed}
           self={session.identity.nodeId}
           oninvite={() => (view = { kind: 'invite', group })}
@@ -130,7 +137,7 @@
         <Fold
           title={t('otherGroups')}
           summary={others.length > 0
-            ? others.map((group) => group.name).join(', ')
+            ? others.map((group) => session.nameOfGroup(group)).join(', ')
             : t('createOrJoin')}
         >
           {@render elsewhere()}

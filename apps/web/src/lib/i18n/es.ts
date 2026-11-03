@@ -107,11 +107,18 @@ export const es: Messages = {
   joinQuestion: '¿Unirte a «{group}» como {role}?',
   joinWarning:
     'Quienes forman parte del grupo ven las posiciones, los mensajes y el mapa de todo el grupo.',
+  joinServer: 'Su servidor: {server}.',
+  joinNoServer: 'Sin servidor: solo por radio.',
+  joinSameName:
+    'Ya estás en otro grupo llamado «{group}». Este es un grupo DISTINTO con el mismo nombre: únete solo si sabes quién te lo envía.',
+  joinShare: 'Compartir mi posición en este grupo',
   join: 'Unirme',
   notNow: 'Ahora no',
   invitationDamaged: 'Esta invitación está dañada o incompleta. Pide una nueva.',
   notAnInvitation: 'Eso no es una invitación de Tesel.',
   joined: 'Te has unido a «{group}».',
+  joinedNotSharing:
+    'Te has unido a «{group}». Tu posición queda en pausa: compártela desde Yo cuando quieras.',
   promoted: 'Ahora coordinas «{group}».',
   alreadyMember: 'Ya formas parte de «{group}».',
   roleMember: 'miembro',

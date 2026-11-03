@@ -2,7 +2,8 @@
 
 import type { Page } from '@playwright/test';
 
-import { chooseAlias, createGroup, expect, test } from './helpers.ts';
+import { chooseAlias, createGroup, device, expect, shareAs, test } from './helpers.ts';
+import { SERVER_URL } from './ports.ts';
 
 async function invitationLink(page: Page, role: 'miembro' | 'coordinador'): Promise<string> {
   await page.getByRole('button', { name: 'Invitar' }).click();
@@ -64,4 +65,37 @@ test('a damaged invitation is reported, not silently ignored', async ({ page }) 
   await expect(
     page.getByText('Esta invitación está dañada o incompleta.', { exact: false }),
   ).toBeVisible();
+});
+
+test('an invitation to another group of the same name is flagged, and sharing is asked for', async ({
+  browser,
+}) => {
+  const ana = await device(browser, 'Ana');
+  await createGroup(ana, 'Rescate Valencia');
+  await ana.getByRole('region', { name: 'Grupos' }).getByRole('button', { name: 'Cerrar' }).click();
+  await shareAs(ana, 'Compartir');
+
+  // Someone else makes a group of a name that looks the same, and sends Ana its invitation.
+  const eva = await device(browser, 'Eva');
+  await createGroup(eva, 'RESCATE  valencia');
+  const lure = await invitationLink(eva, 'coordinador');
+  // A messenger added a query to the link, and a slash: it still opens.
+  await ana.goto(lure.replace('/join#', '/join/?fbclid=IwAR0#'));
+
+  const dialog = ana.getByRole('dialog', { name: 'Unirse a un grupo' });
+  await expect(dialog).toContainText(`Su servidor: ${new URL(SERVER_URL).host}.`);
+  await expect(dialog.getByRole('alert')).toContainText(
+    'Este es un grupo DISTINTO con el mismo nombre',
+  );
+  const share = dialog.getByRole('checkbox', { name: 'Compartir mi posición en este grupo' });
+  await expect(share).not.toBeChecked();
+  await dialog.getByRole('button', { name: 'Unirme' }).click();
+  await expect(ana.getByText(/Tu posición queda en pausa/)).toBeVisible();
+
+  // The two groups are told apart wherever they are named, and nothing is shared in the new one.
+  await expect(ana.getByRole('button', { name: 'Grupo: RESCATE valencia ②' })).toBeVisible();
+  await ana.getByRole('button', { name: /^Yo/ }).click();
+  await expect(
+    ana.getByRole('region', { name: 'Yo' }).getByRole('switch', { name: 'Compartir mi posición' }),
+  ).toHaveAttribute('aria-checked', 'false');
 });

@@ -107,11 +107,18 @@ export const en = {
   joinTitle: 'Join a group',
   joinQuestion: 'Join “{group}” as {role}?',
   joinWarning: 'Group members see the positions, messages and map of the whole group.',
+  joinServer: 'Its server: {server}.',
+  joinNoServer: 'No server: by radio only.',
+  joinSameName:
+    'You already belong to another group called “{group}”. This is a DIFFERENT group with the same name: join it only if you know who sent it to you.',
+  joinShare: 'Share my position in this group',
   join: 'Join',
   notNow: 'Not now',
   invitationDamaged: 'This invitation is damaged or incomplete. Ask for a new one.',
   notAnInvitation: 'That is not a Tesel invitation.',
   joined: 'You joined “{group}”.',
+  joinedNotSharing:
+    'You joined “{group}”. Your position stays paused: share it from Me when you want to.',
   promoted: 'You now coordinate “{group}”.',
   alreadyMember: 'You already belong to “{group}”.',
   roleMember: 'member',

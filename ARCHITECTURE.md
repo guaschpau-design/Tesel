@@ -99,7 +99,7 @@ Roles (coordinator, member) are carried in invitations and shown in the UI. In v
 
 #### Position privacy
 
-The device reads its GPS only while something uses it — sharing, showing it on the map, navigating — through one reader (`lib/position/device-location.svelte.ts`) that every use shares. Each device chooses how it shares its position, and remembers the choice: **sharing** (positions are published as the device moves), **paused** (nothing new is published; the group keeps the last position, which turns stale) or **hidden** (a `POSITION_HIDDEN` removes the device from the group's map). See [ADR-0005](docs/decisions/0005-group-secret-trust-boundary.md).
+The device reads its GPS only while something uses it — sharing, showing it on the map, navigating — through one reader (`lib/position/device-location.svelte.ts`) that every use shares. Each device chooses how it shares its position, and remembers the choice: **sharing** (positions are published as the device moves), **paused** (nothing new is published; the group keeps the last position, which turns stale) or **hidden** (a `POSITION_HIDDEN` removes the device from the group's map). See [ADR-0005](docs/decisions/0005-group-secret-trust-boundary.md). A device that shares and joins a group it was not in asks whether to share there, and pauses sharing otherwise, so an invitation from someone posing as the user's team does not take the position with it ([ADR-0110](docs/decisions/0110-deception-and-loose-ends.md)).
 
 ### 3.3 Events
 

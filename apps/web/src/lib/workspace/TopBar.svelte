@@ -31,7 +31,9 @@
     <img class="mark" src={markUrl} alt="Tesel" />
   </span>
   {#if session?.identity}
-    {@const groupLabel = session.activeGroup?.name ?? t('noGroup')}
+    {@const groupLabel = session.activeGroup
+      ? session.nameOfGroup(session.activeGroup)
+      : t('noGroup')}
     <button
       class="group"
       onclick={() => {

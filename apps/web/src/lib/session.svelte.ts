@@ -4,13 +4,14 @@
 import type { Invitation } from '@tesel/protocol';
 
 import { deleteLeftovers } from './events/event-log.ts';
-import type { JoinOutcome, StoredGroup } from './groups/group.ts';
+import { groupNames, type JoinOutcome, type StoredGroup } from './groups/group.ts';
 import { getActiveGroupId, listGroups, setActiveGroupId } from './groups/group-store.ts';
 import { forgetPracticeGroups, joinGroup, leaveGroup, startGroup } from './groups/membership.ts';
 import { createLocalIdentity, type LocalIdentity } from './identity/identity.ts';
 import { loadIdentity, saveIdentity } from './identity/identity-store.ts';
 import type { AppDb } from './storage/app-db.ts';
 import { keepStorage } from './storage/storage-space.svelte.ts';
+import { shownText } from './text.ts';
 
 export class Session {
   // Raw state: these values are stored in IndexedDB, which cannot clone Svelte's proxies.
@@ -21,6 +22,9 @@ export class Session {
   readonly activeGroup: StoredGroup | undefined = $derived(
     this.groups.find((group) => group.id === this.activeGroupId),
   );
+
+  /** Each group's name as lists show it, groups of names that look the same told apart. */
+  readonly #groupNames: ReadonlyMap<string, string> = $derived(groupNames(this.groups));
 
   readonly #db: AppDb;
 
@@ -60,6 +64,11 @@ export class Session {
     this.identity = identity;
   }
 
+  /** What a group is called wherever the app names it (groupNames). */
+  nameOfGroup(group: Pick<StoredGroup, 'id' | 'name'>): string {
+    return this.#groupNames.get(group.id) ?? shownText(group.name);
+  }
+
   async createGroup(name: string, server: string | null): Promise<StoredGroup> {
     const group = await startGroup(this.#db, name, server, Date.now());
     await this.#refreshGroups();
@@ -67,11 +76,11 @@ export class Session {
     return group;
   }
 
-  async join(invitation: Invitation): Promise<JoinOutcome> {
-    const { outcome } = await joinGroup(this.#db, invitation, Date.now());
+  async join(invitation: Invitation): Promise<{ group: StoredGroup; outcome: JoinOutcome }> {
+    const joined = await joinGroup(this.#db, invitation, Date.now());
     await this.#refreshGroups();
     await keepStorage();
-    return outcome;
+    return joined;
   }
 
   async activate(id: string): Promise<void> {

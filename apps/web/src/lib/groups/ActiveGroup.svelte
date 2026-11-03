@@ -22,22 +22,24 @@
   interface Props {
     t: Translate;
     group: StoredGroup;
+    /** What the group is called, told apart from others of the same name. */
+    name: string;
     /** The group's feed, for its members; undefined while it opens. */
     feed: GroupFeed | undefined;
     self: NodeId;
     oninvite: () => void;
   }
 
-  let { t, group, feed, self, oninvite }: Props = $props();
+  let { t, group, name, feed, self, oninvite }: Props = $props();
 
   const coordinator = $derived(group.role === 'coordinator');
   /** The team being created (null) or changed, while its form is open. */
   let editing: { readonly team: TeamEvent | null } | null = $state(null);
 </script>
 
-<section class="group" aria-label={group.name}>
+<section class="group" aria-label={name}>
   <header>
-    <strong>{group.name}</strong>
+    <strong>{name}</strong>
     <span class="badge role">{t(ROLE_LABELS[group.role])}</span>
   </header>
   {#if feed}

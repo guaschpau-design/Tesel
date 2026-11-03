@@ -53,7 +53,7 @@
     {t}
     input={linkInput}
     network={connection.network}
-    groupName={session?.activeGroup?.name ?? null}
+    groupName={session?.activeGroup ? session.nameOfGroup(session.activeGroup) : null}
     onclose={closePanel}
   />
 {/if}

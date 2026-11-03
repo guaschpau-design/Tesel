@@ -5,7 +5,7 @@ import {
   deriveGroupKeys,
   generateGroupSecret,
   GROUP_NAME_MAX_BYTES,
-  isSecureUrl,
+  isServerUrl,
   SERVER_URL_MAX_BYTES,
   toBase64url,
   utf8ByteLength,
@@ -15,7 +15,7 @@ import {
   type Role,
 } from '@tesel/protocol';
 
-import { nameFault, type NameFault } from '../names/names.ts';
+import { nameFault, nameKey, numberedNames, type NameFault } from '../names/names.ts';
 
 export interface StoredGroup {
   /** Group ID (protocol §5) in base64url: public, safe to use as a key and in logs. */
@@ -48,13 +48,34 @@ export function normalizeGroupName(text: string): string | null {
 }
 
 /**
- * Validates a server address typed by a coordinator: empty means "no server", anything else
- * must be a secure URL (protocol §6). Returns undefined if invalid.
+ * Whether the app may use a server: a server URL (protocol §6) of a size an invitation can carry
+ * and, unless the app itself runs on this device as in development, not on this device, where an
+ * invitation could point the app at another service of the user's (ADR-0110).
  */
-export function normalizeServerUrl(text: string): string | null | undefined {
+export function isUsableServer(url: string, appHost: string): boolean {
+  if (!isServerUrl(url) || utf8ByteLength(url) > SERVER_URL_MAX_BYTES) return false;
+  return isLoopbackHost(appHost) || !isLoopbackHost(new URL(url).hostname);
+}
+
+/** Names of this very device: localhost, the 127.0.0.0/8 addresses, ::1 and 0.0.0.0. */
+function isLoopbackHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    /^127\.\d+\.\d+\.\d+$/.test(hostname) ||
+    hostname === '[::1]' ||
+    hostname === '0.0.0.0'
+  );
+}
+
+/**
+ * Validates a server address typed by a coordinator in an app served from `appHost`: empty means
+ * "no server", anything else must be usable (isUsableServer). Returns undefined if invalid.
+ */
+export function normalizeServerUrl(text: string, appHost: string): string | null | undefined {
   const url = text.trim();
   if (url === '') return null;
-  return isSecureUrl(url) && utf8ByteLength(url) <= SERVER_URL_MAX_BYTES ? url : undefined;
+  return isUsableServer(url, appHost) ? url : undefined;
 }
 
 export function groupId(secret: Uint8Array): string {
@@ -114,6 +135,29 @@ export function applyInvitation(
 /** The invitation a coordinator hands out for a group. */
 export function invitationFor(group: StoredGroup, role: Role, issuer: NodeId): Invitation {
   return { role, secret: group.secret, issuer, groupName: group.name, server: group.server };
+}
+
+/**
+ * How each group of this device is named in lists, by ID: groups whose names look the same
+ * (names.ts) are told apart by a circled number, the first joined keeping the name (ADR-0110).
+ */
+export function groupNames(groups: readonly StoredGroup[]): Map<string, string> {
+  const ordered = [...groups].sort((a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id));
+  return numberedNames(ordered.map((group) => ({ key: group.id, name: group.name })));
+}
+
+/**
+ * The group of this device whose name looks the same as an invitation's while being another
+ * group, or undefined: an invitation to a group the device belongs to already has none.
+ */
+export function lookAlikeGroup(
+  groups: readonly StoredGroup[],
+  invitation: Invitation,
+): StoredGroup | undefined {
+  const id = groupId(invitation.secret);
+  if (groups.some((group) => group.id === id)) return undefined;
+  const name = nameKey(invitation.groupName);
+  return groups.find((group) => nameKey(group.name) === name);
 }
 
 /** In v0.1 only coordinators invite; the role is advisory, so this is a UI rule (ADR-0005). */

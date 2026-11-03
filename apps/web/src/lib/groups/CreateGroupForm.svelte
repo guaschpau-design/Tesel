@@ -26,7 +26,7 @@
   const nameFault = $derived(newName.trim() === '' ? null : groupNameFault(newName));
   const proposed = defaultServerUrl() ?? '';
   let serverText = $state(proposed);
-  const server = $derived(normalizeServerUrl(serverText));
+  const server = $derived(normalizeServerUrl(serverText, window.location.hostname));
   const serverSummary = $derived.by(() => {
     const typed = serverText.trim();
     if (typed === '') return t('serverNone');
