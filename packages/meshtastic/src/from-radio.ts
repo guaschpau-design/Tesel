@@ -153,18 +153,20 @@ export function userOf(user: ProtoMessage): UserInfo {
   };
 }
 
-/** A `Position`, which nodes also send on their own (POSITION_APP); null without coordinates. */
+/**
+ * A `Position`, which nodes also send on their own (POSITION_APP); null without coordinates, or
+ * with coordinates off the Earth: anyone on the public channel can send one.
+ */
 export function positionOf(position: ProtoMessage): PositionFix | null {
-  const latitude = position.sfixed32(POSITION.latitudeI);
-  const longitude = position.sfixed32(POSITION.longitudeI);
+  const latitudeI = position.sfixed32(POSITION.latitudeI);
+  const longitudeI = position.sfixed32(POSITION.longitudeI);
   // A node that shares no position sends none, or zeros.
-  if (latitude === undefined || longitude === undefined) return null;
-  if (latitude === 0 && longitude === 0) return null;
-  return {
-    latitude: latitude * DEGREES_PER_UNIT,
-    longitude: longitude * DEGREES_PER_UNIT,
-    time: position.fixed32(POSITION.time) ?? 0,
-  };
+  if (latitudeI === undefined || longitudeI === undefined) return null;
+  if (latitudeI === 0 && longitudeI === 0) return null;
+  const latitude = latitudeI * DEGREES_PER_UNIT;
+  const longitude = longitudeI * DEGREES_PER_UNIT;
+  if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
+  return { latitude, longitude, time: position.fixed32(POSITION.time) ?? 0 };
 }
 
 function loraOf(lora: ProtoMessage): LoraSettings {

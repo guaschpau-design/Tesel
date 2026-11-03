@@ -23,7 +23,16 @@ interface Heard {
   readonly at: number;
 }
 
-/** Every node heard, by number; each change gives the node as it now stands. */
+/**
+ * Nodes kept at most. Anyone on a public channel can send names and positions under a new number
+ * each time, so the book is bounded: the node heard least recently goes first.
+ */
+export const MAX_NODES = 500;
+
+/**
+ * The nodes heard, by number, the most recently heard last; each change gives the node as it now
+ * stands.
+ */
 export class NodeBook {
   readonly #nodes = new Map<number, MeshtasticNode>();
 
@@ -45,7 +54,13 @@ export class NodeBook {
       position: position ?? known?.position ?? null,
       lastHeard: Math.max(at, known?.lastHeard ?? 0),
     };
+    // Set anew, so the order of the map is the order in which nodes were last heard.
+    this.#nodes.delete(num);
     this.#nodes.set(num, node);
+    for (const oldest of this.#nodes.keys()) {
+      if (this.#nodes.size <= MAX_NODES) break;
+      this.#nodes.delete(oldest);
+    }
     return node;
   }
 
