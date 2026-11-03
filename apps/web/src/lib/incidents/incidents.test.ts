@@ -43,6 +43,19 @@ describe('incidents', () => {
     expect(activeSos(state, BERTA)[0]).toMatchObject({ mine: true, bySelf: false });
   });
 
+  it('orders calls of the same second the same on every device', () => {
+    const call = (origin: NodeId) =>
+      ({ type: 'sos', origin, seq: 9, time: T0 + 40, kind: 'medical', ...at, text: '' }) as const;
+    const orders = [
+      [call(ANA), call(BERTA)],
+      [call(BERTA), call(ANA)],
+    ].map((calls) => activeSos(stateOf(calls), ANA).map(({ event }) => event.origin));
+    expect(orders).toEqual([
+      [ANA, BERTA],
+      [ANA, BERTA],
+    ]);
+  });
+
   it('tells whether this device has an SOS not cancelled yet', () => {
     expect(hasOwnSos(state, BERTA)).toBe(true);
     expect(hasOwnSos(state, ANA)).toBe(false);

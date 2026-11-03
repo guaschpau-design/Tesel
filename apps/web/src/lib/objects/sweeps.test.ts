@@ -96,6 +96,26 @@ describe('sweeps', () => {
     expect(record?.type === 'sweep' && stripOf(record, state.objects)).toBeNull();
   });
 
+  it('tells who walks a strip the same on every device when two tasks along it share a second', () => {
+    const along = (origin: NodeId): TeselEvent => ({
+      type: 'task',
+      origin,
+      seq: 50,
+      time: T0 + 50,
+      task: { origin, seq: 50 },
+      status: 'open',
+      assignee: origin,
+      place: { kind: 'object', object: { origin: ANA, seq: 2 } },
+      text: 'Batida',
+    });
+    const walkers = [
+      [along(ANA), along(BERTA)],
+      [along(BERTA), along(ANA)],
+    ].map((tasks) => stripWalker(stateOf([...PLANNED, ...tasks]).tasks, `${ANA}:2`));
+    // Of events of the same second, the one of the greater origin is the newer (protocol §3.10).
+    expect(walkers).toEqual([ANA, ANA]);
+  });
+
   it('knows who walks a strip and how much of it their trail has swept', () => {
     const walk = [at(0, 12), at(400, 13)].map((point, index) => ({
       type: 'position' as const,

@@ -1,6 +1,6 @@
 // SOS calls as the interface shows them: who, what, where, and who has acknowledged them.
 
-import { openSosCalls, type GroupState } from '@tesel/core';
+import { compareEvents, openSosCalls, type GroupState } from '@tesel/core';
 import { eventRefKey, sosPlace, type LatLon, type NodeId, type SosEvent } from '@tesel/protocol';
 
 import { aliasOf } from '../members/alias.ts';
@@ -42,7 +42,7 @@ export function whereSos(state: Pick<GroupState, 'positions'>, event: SosEvent):
     : { kind: 'unknown' };
 }
 
-/** SOS calls not cancelled yet, newest first. */
+/** SOS calls not cancelled yet, newest first, in the same order on every device (protocol §3.10). */
 export function activeSos(state: GroupState, self: NodeId): SosView[] {
   const views: SosView[] = [];
   for (const [key, event] of openSosCalls(state)) {
@@ -57,7 +57,7 @@ export function activeSos(state: GroupState, self: NodeId): SosView[] {
       ...acknowledgement(state, ref, self),
     });
   }
-  return views.sort((a, b) => b.event.time - a.event.time);
+  return views.sort((a, b) => compareEvents(b.event, a.event));
 }
 
 /** Whether `self` has an SOS not cancelled yet: nothing may reload or close its group meanwhile. */

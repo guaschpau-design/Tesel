@@ -102,9 +102,12 @@ export function stripTasks(tasks: GroupState['tasks'], stripKey: string): TaskEv
   );
 }
 
-/** Who walks a strip: whoever its newest task is for, a member or a team, or no one in particular. */
+/**
+ * Who walks a strip: whoever its newest task is for, a member or a team, or no one in particular.
+ * Tasks of the same second are told apart as every device tells them (protocol §3.10).
+ */
 export function stripWalker(tasks: GroupState['tasks'], stripKey: string): NodeId | null {
-  const newest = stripTasks(tasks, stripKey).sort((a, b) => b.time - a.time)[0];
+  const newest = stripTasks(tasks, stripKey).sort((a, b) => compareEvents(b, a))[0];
   return newest?.assignee ?? null;
 }
 
