@@ -5,8 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { MAX_SHAPE_FILE_BYTES } from './shape-import.ts';
 import { readShapeFile } from './shape-file.ts';
 
-/** Well over the time a file of the largest size takes, on a slow machine running tests. */
-const QUICK_MS = 2_000;
+/**
+ * Well over the time a file of the largest size takes, even on a busy CI runner (2.1 s once there),
+ * and far under the minutes a reader that scans the file once per tag would take.
+ */
+const QUICK_MS = 10_000;
 
 function timed<T>(read: () => T): { value: T; ms: number } {
   const start = performance.now();
