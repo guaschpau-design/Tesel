@@ -5,4 +5,11 @@
 **/playwright-report
 .git
 .github
+.claude
 docs
+# What a working copy may hold beside the sources: settings and secrets, databases and maps.
+**/.env*
+**/data
+**/*.db
+**/*.sqlite
+**/*.pmtiles
