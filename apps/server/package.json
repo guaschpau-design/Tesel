@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node --watch src/main.ts",
     "start": "node src/main.ts",
+    "store-admin": "node src/store-admin.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
