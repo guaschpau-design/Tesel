@@ -47,6 +47,7 @@
   --signal: #c8f04a; /* the one action on each screen, with ink on it */
   --signal-hover: #b4dc30;
   --signal-deep: #4d6e00; /* the same, as text and lines on paper */
+  --alert: #b3261e; /* only for what must not be missed: when to call 112 */
   --measure: 62ch;
   font-family:
     Archivo,
@@ -400,9 +401,9 @@ h3 {
   bottom: 0.6rem;
   z-index: 2;
   margin: 0;
-  font-size: 0.62rem;
+  font-size: 0.55rem;
   letter-spacing: 0.02em;
-  color: rgb(230 235 232 / 28%);
+  color: rgb(230 235 232 / 18%);
 }
 
 @media (max-width: 46rem) {
@@ -455,6 +456,14 @@ section.paper + section.paper > .wrap {
   font-size: 1.15rem;
   color: var(--paper-muted);
   max-width: 52ch;
+}
+
+/* With no headline, the opening line takes its place. */
+.section-head.untitled p:not(.eyebrow) {
+  font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.6rem);
+  line-height: 1.4;
+  color: var(--paper-text);
+  max-width: 44ch;
 }
 
 .ink .section-head p:not(.eyebrow) {
@@ -680,6 +689,21 @@ section.paper + section.paper > .wrap {
 .principles + .aside {
   margin: 2.5rem 0 0;
   color: var(--paper-muted);
+}
+
+/* When to call 112 instead: the one notice on the page that must not be missed. */
+.principles + .aside.emergency {
+  max-width: 40rem;
+  padding: 1.1rem 1.4rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--paper-text);
+  background: var(--paper-deep);
+  border-left: 6px solid var(--alert);
+}
+
+.emergency strong {
+  color: var(--alert);
 }
 
 @media (max-width: 60rem) {

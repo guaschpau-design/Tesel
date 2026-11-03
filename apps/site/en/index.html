@@ -6,7 +6,7 @@
     <title>Tesel · Resilient situational awareness for teams</title>
     <meta
       name="description"
-      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, over its own network of nodes. Free, no sign-up, encrypted."
+      content="Tesel puts on one map, on every team member's phone, where everyone is, what is happening and who is taking care of what. If coverage is lost, it keeps working over its own network of nodes. Free, no sign-up, encrypted."
     />
     <meta name="theme-color" content="#10202c" />
     <link rel="icon" href="../app/icons/favicon.svg?v=39063395" type="image/svg+xml" />
@@ -21,7 +21,7 @@
     <meta property="og:title" content="Tesel · Resilient situational awareness for teams" />
     <meta
       property="og:description"
-      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, over its own network of nodes. Free, no sign-up, encrypted."
+      content="Tesel puts on one map, on every team member's phone, where everyone is, what is happening and who is taking care of what. If coverage is lost, it keeps working over its own network of nodes. Free, no sign-up, encrypted."
     />
     <meta property="og:url" content="https://tesel.eu/en/" />
     <meta property="og:image" content="https://tesel.eu/img/share-en.jpg" />
@@ -90,9 +90,9 @@
           <p class="eyebrow">Resilient situational awareness</p>
           <h1>Keep your team organised in the field, even when communications fail.</h1>
           <p class="lead">
-            Where everyone is, what is happening and who is taking care of what. Over the internet
-            and, if coverage fails, over a network of nodes of its own, with no masts and no
-            operators.
+            Where everyone is, what is happening and who is taking care of what, on every team
+            member's phone. And if coverage is lost, it keeps working over a network of nodes of its
+            own, with no masts and no operators.
           </p>
           <div class="actions">
             <a class="button" href="../app/">Open Tesel</a>
@@ -109,13 +109,11 @@
 
       <section class="paper" id="why">
         <div class="wrap">
-          <div class="section-head">
+          <div class="section-head untitled">
             <p class="eyebrow">Why Tesel</p>
-            <h2>Four simple ideas.</h2>
             <p>
               A team in the field needs to know three things: where its people are, what is
-              happening and what to do next. Tesel puts all three on a map everyone sees, and does
-              it like this:
+              happening and what to do next. Tesel puts all three on a shared map.
             </p>
           </div>
           <ul class="principles">
@@ -134,10 +132,10 @@
               </p>
             </li>
             <li>
-              <h3>More than one way</h3>
+              <h3>More than one channel</h3>
               <p>
                 It uses the internet when there is one and its own network of nodes when there is
-                not. What you write offline goes out as soon as there is a way.
+                not. What you write offline goes out as soon as a channel is available.
               </p>
             </li>
             <li>
@@ -157,12 +155,12 @@
             <p class="eyebrow">Resilient communications</p>
             <h2>If coverage fails, it carries on over the mesh.</h2>
             <p>
-              Normally Tesel goes over the internet, like any app. But the phone can also carry a
-              small pocket node, paired over Bluetooth: a long-range, very low-power LoRa
-              transmitter. The team's nodes link up with each other into a mesh network of their
-              own, with no masts and no operators. When there is no coverage, messages hop from node
-              to node until they reach the whole team. Nobody has to touch anything: Tesel takes the
-              way that works.
+              Normally Tesel works over the internet, like any app. But each member can also carry a
+              small pocket node, paired with their phone over Bluetooth: a long-range, very
+              low-power LoRa transmitter. The team's nodes link up with each other into a mesh
+              network of their own, with no masts and no operators. When there is no coverage,
+              messages hop from node to node until they reach the whole team. Nobody has to touch
+              anything: Tesel uses the channel that works.
             </p>
           </div>
           <ol class="channels">
@@ -216,12 +214,13 @@
               marks on the map, tasks and reports.
             </li>
             <li>
-              <strong>The urgent first:</strong> the mesh carries little data, so an SOS goes ahead
-              of messages, and messages ahead of positions.
+              <strong>The urgent first:</strong> the mesh has limited capacity, so Tesel gives
+              priority to an SOS, then to messages and lastly to positions.
             </li>
             <li>
               <strong>The more nodes, the further:</strong> messages hop from node to node and
-              through the area's repeaters. About a kilometre in a city; tens, between high points.
+              through the area's repeaters. About a kilometre in a city; tens of kilometres, between
+              high points.
             </li>
             <li>
               <strong>Encrypted on the mesh too:</strong> only your group can read what it sends,
@@ -367,8 +366,8 @@
             <li>
               <h3>Create the group</h3>
               <p>
-                The coordinator creates it and invites the rest with a QR code or a link. Whoever
-                opens it is in.
+                The coordinator creates it and invites the rest with a QR code or a link. Within
+                seconds, the whole team is on the same map.
               </p>
             </li>
             <li>
@@ -407,7 +406,9 @@
               <p>No ads, no analytics and no logs of who connects.</p>
             </li>
           </ul>
-          <p class="aside">Tesel does not replace 112. If you can call, call.</p>
+          <p class="aside emergency">
+            <strong>Tesel does not replace 112.</strong> If you can call, call.
+          </p>
         </div>
       </section>
 
@@ -450,7 +451,7 @@
               <summary>Does it work on an iPhone?</summary>
               <p>
                 Yes. To pair a node over Bluetooth on an iPhone, open Tesel in the Bluefy browser,
-                as Safari does not allow it.
+                as neither Safari nor Chrome allows it.
               </p>
             </details>
             <details>
