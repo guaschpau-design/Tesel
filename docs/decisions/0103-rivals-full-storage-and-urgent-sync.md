@@ -1,6 +1,6 @@
 # 0103. Rivals under one event reference, a full storage, and an SOS that does not wait
 
-- Status: Accepted
+- Status: Accepted, amended by [0111](0111-airtime-kept-numbers-per-group.md) (numbers are kept, and skipped, per group)
 - Date: 2026-11-02
 
 ## Context

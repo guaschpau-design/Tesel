@@ -1,6 +1,6 @@
 # 0104. Keep the radio and SOS calls going across drops and group changes
 
-- Status: Accepted
+- Status: Accepted, amended by [0111](0111-airtime-kept-numbers-per-group.md) (an own SOS is answered only in its own group)
 - Date: 2026-11-02
 
 ## Context

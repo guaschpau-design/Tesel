@@ -1,6 +1,6 @@
 # 0093. Close the gaps an audit of the whole code found
 
-- Status: Accepted, amended by [0107](0107-relay-holds-against-floods.md) (what clients may leave unread)
+- Status: Accepted, amended by [0107](0107-relay-holds-against-floods.md) (what clients may leave unread), [0111](0111-airtime-kept-numbers-per-group.md) (a newer window waits for the databases too)
 - Date: 2026-11-02
 
 ## Context

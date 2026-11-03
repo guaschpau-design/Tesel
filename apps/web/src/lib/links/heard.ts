@@ -3,7 +3,8 @@
 // It tells what reaches this device and how. By radio does not mean from the member's own radio:
 // a bridge may have put their event on the air (ARCHITECTURE.md §4.3), and the radio cannot tell
 // who transmitted. Duplicates count: an event already in the log that arrives again by radio
-// still shows that the radio brings that member's news.
+// still shows that the radio brings that member's news, as a frame played back does, at the
+// event's own time, never a later one (ADR-0111).
 
 import type { NodeId } from '@tesel/protocol';
 

@@ -1,6 +1,6 @@
 # 0099. Seal every radio frame with keys of Tesel's own
 
-- Status: Accepted
+- Status: Accepted, amended by [0111](0111-airtime-kept-numbers-per-group.md) (a frame played back counts as heard by radio)
 - Date: 2026-11-02
 
 ## Context
@@ -30,7 +30,7 @@ This supersedes [ADR-0010](0010-lora-link-security.md), and amends [ADR-0098](00
 ## Consequences
 
 - Over LoRa an outsider without the group secret can no longer read events, change them or make them up, on either kind of radio; the radio's own encryption becomes an outer layer. What is left to see is what any listener sees: that a frame was sent, its size, when, and that a repeat is the same as before.
-- A replayed frame is a copy of an event the group has, and is de-duplicated like any copy. Frames bind no time, so a recorded SOS played back later would show the old call again only on a device that never had it.
+- A replayed frame is a copy of an event the group has, and is de-duplicated like any copy. Frames bind no time, so a recorded SOS played back later would show the old call again only on a device that never had it. A frame played back still counts as the member's news heard by radio, at the event's own time ([ADR-0111](0111-airtime-kept-numbers-per-group.md)).
 - The channel key a radio holds is the group secret itself: whoever reads it from a radio, or from a radio app that shows or shares its channels, derives every key of the group, the radio's included, and can read and forge as a member. The seal guards against the radio's weak cipher, not against a leaked channel key. Giving the radio a key derived from the secret, so that a radio never holds the secret, is a separate change.
 - Texts are 12 bytes shorter everywhere, since events are the same on every link ([ADR-0004](0004-one-binary-format-every-transport.md)). Forms and counters follow the protocol's constants and need no change of their own. A team written earlier with more than 25 members shows, but cannot be saved until it has 25.
 - Devices of different development versions do not hear each other by radio. Over the internet they still do.
