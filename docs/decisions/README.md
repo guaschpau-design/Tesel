@@ -54,7 +54,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0046](0046-store-identity.md)                       | A server's store has an identity, and cursors belong to it                                  | Accepted, amended by 0107                               |
 | [0047](0047-alarms-and-notices.md)                   | Raise the alarm, and say what happened                                                      | Accepted, amended by 0070, 0104                         |
 | [0048](0048-how-the-app-shares-state.md)             | One rule for sharing state in the web app, and panels that carry what they show             | Accepted                                                |
-| [0049](0049-signed-images-and-checked-updates.md)    | Run only signed server images, and check every update                                       | Accepted, amended by 0068                               |
+| [0049](0049-signed-images-and-checked-updates.md)    | Run only signed server images, and check every update                                       | Accepted, amended by 0068, 0109                         |
 | [0050](0050-post-certificates-from-the-server.md)    | Command posts get their certificate from the server                                         | Superseded by 0058                                      |
 | [0051](0051-satellite-mosaic-licence.md)             | Name the satellite mosaic's licence, and let a build change the mosaic                      | Accepted                                                |
 | [0052](0052-authorship-is-not-proven.md)             | Members are trusted: protocol version 1 does not prove who wrote an event                   | Accepted, amended by 0099                               |
@@ -114,3 +114,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0106](0106-ground-in-3d-that-reads.md)              | A ground in 3D that reads as raised                                                         | Accepted                                                |
 | [0107](0107-relay-holds-against-floods.md)           | Keep the relay fair, responsive and bounded under a flood                                   | Accepted                                                |
 | [0108](0108-deployment-holds-against-floods.md)      | Keep the VPS's disk, settings and proxy safe from what the relay faces                      | Accepted                                                |
+| [0109](0109-build-and-updates-resist-tampering.md)   | Keep the build, the publishing and the updates safe from tampering                          | Accepted                                                |
