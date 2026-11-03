@@ -127,7 +127,7 @@ export class BleConnection implements MeshtasticConnection {
     this.#listeners.add(listener);
     const unheard = this.#unheard;
     this.#unheard = [];
-    for (const incoming of unheard) listener(incoming);
+    for (const incoming of unheard) tell(listener, incoming);
     return () => this.#listeners.delete(listener);
   }
 
@@ -241,7 +241,7 @@ export class BleConnection implements MeshtasticConnection {
       this.#unheard = [...this.#unheard, incoming].slice(-MAX_UNHEARD);
       return;
     }
-    for (const listener of this.#listeners) listener(incoming);
+    for (const listener of this.#listeners) tell(listener, incoming);
   }
 
   /** The connection is gone: say so once, and let the radio go. */
@@ -258,6 +258,18 @@ export class BleConnection implements MeshtasticConnection {
     }
     this.#waiting.clear();
     if (this.#server.connected) this.#server.disconnect();
+  }
+}
+
+/**
+ * Hands `incoming` to a listener of the app. What the listener does wrong is its own failure: it
+ * must not stop the reading of the radio, which would drop the link.
+ */
+function tell(listener: (incoming: Incoming) => void, incoming: Incoming): void {
+  try {
+    listener(incoming);
+  } catch (error) {
+    console.error('A listener of the radio failed', error);
   }
 }
 

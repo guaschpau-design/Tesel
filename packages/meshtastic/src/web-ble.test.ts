@@ -243,6 +243,29 @@ describe('an open Meshtastic connection', () => {
     });
   });
 
+  it('keeps the link when a listener of the app fails', async () => {
+    const radio = fakeRadio();
+    const { connection } = await openRadio(radio.device);
+    const dropped = vi.fn();
+    connection.onDisconnected(dropped);
+    const failed = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const heard: Incoming[] = [];
+    connection.onIncoming(() => {
+      throw new Error('the app failed');
+    });
+    connection.onIncoming((incoming) => heard.push(incoming));
+    const data = new ProtoWriter().varint(1, 256).bytes(2, new Uint8Array([7]));
+    radio.hear(new ProtoWriter().fixed32(MESH_PACKET.from, 5).message(MESH_PACKET.decoded, data));
+    radio.hear(new ProtoWriter().fixed32(MESH_PACKET.from, 6).message(MESH_PACKET.decoded, data));
+    await vi.waitFor(() => {
+      expect(heard).toHaveLength(2);
+    });
+    expect(dropped).not.toHaveBeenCalled();
+    expect(radio.server.disconnected).toBe(false);
+    expect(failed).toHaveBeenCalledTimes(2);
+    failed.mockRestore();
+  });
+
   it('says it dropped when Bluetooth goes, or when the system refuses a write', async () => {
     const first = fakeRadio();
     const dropped = vi.fn();
