@@ -60,6 +60,32 @@ describe('trails', () => {
   });
 });
 
+describe('trails from a batch', () => {
+  it('are those that applying its positions and hidings one by one gives, in any order', () => {
+    const random = seededRandom(11);
+    const events: TeselEvent[] = [
+      ...Array.from({ length: TRAIL_POINTS + 60 }, (_, i) => position(i + 1)),
+      ...Array.from({ length: 30 }, (_, i) => position(i + 1, 39.5, BEA)),
+      hidden(TRAIL_POINTS + 20),
+      hidden(12, BEA),
+      position(5),
+    ];
+    for (let round = 0; round < 10; round++) {
+      const shuffled = [...events].sort(() => random() - 0.5);
+      const split = Math.floor(random() * shuffled.length);
+      const before = shuffled.slice(0, split).reduce(reduce, EMPTY_STATE);
+      const rest = shuffled.slice(split);
+      expect(reduceAll(before, rest).trails).toEqual(rest.reduce(reduce, before).trails);
+    }
+  });
+
+  it('leave the state as it is when nothing in the batch changes a trail', () => {
+    const events = Array.from({ length: TRAIL_POINTS + 5 }, (_, i) => position(i + 1));
+    const full = stateOf(events);
+    expect(reduceAll(full, [position(1), position(2), events[10] ?? position(11)])).toBe(full);
+  });
+});
+
 describe('outlived positions', () => {
   it('are those older than a full trail, and those up to the last hiding', () => {
     const full = stateOf(Array.from({ length: TRAIL_POINTS + 1 }, (_, i) => position(i + 2)));

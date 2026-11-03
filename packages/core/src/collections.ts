@@ -29,6 +29,13 @@ export function keepOldest<K, T extends TeselEvent>(
 
 /** Inserts keeping (time, origin, seq) order; an event already present changes nothing. */
 export function insertOrdered<T extends TeselEvent>(list: readonly T[], event: T): readonly T[] {
+  const at = placeOf(list, event);
+  if (at === null) return list;
+  return [...list.slice(0, at), event, ...list.slice(at)];
+}
+
+/** Where `event` goes in a list in (time, origin, seq) order, or null if it is there already. */
+function placeOf<T extends TeselEvent>(list: readonly T[], event: T): number | null {
   let low = 0;
   let high = list.length;
   while (low < high) {
@@ -38,8 +45,7 @@ export function insertOrdered<T extends TeselEvent>(list: readonly T[], event: T
     else low = middle + 1;
   }
   const atPosition = list[low];
-  if (atPosition !== undefined && compareEvents(atPosition, event) === 0) return list;
-  return [...list.slice(0, low), event, ...list.slice(low)];
+  return atPosition !== undefined && compareEvents(atPosition, event) === 0 ? null : low;
 }
 
 /** `keepNewest` for many events at once: the collection is copied once, if anything changes. */
@@ -78,13 +84,29 @@ function keepAll<K, T extends TeselEvent>(
 }
 
 /**
- * `insertOrdered` for many events at once: one sort, instead of a copy per event. The list is
- * sorted already, so sorting it with the new events costs little more than merging them.
+ * Events a batch may have for `insertAllOrdered` to put each where it belongs, in one copy of the
+ * list: a few events, as they come live, would otherwise cost a sort of the whole list each time.
+ */
+const FEW_EVENTS = 16;
+
+/**
+ * `insertOrdered` for many events at once, in one copy of the list. A few go in one by one; more
+ * are sorted with the list, which is sorted already, so sorting costs little more than merging.
  */
 export function insertAllOrdered<T extends TeselEvent>(
   list: readonly T[],
   events: readonly T[],
 ): readonly T[] {
+  if (events.length <= FEW_EVENTS) {
+    let inserted: T[] | null = null;
+    for (const event of events) {
+      const at = placeOf(inserted ?? list, event);
+      if (at === null) continue;
+      inserted ??= [...list];
+      inserted.splice(at, 0, event);
+    }
+    return inserted ?? list;
+  }
   const unique: T[] = [];
   for (const event of [...list, ...events].sort(compareEvents)) {
     const last = unique.at(-1);

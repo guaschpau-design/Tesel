@@ -7,7 +7,7 @@
 
 import type { NodeId, PositionEvent, PositionHiddenEvent } from '@tesel/protocol';
 
-import { insertOrdered } from '../collections.ts';
+import { insertAllOrdered, insertOrdered } from '../collections.ts';
 import { compareEvents, newerOf } from '../ordering.ts';
 import { defineSlice } from './slice.ts';
 
@@ -32,6 +32,25 @@ export const trails = defineSlice({
     const trail = state.get(event.origin) ?? EMPTY_TRAIL;
     const next = event.type === 'position' ? withPosition(trail, event) : withHidden(trail, event);
     return next === trail ? state : new Map(state).set(event.origin, next);
+  },
+  // Opening a group of hours of positions copies the map of trails once, not once per position,
+  // and each trail takes its member's positions at once.
+  applyAll: (state, events) => {
+    const byMember = new Map<NodeId, (PositionEvent | PositionHiddenEvent)[]>();
+    for (const event of events) {
+      const share = byMember.get(event.origin);
+      if (share) share.push(event);
+      else byMember.set(event.origin, [event]);
+    }
+    let next: Map<NodeId, Trail> | null = null;
+    for (const [origin, share] of byMember) {
+      const trail = state.get(origin) ?? EMPTY_TRAIL;
+      const updated = withAll(trail, share);
+      if (updated === trail) continue;
+      next ??= new Map(state);
+      next.set(origin, updated);
+    }
+    return next ?? state;
   },
 });
 
@@ -80,6 +99,31 @@ function withPosition(trail: Trail, event: PositionEvent): Trail {
   if (inserted.length <= TRAIL_POINTS) return { ...trail, points: inserted };
   // Over the limit the oldest goes; if that is the new one, nothing changes.
   return inserted[0] === event ? trail : { ...trail, points: inserted.slice(1) };
+}
+
+/**
+ * A trail after several events of its member at once, as applying them one by one leaves it: the
+ * newest hiding ends it, and of the positions after it the newest `TRAIL_POINTS` stay, which is
+ * the same whatever order they come in.
+ */
+function withAll(trail: Trail, events: readonly (PositionEvent | PositionHiddenEvent)[]): Trail {
+  let { hidden } = trail;
+  for (const event of events) {
+    if (event.type === 'position-hidden') hidden = hidden === null ? event : newerOf(hidden, event);
+  }
+  const after = (point: PositionEvent) => hidden === null || compareEvents(point, hidden) > 0;
+  const positions = events.filter(
+    (event): event is PositionEvent => event.type === 'position' && after(event),
+  );
+  const kept = hidden === trail.hidden ? trail.points : trail.points.filter(after);
+  const all = insertAllOrdered(kept, positions);
+  const points = all.length > TRAIL_POINTS ? all.slice(-TRAIL_POINTS) : all;
+  if (hidden === trail.hidden && sameEvents(points, trail.points)) return trail;
+  return { points, hidden };
+}
+
+function sameEvents(a: readonly PositionEvent[], b: readonly PositionEvent[]): boolean {
+  return a === b || (a.length === b.length && a.every((event, index) => event === b[index]));
 }
 
 function withHidden(trail: Trail, event: PositionHiddenEvent): Trail {
