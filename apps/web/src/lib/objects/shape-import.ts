@@ -38,6 +38,20 @@ export async function importShape(
   } catch {
     return { ok: false, error: 'unreadable' };
   }
+  try {
+    return shapeOf(text, kind, file.name);
+  } catch (error) {
+    // Nothing a file holds should get here (shape-file.ts); if it does, the file is unreadable.
+    console.warn('Reading a shape file failed', error);
+    return { ok: false, error: 'unreadable' };
+  }
+}
+
+function shapeOf(
+  text: string,
+  kind: ImportedShape['kind'],
+  fileName: string,
+): Result<ImportedShape, ShapeImportError> {
   const read = readShapeFile(text, kind);
   if (!read.ok) return read;
   const line = withoutRepeats(read.value.points);
@@ -47,7 +61,7 @@ export async function importShape(
   const sendable = simplified(line, FEWEST[kind]);
   if (sendable === null) return { ok: false, error: 'too-wide' };
   const { points, deviation } = sendable;
-  const name = read.value.name || file.name.replace(/\.[^.]*$/, '');
+  const name = read.value.name || fileName.replace(/\.[^.]*$/, '');
   return {
     ok: true,
     value: {

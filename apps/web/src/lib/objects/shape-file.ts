@@ -2,6 +2,8 @@
 // the shape is kept, and its name: for a route, the longest line in the file; for an area, the
 // largest polygon, or line that closes on itself, as a track walked round a place does. The files
 // are read as text, without an XML parser, so the same code runs in the browser and in the tests.
+// A file is whatever the user was sent: reading one takes time in proportion to its size, however
+// it is made, and nesting however deep does not overflow the stack (ADR-0110).
 
 import { areaSquareMeters, distanceMeters, pathMeters } from '@tesel/core';
 import type { LatLon, Result } from '@tesel/protocol';
@@ -157,38 +159,45 @@ function geoJsonShapes(text: string): Shapes | null {
     const [ring] = arrayOf(polygon);
     rings.push({ name, points: positions(ring) });
   };
-  const visit = (value: unknown, name: string): void => {
-    if (!isRecord(value)) return;
+  // What is still to look at, the next on top: collections are walked without recursion, so
+  // nesting however deep cannot overflow the stack.
+  const pending: { value: unknown; name: string }[] = [{ value: json, name: '' }];
+  /** Children are pushed last first, so they are looked at in the file's order. */
+  const push = (values: readonly unknown[], name: string) => {
+    for (const value of [...values].reverse()) pending.push({ value, name });
+  };
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+    const { value, name } = next;
+    if (!isRecord(value)) continue;
     switch (value['type']) {
       case 'FeatureCollection':
-        for (const feature of arrayOf(value['features'])) visit(feature, '');
-        return;
+        push(arrayOf(value['features']), '');
+        break;
       case 'Feature': {
         const properties = isRecord(value['properties']) ? value['properties'] : {};
         const own = properties['name'] ?? properties['title'];
-        visit(value['geometry'], typeof own === 'string' ? own.trim() : '');
-        return;
+        push([value['geometry']], typeof own === 'string' ? own.trim() : '');
+        break;
       }
       case 'GeometryCollection':
-        for (const geometry of arrayOf(value['geometries'])) visit(geometry, name);
-        return;
+        push(arrayOf(value['geometries']), name);
+        break;
       case 'LineString':
         lines.push({ name, points: positions(value['coordinates']) });
-        return;
+        break;
       case 'MultiLineString':
         for (const part of arrayOf(value['coordinates'])) {
           lines.push({ name, points: positions(part) });
         }
-        return;
+        break;
       case 'Polygon':
         outer(value['coordinates'], name);
-        return;
+        break;
       case 'MultiPolygon':
         for (const part of arrayOf(value['coordinates'])) outer(part, name);
-        return;
+        break;
     }
-  };
-  visit(json, '');
+  }
   return { lines, rings };
 }
 
@@ -209,27 +218,33 @@ function arrayOf(value: unknown): readonly unknown[] {
 
 // --- XML, as far as these formats need it ----------------------------------------------------
 
-/** Each element of a name, with any namespace prefix: its attributes and what it holds. */
+/**
+ * Each element of a name, with any namespace prefix: its attributes and what it holds. Its tags
+ * are found in one pass, so the time taken grows with the text, not with it squared: an element
+ * holds what comes up to its closing tag or, never closed, up to the next element of its name or
+ * the end, as in a file cut short.
+ */
 function* elements(xml: string, name: string): Generator<{ attributes: string; body: string }> {
   const prefix = '(?:[\\w.-]+:)?';
-  const close = new RegExp(`</${prefix}${name}\\s*>`, 'g');
-  for (const open of xml.matchAll(new RegExp(`<${prefix}${name}(\\s[^>]*?)?(/?)>`, 'g'))) {
-    const attributes = open[1] ?? '';
-    if (open[2] === '/') {
-      yield { attributes, body: '' };
-      continue;
-    }
-    const start = open.index + open[0].length;
-    close.lastIndex = start;
-    const end = close.exec(xml);
-    yield { attributes, body: xml.slice(start, end?.index ?? xml.length) };
+  // An attribute holds no `<`: stopping at one keeps every tag found short.
+  const tags = new RegExp(`<(?:(/)${prefix}${name}\\s*|${prefix}${name}(\\s[^<>]*?)?(/?))>`, 'g');
+  let open: { attributes: string; start: number } | null = null;
+  for (const tag of xml.matchAll(tags)) {
+    if (open !== null)
+      yield { attributes: open.attributes, body: xml.slice(open.start, tag.index) };
+    open = null;
+    const [whole, closing, attributes = '', empty] = tag;
+    if (closing !== undefined) continue;
+    if (empty === '/') yield { attributes, body: '' };
+    else open = { attributes, start: tag.index + whole.length };
   }
+  if (open !== null) yield { attributes: open.attributes, body: xml.slice(open.start) };
 }
 
 /** The name of what an element holds: the first <name> before its first `child`. */
 function ownName(body: string, child: string): string {
-  const head = body.split(new RegExp(`<(?:[\\w.-]+:)?${child}\\b`))[0] ?? '';
-  const [name] = elements(head, 'name');
+  const end = body.search(new RegExp(`<(?:[\\w.-]+:)?${child}\\b`));
+  const [name] = elements(end < 0 ? body : body.slice(0, end), 'name');
   return name ? textOf(name.body) : '';
 }
 
@@ -247,17 +262,38 @@ const ENTITIES: Readonly<Record<string, string>> = {
 
 /** The text an element holds, its markup undone. */
 function textOf(body: string): string {
-  return body
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+  return withoutCdata(body)
     .replace(/&(#x[\da-f]+|#\d+|\w+);/gi, (entity, code: string) => {
       if (code.startsWith('#x') || code.startsWith('#X')) {
-        return String.fromCodePoint(Number.parseInt(code.slice(2), 16));
+        return character(Number.parseInt(code.slice(2), 16)) ?? entity;
       }
-      if (code.startsWith('#')) return String.fromCodePoint(Number(code.slice(1)));
+      if (code.startsWith('#')) return character(Number.parseInt(code.slice(1), 10)) ?? entity;
       return ENTITIES[code] ?? entity;
     })
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+const CDATA_OPEN = '<![CDATA[';
+const CDATA_CLOSE = ']]>';
+
+/** The text with its CDATA sections opened, in one pass; one never closed is left as it is. */
+function withoutCdata(text: string): string {
+  let result = '';
+  let at = 0;
+  for (;;) {
+    const open = text.indexOf(CDATA_OPEN, at);
+    const close = open < 0 ? -1 : text.indexOf(CDATA_CLOSE, open + CDATA_OPEN.length);
+    if (close < 0) return result + text.slice(at);
+    result += text.slice(at, open) + text.slice(open + CDATA_OPEN.length, close);
+    at = close + CDATA_CLOSE.length;
+  }
+}
+
+/** The character a numeric reference names, or null for none: past U+10FFFF, or half of one. */
+function character(code: number): string | null {
+  const surrogate = code >= 0xd800 && code <= 0xdfff;
+  return code > 0 && code <= 0x10ffff && !surrogate ? String.fromCodePoint(code) : null;
 }
 
 /** A point if the numbers are a valid latitude and longitude, else none. */
