@@ -48,6 +48,11 @@ export interface TileStore {
    * fails: it is a cache.
    */
   keepViewed(source: TileSourceId, tile: TileCoord, data: ArrayBuffer): Promise<void>;
+  /**
+   * Forgets every tile kept only for having been seen: the room they take is the first the
+   * group's log gets when the storage is full (storage/storage-space.svelte.ts).
+   */
+  forgetViewed(): Promise<void>;
   saveArea(area: OfflineArea): Promise<void>;
   listAreas(): Promise<OfflineArea[]>;
   deleteArea(area: OfflineArea): Promise<void>;
@@ -172,8 +177,12 @@ class IndexedDbTileStore implements TileStore {
     } catch (error) {
       console.warn('Keeping a tile seen failed', error);
       // Tiles seen are the first to go when the storage is full: the group's log needs the room.
-      if (isStorageFull(error)) await this.#forgetViewed(0).catch(() => undefined);
+      if (isStorageFull(error)) await this.forgetViewed().catch(() => undefined);
     }
+  }
+
+  forgetViewed(): Promise<void> {
+    return this.#forgetViewed(0);
   }
 
   async saveArea(area: OfflineArea): Promise<void> {

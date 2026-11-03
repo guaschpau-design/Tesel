@@ -12,7 +12,7 @@
   } from '@tesel/protocol';
   import { untrack } from 'svelte';
 
-  import { UnencodableEvent } from '../events/event-log.ts';
+  import { UnencodableEvent } from '../events/own-events.ts';
   import type { Translate } from '../i18n/index.ts';
   import Dialog from '../ui/Dialog.svelte';
   import ChoiceTiles from '../ui/ChoiceTiles.svelte';

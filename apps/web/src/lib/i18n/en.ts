@@ -64,7 +64,11 @@ export const en = {
     'There is no room for this area: it needs about {needed} and {free} are left, after keeping room for the group’s log. Delete other areas or choose less detail.',
   resume: 'Resume',
   storageFull:
-    'The device storage is full: Tesel cannot save what arrives or what you send. Delete offline maps to make room.',
+    'The device storage is full: Tesel cannot save what arrives or what you send, though SOS calls still come and go. Delete offline maps to make room.',
+  impersonated:
+    'Someone is sending messages under {name}’s name: what seems to come from them may not. If an SOS of theirs arrives, check it.',
+  impersonatedSelf:
+    'Someone is sending messages under your name. Tesel works around it so that what you send, an SOS above all, still gets through.',
   noAreas: 'No offline maps yet.',
   incomplete: 'Incomplete',
   showOnMap: 'Show on map',

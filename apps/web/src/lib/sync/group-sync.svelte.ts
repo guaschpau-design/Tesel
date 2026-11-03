@@ -23,21 +23,14 @@ import {
 } from '@tesel/protocol';
 import { SvelteSet } from 'svelte/reactivity';
 
-import {
-  confirmStored,
-  forgetEvents,
-  loadEvents,
-  markAired,
-  pendingEvents,
-  publishEvent,
-  receiveEvents,
-  type ServerRead,
-} from '../events/event-log.ts';
+import { forgetEvents, loadEvents, type Received, type ServerRead } from '../events/event-log.ts';
+import { confirmStored, markAired, pendingEvents } from '../events/outbox.ts';
+import { publishEvent } from '../events/own-events.ts';
 import type { StoredGroup } from '../groups/group.ts';
 import { hear, NOTHING_HEARD, type Channel, type Heard } from '../links/heard.ts';
 import type { AppDb } from '../storage/app-db.ts';
-import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import { FeedRelay } from './feed-relay.ts';
+import { GroupIntake } from './group-intake.ts';
 import { openLogFile, sealLogFile, type LogImport } from './log-file.ts';
 import { catchUpPackets, loraEventOf, standingEvents, type LoraSink } from './lora-events.ts';
 import type { EventBuilder } from './member-events.ts';
@@ -62,6 +55,10 @@ export class GroupSync {
     return this.#undelivered;
   }
   readonly #undelivered = new SvelteSet<string>();
+  /** Members someone else writes as, seen since the feed opened (group-intake.ts). */
+  get impersonated(): ReadonlySet<NodeId> {
+    return this.#intake.impersonated;
+  }
 
   readonly #db: AppDb;
   readonly #group: StoredGroup;
@@ -69,6 +66,7 @@ export class GroupSync {
   readonly #self: NodeId;
   readonly #keys: GroupKeys;
   readonly #relay: FeedRelay | null;
+  readonly #intake: GroupIntake;
   #lora: LoraSink | null = null;
 
   private constructor(
@@ -81,6 +79,10 @@ export class GroupSync {
     this.#group = group;
     this.#self = self;
     this.#keys = deriveGroupKeys(group.secret);
+    this.#intake = new GroupIntake(db, group.id, self, {
+      apply: (batch) => this.#apply(batch),
+      reload: () => this.#reload(),
+    });
     this.#relay =
       group.server === null
         ? null
@@ -129,6 +131,7 @@ export class GroupSync {
   }
 
   close(): void {
+    this.#intake.close();
     this.#relay?.stop();
   }
 
@@ -193,7 +196,8 @@ export class GroupSync {
   /** Creates an event of this device, sends it every way there is, and returns its reference. */
   async publish(build: EventBuilder): Promise<EventRef> {
     const header = { origin: this.#self, time: Math.floor(Date.now() / 1000) };
-    const { entry, bytes } = await publishEvent(this.#db, this.#group.id, build, header);
+    const { entry, bytes, stored } = await publishEvent(this.#db, this.#group.id, build, header);
+    if (!stored) this.#intake.storeHeldLater();
     this.#undelivered.add(eventRefKey(entry));
     const [event] = await this.#apply([bytes]);
     this.#relay?.push(entry, bytes);
@@ -202,38 +206,47 @@ export class GroupSync {
   }
 
   /**
-   * Events that did not come from the group's server (by radio or from a file):
-   * the new ones are stored, applied and, with a server, passed on to it. Returns how many were new.
+   * Events that did not come from the group's server (by radio or from a file): the new ones are
+   * stored, applied and, with a server, passed on to it. Returns how many were new.
    */
   async #take(batch: readonly Uint8Array[]): Promise<number> {
     const forward = this.#relay !== null;
-    const received = await receiveEvents(this.#db, this.#group.id, this.#current(batch), {
-      forward,
-    });
-    await this.#apply(received.map(({ bytes }) => bytes));
-    for (const { entry, bytes } of received) this.#relay?.push(entry, bytes);
-    return received.length;
+    const added = await this.#intake.store(this.#current(batch), { forward });
+    for (const { entry, bytes } of added) this.#relay?.push(entry, bytes);
+    return added.length;
   }
 
   /**
    * Events from the group's server: stored with how far they read it, then applied to the picture
-   * at once. If they cannot be stored, the cursor stays behind them and the server sends them again
-   * on reconnecting; a full storage is told to the user meanwhile.
+   * at once and bridged to the radio. If they cannot be stored, the cursor stays behind them and
+   * the server sends them again on reconnecting.
    */
   async #receive(batch: readonly Uint8Array[], readTo: ServerRead): Promise<void> {
     this.#hear('internet', batch);
-    const received = await receiveEvents(this.#db, this.#group.id, this.#current(batch), {
-      readTo,
-    }).catch((error: unknown) => {
-      storageRefusals.note(error);
+    let added: Received[];
+    try {
+      added = await this.#intake.store(this.#current(batch), { readTo });
+    } catch (error) {
+      // What may save a life reached the picture, held in memory: it goes on the air too.
+      this.#bridge(this.#intake.held());
       throw error;
-    });
-    await this.#apply(received.map(({ bytes }) => bytes));
-    for (const { bytes } of received) {
-      // Types this version does not know are bridged too (protocol §3.1).
+    }
+    this.#bridge(added.map(({ bytes }) => bytes));
+  }
+
+  /** Offers events from the server to the radio; types this version does not know too (§3.1). */
+  #bridge(batch: readonly Uint8Array[]): void {
+    for (const bytes of batch) {
       const event = loraEventOf(bytes);
       if (event) this.#lora?.offer({ event, bytes }, 'bridged');
     }
+  }
+
+  /** Makes the picture again from the log, after events it was made with gave way to rivals. */
+  async #reload(): Promise<void> {
+    const events = await loadEvents(this.#db, this.#group.id);
+    this.state = EMPTY_STATE;
+    await this.#apply(events);
   }
 
   /** Notes the members heard through a channel; own events are not news about anyone. */

@@ -1,32 +1,45 @@
 // Each group's event log on this device (ARCHITECTURE.md §3): the events received or created that
 // its state still uses, which is all of them but old positions (ADR-0055), kept as the bytes that
-// travel on the wire so they can be forwarded unchanged.
+// travel on the wire so they can be forwarded unchanged. Under one `(origin, seq)` it keeps what
+// protocol §3.1 says of rivals, the same on every device (ADR-0103). This device's own events are
+// created in own-events.ts, what waits for the server is in outbox.ts, and what there was no room
+// to store is held in memory (held-events.ts).
 
+import { isLifeSafety, keptRivals } from '@tesel/core';
 import {
-  encodeEvent,
+  bytesEqual,
   eventRefKey,
   isKeepable,
   peekHeader,
-  type EventHeader,
   type EventRef,
   type NodeId,
-  type TeselEvent,
 } from '@tesel/protocol';
 
-import type { AppDb, EventKey, GroupEventRef, OutboxEntry } from '../storage/app-db.ts';
+import { eventKeyOf, type AppDb, type GroupEventRef, type StoredEvent } from '../storage/app-db.ts';
+import { withRoom } from '../storage/storage-space.svelte.ts';
 import { cursorKey, groupCursors } from '../sync/cursor-store.ts';
+import { peekType } from '../sync/lora-events.ts';
 import type { RelayPosition } from '../sync/relay-types.ts';
-
-/** Largest sequence number: the field is an unsigned 32-bit integer (protocol §2). */
-const MAX_SEQ = 0xffff_ffff;
-
-/** An event that cannot be encoded, mostly for being too big for the radio (protocol §2). */
-export class UnencodableEvent extends Error {}
+import { heldEvents, hold, release } from './held-events.ts';
+import { skipSequence } from './own-events.ts';
 
 /** A received event that was new to the log. */
 export interface Received {
   readonly entry: GroupEventRef;
   readonly bytes: Uint8Array;
+}
+
+/** What a batch of received events changed in the log. */
+export interface ReceivedBatch {
+  /** The events new to the log, in the order of the batch. */
+  readonly added: Received[];
+  /**
+   * Whether events the log had gave way to a rival that wins over them (`keptRivals`): the
+   * picture made with them is to be made again from the log.
+   */
+  readonly displaced: boolean;
+  /** Refs under which the batch brought another event than the log had: someone writes as another. */
+  readonly rivalled: GroupEventRef[];
 }
 
 /** How far the group's server has been read with some events. */
@@ -42,142 +55,159 @@ export interface ReceiveOptions {
   readonly readTo?: ServerRead;
 }
 
+/** The versions of one event that arrive together, under its ref. */
+interface Arriving {
+  readonly entry: GroupEventRef;
+  readonly versions: Uint8Array[];
+}
+
+/** What versions arriving under one ref change in the log (`settle`). */
+interface Settled {
+  /** The versions to keep, or null if they are those the log has. */
+  readonly kept: Pick<StoredEvent, 'bytes' | 'rivals'> | null;
+  /** Those of them new to the log. */
+  readonly added: Uint8Array[];
+  /** Whether some the log had are dropped. */
+  readonly displaced: boolean;
+  /** Whether a version unlike the others arrived. */
+  readonly rivalled: boolean;
+}
+
 /**
  * Stores received events in one transaction, however many: storage is what limits how fast a
- * device catches up after hours without coverage. Returns the new ones, in order. Events already
- * in the log, repeated in the batch or not events at all are skipped; events of types this
- * version does not know are kept, since they are still valid to forward (protocol §3.1).
+ * device catches up after hours without coverage. Events already in the log, repeated in the batch
+ * or not events at all are skipped; events of types this version does not know are kept, since
+ * they are still valid to forward (protocol §3.1). If there is no room for them even once map tiles
+ * have made room, the SOS calls, cancellations and acknowledgements among them are held in memory
+ * (held-events.ts) and the failure is passed on.
  */
 export async function receiveEvents(
   db: AppDb,
   groupId: string,
   batch: readonly Uint8Array[],
   options: ReceiveOptions = {},
-): Promise<Received[]> {
-  const candidates = new Map<string, Received>();
+): Promise<ReceivedBatch> {
+  const arriving = arrivingVersions(groupId, batch);
+  try {
+    const received = await withRoom(() => storeVersions(db, groupId, arriving, options));
+    release(db, groupId, batch);
+    return received;
+  } catch (error) {
+    const outbox = options.forward === true;
+    const urgent = [...arriving.values()].flatMap(({ versions }) =>
+      versions.filter((bytes) => isLifeSafety(peekType(bytes))),
+    );
+    hold(
+      db,
+      urgent.map((bytes) => ({ groupId, bytes, outbox, own: false })),
+    );
+    throw error;
+  }
+}
+
+/** The versions of each event of a batch, by ref, in the order the batch first has them. */
+function arrivingVersions(groupId: string, batch: readonly Uint8Array[]): Map<string, Arriving> {
+  const arriving = new Map<string, Arriving>();
   for (const bytes of batch) {
     const header = peekHeader(bytes);
     // A damaged copy must not take the place of the real event (protocol §3.1).
     if (!header.ok || !isKeepable(bytes)) continue;
     const entry: GroupEventRef = { groupId, origin: header.value.origin, seq: header.value.seq };
     const id = eventRefKey(entry);
-    if (!candidates.has(id)) candidates.set(id, { entry, bytes });
+    const known = arriving.get(id);
+    if (known === undefined) arriving.set(id, { entry, versions: [bytes] });
+    else known.versions.push(bytes);
   }
+  return arriving;
+}
+
+async function storeVersions(
+  db: AppDb,
+  groupId: string,
+  arriving: ReadonlyMap<string, Arriving>,
+  options: ReceiveOptions,
+): Promise<ReceivedBatch> {
   // Requests are issued together and served in order by the transaction: much faster than
   // waiting for each one in turn.
   const tx = db.transaction(['events', 'outbox', 'cursors'], 'readwrite');
   const events = tx.objectStore('events');
-  const unique = [...candidates.values()];
-  const known = await Promise.all(unique.map(({ entry }) => events.getKey(eventKeyOf(entry))));
-  const received = unique.filter((_, index) => known[index] === undefined);
-  const writes: Promise<unknown>[] = received.map(({ entry, bytes }) =>
-    events.put({ ...entry, bytes }),
-  );
-  if (options.forward === true) {
-    writes.push(...received.map(({ entry }) => tx.objectStore('outbox').put(entry)));
-  }
+  const refs = [...arriving.values()];
+  const stored = await Promise.all(refs.map(({ entry }) => events.get(eventKeyOf(entry))));
+  const added: Received[] = [];
+  const rivalled: GroupEventRef[] = [];
+  let displaced = false;
+  const writes: Promise<unknown>[] = [];
+  refs.forEach(({ entry, versions }, index) => {
+    const record = stored[index];
+    const settled = settle(record === undefined ? [] : versionsOf(record), versions);
+    if (settled.rivalled) rivalled.push(entry);
+    if (settled.kept === null) return;
+    displaced ||= settled.displaced;
+    added.push(...settled.added.map((bytes) => ({ entry, bytes })));
+    writes.push(events.put({ ...entry, ...settled.kept }));
+    if (options.forward === true && settled.added.length > 0) {
+      writes.push(tx.objectStore('outbox').put(entry));
+    }
+  });
   if (options.readTo !== undefined) {
     const { server, position } = options.readTo;
     writes.push(tx.objectStore('cursors').put(position, cursorKey(groupId, server)));
   }
   await Promise.all([...writes, tx.done]);
-  return received;
+  return { added, displaced, rivalled };
 }
 
-function eventKeyOf(entry: GroupEventRef): EventKey {
-  return [entry.groupId, entry.origin, entry.seq];
+/** What versions arriving under one ref change among those the log has (`keptRivals`). */
+function settle(known: readonly Uint8Array[], arriving: readonly Uint8Array[]): Settled {
+  const seen = [...known];
+  for (const bytes of arriving) if (!includes(seen, bytes)) seen.push(bytes);
+  const kept = keptRivals(seen);
+  const added = kept.filter((bytes) => !includes(known, bytes));
+  const displaced = known.some((bytes) => !includes(kept, bytes));
+  const [first, ...rest] = kept;
+  const changed = first !== undefined && (added.length > 0 || displaced);
+  return {
+    kept: changed ? { bytes: first, ...(rest.length > 0 ? { rivals: rest } : {}) } : null,
+    added,
+    displaced,
+    rivalled: seen.length > Math.max(known.length, 1),
+  };
 }
 
+function includes(list: readonly Uint8Array[], bytes: Uint8Array): boolean {
+  return list.some((other) => bytesEqual(other, bytes));
+}
+
+/** Every version the log keeps of an event, in byte order. */
+function versionsOf(record: StoredEvent): Uint8Array[] {
+  return [record.bytes, ...(record.rivals ?? [])];
+}
+
+/** Every event of the group on this device: those stored, and those held for lack of room. */
 export async function loadEvents(db: AppDb, groupId: string): Promise<Uint8Array[]> {
   const events = await db.getAllFromIndex('events', 'byGroup', groupId);
-  return events.map((event) => event.bytes);
+  return [...events.flatMap(versionsOf), ...heldEvents(db, groupId).map(({ bytes }) => bytes)];
 }
 
 /**
- * Creates an event of this device: takes the next sequence number, encodes the event and
- * stores it in the log and the outbox in one transaction, so a crash never loses or reuses a
- * sequence number.
+ * Stores what was held for lack of room, if there is room now, and counts the numbers of own
+ * events among them as used. Returns whether nothing is held any longer.
  */
-export async function publishEvent(
-  db: AppDb,
-  groupId: string,
-  build: (header: EventHeader) => TeselEvent,
-  header: Omit<EventHeader, 'seq'>,
-): Promise<{ entry: OutboxEntry; bytes: Uint8Array }> {
-  const tx = db.transaction(['sequence', 'events', 'outbox'], 'readwrite');
-  const sequence = tx.objectStore('sequence');
-  const [seq = 1, lastTime = 0] = await Promise.all([
-    sequence.get('next'),
-    sequence.get('lastTime'),
-  ]);
-  if (seq > MAX_SEQ) throw new RangeError('this device has used every sequence number');
-  // A clock put back must not make this event older than the one before (protocol §3.1).
-  const time = Math.max(header.time, lastTime);
-  const encoded = encodeEvent(build({ ...header, time, seq }));
-  if (!encoded.ok) {
-    tx.abort();
-    await tx.done.catch(() => undefined); // The abort itself rejects `done`.
-    throw new UnencodableEvent(`cannot encode event: ${encoded.error.detail}`);
+export async function storeHeld(db: AppDb, groupId: string): Promise<boolean> {
+  const held = heldEvents(db, groupId);
+  const forwarded = held.filter(({ outbox }) => outbox).map(({ bytes }) => bytes);
+  const rest = held.filter(({ outbox }) => !outbox).map(({ bytes }) => bytes);
+  try {
+    if (forwarded.length > 0) await receiveEvents(db, groupId, forwarded, { forward: true });
+    if (rest.length > 0) await receiveEvents(db, groupId, rest);
+    for (const { bytes } of held.filter(({ own }) => own)) {
+      const header = peekHeader(bytes);
+      if (header.ok) await skipSequence(db, header.value.seq);
+    }
+  } catch (error) {
+    console.warn('Storing what was held for lack of room failed', error);
   }
-  const entry: OutboxEntry = { groupId, origin: header.origin, seq };
-  await Promise.all([
-    sequence.put(seq + 1, 'next'),
-    sequence.put(time, 'lastTime'),
-    tx.objectStore('events').put({ ...entry, bytes: encoded.value }),
-    tx.objectStore('outbox').put(entry),
-  ]);
-  await tx.done;
-  return { entry, bytes: encoded.value };
-}
-
-/**
- * Events waiting for the server, with their bytes: this device's own and those it forwards. What
- * concerns only its own events (what is still to deliver, what to put on the air) filters by origin.
- */
-export async function pendingEvents(
-  db: AppDb,
-  groupId: string,
-): Promise<{ entry: OutboxEntry; bytes: Uint8Array }[]> {
-  const tx = db.transaction(['outbox', 'events']);
-  const entries = await tx.objectStore('outbox').index('byGroup').getAll(groupId);
-  const pending = [];
-  for (const entry of entries) {
-    const stored = await tx.objectStore('events').get(eventKeyOf(entry));
-    if (stored !== undefined) pending.push({ entry, bytes: stored.bytes });
-  }
-  await tx.done;
-  return pending;
-}
-
-export async function confirmStored(db: AppDb, entry: GroupEventRef): Promise<void> {
-  await db.delete('outbox', eventKeyOf(entry));
-}
-
-/**
- * Puts every own event of a group back in the outbox, for a server that lost them (protocol §8):
- * they go to it again on the next sync. They reached the group before, so they count as aired and
- * do not go on the radio again.
- */
-export async function requeueOwnEvents(db: AppDb, groupId: string, origin: NodeId): Promise<void> {
-  const tx = db.transaction(['events', 'outbox'], 'readwrite');
-  const keys = await tx.objectStore('events').index('byGroup').getAllKeys(groupId);
-  const outbox = tx.objectStore('outbox');
-  const own = keys.filter(([, author]) => author === origin);
-  const queued = await Promise.all(own.map((key) => outbox.getKey(key)));
-  await Promise.all(
-    own.flatMap(([, , seq], index) =>
-      queued[index] === undefined ? [outbox.put({ groupId, origin, seq, aired: true })] : [],
-    ),
-  );
-  await tx.done;
-}
-
-/** Notes that an own event went out over LoRa while it still waits for the server. */
-export async function markAired(db: AppDb, entry: GroupEventRef): Promise<void> {
-  const tx = db.transaction('outbox', 'readwrite');
-  const current = await tx.store.get(eventKeyOf(entry));
-  if (current !== undefined) await tx.store.put({ ...current, aired: true });
-  await tx.done;
+  return heldEvents(db, groupId).length === 0;
 }
 
 /**
@@ -244,8 +274,13 @@ export async function deleteLeftovers(db: AppDb, kept: readonly string[]): Promi
   }
 }
 
-/** Forgets everything a group left on this device: its events, outbox and cursors. */
+/** Forgets everything a group left on this device: its events, outbox, cursors and what is held. */
 export async function deleteGroupEvents(db: AppDb, groupId: string): Promise<void> {
+  release(
+    db,
+    groupId,
+    heldEvents(db, groupId).map(({ bytes }) => bytes),
+  );
   const tx = db.transaction(['events', 'outbox', 'cursors'], 'readwrite');
   for (const name of ['events', 'outbox'] as const) {
     const store = tx.objectStore(name);

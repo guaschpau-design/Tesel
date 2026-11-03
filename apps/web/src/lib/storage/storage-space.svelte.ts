@@ -40,6 +40,29 @@ export function isStorageFull(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'QuotaExceededError';
 }
 
+/** What makes room for the group's log when the storage is full: forgetting the tiles seen. */
+let makeRoom: (() => Promise<void>) | null = null;
+
+/** Names what can give its room up for the group's log: the tile store, once it is open. */
+export function makeRoomWith(free: () => Promise<void>): void {
+  makeRoom = free;
+}
+
+/**
+ * Makes a write of the group's log, and if the storage is full, makes room and tries once more:
+ * the browser's share is one for all of the app's databases, so tiles kept only for having been
+ * seen give theirs up (ADR-0056, ADR-0103). `write` must start its transaction afresh each time.
+ */
+export async function withRoom<T>(write: () => Promise<T>): Promise<T> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isStorageFull(error) || makeRoom === null) throw error;
+    await makeRoom();
+    return write();
+  }
+}
+
 /** Writes the browser refused for lack of room, which the app tells the user about. */
 class StorageRefusals {
   /** How many so far; each one is told, unless the user is still being told of the last. */

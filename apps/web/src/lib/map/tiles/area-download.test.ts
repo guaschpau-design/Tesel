@@ -157,6 +157,7 @@ describe('area download', () => {
       keepStored: (owner, source, tiles) => store.keepStored(owner, source, tiles),
       countStored: (source, tiles) => store.countStored(source, tiles),
       keepViewed: (source, tile, data) => store.keepViewed(source, tile, data),
+      forgetViewed: () => store.forgetViewed(),
       saveArea: (area) => store.saveArea(area),
       listAreas: () => store.listAreas(),
       deleteArea: (area) => store.deleteArea(area),

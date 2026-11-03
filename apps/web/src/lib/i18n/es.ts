@@ -63,7 +63,11 @@ export const es: Messages = {
     'No hay sitio para esta zona: necesita unos {needed} y quedan {free}, después de guardar espacio para el registro del grupo. Borra otras zonas o elige menos detalle.',
   resume: 'Reanudar',
   storageFull:
-    'El almacenamiento del dispositivo está lleno: Tesel no puede guardar lo que llega ni lo que envías. Borra mapas sin conexión para hacer sitio.',
+    'El almacenamiento del dispositivo está lleno: Tesel no puede guardar lo que llega ni lo que envías, aunque las llamadas de socorro siguen llegando y saliendo. Borra mapas sin conexión para hacer sitio.',
+  impersonated:
+    'Alguien envía mensajes con el nombre de {name}: lo que parezca suyo puede no serlo. Si recibes un SOS suyo, compruébalo.',
+  impersonatedSelf:
+    'Alguien envía mensajes con tu nombre. Tesel lo tiene en cuenta para que lo tuyo, un SOS sobre todo, llegue igualmente.',
   noAreas: 'Aún no hay mapas sin conexión.',
   incomplete: 'Incompleta',
   showOnMap: 'Ver en el mapa',

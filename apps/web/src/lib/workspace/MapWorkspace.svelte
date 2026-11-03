@@ -37,6 +37,7 @@
   import { operationAreas } from '../objects/operation-areas.ts';
   import { useSweepCompletion } from '../objects/sweep-completion.svelte.ts';
   import { useSelfState } from '../me/self-state.svelte.ts';
+  import ImpersonationNotice from '../members/ImpersonationNotice.svelte';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import { useEnergySaving } from '../power/energy-saving.svelte.ts';
@@ -208,6 +209,7 @@
       <GroupNews {t} {locale} state={slices} {self} />
     {/if}
     <ChatNotice {t} chat={slices.chat} members={slices.members} {self} open={isOpen('chat')} />
+    <ImpersonationNotice {t} impersonated={feed.impersonated} members={slices.members} {self} />
   {/key}
 
   {#if drawing.draft && drawing.describing}

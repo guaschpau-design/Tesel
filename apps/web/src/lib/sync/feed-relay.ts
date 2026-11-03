@@ -13,12 +13,8 @@ import {
   type NodeId,
 } from '@tesel/protocol';
 
-import {
-  confirmStored,
-  pendingEvents,
-  requeueOwnEvents,
-  type ServerRead,
-} from '../events/event-log.ts';
+import type { ServerRead } from '../events/event-log.ts';
+import { confirmStored, pendingEvents, requeueOwnEvents } from '../events/outbox.ts';
 import type { AppDb, GroupEventRef } from '../storage/app-db.ts';
 import { loadPosition, savePosition } from './cursor-store.ts';
 import { peekType } from './lora-events.ts';

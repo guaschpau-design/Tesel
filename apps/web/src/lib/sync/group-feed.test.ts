@@ -5,7 +5,9 @@ import {
   deriveGroupKeys,
   encodeEvent,
   encodeLogFile,
+  eventKey,
   eventRefKey,
+  parseClientMessage,
   sealEnvelope,
   type NodeId,
   type TeselEvent,
@@ -16,6 +18,7 @@ import { loadEvents, receiveEvents } from '../events/event-log.ts';
 import { createGroup } from '../groups/group.ts';
 import { createLocalIdentity } from '../identity/identity.ts';
 import { openAppDb } from '../storage/app-db.ts';
+import { fillStorage } from '../storage/full-storage.ts';
 import { GroupFeed } from './group-feed.svelte.ts';
 import type { LoraSink } from './lora-events.ts';
 import type { SocketLike } from './relay-types.ts';
@@ -96,6 +99,59 @@ describe('a group feed', () => {
     expect(feed.state.chat).toHaveLength(MEMBERS.length);
   });
 
+  it('skips the numbers someone took under this device’s name, and says so', async () => {
+    const { db, group, identity } = await setUp();
+    const feed = await GroupFeed.open(db, group, identity);
+    const [forged] = bytesOf([
+      { type: 'chat', origin: identity.nodeId, seq: 10, time: T0, text: 'No soy yo' },
+    ]);
+    if (forged === undefined) throw new Error('no event');
+    await feed.receiveFromRadio(forged);
+    expect([...feed.impersonated]).toEqual([identity.nodeId]);
+    const call = await feed.sendSos('medical', null, null, 'Ayuda');
+    expect(call.seq).toBe(11);
+  });
+
+  it('says who someone writes as, when two events arrive under one reference', async () => {
+    const { db, group, identity } = await setUp();
+    const feed = await GroupFeed.open(db, group, identity);
+    const other = '0d0d0d0d' as NodeId;
+    const versions = bytesOf([
+      { type: 'chat', origin: other, seq: 3, time: T0, text: 'una' },
+      { type: 'chat', origin: other, seq: 3, time: T0, text: 'otra' },
+    ]);
+    for (const bytes of versions) await feed.receiveFromRadio(bytes);
+    expect([...feed.impersonated]).toEqual([other]);
+    expect(feed.state.chat).toHaveLength(1);
+  });
+
+  it('shows an SOS that arrives when the storage is full, and sends its own', async () => {
+    const { db, group, identity } = await setUp();
+    const feed = await GroupFeed.open(db, group, identity);
+    fillStorage(db);
+    const other = '0d0d0d0d' as NodeId;
+    const [heard] = bytesOf([
+      {
+        type: 'sos',
+        origin: other,
+        seq: 1,
+        time: T0,
+        kind: 'trapped',
+        lat: 39.47,
+        lon: -0.37,
+        accuracy: 5,
+        text: 'Atrapada',
+      },
+    ]);
+    if (heard === undefined) throw new Error('no event');
+    await expect(feed.receiveFromRadio(heard)).rejects.toThrow();
+    expect([...feed.state.sos.values()].flat().map((call) => call.text)).toEqual(['Atrapada']);
+    const own = await feed.sendSos('medical', null, null, 'Ayuda');
+    expect(feed.state.sos.get(eventRefKey(own))?.[0]?.text).toBe('Ayuda');
+    expect(feed.undelivered.has(eventRefKey(own))).toBe(true);
+    feed.close();
+  });
+
   it('tells the group a new name, which it then knows this member by', async () => {
     const { db, group, identity } = await setUp();
     const feed = await GroupFeed.open(db, group, identity);
@@ -147,6 +203,25 @@ describe('a group feed', () => {
       await reopened.attachRadio(sink);
       expect(offered).not.toContain(`${other}:own`);
       reopened.close();
+    });
+
+    it('pushes its own SOS as soon as it joins, ahead of the backlog and of the rest', async () => {
+      const { db, identity } = await setUp();
+      const group = createGroup('Rescate', 'https://relay.example/', Date.now());
+      const sent: string[] = [];
+      const socket: SocketLike = { ...silentRelay(), send: (text) => sent.push(text) };
+      const feed = await GroupFeed.open(db, group, identity, () => socket);
+      const call = await feed.sendSos('medical', null, null, 'Ayuda');
+      socket.onopen?.(new Event('open'));
+      await vi.waitFor(() => {
+        expect(sent.filter((text) => text.includes('"push"'))).toHaveLength(1);
+      });
+      const keys = deriveGroupKeys(group.secret);
+      const pushed = parseClientMessage(sent.find((text) => text.includes('"push"')) ?? '');
+      expect(pushed.ok && pushed.value.t === 'push' && pushed.value.key).toEqual(
+        eventKey(keys, call),
+      );
+      feed.close();
     });
   });
 });

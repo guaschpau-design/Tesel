@@ -97,6 +97,18 @@ describe('offline tile store', () => {
     expect(await store.getTile('basemap', seen(127))).toBeDefined();
   });
 
+  it('forgets every tile seen to make room, and none an area needs', async () => {
+    const store = await freshStore();
+    const data = new Uint8Array([1]).buffer;
+    const needed = { z: 18, x: 0, y: 0 };
+    const seen = { z: 18, x: 1, y: 0 };
+    await store.putTiles('a', 'basemap', [{ tile: needed, data }]);
+    await store.keepViewed('basemap', seen, data);
+    await store.forgetViewed();
+    expect(await store.getTile('basemap', needed)).toBeDefined();
+    expect(await store.getTile('basemap', seen)).toBeUndefined();
+  });
+
   it('keeps the tiles and areas of the first version, as the base map’s', async () => {
     const name = `upgrade-${String(dbCounter++)}`;
     const old = await openDB(name, 1, {

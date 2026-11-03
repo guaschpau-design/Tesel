@@ -19,8 +19,14 @@ export interface GroupEventRef {
 }
 
 /** An event of a group as received or created: its encoded bytes, keyed by group and ref. */
-interface StoredEvent extends GroupEventRef {
+export interface StoredEvent extends GroupEventRef {
   readonly bytes: Uint8Array;
+  /**
+   * Other versions kept under the same ref, when a member wrote under another's: SOS calls,
+   * cancellations and acknowledgements, none of which may hide another (protocol §3.1, ADR-0103).
+   * Every version is in byte order, `bytes` first.
+   */
+  readonly rivals?: readonly Uint8Array[];
 }
 
 /**
@@ -59,7 +65,12 @@ export type SettingKey =
   /** The SOS calls the alarm was raised for, by group (incidents/alarmed-sos.ts). */
   | 'alarmedSos';
 
-export type EventKey = [groupId: string, origin: NodeId, seq: number];
+type EventKey = [groupId: string, origin: NodeId, seq: number];
+
+/** Where the log and the outbox keep an event of a group. */
+export function eventKeyOf(entry: GroupEventRef): EventKey {
+  return [entry.groupId, entry.origin, entry.seq];
+}
 
 /** A group and the server it syncs with. */
 type CursorKey = [groupId: string, server: string];

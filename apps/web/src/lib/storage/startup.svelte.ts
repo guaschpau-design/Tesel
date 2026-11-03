@@ -23,6 +23,7 @@ import { ElevationReader } from '../terrain/elevation.ts';
 import { fullscreenAtFirstTap, fullscreenSupported } from '../ui/fullscreen.svelte.ts';
 import { WeatherFeed } from '../weather/weather-feed.svelte.ts';
 import { openAppDb, type AppDb } from './app-db.ts';
+import { makeRoomWith } from './storage-space.svelte.ts';
 import type { StartupFailure, VersionChange } from './version-change.ts';
 
 export class Startup {
@@ -69,6 +70,7 @@ export class Startup {
       registerContourProtocol(store, archives);
       this.elevations = new ElevationReader((tile) => findTile('terrain', tile, store, archives));
       this.offline = { store, archives };
+      makeRoomWith(() => store.forgetViewed());
       void keepOverview(store, archives);
     }, failed);
     const server = defaultServerUrl();

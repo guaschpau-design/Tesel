@@ -7,6 +7,7 @@ import type {
   EventRef,
   LatLon,
   MarkerEvent,
+  NodeId,
   ObjectRef,
   ShapeEvent,
   ShapeGeometry,
@@ -108,6 +109,11 @@ export class GroupFeed {
   /** Own events neither stored by a relay nor put on the air, by event reference key. */
   get undelivered(): ReadonlySet<string> {
     return this.#sync.undelivered;
+  }
+
+  /** Members someone else writes as, seen since the feed opened (ADR-0103). */
+  get impersonated(): ReadonlySet<NodeId> {
+    return this.#sync.impersonated;
   }
 
   get delivery(): Delivery {
