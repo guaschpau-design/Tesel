@@ -35,20 +35,22 @@ curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/v0.1.0/deplo
 
 What [`vps/install.sh`](vps/install.sh) sets up:
 
-| Layer      | What                                                                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| System     | Updates, then automatic security updates with a nightly reboot when the kernel needs it                                                                                    |
-| Firewall   | `ufw`: only SSH (22) and the web (80, 443) are reachable                                                                                                                   |
-| SSH        | `fail2ban` bans repeated failed logins; password logins are turned off if an SSH key is installed                                                                          |
-| Containers | Docker with [`vps/compose.yaml`](vps/compose.yaml): the server (read-only, no capabilities, unprivileged) and Caddy; memory limits and rotated logs                        |
-| HTTPS      | Caddy gets and renews a Let's Encrypt certificate ([`vps/Caddyfile`](vps/Caddyfile)) and sends security headers ([`vps/headers.caddy`](vps/headers.caddy)); no access logs |
-| Old names  | With `--redirect-from`, domains the server used to have answer with a permanent redirect to the same address on the new one                                                |
-| Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                |
-| Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                        |
-| Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`                                  |
-| Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy; the backups and the updates use it                                     |
+| Layer      | What                                                                                                                                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| System     | Updates, then automatic security updates with a nightly reboot when the kernel needs it                                                                                                                           |
+| Firewall   | `ufw`: only SSH (22) and the web (80, 443) are reachable                                                                                                                                                          |
+| SSH        | `fail2ban` bans repeated failed logins; password logins are turned off if an SSH key is installed                                                                                                                 |
+| Containers | Docker with [`vps/compose.yaml`](vps/compose.yaml): the server (read-only, no capabilities, unprivileged, given only its own settings) and Caddy, alone on a network of their own; memory limits and rotated logs |
+| HTTPS      | Caddy gets and renews a Let's Encrypt certificate ([`vps/Caddyfile`](vps/Caddyfile)) and sends security headers ([`vps/headers.caddy`](vps/headers.caddy)); no access logs                                        |
+| Old names  | With `--redirect-from`, domains the server used to have answer with a permanent redirect to the same address on the new one                                                                                       |
+| Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                                                       |
+| Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                                                               |
+| Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`, or off the host (below)                                                |
+| Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy, which the backups and the updates use; it also lists the largest groups and purges one                        |
 
 Running the script again applies changes to the files of this folder and is otherwise harmless.
+
+The server's settings (`apps/server/README.md`) go in `/opt/tesel/.env`, with the installer's own; `compose.yaml` passes the server only its own, so the rest of `.env`, `TESEL_ALERT_URL` among them, never reaches the container that faces the internet. A new server setting reaches it once it is listed there too.
 
 Useful commands on the VPS:
 
@@ -70,7 +72,7 @@ CI builds the image on every run and starts it as servers do. After every green 
 
 Every 15 minutes [`vps/update.sh`](vps/update.sh) checks that signature for the image `TESEL_IMAGE_TAG` names (`latest` unless set in `.env`; a commit's SHA pins that version), pulls it by digest, starts it and waits for its health check. A version that does not become healthy is replaced at once by the previous one, kept on disk for this, and is not tried again. `.env` records the digests: `TESEL_IMAGE` (running), `TESEL_IMAGE_PREVIOUS` and `TESEL_IMAGE_REJECTED`. With nothing new the job only checks that the server is healthy, so an unhealthy server shows up as a failed update.
 
-A new version may upgrade the database's schema, which older versions cannot read. So before starting a new version the job copies the database into `/opt/tesel/rollback`, and an update fails, leaving the server as it was, when the disk has no room for the copy and `TESEL_MIN_FREE_DISK_MB` more. Going back to the previous version across a change of schema, at once or by hand (below), restores that copy: what the server stored since is lost from it, and apps, seeing the server's store change, push their own events again.
+A new version may upgrade the database's schema, which older versions cannot read. So before starting a new version the job copies the database into `/opt/tesel/rollback`, and an update fails, leaving the server as it was, when the disk has no room for the copy and twice `TESEL_MIN_FREE_DISK_MB` more. Going back to the previous version across a change of schema, at once or by hand (below), restores that copy: what the server stored since is lost from it, and apps, seeing the server's store change, push their own events again.
 
 ### Alerts
 
@@ -83,7 +85,7 @@ Every night [`vps/backup.sh`](vps/backup.sh) writes into `/opt/tesel/backups`, r
 - `tesel-TIME.db`: a consistent copy of the database, taken while the server runs and checked for integrity;
 - `caddy-data-TIME.tar.gz`: Caddy's certificates and ACME account.
 
-A backup that would leave less than `TESEL_MIN_FREE_DISK_MB` (500 MB unless set in `.env`) free on the disk is not made, and the job fails, so the alerts tell. Copies are kept `TESEL_BACKUP_DAYS` days (14 unless set in `.env`). The database holds sealed envelopes only, but a backup on the same VPS is lost with it. To keep a copy elsewhere, create `/opt/tesel/backup.env` (mode 0600) with a [restic](https://restic.readthedocs.io) repository, its password and the credentials of its storage, for example an S3-compatible bucket:
+A backup that would leave less than twice `TESEL_MIN_FREE_DISK_MB` (500 MB unless set in `.env`) free on the disk is not made, and the job fails, so the alerts tell: the server, which refuses pushes below that margin, still has as much room again to grow. Copies are kept `TESEL_BACKUP_DAYS` days (14 unless set in `.env`); those past it are deleted before the night's is taken. The database holds sealed envelopes only, but a backup on the same VPS is lost with it. To keep a copy elsewhere, create `/opt/tesel/backup.env` (mode 0600) with a [restic](https://restic.readthedocs.io) repository, its password and the credentials of its storage, for example an S3-compatible bucket:
 
 ```sh
 RESTIC_REPOSITORY=s3:https://s3.example.eu/tesel-backups
@@ -92,7 +94,7 @@ AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
 
-Create the repository once, then the nightly job copies the folder there after every backup and forgets copies older than `TESEL_BACKUP_DAYS` days:
+Create the repository once, then the nightly job copies the folder there after every backup and forgets copies older than `TESEL_BACKUP_DAYS` days. Once a night's copies are off the host, only they stay in `/opt/tesel/backups`: the server's disk then holds one copy of the database, not one for every day. An older night is restored from restic (`restic restore`).
 
 ```sh
 cd /opt/tesel && sudo docker run --rm --env-file backup.env restic/restic:0.19.1 init
@@ -129,6 +131,17 @@ sudo docker compose run --rm --no-deps --no-TTY --entrypoint sh caddy \
 sudo docker compose up --detach
 ```
 
+### Removing a group's junk
+
+Pushes need only a group's ID, so anyone who has one can fill that group with junk, within the limits per address and per new group ([ADR-0107](../docs/decisions/0107-relay-holds-against-floods.md)). Junk expires with `TESEL_RETENTION_DAYS`; to remove it at once, find the group among those that take the most room and purge it, while the server runs:
+
+```sh
+sudo /opt/tesel/database.sh /opt/tesel groups       # the 20 largest; add a number for more
+sudo /opt/tesel/database.sh /opt/tesel purge GROUP  # GROUP as the list shows it
+```
+
+Every envelope of the group goes, the genuine ones too: a real group's members push their own events again only after a change of store identity, so purge only a group that is junk. Its cursors are never reused.
+
 ### Rebuilding a lost server
 
 Keep these somewhere other than the VPS: `/opt/tesel/.env` (settings), `backup.env` and the restic password (with off-host copies), and the latest backups (`tesel-*.db`, `caddy-data-*.tar.gz`), from `/opt/tesel/backups` or restic. The base map is rebuilt by the installer.
@@ -140,7 +153,7 @@ Keep these somewhere other than the VPS: `/opt/tesel/.env` (settings), `backup.e
 
 ### Updating the installers and the configuration
 
-Changes to the files of [`vps/`](vps) reach a server when its installer runs again; `--domain` is the only option to repeat, the others are kept:
+Changes to the files of [`vps/`](vps) reach a server when its installer runs again; `--domain` is the only option to repeat, the others are kept. Run it again as soon as a version with ADR-0108's changes is published: the server image updates on its own, but believes only the proxy that `compose.yaml` names from then on, so with the older file every client counts as coming from Caddy's address and the limits per address apply to all of them together:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/main/deploy/vps/install.sh \

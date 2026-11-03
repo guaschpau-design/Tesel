@@ -17,22 +17,40 @@ services:
     # version. Docker restarts the server when it exits, not when it is unhealthy: an unhealthy
     # server makes the next update run fail, which alerts the operator.
     restart: unless-stopped
-    # Every server setting written in .env reaches the server (apps/server/README.md lists them,
-    # with their defaults); the rest of .env, for the installer and Caddy, the server ignores.
-    env_file: .env
+    # The server's settings written in .env (apps/server/README.md lists them, with their
+    # defaults), and nothing else of it: the server faces the internet, and .env also holds the
+    # installer's settings and secrets such as TESEL_ALERT_URL. A setting not in .env reaches the
+    # server empty, which it takes as its default. TESEL_HOST, TESEL_PORT, TESEL_DB and
+    # TESEL_WEB_ROOT are the image's, which Caddy and the volume below rely on.
+    environment:
+      TESEL_RETENTION_DAYS: ${TESEL_RETENTION_DAYS:-}
+      TESEL_WEATHER: ${TESEL_WEATHER:-}
+      TESEL_WEATHER_MAX_AGE_MINUTES: ${TESEL_WEATHER_MAX_AGE_MINUTES:-}
+      TESEL_MAX_CONNECTIONS: ${TESEL_MAX_CONNECTIONS:-}
+      TESEL_MAX_CONNECTIONS_PER_IP: ${TESEL_MAX_CONNECTIONS_PER_IP:-}
+      TESEL_UNREAD_MB: ${TESEL_UNREAD_MB:-}
+      TESEL_NEW_GROUPS_PER_IP_PER_HOUR: ${TESEL_NEW_GROUPS_PER_IP_PER_HOUR:-}
+      TESEL_PUSHES_PER_SECOND: ${TESEL_PUSHES_PER_SECOND:-}
+      TESEL_PUSHES_PER_IP_PER_SECOND: ${TESEL_PUSHES_PER_IP_PER_SECOND:-}
+      TESEL_MB_PER_IP_PER_DAY: ${TESEL_MB_PER_IP_PER_DAY:-}
+      TESEL_MB_PER_GROUP_FIRST_DAY: ${TESEL_MB_PER_GROUP_FIRST_DAY:-}
+      TESEL_MIN_FREE_DISK_MB: ${TESEL_MIN_FREE_DISK_MB:-}
+      # Caddy, on the network below, names each client in X-Forwarded-For; nobody else is believed.
+      TESEL_TRUSTED_PROXIES: ${TESEL_TRUSTED_PROXIES:-172.31.250.0/24}
     volumes:
       - tesel-data:/data
     # Locked down: read-only system, no Linux capabilities, no privilege escalation. The server
-    # only needs to write its database and talk to Caddy on the internal network.
+    # only needs to write its database and talk to Caddy on the proxy network.
     read_only: true
     tmpfs:
       - /tmp
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
+    # What its connection limits are sized to (apps/server/src/relay-limits.ts).
     mem_limit: 512m
     pids_limit: 256
     logging: *logging
-    networks: [internal]
+    networks: [proxy]
 
   caddy:
     image: caddy:2.11.7@sha256:5e5286cb37d44086d651a5363f05f43a692ce4d649d88fb1bd844579f45fa9e8
@@ -57,7 +75,7 @@ services:
     mem_limit: 256m
     pids_limit: 256
     logging: *logging
-    networks: [internal]
+    networks: [proxy]
     depends_on: [tesel]
 
 volumes:
@@ -65,5 +83,11 @@ volumes:
   caddy-data:
   caddy-config:
 
+# Caddy and the server, alone on a network whose addresses the server trusts as its proxy's. Its
+# range is fixed so that TESEL_TRUSTED_PROXIES can name it; on a host whose own networks already
+# use it, change it in both places.
 networks:
-  internal:
+  proxy:
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24

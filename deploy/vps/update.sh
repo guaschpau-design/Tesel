@@ -142,6 +142,7 @@ fi
 echo "Updating to $candidate"
 docker pull --quiet "$candidate" >/dev/null
 if [[ -n "$current" ]]; then
+  install -m 0700 -d "$(dirname "$COPY_CURRENT")"
   "$DIR/database.sh" "$DIR" copy "$COPY_CURRENT"
   schema="$("$DIR/database.sh" "$DIR" schema)"
 fi

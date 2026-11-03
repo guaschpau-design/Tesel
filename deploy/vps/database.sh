@@ -5,18 +5,23 @@
 #
 #   database.sh DIRECTORY copy FILE      writes a consistent copy of the database into FILE, made
 #                                        with VACUUM INTO while the server runs and checked with
-#                                        PRAGMA integrity_check; refused when the disk would keep
-#                                        less than TESEL_MIN_FREE_DISK_MB (500) free after it
+#                                        PRAGMA integrity_check; refused unless the disk keeps
+#                                        twice TESEL_MIN_FREE_DISK_MB (500) free after it, so a
+#                                        copy never brings the server near refusing pushes
 #   database.sh DIRECTORY restore FILE   stops the server and replaces its database with the copy
 #                                        in FILE, under a new store identity: clients then know
 #                                        that what they remember of the server may be gone, and
 #                                        push their own events again (ADR-0046)
 #   database.sh DIRECTORY schema         prints the database's schema version
+#   database.sh DIRECTORY groups [N]     lists the N groups (20) that take the most room
+#   database.sh DIRECTORY purge GROUP    deletes every envelope of the group GROUP, as the list
+#                                        names it, while the server runs: junk pushed into it
+#                                        goes without waiting for TESEL_RETENTION_DAYS
 
 set -euo pipefail
 
 usage() {
-  echo "usage: database.sh DIRECTORY copy FILE | restore FILE | schema" >&2
+  echo "usage: database.sh DIRECTORY copy FILE | restore FILE | schema | groups [N] | purge GROUP" >&2
   exit 2
 }
 
@@ -33,10 +38,11 @@ import { statfsSync, statSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 
 const database = process.env.TESEL_DB;
-// The copy takes at most the database's size, and the disk must keep the margin the server keeps
-// for itself (apps/server/README.md, TESEL_MIN_FREE_DISK_MB), whose default this repeats.
+// The copy takes at most the database's size, and the disk must keep twice the margin at which the
+// server refuses pushes (apps/server/README.md, TESEL_MIN_FREE_DISK_MB, whose default this
+// repeats): the server then still has as much room again to grow before it refuses any.
 const megabyte = 1024 * 1024;
-const margin = Number(process.env.TESEL_MIN_FREE_DISK_MB || 500) * megabyte;
+const margin = 2 * Number(process.env.TESEL_MIN_FREE_DISK_MB || 500) * megabyte;
 const size = ['', '-wal']
   .map((suffix) => statSync(database + suffix, { throwIfNoEntry: false })?.size ?? 0)
   .reduce((sum, bytes) => sum + bytes);
@@ -83,21 +89,27 @@ console.log(database.prepare('PRAGMA user_version').get().user_version);
 JS
 )"
 
-# Runs SCRIPT in a container of the server's image, with the host's folder FOLDER, if given, at
-# /work. Node's warning that node:sqlite is experimental is left out of the output.
-run_in_image() {
-  local script="$1" volume=()
-  [[ -z "${2:-}" ]] || volume=(--volume "$2:/work")
+# Runs node in a container of the server's image, with the host's folder FOLDER at /work unless
+# it is empty, and the arguments that follow. Node's warning that node:sqlite is experimental is
+# left out of the output.
+node_in_image() {
+  local volume=()
+  [[ -z "$1" ]] || volume=(--volume "$1:/work")
   docker compose run --rm --no-deps --no-TTY --quiet-pull "${volume[@]}" \
-    --entrypoint node tesel --no-warnings --input-type=module --eval "$script"
+    --entrypoint node tesel --no-warnings "${@:2}"
 }
 
-# A folder next to FILE that the server's user may write and nobody else read, removed on exit.
+# Runs SCRIPT in the server's image, with the host's folder FOLDER, if given, at /work.
+run_in_image() {
+  node_in_image "${2:-}" --input-type=module --eval "$1"
+}
+
+# A folder in DIRECTORY that the server's user may write and nobody else read, removed on exit.
+# It is made there, not next to FILE, so that no folder of FILE's is created or changed.
 staging=""
 trap '[[ -z "$staging" ]] || rm -rf "$staging"' EXIT
 make_staging() {
-  install -m 0700 -d "$(dirname "$1")"
-  staging="$(mktemp -d "$(dirname "$1")/.staging.XXXXXX")"
+  staging="$(mktemp -d "$PWD/.staging.XXXXXX")"
   chown "$SERVER_UID:$SERVER_UID" "$staging"
 }
 
@@ -105,18 +117,26 @@ cd "$DIR"
 case "$ACTION" in
   copy)
     [[ -n "$FILE" ]] || usage
-    make_staging "$FILE"
+    make_staging
     run_in_image "$COPY_SCRIPT" "$staging"
-    install -m 0600 -o root -g root "$staging/tesel.db" "$FILE"
+    chown root:root "$staging/tesel.db"
+    chmod 0600 "$staging/tesel.db"
+    # A rename on the same disk, so the copy never takes its room twice.
+    mv "$staging/tesel.db" "$FILE"
     ;;
   restore)
     [[ -f "$FILE" ]] || { echo "There is no copy of the database at $FILE." >&2; exit 1; }
-    make_staging "$FILE"
+    make_staging
     install -m 0600 -o "$SERVER_UID" -g "$SERVER_UID" "$FILE" "$staging/tesel.db"
     docker compose stop tesel
     run_in_image "$RESTORE_SCRIPT" "$staging"
     echo "Restored the database from $FILE, under a new store identity."
     ;;
   schema) run_in_image "$SCHEMA_SCRIPT" ;;
+  groups) node_in_image "" apps/server/src/store-admin.ts groups ${FILE:+"$FILE"} ;;
+  purge)
+    [[ "$FILE" =~ ^[A-Za-z0-9_-]{22}$ ]] || usage
+    node_in_image "" apps/server/src/store-admin.ts purge "$FILE"
+    ;;
   *) usage ;;
 esac

@@ -311,6 +311,9 @@ by the repository's CI."
 fi
 # Caddy reads its configuration only when it starts: apply what was installed above.
 docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+# The containers' network was "internal" until 2026-11 (ADR-0107); nothing uses it any more. Once
+# every server has been installed again since then, this step can go.
+docker network rm tesel_internal >/dev/null 2>&1 || true
 # Enabled only now: a timer whose boot delay has passed fires at once, and its own update would
 # wait for the one above for nothing.
 systemctl enable --now tesel-update.timer tesel-backup.timer >/dev/null

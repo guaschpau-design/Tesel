@@ -3,8 +3,8 @@
 # The app's Content-Security-Policy is the one its build puts in index.html as a meta tag
 # (apps/web/scripts/content-security-policy.ts), plus frame-ancestors, which only a header can
 # set; a test there keeps the two the same. The app connects to whichever servers its groups use
-# and reads public map services, hence the open connect-src and img-src. The landing page is static HTML and CSS with no scripts; its map pins are
-# placed with style attributes.
+# and reads public map services, hence the open connect-src and img-src. The landing page is
+# static HTML and CSS, with no scripts and no style attributes, which its policy forbids.
 
 @app path /app /app/*
 @site not path /app /app/*
