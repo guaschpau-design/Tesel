@@ -17,7 +17,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0009](0009-toolchain.md)                            | Toolchain: TypeScript, pnpm workspace, Svelte, Vitest                                       | Accepted                                                |
 | [0010](0010-lora-link-security.md)                   | Rely on MeshCore channel encryption for LoRa in v0.1, knowing its limits                    | Superseded by 0099                                      |
 | [0011](0011-client-side-area-download.md)            | Download offline areas tile by tile in the browser                                          | Accepted, amended by 0056                               |
-| [0012](0012-invitation-links-under-a-base-path.md)   | Invitation links work under a base path                                                     | Accepted, amended by 0017                               |
+| [0012](0012-invitation-links-under-a-base-path.md)   | Invitation links work under a base path                                                     | Accepted, amended by 0017 and 0110                      |
 | [0013](0013-self-updating-vps.md)                    | A self-updating VPS behind Caddy, installed by one script                                   | Accepted, partly superseded by 0049                     |
 | [0014](0014-name-teselia.md)                         | The project is called Teselia                                                               | Superseded by 0019                                      |
 | [0015](0015-lora-airtime-policy.md)                  | LoRa airtime policy                                                                         | Accepted, amended by 0043, 0098                         |
@@ -101,7 +101,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted, amended by 0107                               |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
 | [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |
-| [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted                                                |
+| [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted, amended by 0110                               |
 | [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted                                                |
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
 | [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted                                                |
@@ -115,3 +115,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0107](0107-relay-holds-against-floods.md)           | Keep the relay fair, responsive and bounded under a flood                                   | Accepted                                                |
 | [0108](0108-deployment-holds-against-floods.md)      | Keep the VPS's disk, settings and proxy safe from what the relay faces                      | Accepted                                                |
 | [0109](0109-build-and-updates-resist-tampering.md)   | Keep the build, the publishing and the updates safe from tampering                          | Accepted                                                |
+| [0110](0110-deception-and-loose-ends.md)             | Guard against look-alike names and invitations, and close loose ends                        | Accepted                                                |
