@@ -68,7 +68,7 @@ A server installed while the project was called Teselia (in `/opt/teselia`) is m
 
 ### Updates
 
-CI builds the image on every run and starts it as servers do. After every green push to `main` it publishes `ghcr.io/guaschpau-design/tesel-server` for amd64 and arm64, signs it with cosign under the identity of its workflow on `main`, and only then moves the `latest` tag to it, if no newer commit has reached `main` meanwhile ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md), [ADR-0068](../docs/decisions/0068-restorable-copies-and-going-back.md)).
+CI builds the image on every run and starts it as servers do, with read access only. After every green push to `main` a separate job publishes `ghcr.io/guaschpau-design/tesel-server` for amd64 and arm64, signs it with cosign under the identity of its workflow on `main`, and only then moves the `latest` tag to it, if no newer commit has reached `main` meanwhile ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md), [ADR-0068](../docs/decisions/0068-restorable-copies-and-going-back.md)).
 
 Every 15 minutes [`vps/update.sh`](vps/update.sh) checks that signature for the image `TESEL_IMAGE_TAG` names (`latest` unless set in `.env`; a commit's SHA pins that version), pulls it by digest, starts it and waits for its health check. A version that does not become healthy is replaced at once by the previous one, kept on disk for this, and is not tried again. `.env` records the digests: `TESEL_IMAGE` (running), `TESEL_IMAGE_PREVIOUS` and `TESEL_IMAGE_REJECTED`. With nothing new the job only checks that the server is healthy, so an unhealthy server shows up as a failed update.
 
@@ -173,3 +173,5 @@ Images and tools are pinned by version, and images also by digest; nothing updat
 | cosign         | `vps/install-cosign.sh` (with the checksums of its release) and `cosign-release` in `ci.yml`                       |
 | GitHub Actions | `.github/workflows/ci.yml`, by commit                                                                              |
 | pnpm           | `packageManager` in `package.json`, version and hash: `corepack use pnpm@VERSION` writes both                      |
+| BuildKit       | `driver-opts` of both `setup-buildx-action` steps in `.github/workflows/ci.yml` (`moby/buildkit`)                  |
+| QEMU (binfmt)  | `image` of `setup-qemu-action` in `.github/workflows/ci.yml` (`tonistiigi/binfmt`)                                 |
