@@ -31,8 +31,8 @@ export function encodeInvitationToken(invitation: Invitation): Result<string, Pr
     if (invitation.secret.length !== GROUP_SECRET_SIZE) {
       throw new ProtocolFailure('invalid-value', 'group secret must be 16 bytes');
     }
-    if (invitation.server !== null && !isSecureUrl(invitation.server)) {
-      throw new ProtocolFailure('invalid-value', 'server must be a secure URL');
+    if (invitation.server !== null && !isServerUrl(invitation.server)) {
+      throw new ProtocolFailure('invalid-value', 'server must be a plain secure URL');
     }
     const token = new ByteWriter()
       .u8(INVITATION_VERSION)
@@ -64,8 +64,8 @@ export function decodeInvitationToken(token: string): Result<Invitation, Protoco
     const groupName = reader.textU8(1, GROUP_NAME_MAX_BYTES, 'group name');
     const serverText = reader.textU8(0, SERVER_URL_MAX_BYTES, 'server URL');
     reader.end();
-    if (serverText !== '' && !isSecureUrl(serverText)) {
-      throw new ProtocolFailure('invalid-value', 'server must be a secure URL');
+    if (serverText !== '' && !isServerUrl(serverText)) {
+      throw new ProtocolFailure('invalid-value', 'server must be a plain secure URL');
     }
     return ok({ role, secret, issuer, groupName, server: serverText === '' ? null : serverText });
   } catch (failure) {
@@ -90,7 +90,10 @@ export function buildInvitationUrl(
   return ok(`${appBaseUrl}${JOIN_SEGMENT}#${token.value}`);
 }
 
-/** Extracts the invitation from a secure link (§6) whose last path segment is `join`. */
+/**
+ * Extracts the invitation from a secure link (§6) whose last path segment is `join`. A query and a
+ * slash after `join`, which whatever passed the link on may have added, are ignored.
+ */
 export function parseInvitationUrl(url: string): Result<Invitation, ProtocolError> {
   let parsed: URL;
   try {
@@ -98,20 +101,15 @@ export function parseInvitationUrl(url: string): Result<Invitation, ProtocolErro
   } catch {
     return err({ code: 'invalid-value', detail: 'not a URL' });
   }
-  if (
-    !isSecureUrl(url) ||
-    !isJoinPath(parsed.pathname) ||
-    parsed.search !== '' ||
-    parsed.hash.length < 2
-  ) {
+  if (!isSecureUrl(url) || !isJoinPath(parsed.pathname) || parsed.hash.length < 2) {
     return err({ code: 'invalid-value', detail: 'not an invitation link' });
   }
   return decodeInvitationToken(parsed.hash.slice(1));
 }
 
-/** True for `/join` and `/{base path}/join`: the path an invitation link opens. */
+/** True for `/join` and `/{base path}/join`, with or without a slash after it (§6). */
 function isJoinPath(pathname: string): boolean {
-  return pathname.endsWith(`/${JOIN_SEGMENT}`);
+  return pathname.replace(/\/$/, '').endsWith(`/${JOIN_SEGMENT}`);
 }
 
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]']);
@@ -131,4 +129,12 @@ export function isSecureUrl(text: string): boolean {
   return (
     url.protocol === 'https:' || (url.protocol === 'http:' && LOOPBACK_HOSTS.has(url.hostname))
   );
+}
+
+/**
+ * §6 a server URL: a secure URL with no user name or password, no query (not even a bare `?`) and
+ * no fragment, so the address an invitation carries is the server and nothing else.
+ */
+export function isServerUrl(text: string): boolean {
+  return isSecureUrl(text) && !/[@?#]/.test(text);
 }

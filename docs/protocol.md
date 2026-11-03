@@ -420,9 +420,11 @@ The token sits in the fragment so it is never sent to any server. It is the base
 | 16   | `secret`  | Group secret                                                                            |
 | 4    | `issuer`  | Node ID of whoever created the invitation                                               |
 | 1+n  | `name`    | text-u8, group name, 1–32 bytes                                                         |
-| 1+n  | `server`  | text-u8, server base URL, 0–200 bytes; empty if none. MUST be a secure URL when present |
+| 1+n  | `server`  | text-u8, server base URL, 0–200 bytes; empty if none. MUST be a server URL when present |
 
-Decoders MUST accept only secure URLs with no query whose last path segment is exactly `join` (the path is `/join` or ends in `/join`). Servers and static hosts MUST answer that path with the web app (see [ADR-0012](decisions/0012-invitation-links-under-a-base-path.md)). A reserved `role` value grants member. Anyone holding an invitation can join the group. Interfaces MUST make clear that sharing an invitation shares the group.
+A **server URL** is a secure URL with no `@`, `?` or `#` in it: no user name or password, no query (not even an empty one) and no fragment. Decoders MUST refuse an invitation whose `server` is not one. Apps SHOULD also refuse, when they are not themselves served from a loopback host, an invitation whose server is on one: it would point the app at a service on the user's own device ([ADR-0110](decisions/0110-deception-and-loose-ends.md)).
+
+Decoders MUST accept only secure URLs whose last path segment is exactly `join` (the path is `/join` or ends in `/join`), ignoring one slash after it and any query, which messengers and mail add to links they pass on ([ADR-0110](decisions/0110-deception-and-loose-ends.md)). Servers and static hosts MUST answer that path with the web app (see [ADR-0012](decisions/0012-invitation-links-under-a-base-path.md)). A reserved `role` value grants member. Anyone holding an invitation can join the group. Interfaces MUST make clear that sharing an invitation shares the group.
 
 ## 7. Transport: LoRa radios
 

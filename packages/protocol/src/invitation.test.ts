@@ -110,8 +110,13 @@ describe('invitation links', () => {
     expect(parseInvitationUrl(`https://app.example/tesel/join#${tokenText}`).ok).toBe(true);
     expect(parseInvitationUrl(`http://app.example/join#${tokenText}`).ok).toBe(false);
     expect(parseInvitationUrl(`https://app.example/xjoin#${tokenText}`).ok).toBe(false);
-    expect(parseInvitationUrl(`https://app.example/join/#${tokenText}`).ok).toBe(false);
-    expect(parseInvitationUrl(`https://app.example/join?x=1#${tokenText}`).ok).toBe(false);
+    expect(parseInvitationUrl(`https://app.example/join/x#${tokenText}`).ok).toBe(false);
+  });
+
+  it('ignores a query and a slash after join, which whatever passed the link on may add', () => {
+    expect(parseInvitationUrl(`https://app.example/join/#${tokenText}`).ok).toBe(true);
+    expect(parseInvitationUrl(`https://app.example/join?fbclid=x#${tokenText}`).ok).toBe(true);
+    expect(parseInvitationUrl(`https://app.example/tesel/join/?x=1#${tokenText}`).ok).toBe(true);
   });
 
   it('accepts plain http only on a loopback host, for development', () => {
@@ -124,6 +129,29 @@ describe('invitation links', () => {
 
   it('refuses a server value that only looks like an https URL', () => {
     expect(encodeInvitationToken({ ...plain, server: 'https://' }).ok).toBe(false);
+  });
+
+  /** The token with another server in it, as a forged invitation could carry. */
+  const withServer = (server: string) => {
+    const bytes = encodeUtf8(server);
+    const head = (fromBase64url(tokenText) ?? new Uint8Array()).slice(0, -1);
+    return toBase64url(Uint8Array.of(...head, bytes.length, ...bytes));
+  };
+
+  it('reads the server an invitation carries', () => {
+    const decoded = decodeInvitationToken(withServer('https://relay.example/tesel/'));
+    expect(decoded.ok && decoded.value.server).toBe('https://relay.example/tesel/');
+  });
+
+  it.each([
+    'https://user:secret@relay.example',
+    'https://@relay.example',
+    'https://relay.example/?',
+    'https://relay.example/?to=elsewhere',
+    'https://relay.example/#here',
+  ])('refuses a server %j with a user, a query or a fragment', (server) => {
+    expect(encodeInvitationToken({ ...plain, server }).ok).toBe(false);
+    expect(decodeInvitationToken(withServer(server)).ok).toBe(false);
   });
 
   it('grants member when the role byte is reserved', () => {
