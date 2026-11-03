@@ -1,6 +1,6 @@
 # 0068. Restore copies under a new identity, and go back across a change of schema
 
-- Status: Accepted
+- Status: Accepted, amended by [0108](0108-deployment-holds-against-floods.md) (the room a copy leaves)
 - Date: 2026-10-29
 
 ## Context

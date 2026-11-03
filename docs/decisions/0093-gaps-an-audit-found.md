@@ -1,6 +1,6 @@
 # 0093. Close the gaps an audit of the whole code found
 
-- Status: Accepted
+- Status: Accepted, amended by [0107](0107-relay-holds-against-floods.md) (what clients may leave unread)
 - Date: 2026-11-02
 
 ## Context

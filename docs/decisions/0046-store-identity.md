@@ -1,6 +1,6 @@
 # 0046. A server's store has an identity, and cursors belong to it
 
-- Status: Accepted
+- Status: Accepted, amended by [0107](0107-relay-holds-against-floods.md) (`stored` once on the disk)
 - Date: 2026-10-27
 
 ## Context

@@ -50,8 +50,8 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0042](0042-remove-radio-line-of-sight.md)           | Remove the radio line of sight                                                              | Accepted                                                |
 | [0043](0043-radio-delivery.md)                       | Deliver over the radio until someone has it                                                 | Accepted, amended by 0104                               |
 | [0044](0044-clocks-and-damaged-events.md)            | Keep each author's events in order, and say when a clock is wrong                           | Accepted, amended by 0103                               |
-| [0045](0045-server-keeps-every-distinct-envelope.md) | The server keeps every distinct envelope pushed under a key                                 | Accepted, amended by 0067                               |
-| [0046](0046-store-identity.md)                       | A server's store has an identity, and cursors belong to it                                  | Accepted                                                |
+| [0045](0045-server-keeps-every-distinct-envelope.md) | The server keeps every distinct envelope pushed under a key                                 | Accepted, amended by 0067 and 0107                      |
+| [0046](0046-store-identity.md)                       | A server's store has an identity, and cursors belong to it                                  | Accepted, amended by 0107                               |
 | [0047](0047-alarms-and-notices.md)                   | Raise the alarm, and say what happened                                                      | Accepted, amended by 0070, 0104                         |
 | [0048](0048-how-the-app-shares-state.md)             | One rule for sharing state in the web app, and panels that carry what they show             | Accepted                                                |
 | [0049](0049-signed-images-and-checked-updates.md)    | Run only signed server images, and check every update                                       | Accepted, amended by 0068                               |
@@ -73,7 +73,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0065](0065-room-for-what-is-read.md)                | Give the room to what is read; what is used now and then waits in a menu                    | Accepted, amended by 0070, 0082                         |
 | [0066](0066-practice-situations.md)                  | Practice situations, on foot along the streets, with a guide                                | Superseded by 0083                                      |
 | [0067](0067-envelope-nonce-from-the-event.md)        | Derive each envelope's nonce from its event                                                 | Accepted                                                |
-| [0068](0068-restorable-copies-and-going-back.md)     | Restore copies under a new identity, and go back across a change of schema                  | Accepted                                                |
+| [0068](0068-restorable-copies-and-going-back.md)     | Restore copies under a new identity, and go back across a change of schema                  | Accepted, amended by 0108                               |
 | [0069](0069-who-keeps-in-touch-without-coverage.md)  | Tell who keeps in touch without coverage                                                    | Accepted, amended by 0071, 0078                         |
 | [0070](0070-a-simpler-app.md)                        | A simpler app: one place to add, no alerts or roll calls, a way to start                    | Accepted, amended by 0071, 0078, 0081, 0082, 0083, 0087 |
 | [0071](0071-panels-read-whole.md)                    | Me and the map layers are read whole, without opening anything                              | Accepted, amended by 0078, 0081, 0087                   |
@@ -98,7 +98,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0090](0090-pairing-a-radio-from-the-app.md)         | Pairing a radio from the app, and saying why a connection failed                            | Accepted                                                |
 | [0091](0091-interlocking-tiles-logo.md)              | The logo: two interlocking tiles and a drawn wordmark                                       | Superseded by 0095                                      |
 | [0092](0092-moves-not-gps-wandering.md)              | Moves, not the GPS wandering                                                                | Accepted                                                |
-| [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted                                                |
+| [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted, amended by 0107                               |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
 | [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |
 | [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted                                                |
@@ -112,3 +112,5 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0104](0104-sos-across-drops-and-groups.md)          | Keep the radio and SOS calls going across drops and group changes                           | Accepted                                                |
 | [0105](0105-circles-stay-on-the-earth.md)            | Keep circles to 1 000 km, and their points on the Earth                                     | Accepted                                                |
 | [0106](0106-ground-in-3d-that-reads.md)              | A ground in 3D that reads as raised                                                         | Accepted                                                |
+| [0107](0107-relay-holds-against-floods.md)           | Keep the relay fair, responsive and bounded under a flood                                   | Accepted                                                |
+| [0108](0108-deployment-holds-against-floods.md)      | Keep the VPS's disk, settings and proxy safe from what the relay faces                      | Accepted                                                |
