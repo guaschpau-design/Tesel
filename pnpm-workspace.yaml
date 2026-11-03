@@ -2,3 +2,13 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'tools/*'
+
+# Dependencies' install scripts do not run, and one nobody has reviewed fails the install, in CI
+# and in the image build, instead of being skipped with only a warning. A dependency whose script
+# must run goes in onlyBuiltDependencies, one whose script is not needed in ignoredBuiltDependencies.
+onlyBuiltDependencies: []
+ignoredBuiltDependencies:
+  # Native serial ports for Node, which meshcore.js pulls in. The app reaches radios through the
+  # browser (Web Bluetooth, Web Serial) and never loads it.
+  - '@serialport/bindings-cpp'
+strictDepBuilds: true
