@@ -1,9 +1,51 @@
-# CI pins its actions by commit (ci.yml); Dependabot proposes the newer releases, updating the
-# commit and its "# vX.Y.Z" comment together. Images pinned in apps/server/Dockerfile and deploy/
-# are updated by hand, with CI's Node version (deploy/README.md, "Updating pinned versions").
+# Dependabot proposes newer versions of what the project pins (ADR-0109): the actions of ci.yml,
+# by commit with the release in a "# vX.Y.Z" comment; the npm packages of the pnpm workspace; the
+# Node base image of apps/server/Dockerfile and Caddy's in deploy/vps/compose.yaml, by version and
+# digest. A release is proposed only once it is a week old, so one published by a hijacked account
+# is likely found and pulled first, and updates come grouped, so they do not flood. Advisories are
+# caught by `pnpm audit` in CI. A Node update also needs `node-version` in ci.yml, in the same pull
+# request; the other pinned images and tools are updated by hand (deploy/README.md, "Updating
+# pinned versions").
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      # Minor and patch releases in one pull request a week; each major in its own.
+      npm-minor-and-patch:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
+      npm-security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /apps/server
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      # Node changes major version by a decision (an even, long-term release), not by a bot.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker-compose
+    directory: /deploy/vps
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

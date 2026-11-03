@@ -25,6 +25,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      # Known vulnerabilities of high or critical severity in what the app and the server ship
+      # fail the run; lesser ones and those of build tools are left to Dependabot (ADR-0109).
+      - run: pnpm audit --prod --audit-level high
 
   e2e:
     runs-on: ubuntu-latest
