@@ -4,8 +4,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/main/deploy/vps/install.sh \
 #     | sudo bash -s -- --domain tesel.example.eu [--redirect-from old.example.eu]
 #
-# To install the files of a release instead of main, fetch this script from the release's tag
-# and pass the same tag with --ref (deploy/README.md).
+# To install the files of one commit, which cannot change, instead of the tip of main, fetch this
+# script from that commit and pass its full SHA with --ref (deploy/README.md).
 #
 # Safe to run again: it converges to the same setup, which is also how configuration changes
 # in this folder reach an existing server. See deploy/README.md for what it does and why.
@@ -37,7 +37,7 @@ Usage: install.sh --domain DOMAIN [--redirect-from DOMAIN[,DOMAIN...]]
   --redirect-from  Old names of the server, which redirect to the new one; kept on later runs
   --alert-url      Ping URL of healthchecks.io or alike, told how each scheduled job ends; kept
                    on later runs
-  --ref            Branch or tag whose deployment files are installed (default: main)
+  --ref            Commit SHA, branch or tag whose deployment files are installed (default: main)
 TEXT
   exit 2
 }
@@ -68,7 +68,7 @@ set_setting() {
 
 [[ -n "$DOMAIN" ]] || usage
 is_domain "$DOMAIN" || fail "\"$DOMAIN\" is not a domain name."
-[[ "$REF" =~ ^[A-Za-z0-9._/-]+$ ]] || fail "--ref: \"$REF\" is not a branch or tag name."
+[[ "$REF" =~ ^[A-Za-z0-9._/-]+$ ]] || fail "--ref: \"$REF\" is not a commit, branch or tag."
 IFS=',' read -r -a REDIRECT_DOMAINS <<< "$REDIRECT_FROM"
 for old in "${REDIRECT_DOMAINS[@]}"; do
   is_domain "$old" || fail "--redirect-from: \"$old\" is not a domain name."

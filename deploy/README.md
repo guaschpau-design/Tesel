@@ -26,11 +26,12 @@ The server runs on any Debian or Ubuntu VPS with a domain pointing to it ([ADR-0
 
 3. Open `https://tesel.example.eu`: the landing page is at the root and the app at `/app/`. Groups created there use that server.
 
-The installer and the files it downloads come from `main`. To install those of a release, fetch the script from the release's tag and pass the same tag with `--ref`; the image still follows `TESEL_IMAGE_TAG` (below):
+The installer and the files it downloads come from the tip of `main`, which changes with every merge. To install files that cannot change under you, fetch the script from one commit and pass the same commit's full SHA with `--ref` (the SHA of a commit you have read, for example from the repository's history on GitHub); the image still follows `TESEL_IMAGE_TAG` (below):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/v0.1.0/deploy/vps/install.sh \
-  | sudo bash -s -- --ref v0.1.0 --domain tesel.example.eu
+REF=0123456789abcdef0123456789abcdef01234567   # the commit's full SHA
+curl -fsSL "https://raw.githubusercontent.com/guaschpau-design/Tesel/$REF/deploy/vps/install.sh" \
+  | sudo bash -s -- --ref "$REF" --domain tesel.example.eu
 ```
 
 What [`vps/install.sh`](vps/install.sh) sets up:
