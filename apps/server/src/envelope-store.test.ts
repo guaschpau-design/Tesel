@@ -3,13 +3,14 @@ import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { fromBase64url } from '@tesel/protocol';
+import { fromBase64url, toBase64url } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
 import { EnvelopeStore } from './envelope-store.ts';
 
 const GROUP_A = new Uint8Array(16).fill(1);
 const GROUP_B = new Uint8Array(16).fill(2);
+const GROUP_C = new Uint8Array(16).fill(3);
 const key = (n: number) => new Uint8Array(16).fill(n);
 const env = (n: number) => new Uint8Array(50).fill(n);
 const tempPath = () => join(mkdtempSync(join(tmpdir(), 'tesel-store-')), 'tesel.db');
@@ -84,6 +85,71 @@ describe('envelope store', () => {
     const reopened = new EnvelopeStore(path);
     expect(reopened.append(GROUP_A, key(5), env(5), 3000).cursor).toBe(5);
     reopened.close();
+  });
+
+  it('forgets only the groups an expiry left empty, whichever other groups there are', () => {
+    const store = new EnvelopeStore(':memory:');
+    store.append(GROUP_A, key(1), env(1), 1000);
+    store.append(GROUP_A, key(2), env(2), 3000);
+    for (let n = 1; n <= 7; n++) store.append(GROUP_B, key(n), env(n), 1000);
+    store.append(GROUP_C, key(1), env(1), 3000);
+    expect(store.deleteReceivedBefore(2000)).toBe(8);
+    expect([GROUP_A, GROUP_B, GROUP_C].map((group) => store.lastCursor(group))).toEqual([2, 0, 1]);
+    // The forgotten group counts on from the highest cursor any forgotten group had.
+    expect(store.append(GROUP_B, key(8), env(8), 3000).cursor).toBe(8);
+  });
+
+  it('tells when the oldest envelope a group still has arrived', () => {
+    const store = new EnvelopeStore(':memory:');
+    expect(store.firstReceivedAt(GROUP_A)).toBeNull();
+    store.append(GROUP_A, key(1), env(1), 1000);
+    store.append(GROUP_A, key(2), env(2), 3000);
+    expect(store.firstReceivedAt(GROUP_A)).toBe(1000);
+    store.deleteReceivedBefore(2000);
+    expect(store.firstReceivedAt(GROUP_A)).toBe(3000);
+  });
+
+  it('lists the groups that take the most room, the largest first', () => {
+    const store = new EnvelopeStore(':memory:');
+    store.append(GROUP_A, key(1), env(1), 1000);
+    store.append(GROUP_B, key(1), env(1), 2000);
+    store.append(GROUP_B, key(2), env(2), 5000);
+    expect(store.largestGroups(1)).toEqual([
+      {
+        id: toBase64url(GROUP_B),
+        envelopes: 2,
+        bytes: 100,
+        firstReceivedAt: 2000,
+        lastReceivedAt: 5000,
+      },
+    ]);
+    expect(store.largestGroups(5).map((group) => group.id)).toEqual(
+      [GROUP_B, GROUP_A].map(toBase64url),
+    );
+  });
+
+  it('purges a group a batch at a time, and never reuses its cursors', () => {
+    const store = new EnvelopeStore(':memory:');
+    for (let n = 1; n <= 5; n++) store.append(GROUP_A, key(n), env(n), 1000);
+    store.append(GROUP_B, key(1), env(1), 1000);
+    expect(store.deleteGroup(GROUP_A, 3)).toBe(3);
+    expect(store.lastCursor(GROUP_A)).toBe(5);
+    expect(store.deleteGroup(GROUP_A, 3)).toBe(2);
+    expect(store.lastCursor(GROUP_A)).toBe(0);
+    expect(store.after(GROUP_B, 0, 10)).toHaveLength(1);
+    expect(store.append(GROUP_A, key(6), env(6), 2000).cursor).toBe(6);
+  });
+
+  it('never reuses the cursors of a group purged by another process while it serves', () => {
+    const path = tempPath();
+    const server = new EnvelopeStore(path);
+    for (let n = 1; n <= 4; n++) server.append(GROUP_A, key(n), env(n), 1000);
+    const admin = new EnvelopeStore(path, { busyTimeoutMs: 1000 });
+    admin.deleteGroup(GROUP_A, 100);
+    admin.close();
+    expect(server.append(GROUP_A, key(5), env(5), 2000).cursor).toBe(5);
+    expect(server.append(GROUP_B, key(1), env(1), 2000).cursor).toBe(5);
+    server.close();
   });
 
   it('keeps its identity across restarts, and a new database gets a new one', () => {

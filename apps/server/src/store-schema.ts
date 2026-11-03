@@ -31,9 +31,10 @@ export function envelopeDigest(envelope: Uint8Array): Uint8Array {
 export function openSchema(db: DatabaseSync): void {
   db.exec('PRAGMA auto_vacuum = INCREMENTAL');
   if (pragma(db, 'auto_vacuum') !== AUTO_VACUUM_INCREMENTAL) db.exec('VACUUM');
-  // NORMAL is safe with WAL: a crash of the server loses nothing, a power cut at most the last
-  // transactions, and each push no longer waits for the disk.
-  db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL');
+  // FULL: a push is answered `stored` only once it is on the disk, so not even a power cut loses
+  // an envelope the server acknowledged, or reuses its cursor under the same store identity
+  // (ADR-0046). It costs each push one flush of the log (ADR-0107).
+  db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL');
   const version = pragma(db, 'user_version');
   if (version > MIGRATIONS.length) {
     throw new Error(`The database has schema ${String(version)}, newer than this server knows`);

@@ -2,7 +2,7 @@
 // The server never sees anything but group IDs, event keys and ciphertext. The schema and its
 // upgrades live in store-schema.ts.
 
-import { DatabaseSync, type StatementSync } from 'node:sqlite';
+import { DatabaseSync, type SQLInputValue, type StatementSync } from 'node:sqlite';
 
 import { toBase64url } from '@tesel/protocol';
 
@@ -20,8 +20,27 @@ export interface AppendResult {
   readonly isNew: boolean;
 }
 
+/** What a group keeps on the server, for its operator (store-admin.ts). */
+export interface GroupUsage {
+  /** The group ID, base64url. */
+  readonly id: string;
+  readonly envelopes: number;
+  /** Bytes of its envelopes, without the keys and indexes stored beside them. */
+  readonly bytes: number;
+  readonly firstReceivedAt: number;
+  readonly lastReceivedAt: number;
+}
+
+export interface StoreOptions {
+  /**
+   * How long a write waits for one of another process (store-admin.ts beside the server) to
+   * finish before it fails; none by default, so the server answers at once.
+   */
+  readonly busyTimeoutMs?: number;
+}
+
 // Statements used in more than one place.
-const STORE_INFO = 'SELECT id, pruned_cursor FROM store_info';
+const STORE_ID = 'SELECT id FROM store_info';
 const LAST_CURSOR = 'SELECT cursor FROM group_cursors WHERE group_id = ?';
 
 export class EnvelopeStore {
@@ -29,44 +48,46 @@ export class EnvelopeStore {
   readonly id: string;
 
   readonly #db: DatabaseSync;
-  /** The cursor a group without a cursor row counts on from (see store_info). */
-  #prunedCursor: number;
 
   /** Statements prepared once, at first use, by their SQL. */
   readonly #statements = new Map<string, StatementSync>();
 
   /** `path` is a file, or `:memory:` for tests. */
-  constructor(path: string) {
-    this.#db = new DatabaseSync(path);
+  constructor(path: string, options: StoreOptions = {}) {
+    this.#db = new DatabaseSync(path, { timeout: options.busyTimeoutMs ?? 0 });
     openSchema(this.#db);
 
-    const info = this.#sql(STORE_INFO).get();
+    const info = this.#sql(STORE_ID).get();
     if (info === undefined) throw new Error('The database has no store identity');
     this.id = toBase64url(info['id'] as Uint8Array);
-    this.#prunedCursor = Number(info['pruned_cursor']);
   }
 
   /**
    * Stores an envelope unless the group already has this very envelope under this key; a
-   * different envelope under a known key is stored too (ADR-0045).
+   * different envelope under a known key is stored too (ADR-0045). What it reads to number the
+   * envelope is read in the same transaction, so a group purged meanwhile by another process
+   * cannot get a cursor it had.
    */
   append(group: Uint8Array, key: Uint8Array, env: Uint8Array, now: number): AppendResult {
     const digest = envelopeDigest(env);
-    const known = this.#sql(
-      'SELECT cursor FROM envelopes WHERE group_id = ? AND event_key = ? AND digest = ?',
-    ).get(group, key, digest);
-    if (known !== undefined) return { cursor: Number(known['cursor']), isNew: false };
-    const last = this.#sql(LAST_CURSOR).get(group);
-    const cursor = (last === undefined ? this.#prunedCursor : Number(last['cursor'])) + 1;
-    transaction(this.#db, () => {
+    return transaction(this.#db, () => {
+      const known = this.#sql(
+        'SELECT cursor FROM envelopes WHERE group_id = ? AND event_key = ? AND digest = ?',
+      ).get(group, key, digest);
+      if (known !== undefined) return { cursor: Number(known['cursor']), isNew: false };
+      // A group without a cursor row counts on from the highest cursor of forgotten groups.
+      const last =
+        this.#sql(LAST_CURSOR).get(group) ??
+        this.#sql('SELECT pruned_cursor AS cursor FROM store_info').get();
+      const cursor = Number(last?.['cursor'] ?? 0) + 1;
       this.#sql(
         'INSERT INTO envelopes (group_id, cursor, event_key, digest, envelope, received_at) VALUES (?, ?, ?, ?, ?, ?)',
       ).run(group, cursor, key, digest, env, now);
       this.#sql(
         'INSERT INTO group_cursors (group_id, cursor) VALUES (?, ?) ON CONFLICT (group_id) DO UPDATE SET cursor = excluded.cursor',
       ).run(group, cursor);
+      return { cursor, isNew: true };
     });
-    return { cursor, isNew: true };
   }
 
   /**
@@ -76,6 +97,14 @@ export class EnvelopeStore {
    */
   lastCursor(group: Uint8Array): number {
     return Number(this.#sql(LAST_CURSOR).get(group)?.['cursor'] ?? 0);
+  }
+
+  /** When the oldest envelope the group still has was received, or null if it has none. */
+  firstReceivedAt(group: Uint8Array): number | null {
+    const row = this.#sql(
+      'SELECT received_at FROM envelopes WHERE group_id = ? ORDER BY cursor LIMIT 1',
+    ).get(group);
+    return row === undefined ? null : Number(row['received_at']);
   }
 
   /** Up to `limit` envelopes with a cursor greater than `cursor`, oldest first. */
@@ -90,7 +119,7 @@ export class EnvelopeStore {
   /** Whether the database answers a query, for health reporting. */
   isAvailable(): boolean {
     try {
-      return this.#sql(STORE_INFO).get() !== undefined;
+      return this.#sql(STORE_ID).get() !== undefined;
     } catch {
       return false;
     }
@@ -98,44 +127,82 @@ export class EnvelopeStore {
 
   /**
    * Deletes envelopes received before `time`, the oldest first and at most `limit` of them (all
-   * of them when it is negative, as SQLite's LIMIT takes it), and
-   * forgets the cursors of groups left without envelopes; returns how many envelopes went. The
-   * space they took is given back to the file system. A limit lets a long deletion go in short
-   * steps, with the server answering in between.
+   * of them when it is negative, as SQLite's LIMIT takes it), and forgets the cursors of groups
+   * left without envelopes; returns how many envelopes went. The space they took is given back to
+   * the file system. A limit lets a long deletion go in short steps, with the server answering in
+   * between.
    */
   deleteReceivedBefore(time: number, limit = -1): number {
-    const deleted = transaction(this.#db, () => {
-      const changes = Number(
-        this.#sql(
-          `DELETE FROM envelopes WHERE (group_id, cursor) IN
-            (SELECT group_id, cursor FROM envelopes WHERE received_at < ?
-              ORDER BY received_at LIMIT ?)`,
-        ).run(time, limit).changes,
-      );
-      // Groups left without envelopes are forgotten; the cursor they reached is kept as the one
-      // every forgotten group counts on from, so a cursor is never reused.
-      this.#sql(
-        `
-        UPDATE store_info SET pruned_cursor = MAX(pruned_cursor, COALESCE(
-          (SELECT MAX(cursor) FROM group_cursors AS g
-            WHERE NOT EXISTS (SELECT 1 FROM envelopes AS e WHERE e.group_id = g.group_id)),
-          0))
-      `,
-      ).run();
-      this.#sql(
-        'DELETE FROM group_cursors WHERE NOT EXISTS (SELECT 1 FROM envelopes AS e WHERE e.group_id = group_cursors.group_id)',
-      ).run();
-      return changes;
-    });
-    this.#prunedCursor = Number(
-      this.#sql(STORE_INFO).get()?.['pruned_cursor'] ?? this.#prunedCursor,
+    return this.#deleteAndForget(
+      `DELETE FROM envelopes WHERE (group_id, cursor) IN
+        (SELECT group_id, cursor FROM envelopes WHERE received_at < ? ORDER BY received_at LIMIT ?)
+        RETURNING group_id`,
+      time,
+      limit,
     );
-    this.#db.exec('PRAGMA incremental_vacuum');
-    return deleted;
+  }
+
+  /**
+   * Deletes up to `limit` of a group's envelopes, the oldest first, and forgets the group once it
+   * has none; returns how many went. Its cursors are never reused, as for an expired group.
+   */
+  deleteGroup(group: Uint8Array, limit: number): number {
+    return this.#deleteAndForget(
+      `DELETE FROM envelopes WHERE (group_id, cursor) IN
+        (SELECT group_id, cursor FROM envelopes WHERE group_id = ? ORDER BY cursor LIMIT ?)
+        RETURNING group_id`,
+      group,
+      limit,
+    );
+  }
+
+  /** The `limit` groups that take the most room, the largest first. */
+  largestGroups(limit: number): GroupUsage[] {
+    return this.#sql(
+      `SELECT group_id, COUNT(*) AS envelopes, SUM(LENGTH(envelope)) AS bytes,
+        MIN(received_at) AS first, MAX(received_at) AS last
+        FROM envelopes GROUP BY group_id ORDER BY bytes DESC LIMIT ?`,
+    )
+      .all(limit)
+      .map((row) => ({
+        id: toBase64url(row['group_id'] as Uint8Array),
+        envelopes: Number(row['envelopes']),
+        bytes: Number(row['bytes']),
+        firstReceivedAt: Number(row['first']),
+        lastReceivedAt: Number(row['last']),
+      }));
   }
 
   close(): void {
     this.#db.close();
+  }
+
+  /**
+   * Runs a DELETE that returns the group of each envelope it deletes, then forgets those groups
+   * that have none left: the highest cursor each reached becomes the one every forgotten group
+   * counts on from, so a cursor is never reused. Only the groups it touched are looked at.
+   */
+  #deleteAndForget(deletion: string, ...parameters: SQLInputValue[]): number {
+    const deleted = transaction(this.#db, () => {
+      const rows = this.#sql(deletion).all(...parameters);
+      const groups = new Map<string, Uint8Array>();
+      for (const row of rows) {
+        const group = row['group_id'] as Uint8Array;
+        groups.set(toBase64url(group), group);
+      }
+      for (const group of groups.values()) {
+        const left = this.#sql('SELECT 1 FROM envelopes WHERE group_id = ? LIMIT 1').get(group);
+        if (left !== undefined) continue;
+        this.#sql(
+          `UPDATE store_info SET pruned_cursor = MAX(pruned_cursor,
+            COALESCE((SELECT cursor FROM group_cursors WHERE group_id = ?), 0))`,
+        ).run(group);
+        this.#sql('DELETE FROM group_cursors WHERE group_id = ?').run(group);
+      }
+      return rows.length;
+    });
+    this.#db.exec('PRAGMA incremental_vacuum');
+    return deleted;
   }
 
   #sql(text: string): StatementSync {
