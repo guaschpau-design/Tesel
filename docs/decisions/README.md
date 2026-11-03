@@ -117,3 +117,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0109](0109-build-and-updates-resist-tampering.md)   | Keep the build, the publishing and the updates safe from tampering                          | Accepted                                                |
 | [0110](0110-deception-and-loose-ends.md)             | Guard against look-alike names and invitations, and close loose ends                        | Accepted                                                |
 | [0111](0111-airtime-kept-numbers-per-group.md)       | Keep the radio's airtime, one window on the radio, and numbers per group                    | Accepted                                                |
+| [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |

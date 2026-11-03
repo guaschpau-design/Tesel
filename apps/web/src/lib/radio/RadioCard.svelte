@@ -41,7 +41,7 @@
   });
 </script>
 
-<ChannelCard icon="mast" name={t('mediumLora')} level={card.level} status={card.status}>
+<ChannelCard icon="mesh" name={t('mediumLora')} level={card.level} status={card.status}>
   {#if supported && radio.state === 'ready'}
     <span class="hint">
       {t('radioDetails', { percent: Math.round(radio.airtimeUsed * 100) })}

@@ -6,7 +6,7 @@
     <title>Tesel · Consciencia situacional resiliente para equipos</title>
     <meta
       name="description"
-      content="Tesel reúne en un mismo mapa dónde está cada miembro del equipo, qué está pasando y quién se ocupa de qué. Con internet y, si falla la cobertura, por radio. Gratuita, sin registro y cifrada."
+      content="Tesel reúne en un mismo mapa dónde está cada miembro del equipo, qué está pasando y quién se ocupa de qué. Con internet y, si falla la cobertura, por su propia red de nodos. Gratuita, sin registro y cifrada."
     />
     <!-- Proves to Google Search Console that the project owns the site (ADR-0094). -->
     <meta name="google-site-verification" content="fNH5dLDZrbQVVV_fkWFmdEVKhsDNSeNqKIOMZBFmgzA" />
@@ -23,7 +23,7 @@
     <meta property="og:title" content="Tesel · Consciencia situacional resiliente para equipos" />
     <meta
       property="og:description"
-      content="Tesel reúne en un mismo mapa dónde está cada miembro del equipo, qué está pasando y quién se ocupa de qué. Con internet y, si falla la cobertura, por radio. Gratuita, sin registro y cifrada."
+      content="Tesel reúne en un mismo mapa dónde está cada miembro del equipo, qué está pasando y quién se ocupa de qué. Con internet y, si falla la cobertura, por su propia red de nodos. Gratuita, sin registro y cifrada."
     />
     <meta property="og:url" content="https://tesel.eu/" />
     <meta property="og:image" content="https://tesel.eu/img/share-es.jpg" />
@@ -88,11 +88,11 @@
           <h1>Organiza a tu equipo sobre el terreno aunque fallen las comunicaciones.</h1>
           <p class="lead">
             Dónde está cada uno, qué está pasando y quién se ocupa de qué. Con internet y, si falla
-            la cobertura, por radio.
+            la cobertura, por una red propia de nodos, sin antenas ni operadoras.
           </p>
           <div class="actions">
             <a class="button" href="app/">Abrir Tesel</a>
-            <a class="button quiet" href="#sin-red">Cómo funciona por radio</a>
+            <a class="button quiet" href="#sin-red">Cómo funciona sin cobertura</a>
           </div>
           <ul class="fine">
             <li>Gratuita</li>
@@ -131,8 +131,8 @@
             <li>
               <h3>Más de un camino</h3>
               <p>
-                Usa internet cuando lo hay y radio cuando no. Lo que se escribe sin conexión sale en
-                cuanto hay un camino.
+                Usa internet cuando lo hay y su propia red de nodos cuando no. Lo que se escribe sin
+                conexión sale en cuanto hay un camino.
               </p>
             </li>
             <li>
@@ -150,12 +150,14 @@
         <div class="wrap">
           <div class="section-head">
             <p class="eyebrow">Comunicaciones resilientes</p>
-            <h2>Si falla la cobertura, sigue por radio.</h2>
+            <h2>Si falla la cobertura, sigue por la malla.</h2>
             <p>
               Normalmente Tesel va por internet, como cualquier app. Pero el móvil puede llevar
-              también una pequeña radio de bolsillo, unida por Bluetooth. Cuando no hay cobertura,
-              los mensajes viajan por esa radio, saltando de una a otra hasta llegar a todo el
-              equipo. Nadie tiene que tocar nada: Tesel usa el camino que funciona.
+              también un pequeño nodo de bolsillo, unido por Bluetooth: un transmisor LoRa de largo
+              alcance y muy bajo consumo. Los nodos del equipo se enlazan entre sí y forman una red
+              de malla propia, sin antenas ni operadoras. Cuando no hay cobertura, los mensajes
+              saltan de nodo en nodo hasta llegar a todo el equipo. Nadie tiene que tocar nada:
+              Tesel usa el camino que funciona.
             </p>
           </div>
           <ol class="channels">
@@ -175,16 +177,16 @@
             </li>
             <li>
               <img
-                src="img/net-radio.svg"
+                src="img/net-mesh.svg"
                 width="400"
                 height="240"
                 loading="lazy"
-                alt="Esquema: internet tachado, y tres móviles, cada uno con su radio, que se pasan un mensaje de radio en radio."
+                alt="Esquema: internet tachado, y tres móviles, cada uno con su nodo, que se pasan un mensaje de nodo en nodo."
               />
               <h3>Sin cobertura</h3>
               <p>
-                Cada móvil habla con su radio, y las radios se pasan los mensajes entre ellas, de
-                una a otra, a kilómetros de distancia.
+                Cada móvil habla con su nodo, y los nodos se pasan los mensajes de uno a otro, a
+                kilómetros de distancia.
               </p>
             </li>
             <li>
@@ -193,36 +195,36 @@
                 width="400"
                 height="240"
                 loading="lazy"
-                alt="Esquema: un móvil con cobertura, internet, y en el centro un móvil con radio y cobertura, resaltado, que une internet con otro móvil que solo tiene radio."
+                alt="Esquema: un móvil con cobertura, internet, y en el centro un móvil con nodo y cobertura, resaltado, que une internet con otro móvil que solo tiene nodo."
               />
               <h3>Las dos a la vez</h3>
               <p>
-                Un móvil que tiene cobertura y radio hace de puente, sin configurar nada: lo que oye
-                por radio lo sube a internet, y lo que llega de internet lo repite por radio. Así
-                nadie se queda fuera.
+                Un móvil que tiene cobertura y nodo hace de puente, sin configurar nada: lo que
+                recibe por la malla lo sube a internet, y lo que llega de internet lo reenvía por la
+                malla. Así nadie se queda fuera.
               </p>
             </li>
           </ol>
           <ul class="facts">
             <li>
-              <strong>Todo viaja por radio:</strong> SOS, mensajes, posiciones, marcas en el mapa,
-              tareas y partes.
+              <strong>Todo viaja por la malla:</strong> SOS, mensajes, posiciones, marcas en el
+              mapa, tareas y partes.
             </li>
             <li>
-              <strong>Lo urgente, primero:</strong> por radio caben pocos datos, así que el SOS pasa
-              delante de los mensajes, y estos delante de las posiciones.
+              <strong>Lo urgente, primero:</strong> por la malla caben pocos datos, así que el SOS
+              pasa delante de los mensajes, y estos delante de las posiciones.
             </li>
             <li>
-              <strong>Cuantas más radios, más lejos:</strong> los mensajes saltan de radio en radio
-              y por los repetidores de la zona. Alrededor de un kilómetro en ciudad; decenas, entre
+              <strong>Cuantos más nodos, más lejos:</strong> los mensajes saltan de nodo en nodo y
+              por los repetidores de la zona. Alrededor de un kilómetro en ciudad; decenas, entre
               puntos altos.
             </li>
             <li>
-              <strong>Cifrado también por radio:</strong> solo tu grupo puede leer lo que envía,
-              aunque comparta la red con otras radios.
+              <strong>Cifrado también en la malla:</strong> solo tu grupo puede leer lo que envía,
+              aunque comparta la red con otros nodos.
             </li>
             <li>
-              <strong>Sin licencias ni cuotas:</strong> las radios usan una banda libre (868 MHz en
+              <strong>Sin licencias ni cuotas:</strong> los nodos usan una banda libre (868 MHz en
               Europa) y gastan muy poca batería.
             </li>
           </ul>
@@ -367,7 +369,7 @@
             <li>
               <h3>Prepárate para quedarte sin red</h3>
               <p>
-                Descarga el mapa de tu zona con wifi y, si tenéis radios, únelas al móvil. Y
+                Descarga el mapa de tu zona con wifi y, si tenéis nodos, únelos al móvil. Y
                 practicad un día tranquilo.
               </p>
             </li>
@@ -413,37 +415,35 @@
           <div class="questions">
             <details>
               <summary>¿Cuesta algo?</summary>
+              <p>No. Tesel es gratuita y sin registro. Solo los nodos, si los usáis, se compran.</p>
+            </details>
+            <details>
+              <summary>¿Necesitamos nodos?</summary>
               <p>
-                No. Tesel es gratuita y sin registro. Solo las radios, si las usáis, se compran.
+                No. Con cobertura, Tesel funciona sin nada más. Los nodos son el plan B para cuando
+                la red falla: conviene tenerlos preparados antes.
               </p>
             </details>
             <details>
-              <summary>¿Necesitamos radios?</summary>
+              <summary>¿Tiene que llevar nodo todo el mundo?</summary>
               <p>
-                No. Con cobertura, Tesel funciona sin nada más. Las radios son el plan B para cuando
-                la red falla: conviene tenerlas preparadas antes.
-              </p>
-            </details>
-            <details>
-              <summary>¿Tiene que llevar radio todo el mundo?</summary>
-              <p>
-                No. Con que algunos la lleven, hacen de puente para los demás. Eso sí: quien no
-                lleva radio ni tiene cobertura se queda sin noticias hasta que recupere una de las
+                No. Con que algunos lo lleven, hacen de puente para los demás. Eso sí: quien no
+                lleva nodo ni tiene cobertura se queda sin noticias hasta que recupere una de las
                 dos.
               </p>
             </details>
             <details>
-              <summary>¿Qué radios sirven?</summary>
+              <summary>¿Qué nodos sirven?</summary>
               <p>
-                Radios LoRa con el programa MeshCore (versión «Companion Bluetooth») o con
-                Meshtastic. Tesel reconoce cuál es al unirla, sin configurar nada. Publicaremos aquí
+                Nodos LoRa con el programa MeshCore (versión «Companion Bluetooth») o con
+                Meshtastic. Tesel reconoce cuál es al unirlo, sin configurar nada. Publicaremos aquí
                 los modelos que recomendamos.
               </p>
             </details>
             <details>
               <summary>¿Funciona en iPhone?</summary>
               <p>
-                Sí. Para unir una radio por Bluetooth, en iPhone hay que abrir Tesel en el navegador
+                Sí. Para unir un nodo por Bluetooth, en iPhone hay que abrir Tesel en el navegador
                 Bluefy, porque Safari no lo permite.
               </p>
             </details>

@@ -68,7 +68,7 @@
             .filter(Boolean)
             .join(' · ')}
           <span class="radio" class:lora={row.lora} title={label} aria-label={label} role="img">
-            <Pictogram name="mast" size={16} />
+            <Pictogram name="mesh" size={16} />
           </span>
         {/if}
         <span

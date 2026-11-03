@@ -23,7 +23,7 @@ test('a member’s profile, status and equipment reach the others', async ({ bro
   await me.getByRole('radio', { name: 'En descanso' }).click();
   await expect(me.getByRole('radio', { name: 'En descanso' })).toBeChecked();
   // The rest, seldom changed, waits under one line.
-  await me.getByText('Perfil, batería, radio y equipo').click();
+  await me.getByText('Perfil, batería, nodo y equipo').click();
   await me.getByLabel('Perfil').selectOption({ label: 'Protección Civil' });
   await me.getByRole('button', { name: 'Botiquín' }).click();
   await me.getByRole('button', { name: 'Agua' }).click();
@@ -39,7 +39,7 @@ test('a member’s profile, status and equipment reach the others', async ({ bro
   await expect(card).toContainText('Protección Civil');
   await expect(card).toContainText('Botiquín, Agua');
   // Her app has no LoRa radio linked: without coverage she cannot be reached, and the card says so.
-  await expect(card.getByText('No conectada')).toBeVisible();
+  await expect(card.getByText('No conectado')).toBeVisible();
   await expect(card.getByText('Tareas', { exact: true })).toBeVisible();
 });
 
@@ -49,7 +49,7 @@ test('much equipment keeps the panel as narrow as a phone', async ({ browser }) 
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
-  await me.getByText('Perfil, batería, radio y equipo').click();
+  await me.getByText('Perfil, batería, nodo y equipo').click();
   const chips = me.locator('button[aria-pressed="false"]');
   for (let left = await chips.count(); left > 0; left -= 1) await chips.first().click();
   const sideways = await me.evaluate((panel) => panel.scrollWidth - panel.clientWidth);
@@ -62,12 +62,12 @@ test('Me says whether a LoRa radio keeps this person in touch, and leads to link
   const page = await device(browser, 'Ana');
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
-  await me.getByText('Perfil, batería, radio y equipo').click();
-  await expect(me.getByText('No conectada')).toBeVisible();
+  await me.getByText('Perfil, batería, nodo y equipo').click();
+  await expect(me.getByText('No conectado')).toBeVisible();
   // Not something to pick by hand: the app knows whether a radio is linked.
   await expect(me.getByRole('button', { name: /LoRa/ })).toHaveCount(0);
-  await me.getByRole('button', { name: 'Conectar radio' }).click();
-  await expect(page.getByRole('region', { name: 'LoRa' })).toBeVisible();
+  await me.getByRole('button', { name: 'Conectar nodo' }).click();
+  await expect(page.getByRole('region', { name: 'Malla' })).toBeVisible();
 });
 
 test('a member changes their name in Me, and the group knows them by it', async ({ browser }) => {

@@ -6,7 +6,7 @@
     <title>Tesel · Resilient situational awareness for teams</title>
     <meta
       name="description"
-      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, by radio. Free, no sign-up, encrypted."
+      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, over its own network of nodes. Free, no sign-up, encrypted."
     />
     <meta name="theme-color" content="#10202c" />
     <link rel="icon" href="../app/icons/favicon.svg?v=39063395" type="image/svg+xml" />
@@ -21,7 +21,7 @@
     <meta property="og:title" content="Tesel · Resilient situational awareness for teams" />
     <meta
       property="og:description"
-      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, by radio. Free, no sign-up, encrypted."
+      content="Tesel puts on one map where each member of the team is, what is happening and who is taking care of what. Over the internet and, if coverage fails, over its own network of nodes. Free, no sign-up, encrypted."
     />
     <meta property="og:url" content="https://tesel.eu/en/" />
     <meta property="og:image" content="https://tesel.eu/img/share-en.jpg" />
@@ -91,11 +91,12 @@
           <h1>Keep your team organised in the field, even when communications fail.</h1>
           <p class="lead">
             Where everyone is, what is happening and who is taking care of what. Over the internet
-            and, if coverage fails, by radio.
+            and, if coverage fails, over a network of nodes of its own, with no masts and no
+            operators.
           </p>
           <div class="actions">
             <a class="button" href="../app/">Open Tesel</a>
-            <a class="button quiet" href="#no-network">How it works by radio</a>
+            <a class="button quiet" href="#no-network">How it works without coverage</a>
           </div>
           <ul class="fine">
             <li>Free</li>
@@ -135,8 +136,8 @@
             <li>
               <h3>More than one way</h3>
               <p>
-                It uses the internet when there is one and radio when there is not. What you write
-                offline goes out as soon as there is a way.
+                It uses the internet when there is one and its own network of nodes when there is
+                not. What you write offline goes out as soon as there is a way.
               </p>
             </li>
             <li>
@@ -154,12 +155,14 @@
         <div class="wrap">
           <div class="section-head">
             <p class="eyebrow">Resilient communications</p>
-            <h2>If coverage fails, it carries on by radio.</h2>
+            <h2>If coverage fails, it carries on over the mesh.</h2>
             <p>
               Normally Tesel goes over the internet, like any app. But the phone can also carry a
-              small pocket radio, paired over Bluetooth. When there is no coverage, messages travel
-              by that radio, hopping from one to the next until they reach the whole team. Nobody
-              has to touch anything: Tesel takes the way that works.
+              small pocket node, paired over Bluetooth: a long-range, very low-power LoRa
+              transmitter. The team's nodes link up with each other into a mesh network of their
+              own, with no masts and no operators. When there is no coverage, messages hop from node
+              to node until they reach the whole team. Nobody has to touch anything: Tesel takes the
+              way that works.
             </p>
           </div>
           <ol class="channels">
@@ -179,16 +182,16 @@
             </li>
             <li>
               <img
-                src="../img/net-radio.svg"
+                src="../img/net-mesh.svg"
                 width="400"
                 height="240"
                 loading="lazy"
-                alt="Scheme: the internet crossed out, and three phones, each with its radio, passing a message from radio to radio."
+                alt="Scheme: the internet crossed out, and three phones, each with its node, passing a message from node to node."
               />
               <h3>Without coverage</h3>
               <p>
-                Each phone talks to its radio, and the radios pass the messages on to each other,
-                from one to the next, kilometres apart.
+                Each phone talks to its node, and the nodes pass the messages on from one to the
+                next, kilometres apart.
               </p>
             </li>
             <li>
@@ -197,35 +200,35 @@
                 width="400"
                 height="240"
                 loading="lazy"
-                alt="Scheme: a phone with coverage, the internet, and in the middle a highlighted phone with both radio and coverage, joining the internet to another phone that only has a radio."
+                alt="Scheme: a phone with coverage, the internet, and in the middle a highlighted phone with both a node and coverage, joining the internet to another phone that only has a node."
               />
               <h3>Both at once</h3>
               <p>
-                A phone that has coverage and a radio acts as a bridge, with nothing to set up: what
-                it hears by radio it sends up to the internet, and what comes from the internet it
-                repeats by radio. So nobody is left out.
+                A phone that has coverage and a node acts as a bridge, with nothing to set up: what
+                it receives over the mesh it sends up to the internet, and what comes from the
+                internet it passes on over the mesh. So nobody is left out.
               </p>
             </li>
           </ol>
           <ul class="facts">
             <li>
-              <strong>Everything travels by radio:</strong> SOS calls, messages, positions, marks on
-              the map, tasks and reports.
+              <strong>Everything travels over the mesh:</strong> SOS calls, messages, positions,
+              marks on the map, tasks and reports.
             </li>
             <li>
-              <strong>The urgent first:</strong> radio carries little data, so an SOS goes ahead of
-              messages, and messages ahead of positions.
+              <strong>The urgent first:</strong> the mesh carries little data, so an SOS goes ahead
+              of messages, and messages ahead of positions.
             </li>
             <li>
-              <strong>The more radios, the further:</strong> messages hop from radio to radio and
+              <strong>The more nodes, the further:</strong> messages hop from node to node and
               through the area's repeaters. About a kilometre in a city; tens, between high points.
             </li>
             <li>
-              <strong>Encrypted by radio too:</strong> only your group can read what it sends, even
-              on a network shared with other radios.
+              <strong>Encrypted on the mesh too:</strong> only your group can read what it sends,
+              even on a network shared with other nodes.
             </li>
             <li>
-              <strong>No licences, no fees:</strong> the radios use a free band (868 MHz in Europe)
+              <strong>No licences, no fees:</strong> the nodes use a free band (868 MHz in Europe)
               and very little battery.
             </li>
           </ul>
@@ -371,7 +374,7 @@
             <li>
               <h3>Get ready to lose the network</h3>
               <p>
-                Download the map of your area on wifi and, if you have radios, pair them with your
+                Download the map of your area on wifi and, if you have nodes, pair them with your
                 phones. And practise on a quiet day.
               </p>
             </li>
@@ -418,28 +421,27 @@
             <details>
               <summary>Does it cost anything?</summary>
               <p>
-                No. Tesel is free and needs no sign-up. Only the radios, if you use them, are
-                bought.
+                No. Tesel is free and needs no sign-up. Only the nodes, if you use them, are bought.
               </p>
             </details>
             <details>
-              <summary>Do we need radios?</summary>
+              <summary>Do we need nodes?</summary>
               <p>
-                No. With coverage, Tesel needs nothing else. Radios are plan B for when the network
+                No. With coverage, Tesel needs nothing else. Nodes are plan B for when the network
                 fails: best to have them ready beforehand.
               </p>
             </details>
             <details>
-              <summary>Does everyone need a radio?</summary>
+              <summary>Does everyone need a node?</summary>
               <p>
                 No. As long as some carry one, they act as bridges for the rest. Mind you: whoever
-                has neither a radio nor coverage hears nothing until they get one of the two back.
+                has neither a node nor coverage hears nothing until they get one of the two back.
               </p>
             </details>
             <details>
-              <summary>Which radios work?</summary>
+              <summary>Which nodes work?</summary>
               <p>
-                LoRa radios with the MeshCore firmware (its “Companion Bluetooth” version) or with
+                LoRa nodes with the MeshCore firmware (its “Companion Bluetooth” version) or with
                 Meshtastic. Tesel recognises which one it is when you link it, with nothing to set
                 up. We will publish the models we recommend here.
               </p>
@@ -447,7 +449,7 @@
             <details>
               <summary>Does it work on an iPhone?</summary>
               <p>
-                Yes. To pair a radio over Bluetooth on an iPhone, open Tesel in the Bluefy browser,
+                Yes. To pair a node over Bluetooth on an iPhone, open Tesel in the Bluefy browser,
                 as Safari does not allow it.
               </p>
             </details>

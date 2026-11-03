@@ -41,7 +41,7 @@
 >
   <StatusDot tone={LEVEL_TONES[link.level]} />
   {#each signs as channel (channel)}
-    <Pictogram name={channel === 'radio' ? 'mast' : networkSign(channel, network)} size={18} />
+    <Pictogram name={channel === 'radio' ? 'mesh' : networkSign(channel, network)} size={18} />
   {/each}
   <span>{word}</span>
 </button>

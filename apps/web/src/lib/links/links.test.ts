@@ -37,11 +37,11 @@ describe('link', () => {
     expect(linkOf({ ...BASE, server: 'local-only' }).level).toBe('none');
   });
 
-  it('says in a word whether the group is reached online, only by radio, or not at all', () => {
+  it('says in a word whether the group is reached online, only over the mesh, or not at all', () => {
     const t = translator('es');
     expect(t(linkWord(linkOf({ ...BASE, radio: 'linked' })))).toBe('En línea');
     expect(t(linkWord(linkOf({ ...BASE, server: 'disconnected', radio: 'linked' })))).toBe(
-      'Por radio',
+      'Por la malla',
     );
     expect(t(linkWord(linkOf({ ...BASE, server: 'syncing' })))).toBe('Conectando…');
     expect(t(linkWord(linkOf({ ...BASE, server: 'disconnected' })))).toBe('Sin conexión');
@@ -70,10 +70,10 @@ describe('channel names', () => {
     expect(name(undefined)).toBe('WiFi/5G');
   });
 
-  it('calls the internet by its network and the radio LoRa', () => {
+  it('calls the internet by its network and the radio the mesh', () => {
     const network = { type: 'cellular', effectiveType: '4g' };
     expect(t(channelName('internet', network))).toBe('4G/5G');
-    expect(t(channelName('radio', network))).toBe('LoRa');
+    expect(t(channelName('radio', network))).toBe('Malla');
   });
 });
 
