@@ -28,12 +28,12 @@ export {
 } from './geo.ts';
 export {
   LIMITS,
-  LoraScheduler,
   type LoraEvent,
   type LoraPacket,
   type LoraSource,
   type OpaqueEvent,
-} from './lora-scheduler.ts';
+} from './lora-limits.ts';
+export { LoraScheduler } from './lora-scheduler.ts';
 export {
   bestHeading,
   lanesLength,

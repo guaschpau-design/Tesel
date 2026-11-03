@@ -7,80 +7,14 @@
 // came from the server (ADR-0015, ADR-0043). It is pure: time and randomness are passed in, and
 // the caller does the sending: it takes one packet with `next`, then reports `sent` or `retry`.
 
-import {
-  eventRefKey,
-  type EventHeader,
-  type LatLon,
-  type NodeId,
-  type TeselEvent,
-} from '@tesel/protocol';
+import { eventRefKey } from '@tesel/protocol';
 
+import { AirNews } from './air-news.ts';
 import { AirtimeWindow } from './airtime.ts';
-import { distanceMeters } from './geo.ts';
+import { LIMITS, URGENT, type LoraEvent, type LoraPacket, type LoraSource } from './lora-limits.ts';
 import { rivalKey } from './rivals.ts';
-import { URGENCY, urgencyOf } from './urgency.ts';
-
-/** Where an event came from: this device, or the server (this device is bridging it). */
-export type LoraSource = 'own' | 'bridged';
-
-/**
- * An event of a type this version does not know: only its header can be read. Bridges still
- * carry it, de-duplicated by the header (protocol §3.1).
- */
-export interface OpaqueEvent extends EventHeader {
-  readonly type: null;
-}
-
-export type LoraEvent = TeselEvent | OpaqueEvent;
-
-export interface LoraPacket {
-  readonly event: LoraEvent;
-  /**
-   * The bytes to put on the air, whose length the airtime budget weighs: in the app, the event
-   * sealed for the radio (protocol §5.2).
-   */
-  readonly bytes: Uint8Array;
-}
-
-const MINUTE = 60_000;
-
-export const LIMITS = {
-  /** The duty-cycle window. */
-  windowMs: 60 * MINUTE,
-  /** Tesel uses half the legal 10 %, leaving room for repeaters and other traffic... */
-  normalBudgetMs: 0.05 * 60 * MINUTE,
-  /** ...except for the most urgent events, which may use all of it. */
-  urgentBudgetMs: 0.1 * 60 * MINUTE,
-  /** Own positions: at most one every 2 minutes, and only after moving 50 m or 10 minutes. */
-  ownPositionMinMs: 2 * MINUTE,
-  ownPositionMinMeters: 50,
-  ownPositionMaxMs: 10 * MINUTE,
-  /** Positions from the server: at most one every 5 minutes per member. */
-  bridgedPositionMs: 5 * MINUTE,
-  /**
-   * Events from the server older than this are history, not news: they are not bridged, unless
-   * they still call for action (`stillNews`).
-   */
-  bridgeMaxAgeMs: 10 * MINUTE,
-  /** Bridged events wait up to this long, so several bridges do not all repeat them. */
-  bridgeDelayMs: 10_000,
-  /** An ACK over LoRa waits 2–30 s and is dropped if another member's ACK is heard first. */
-  ackDelayMinMs: 2_000,
-  ackDelayMaxMs: 30_000,
-  /**
-   * Own SOS repeats: first after 30 s, doubling up to every 5 minutes, until someone acknowledges
-   * or cancels it. At 5 minutes an SOS takes under 1 % of the airtime.
-   */
-  sosFirstRepeatMs: 30_000,
-  sosMaxRepeatMs: 5 * MINUTE,
-  /** A send the radio refused is retried after this long. */
-  retryMs: 10_000,
-  /** Queued packets at most; beyond it the least urgent go, bridged ones first. */
-  maxPending: 500,
-} as const;
-
-/** Events urgent enough to use the full legal budget. */
-const URGENT = URGENCY.alert;
+import { repeatWaitMs, SosRepeats } from './sos-repeats.ts';
+import { urgencyOf } from './urgency.ts';
 
 interface Pending<Packet extends LoraPacket> {
   readonly key: string;
@@ -105,24 +39,18 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   readonly #pending = new Map<string, Pending<Packet>>();
   /** Rival keys sent by us or heard on LoRa in the last hour, with when: not put on the air again. */
   readonly #onAir = new Map<string, number>();
-  /** Own SOS calls still waiting for an acknowledgement or a cancellation: rival → reference key. */
-  readonly #openSos = new Map<string, string>();
+  readonly #sos = new SosRepeats();
+  readonly #news = new AirNews();
   /** Roll calls seen: each member answers them, so their ACKs are never dropped (§3.12). */
   readonly #rollCalls = new Set<string>();
   /** SOS calls, critical alerts and roll calls seen: their acknowledgements are urgent too. */
   readonly #urgentTargets = new Set<string>();
-  /** SOS calls seen cancelled: no longer worth bridging, however recent. */
-  readonly #cancelledSos = new Set<string>();
   /**
    * Events another member acknowledged on the air (roll calls aside): the sender heard that, so a
    * later ACK of them, own or bridged, would only add noise.
    */
   readonly #ackedOnAir = new Set<string>();
   readonly #airtime = new AirtimeWindow(LIMITS.windowMs);
-  #lastOwnPosition: { readonly at: LatLon; readonly time: number } | null = null;
-  readonly #lastBridgedPosition = new Map<NodeId, number>();
-  /** Each member's newest position or hiding seen: older positions are no longer worth sending. */
-  readonly #newestLocation = new Map<NodeId, number>();
   /** Counts group changes, so a packet in flight across one is not put back on the new group. */
   #group = 0;
   /** The packet handed out by `next`, until the caller reports how sending it went. */
@@ -148,12 +76,12 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     this.observe(event);
     if (this.#onAir.has(key) || this.#pending.has(key)) return;
     if (event.type === 'ack' && this.#ackedOnAir.has(eventRefKey(event.target))) return;
-    if (source === 'bridged' && this.#isHistory(event, now)) return;
-    if (this.#superseded(event)) return;
+    if (source === 'bridged' && this.#news.isHistory(event, now)) return;
+    if (this.#news.superseded(event)) return;
     for (const [otherKey, other] of this.#pending) {
-      if (this.#superseded(other.packet.event)) this.#pending.delete(otherKey);
+      if (this.#news.superseded(other.packet.event)) this.#pending.delete(otherKey);
     }
-    if (event.type === 'sos' && source === 'own') this.#openSos.set(key, eventRefKey(event));
+    if (event.type === 'sos' && source === 'own') this.#sos.open(key, eventRefKey(event));
     this.#pending.set(key, {
       key,
       packet,
@@ -171,7 +99,7 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   heard(event: LoraEvent, now: number): void {
     const key = rivalKey(event);
     this.#onAir.set(key, now);
-    if (!this.#openSos.has(key)) this.#pending.delete(key);
+    if (!this.#sos.isOpen(key)) this.#pending.delete(key);
     this.observe(event);
     if (event.type === 'ack' && !this.#rollCalls.has(eventRefKey(event.target))) {
       // Another member acknowledged, and the sender heard it as we did: our own ACK for the same
@@ -190,16 +118,10 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   /** An event arrived over any transport: acknowledgements and cancellations end SOS repeats. */
   observe(event: LoraEvent): void {
     const key = eventRefKey(event);
+    this.#news.observe(event);
     if (event.type === 'ack') this.#closeSos(eventRefKey(event.target));
-    if (event.type === 'sos-cancel') {
-      this.#cancelledSos.add(eventRefKey(event.sos));
-      this.#closeSos(eventRefKey(event.sos));
-    }
+    if (event.type === 'sos-cancel') this.#closeSos(eventRefKey(event.sos));
     if (event.type === 'roll-call') this.#rollCalls.add(key);
-    if (event.type === 'position' || event.type === 'position-hidden') {
-      const newest = this.#newestLocation.get(event.origin) ?? -1;
-      if (event.seq > newest) this.#newestLocation.set(event.origin, event.seq);
-    }
     if (
       event.type === 'sos' ||
       event.type === 'roll-call' ||
@@ -219,16 +141,13 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   changeGroup(): void {
     this.#group += 1;
     for (const key of this.#pending.keys()) {
-      if (!this.#openSos.has(key)) this.#pending.delete(key);
+      if (!this.#sos.isOpen(key)) this.#pending.delete(key);
     }
     this.#onAir.clear();
     this.#rollCalls.clear();
     this.#urgentTargets.clear();
-    this.#cancelledSos.clear();
     this.#ackedOnAir.clear();
-    this.#lastOwnPosition = null;
-    this.#lastBridgedPosition.clear();
-    this.#newestLocation.clear();
+    this.#news.clear();
   }
 
   /**
@@ -242,11 +161,14 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     // newer position heard meanwhile.
     for (const [key, pending] of this.#pending) {
       const { event } = pending.packet;
-      const history = pending.source === 'bridged' && this.#isHistory(event, now);
-      if (history || this.#superseded(event)) this.#pending.delete(key);
+      const history = pending.source === 'bridged' && this.#news.isHistory(event, now);
+      if (history || this.#news.superseded(event)) this.#pending.delete(key);
     }
     const due = [...this.#pending.values()]
-      .filter((pending) => pending.dueAt <= now && this.#eligible(pending, now))
+      .filter(
+        (pending) =>
+          pending.dueAt <= now && this.#news.eligible(pending.packet.event, pending.source, now),
+      )
       .sort((a, b) => this.#urgency(a) - this.#urgency(b) || a.dueAt - b.dueAt);
     const spent = this.#airtime.usedMs(now);
     // Once a packet does not fit its budget, nothing less urgent on that budget goes before it:
@@ -286,8 +208,9 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     if (!this.#stillQueued(inFlight) || this.#pending.has(pending.key)) return;
     // Heard from someone else meanwhile, or superseded by a newer position: let it go. An own SOS
     // still open was on the air before, and keeps repeating until it is answered.
-    const open = this.#openSos.has(pending.key);
-    if (!open && (this.#onAir.has(pending.key) || this.#superseded(pending.packet.event))) return;
+    const open = this.#sos.isOpen(pending.key);
+    const gone = this.#onAir.has(pending.key) || this.#news.superseded(pending.packet.event);
+    if (!open && gone) return;
     this.#pending.set(pending.key, { ...pending, dueAt: now + LIMITS.retryMs });
   }
 
@@ -296,10 +219,10 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     for (const [key, pending] of this.#pending) {
       if (!matches(pending.packet)) continue;
       this.#pending.delete(key);
-      this.#openSos.delete(key);
+      this.#sos.drop(key);
     }
     const inFlight = this.#inFlight?.pending;
-    if (inFlight !== undefined && matches(inFlight.packet)) this.#openSos.delete(inFlight.key);
+    if (inFlight !== undefined && matches(inFlight.packet)) this.#sos.drop(inFlight.key);
   }
 
   /** Airtime used in the current window, in milliseconds. */
@@ -315,17 +238,6 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     const { event } = pending.packet;
     if (event.type === 'ack' && this.#urgentTargets.has(eventRefKey(event.target))) return URGENT;
     return urgencyOf(event.type);
-  }
-
-  /**
-   * Whether an event from the server is too old to bridge. Age is the sender's clock against
-   * ours, so a wrong clock can only hold back what is not urgent: an SOS not cancelled, a
-   * cancellation, an alert and a roll call are bridged however old, since they still call for
-   * action.
-   */
-  #isHistory(event: LoraEvent, now: number): boolean {
-    if (stillNews(event, this.#cancelledSos)) return false;
-    return now - event.time * 1000 > LIMITS.bridgeMaxAgeMs;
   }
 
   /** Drops the least urgent queued packets beyond the limit, bridged before own, oldest first. */
@@ -349,54 +261,24 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
     return 0;
   }
 
-  #eligible(pending: Pending<Packet>, now: number): boolean {
-    const { event } = pending.packet;
-    if (event.type !== 'position') return true;
-    if (pending.source === 'bridged') {
-      const last = this.#lastBridgedPosition.get(event.origin);
-      return last === undefined || now - last >= LIMITS.bridgedPositionMs;
-    }
-    const last = this.#lastOwnPosition;
-    if (last === null) return true;
-    const elapsed = now - last.time;
-    if (elapsed < LIMITS.ownPositionMinMs) return false;
-    return (
-      elapsed >= LIMITS.ownPositionMaxMs ||
-      distanceMeters(last.at, event) >= LIMITS.ownPositionMinMeters
-    );
-  }
-
   /** Whether a packet in flight still belongs in the queue: of the group now, or an open own SOS. */
   #stillQueued(inFlight: { readonly pending: Pending<Packet>; readonly group: number }): boolean {
-    return inFlight.group === this.#group || this.#openSos.has(inFlight.pending.key);
+    return inFlight.group === this.#group || this.#sos.isOpen(inFlight.pending.key);
   }
 
   #markSent(pending: Pending<Packet>, now: number): void {
-    const { event } = pending.packet;
     this.#onAir.set(pending.key, now);
-    if (event.type === 'position') {
-      if (pending.source === 'own') this.#lastOwnPosition = { at: event, time: now };
-      else this.#lastBridgedPosition.set(event.origin, now);
-    }
+    this.#news.sent(pending.packet.event, pending.source, now);
     const sends = pending.sends + 1;
-    if (this.#openSos.has(pending.key)) {
+    if (this.#sos.isOpen(pending.key)) {
       // Repeats are byte-identical, so receivers de-duplicate them (protocol §3.8).
-      const wait = Math.min(LIMITS.sosFirstRepeatMs * 2 ** (sends - 1), LIMITS.sosMaxRepeatMs);
-      this.#pending.set(pending.key, { ...pending, dueAt: now + wait, sends });
+      this.#pending.set(pending.key, { ...pending, dueAt: now + repeatWaitMs(sends), sends });
     }
-  }
-
-  /** A position older than the member's newest position or hiding. */
-  #superseded(event: LoraEvent): boolean {
-    if (event.type !== 'position') return false;
-    return (this.#newestLocation.get(event.origin) ?? -1) > event.seq;
   }
 
   /** An own SOS was answered or cancelled: every call under its reference stops repeating. */
   #closeSos(reference: string): void {
-    for (const [key, call] of this.#openSos) {
-      if (call !== reference) continue;
-      this.#openSos.delete(key);
+    for (const key of this.#sos.close(reference)) {
       const pending = this.#pending.get(key);
       if (pending !== undefined && pending.sends > 0) this.#pending.delete(key);
     }
@@ -405,10 +287,4 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   #forgetOnAirBefore(time: number): void {
     for (const [key, at] of this.#onAir) if (at < time) this.#onAir.delete(key);
   }
-}
-
-/** Events that call for action however long ago they were sent. */
-function stillNews(event: LoraEvent, cancelledSos: ReadonlySet<string>): boolean {
-  if (event.type === 'sos') return !cancelledSos.has(eventRefKey(event));
-  return event.type === 'sos-cancel' || event.type === 'alert' || event.type === 'roll-call';
 }

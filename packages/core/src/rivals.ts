@@ -12,7 +12,7 @@ import {
   type EventType,
 } from '@tesel/protocol';
 
-import type { LoraEvent } from './lora-scheduler.ts';
+import type { LoraEvent } from './lora-limits.ts';
 import { isLifeSafety } from './urgency.ts';
 
 /**

@@ -1,7 +1,8 @@
 import type { NodeId, TeselEvent } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
-import { LIMITS, LoraScheduler, type LoraPacket } from './lora-scheduler.ts';
+import { LIMITS, type LoraPacket } from './lora-limits.ts';
+import { LoraScheduler } from './lora-scheduler.ts';
 
 const ME = 'a1b2c3d4' as NodeId;
 const OTHER = '0f1e2d3c' as NodeId;

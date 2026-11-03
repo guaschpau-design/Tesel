@@ -63,6 +63,8 @@ The event log and the outbox, the queue of events waiting for the server, are st
 | `apps/web/src/lib/sync/feed-relay.ts`        | The relay side of it: opens what the server sends, seals and pushes the outbox, confirms what is stored    |
 | `apps/web/src/lib/sync/lora-events.ts`       | What a radio is given when it connects (`catchUpPackets`)                                                  |
 | `packages/core/src/lora-scheduler.ts`        | Decides what goes on the air and in what order, bridge rules included, so it can be tested with no radio   |
+| `packages/core/src/air-news.ts`              | What is still worth the scheduler's airtime: positions thinned, history left off the air                   |
+| `packages/core/src/sos-repeats.ts`           | This device's own SOS calls, which the scheduler repeats until someone answers them                        |
 | `apps/web/src/lib/sync/log-file.ts`          | Saves a group's log to a file and loads one back (protocol §10)                                            |
 
 ## 3. Data model
