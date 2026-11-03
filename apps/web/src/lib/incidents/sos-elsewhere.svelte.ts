@@ -16,7 +16,7 @@ import { shownText } from '../text.ts';
 import { announcer } from '../ui/announcer.svelte.ts';
 import { notices } from '../ui/notices.svelte.ts';
 import { attempt } from '../ui/submission.svelte.ts';
-import { raiseAlarm, type AlarmChoices } from './alarm.ts';
+import { raiseAlarm, sosTag, type AlarmChoices } from './alarm.ts';
 import { alarmedSos, type AlarmedSos } from './alarmed-sos.ts';
 import { SOS_KINDS } from './sos-kinds.ts';
 
@@ -76,7 +76,7 @@ function alarm(
   const name = session.nameOfGroup(group);
   const title = `${t('sos')} · ${name}`;
   const body = [t(SOS_KINDS[event.kind].label), shownText(event.text)].filter(Boolean).join(' · ');
-  raiseAlarm([{ title, body, tag: eventRefKey(event) }], choices);
+  raiseAlarm([{ title, body, tag: sosTag(group.id, eventRefKey(event)) }], choices);
   // A screen at rest lights up for it (power/).
   activity.wake();
   announcer.say(`${title}. ${body}`);

@@ -10,6 +10,14 @@ export interface AlarmMessage {
   readonly tag: string;
 }
 
+/**
+ * The tag of an SOS call's notification: its event's key within its group, as each member numbers
+ * its events in each group on its own (ADR-0111).
+ */
+export function sosTag(groupId: string, eventKey: string): string {
+  return `${groupId}/${eventKey}`;
+}
+
 export interface AlarmChoices {
   readonly sound: boolean;
   readonly notifications: boolean;

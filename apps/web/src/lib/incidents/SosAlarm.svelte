@@ -14,7 +14,7 @@
   import { shownText } from '../text.ts';
   import { announcer } from '../ui/announcer.svelte.ts';
   import { alarmedSos } from './alarmed-sos.ts';
-  import { prepareAlarmSound, raiseAlarm, type AlarmChoices, type AlarmMessage } from './alarm.ts';
+  import { prepareAlarmSound, raiseAlarm, sosTag, type AlarmChoices } from './alarm.ts';
   import { activeSos } from './incidents.ts';
   import { SOS_KINDS } from './sos-kinds.ts';
 
@@ -32,16 +32,17 @@
 
   onMount(prepareAlarmSound);
 
-  /** The SOS calls of others, each tagged with its event's key. */
+  /** The SOS calls of others, each with its event's key and what its notification says. */
   const calls = $derived(
     activeSos(groupState, self)
       .filter((call) => !call.mine)
-      .map((call): AlarmMessage => ({
+      .map((call) => ({
+        key: call.key,
         title: `${t('sos')} · ${call.author}`,
         body: [t(SOS_KINDS[call.event.kind].label), shownText(call.event.text)]
           .filter(Boolean)
           .join(' · '),
-        tag: call.key,
+        tag: sosTag(groupId, call.key),
       })),
   );
 
@@ -50,10 +51,10 @@
     const unheard = new Set(
       alarmedSos.claim(
         groupId,
-        current.map(({ tag }) => tag),
+        current.map(({ key }) => key),
       ),
     );
-    const fresh = current.filter(({ tag }) => unheard.has(tag));
+    const fresh = current.filter(({ key }) => unheard.has(key));
     if (fresh.length === 0) return;
     raiseAlarm(fresh, choices);
     // A screen at rest lights up for it (power/).
