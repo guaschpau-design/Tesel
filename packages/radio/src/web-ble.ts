@@ -1,6 +1,7 @@
 // What every kind of radio shares over Web Bluetooth (Chrome and Edge; Bluefy on the iPhone):
-// the part of the API Tesel uses, picking a radio of any kind Tesel speaks, pairing, and time
-// limits that turn a silent radio into a failure the user is told about (ADR-0090).
+// the part of the API Tesel uses, picking a radio of any kind Tesel speaks, pairing, time limits
+// that turn a silent radio into a failure the user is told about (ADR-0090), and a link's hold on
+// its radio's Bluetooth connection, which the browser shares between every link made to it.
 
 import { RadioError } from './radio-link.ts';
 import { within } from './time-limit.ts';
@@ -16,12 +17,11 @@ export interface BleCharacteristic {
   addEventListener(type: 'characteristicvaluechanged', listener: () => void): void;
 }
 
+/** A device's connected Bluetooth services; the connection itself is let go by `BleHold`. */
 export interface BleServer {
-  readonly connected: boolean;
   getPrimaryService(uuid: string): Promise<{
     getCharacteristic(uuid: string): Promise<BleCharacteristic>;
   }>;
-  disconnect(): void;
 }
 
 export interface BleDevice {
@@ -38,6 +38,29 @@ interface Bluetooth {
   requestDevice(options: { filters: { services: string[] }[] }): Promise<BleDevice>;
 }
 
+/** The hold on each device made last: the only one that may disconnect it. */
+const newestHolds = new WeakMap<BleDevice, BleHold>();
+
+/**
+ * A link's hold on a radio's Bluetooth connection. The browser gives one connection per device and
+ * one object for it, shared by every link made to the device: an old link that lets a connection
+ * go late, as when an attempt to open it again ends after the user picked the same radio anew,
+ * must not close it under the new link. So only the hold made last disconnects the device.
+ */
+export class BleHold {
+  readonly device: BleDevice;
+
+  constructor(device: BleDevice) {
+    this.device = device;
+    newestHolds.set(device, this);
+  }
+
+  /** Disconnects the device's Bluetooth, unless a link made later holds it. */
+  disconnect(): void {
+    if (newestHolds.get(this.device) === this) this.device.gatt?.disconnect();
+  }
+}
+
 /** How long the radio has to accept the Bluetooth connection. */
 const CONNECT_MS = 15_000;
 /** How long the user has to type the PIN when the system asks for it. */
@@ -50,37 +73,38 @@ const OPEN_MS = 120_000;
 
 /**
  * Shows the browser's Bluetooth picker with every radio that offers one of `services`, one per
- * kind of radio, and says which one the picked radio offers. The browser does not say which
- * filter a device matched, so the radio is connected to look.
+ * kind of radio, and says which one the picked radio offers, with the new link's hold on it. The
+ * browser does not say which filter a device matched, so the radio is connected to look.
  */
 export async function pickRadio<Service extends string>(
   services: readonly Service[],
-): Promise<{ readonly device: BleDevice; readonly service: Service }> {
+): Promise<{ readonly hold: BleHold; readonly service: Service }> {
   const { bluetooth } = navigator as Navigator & { readonly bluetooth: Bluetooth };
   const device = await bluetooth.requestDevice({
     filters: services.map((service) => ({ services: [service] })),
   });
-  const server = await connectGatt(device);
+  const hold = new BleHold(device);
+  const server = await connectGatt(hold);
   for (const service of services) {
     try {
       await server.getPrimaryService(service);
       // Left connected: the radio's own code opens this same connection.
-      return { device, service };
+      return { hold, service };
     } catch {
       // Not this kind of radio: try the next one.
     }
   }
-  server.disconnect();
+  hold.disconnect();
   throw new RadioError('refused', 'the radio offers no service Tesel speaks');
 }
 
 /** Connects to the device's Bluetooth services, or gives up after a while. */
-export async function connectGatt(device: BleDevice): Promise<BleServer> {
-  const { gatt } = device;
+export async function connectGatt(hold: BleHold): Promise<BleServer> {
+  const { gatt } = hold.device;
   if (gatt === undefined) throw new Error('the device offers no Bluetooth services');
   return within(gatt.connect(), CONNECT_MS, 'the radio did not connect').catch((error: unknown) => {
     // A connection that completes after the limit must not keep holding the radio.
-    gatt.disconnect();
+    hold.disconnect();
     throw error;
   });
 }
@@ -90,14 +114,11 @@ export async function connectGatt(device: BleDevice): Promise<BleServer> {
  * browser never finishes (finding the service, turning notifications on) fails after a while, so
  * a radio being opened again after a drop cannot keep its link waiting forever.
  */
-export async function openOn<Opened>(
-  server: BleServer,
-  open: () => Promise<Opened>,
-): Promise<Opened> {
+export async function openOn<Opened>(hold: BleHold, open: () => Promise<Opened>): Promise<Opened> {
   try {
     return await within(open(), OPEN_MS, 'the radio did not finish opening');
   } catch (error) {
-    server.disconnect();
+    hold.disconnect();
     throw error;
   }
 }

@@ -1,4 +1,4 @@
-import { RadioError, type BleDevice } from '@tesel/radio';
+import { BleHold, RadioError, type BleDevice } from '@tesel/radio';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Incoming } from './connection.ts';
@@ -165,7 +165,7 @@ afterEach(() => {
 describe('opening a Meshtastic radio over Web Bluetooth', () => {
   it('reads before it writes, so the system asks for the PIN, then learns the radio', async () => {
     const { device, log } = fakeRadio();
-    const opened = await openRadio(device);
+    const opened = await openRadio(new BleHold(device));
     expect(log.slice(0, 2)).toEqual(['read', 'write']);
     expect(opened.name).toBe('Meshtastic_c3d4');
     const { setup } = opened.connection;
@@ -182,19 +182,19 @@ describe('opening a Meshtastic radio over Web Bluetooth', () => {
       pairingRead: () =>
         Promise.reject(new DOMException('Authentication canceled', 'NetworkError')),
     });
-    expect((await failure(openRadio(device))).code).toBe('not-paired');
+    expect((await failure(openRadio(new BleHold(device)))).code).toBe('not-paired');
     expect(server.disconnected).toBe(true);
   });
 
   it('takes a write the system refuses for a link that is not paired', async () => {
     const { device } = fakeRadio({ readable: false, refuseWrites: true });
-    expect((await failure(openRadio(device))).code).toBe('not-paired');
+    expect((await failure(openRadio(new BleHold(device)))).code).toBe('not-paired');
   });
 
   it('gives up on a paired radio that never tells its configuration', async () => {
     vi.useFakeTimers();
     const { device, server } = fakeRadio({ answers: false });
-    const opening = failure(openRadio(device));
+    const opening = failure(openRadio(new BleHold(device)));
     await vi.advanceTimersByTimeAsync(5000);
     expect((await opening).code).toBe('timeout');
     expect(server.disconnected).toBe(true);
@@ -203,7 +203,7 @@ describe('opening a Meshtastic radio over Web Bluetooth', () => {
   it('waits for a slow radio as long as it keeps telling', async () => {
     vi.useFakeTimers();
     const { device } = fakeRadio({ readMs: 3000 });
-    const opening = openRadio(device);
+    const opening = openRadio(new BleHold(device));
     await vi.advanceTimersByTimeAsync(30_000);
     expect((await opening).connection.setup.myNodeNum).toBe(ME);
   });
@@ -220,7 +220,7 @@ describe('an open Meshtastic connection', () => {
 
   it('resolves a packet once the radio has taken it, and refuses one it did not', async () => {
     const radio = fakeRadio();
-    const { connection } = await openRadio(radio.device);
+    const { connection } = await openRadio(new BleHold(radio.device));
     await expect(connection.sendPacket(packet)).resolves.toBeUndefined();
     radio.options.queueResult = 32;
     await expect(connection.sendPacket(packet)).rejects.toMatchObject({ code: 'refused' });
@@ -228,7 +228,7 @@ describe('an open Meshtastic connection', () => {
 
   it('hands on what the radio hears, what it heard before anyone listened first', async () => {
     const radio = fakeRadio();
-    const { connection } = await openRadio(radio.device);
+    const { connection } = await openRadio(new BleHold(radio.device));
     const data = new ProtoWriter().varint(1, 256).bytes(2, new Uint8Array([7]));
     radio.hear(new ProtoWriter().fixed32(MESH_PACKET.from, 5).message(MESH_PACKET.decoded, data));
     await vi.waitFor(() => {
@@ -245,7 +245,7 @@ describe('an open Meshtastic connection', () => {
 
   it('keeps the link when a listener of the app fails', async () => {
     const radio = fakeRadio();
-    const { connection } = await openRadio(radio.device);
+    const { connection } = await openRadio(new BleHold(radio.device));
     const dropped = vi.fn();
     connection.onDisconnected(dropped);
     const failed = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -269,12 +269,12 @@ describe('an open Meshtastic connection', () => {
   it('says it dropped when Bluetooth goes, or when the system refuses a write', async () => {
     const first = fakeRadio();
     const dropped = vi.fn();
-    (await openRadio(first.device)).connection.onDisconnected(dropped);
+    (await openRadio(new BleHold(first.device))).connection.onDisconnected(dropped);
     first.drop();
     expect(dropped).toHaveBeenCalledOnce();
 
     const second = fakeRadio();
-    const { connection } = await openRadio(second.device);
+    const { connection } = await openRadio(new BleHold(second.device));
     connection.onDisconnected(dropped);
     second.options.refuseWrites = true;
     await expect(connection.sendPacket(packet)).rejects.toThrow();

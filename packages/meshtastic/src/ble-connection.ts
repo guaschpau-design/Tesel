@@ -2,14 +2,7 @@
 // it is empty whenever the radio says there is more, writing ToRadio, the configuration handshake,
 // and telling which packets the radio took into its queue.
 
-import {
-  copyOf,
-  messageOf,
-  RadioError,
-  type BleCharacteristic,
-  type BleDevice,
-  type BleServer,
-} from '@tesel/radio';
+import { copyOf, messageOf, RadioError, type BleCharacteristic, type BleHold } from '@tesel/radio';
 
 import { withChannel } from './channels.ts';
 import type { Incoming, MeshtasticConnection } from './connection.ts';
@@ -33,7 +26,7 @@ interface Waiting {
 
 /** A Meshtastic connection over the radio's Bluetooth service. */
 export class BleConnection implements MeshtasticConnection {
-  readonly #server: BleServer;
+  readonly #hold: BleHold;
   readonly #toRadio: BleCharacteristic;
   readonly #fromRadio: BleCharacteristic;
   readonly #setup = {
@@ -55,16 +48,11 @@ export class BleConnection implements MeshtasticConnection {
   readonly #listeners = new Set<(incoming: Incoming) => void>();
   readonly #disconnectListeners = new Set<() => void>();
 
-  constructor(
-    device: BleDevice,
-    server: BleServer,
-    toRadio: BleCharacteristic,
-    fromRadio: BleCharacteristic,
-  ) {
-    this.#server = server;
+  constructor(hold: BleHold, toRadio: BleCharacteristic, fromRadio: BleCharacteristic) {
+    this.#hold = hold;
     this.#toRadio = toRadio;
     this.#fromRadio = fromRadio;
-    device.addEventListener(
+    hold.device.addEventListener(
       'gattserverdisconnected',
       () => {
         this.#dropped();
@@ -257,7 +245,8 @@ export class BleConnection implements MeshtasticConnection {
       waiting.reject(new RadioError('not-ready', 'the radio is not connected'));
     }
     this.#waiting.clear();
-    if (this.#server.connected) this.#server.disconnect();
+    // Unless a link made later uses the same Bluetooth connection.
+    this.#hold.disconnect();
   }
 }
 

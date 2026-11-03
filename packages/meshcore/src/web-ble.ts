@@ -20,8 +20,7 @@ import {
   RadioError,
   within,
   type BleCharacteristic,
-  type BleDevice,
-  type BleServer,
+  type BleHold,
   type OpenedRadio,
 } from '@tesel/radio';
 
@@ -58,12 +57,12 @@ const ANSWER_MS = 5000;
 
 /** A companion connection whose frames travel over the radio's Bluetooth serial service. */
 class BleConnection extends Connection {
-  readonly #server: BleServer;
+  readonly #hold: BleHold;
   readonly #radioIn: BleCharacteristic;
 
-  constructor(server: BleServer, radioIn: BleCharacteristic) {
+  constructor(hold: BleHold, radioIn: BleCharacteristic) {
     super();
-    this.#server = server;
+    this.#hold = hold;
     this.#radioIn = radioIn;
   }
 
@@ -92,26 +91,28 @@ class BleConnection extends Connection {
     }
   }
 
+  /** Lets the radio go, unless a link made later uses the same Bluetooth connection. */
   override close(): Promise<void> {
-    if (this.#server.connected) this.#server.disconnect();
+    this.#hold.disconnect();
     return Promise.resolve();
   }
 }
 
 /** A link to the MeshCore radio the user picked; the same device is opened again when it drops. */
-export function linkTo(device: BleDevice): MeshCoreRadio {
-  return new MeshCoreRadio(() => openRadio(device));
+export function linkTo(hold: BleHold): MeshCoreRadio {
+  return new MeshCoreRadio(() => openRadio(hold));
 }
 
-/** Connects to `device`, pairs if it has not yet, and checks that the radio answers. */
-export async function openRadio(device: BleDevice): Promise<OpenedRadio<CompanionConnection>> {
-  const server = await connectGatt(device);
-  return openOn(server, async () => {
+/** Connects to the held device, pairs if it has not yet, and checks that the radio answers. */
+export async function openRadio(hold: BleHold): Promise<OpenedRadio<CompanionConnection>> {
+  const { device } = hold;
+  const server = await connectGatt(hold);
+  return openOn(hold, async () => {
     const service = await server.getPrimaryService(MESHCORE_SERVICE);
     const radioIn = await service.getCharacteristic(RADIO_IN);
     const radioOut = await service.getCharacteristic(RADIO_OUT);
     await pair(radioOut);
-    const connection = new BleConnection(server, radioIn);
+    const connection = new BleConnection(hold, radioIn);
     radioOut.addEventListener('characteristicvaluechanged', () => {
       if (radioOut.value !== null) connection.onFrameReceived(copyOf(radioOut.value));
     });
@@ -124,7 +125,7 @@ export async function openRadio(device: BleDevice): Promise<OpenedRadio<Companio
       },
       { once: true },
     );
-    return { connection, name: device.name ?? null, reopen: () => openRadio(device) };
+    return { connection, name: device.name ?? null, reopen: () => openRadio(hold) };
   });
 }
 

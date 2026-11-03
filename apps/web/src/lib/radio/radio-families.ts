@@ -8,11 +8,11 @@ import { pickRadio, type RadioLink } from '@tesel/radio';
 
 /** Asks the user to pick a radio of any kind, and makes the link for the kind it is. */
 export async function pickedRadioLink(): Promise<RadioLink> {
-  const { device, service } = await pickRadio([MESHCORE_SERVICE, MESHTASTIC_SERVICE]);
+  const { hold, service } = await pickRadio([MESHCORE_SERVICE, MESHTASTIC_SERVICE]);
   switch (service) {
     case MESHCORE_SERVICE:
-      return (await import('@tesel/meshcore')).linkTo(device);
+      return (await import('@tesel/meshcore')).linkTo(hold);
     case MESHTASTIC_SERVICE:
-      return (await import('@tesel/meshtastic')).linkTo(device);
+      return (await import('@tesel/meshtastic')).linkTo(hold);
   }
 }

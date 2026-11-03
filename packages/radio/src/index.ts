@@ -18,6 +18,7 @@ export {
 } from './radio-link.ts';
 export { within } from './time-limit.ts';
 export {
+  BleHold,
   connectGatt,
   copyOf,
   messageOf,
