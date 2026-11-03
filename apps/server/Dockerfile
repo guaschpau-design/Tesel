@@ -6,12 +6,14 @@
 # build step. The workspace layout is kept because Node only strips types outside node_modules.
 
 # The Node image is pinned by version and digest; CI (.github/workflows/ci.yml) tests with the
-# same Node version.
+# same Node version. pnpm is the one "packageManager" names in package.json, version and hash:
+# Corepack, which comes with Node, downloads it and refuses it if the hash differs.
 
 # The built web app is the same on every platform, so it is built once, natively.
 FROM --platform=$BUILDPLATFORM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS web
-RUN npm install --global pnpm@10.28.0
 WORKDIR /src
+COPY package.json ./
+RUN corepack enable pnpm && corepack install
 COPY . .
 RUN pnpm install --frozen-lockfile --filter @tesel/web...
 # VITE_SERVER_URL "/" makes every server propose itself for new groups, and the base map is the
@@ -20,9 +22,9 @@ RUN TESEL_BASE=/app/ VITE_SERVER_URL=/ VITE_BASEMAP_URL=/maps/basemap.pmtiles \
     pnpm --filter @tesel/web build
 
 FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS install
-RUN npm install --global pnpm@10.28.0
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack enable pnpm && corepack install
 COPY packages/protocol/package.json packages/protocol/
 COPY packages/core/package.json packages/core/
 COPY apps/server/package.json apps/server/

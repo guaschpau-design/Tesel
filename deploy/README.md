@@ -164,11 +164,12 @@ curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/main/deploy/
 
 Images and tools are pinned by version, and images also by digest; nothing updates them silently. To update one, change its version and digest (`docker buildx imagetools inspect IMAGE:VERSION` prints the digest) where it is pinned, and let CI and an installer run:
 
-| What           | Where                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------- |
-| Node           | `apps/server/Dockerfile` (three stages) and `node-version` in `.github/workflows/ci.yml`     |
-| Caddy          | `vps/compose.yaml`                                                                           |
-| go-pmtiles     | `vps/maps.sh`                                                                                |
-| restic         | `vps/backup.sh`                                                                              |
-| cosign         | `vps/install-cosign.sh` (with the checksums of its release) and `cosign-release` in `ci.yml` |
-| GitHub Actions | `.github/workflows/ci.yml`, by commit; Dependabot proposes updates                           |
+| What           | Where                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| Node           | `apps/server/Dockerfile` (three stages) and `node-version` in `.github/workflows/ci.yml`      |
+| Caddy          | `vps/compose.yaml`                                                                            |
+| go-pmtiles     | `vps/maps.sh`                                                                                 |
+| restic         | `vps/backup.sh`                                                                               |
+| cosign         | `vps/install-cosign.sh` (with the checksums of its release) and `cosign-release` in `ci.yml`  |
+| GitHub Actions | `.github/workflows/ci.yml`, by commit; Dependabot proposes updates                            |
+| pnpm           | `packageManager` in `package.json`, version and hash: `corepack use pnpm@VERSION` writes both |
