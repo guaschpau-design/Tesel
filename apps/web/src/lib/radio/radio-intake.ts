@@ -10,7 +10,7 @@ import { groupId } from '../groups/group.ts';
 import { getGroup } from '../groups/group-store.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import { storageRefusals } from '../storage/storage-space.svelte.ts';
-import type { RadioFeed } from './radio.svelte.ts';
+import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 
 /** Frames heard but not stored yet, at most: storage that keeps failing cannot fill memory. */
 const MAX_UNSTORED = 200;
@@ -24,9 +24,12 @@ interface Unstored {
   readonly attempts: number;
 }
 
+/** What storing needs of the active group's feed. */
+type StoringFeed = Pick<GroupFeed, 'radioChannel' | 'receiveFromRadio'>;
+
 /** Where the intake finds the active group's feed and the database, as they are now. */
 interface Storing {
-  readonly feed: () => RadioFeed | null;
+  readonly feed: () => StoringFeed | null;
   readonly db: () => AppDb | null;
 }
 
