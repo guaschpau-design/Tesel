@@ -3,7 +3,7 @@
 import 'fake-indexeddb/auto';
 
 import type { RadioLink, RadioLinkState, ReceivedFrame, SendOutcome } from '@tesel/radio';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { applyInvitation, createGroup, invitationFor } from '../groups/group.ts';
 import { createLocalIdentity } from '../identity/identity.ts';
@@ -77,6 +77,16 @@ class AirLink implements RadioLink {
     return Promise.resolve();
   }
 }
+
+// Node 24, as CI runs, has the browser's window locks, which a test's radio would hold into the
+// next one: each test is a window of its own, with no locks to hold.
+beforeEach(() => {
+  vi.stubGlobal('navigator', {});
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('the radio path', () => {
   it('carries announcements, chat and an SOS between devices with no server', async () => {

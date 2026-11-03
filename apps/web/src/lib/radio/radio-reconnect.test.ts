@@ -10,7 +10,7 @@ import {
   type SyncedMessage,
 } from '@tesel/meshcore';
 import type { OpenedRadio } from '@tesel/radio';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { LoraSink } from '../sync/lora-events.ts';
 import { RadioSession, type RadioFeed } from './radio.svelte.ts';
@@ -106,8 +106,15 @@ class Feed implements RadioFeed {
   }
 }
 
+// Node 24, as CI runs, has the browser's window locks, which a test's radio would hold into the
+// next one: each test is a window of its own, with no locks to hold.
+beforeEach(() => {
+  vi.stubGlobal('navigator', {});
+});
+
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe('a radio whose Bluetooth link drops and comes back', () => {

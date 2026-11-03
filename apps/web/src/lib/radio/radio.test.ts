@@ -28,12 +28,16 @@ const bytes = encoded(chat);
 /** The secret of the group a fake feed carries unless told otherwise. */
 const SECRET_OF_FEED = new FakeFeed().radioChannel.secret;
 
+// Node 24, as CI runs, has the browser's window locks, which a test's radio would hold into the
+// next one: each test is a window of its own, with no locks to hold.
 beforeEach(() => {
   vi.useFakeTimers();
+  vi.stubGlobal('navigator', {});
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe('radio session', () => {
