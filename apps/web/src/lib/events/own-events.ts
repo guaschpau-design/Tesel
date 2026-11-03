@@ -85,8 +85,8 @@ export async function skipSequence(db: AppDb, groupId: string, seq: number): Pro
   try {
     const tx = db.transaction('sequence', 'readwrite');
     const next = await nextInGroup(tx.store, groupId);
-    const writes = [next <= seq ? tx.store.put(seq + 1, sequenceKey(groupId)) : undefined];
-    await Promise.all([...writes, tx.done]);
+    const skip = next <= seq ? tx.store.put(seq + 1, sequenceKey(groupId)) : undefined;
+    await Promise.all([skip, tx.done]);
     return seq >= Math.max(next, taking);
   } catch (error) {
     storageRefusals.note(error);
@@ -151,9 +151,9 @@ function stampTime(clock: number, previous: number): number {
 }
 
 /**
- * The next number of a group as stored: its own counter, which starts above every number this
- * device used before counters were kept per group, when one counter served every group: that one,
- * under `next`, is no longer moved, and is where the counter of each group starts.
+ * The next number of a group as stored. Before version 8 of the database one counter, under
+ * `next`, numbered every group; it is no longer moved, and each group's own counter starts at it,
+ * above every number this device used before (ADR-0111).
  */
 async function nextInGroup(
   sequence: { get(key: 'next' | GroupSequenceKey): Promise<number | undefined> },
