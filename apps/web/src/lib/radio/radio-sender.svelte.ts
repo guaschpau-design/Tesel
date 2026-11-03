@@ -7,8 +7,10 @@ import { LIMITS, LoraScheduler, type LoraEvent, type LoraPacket } from '@tesel/c
 import { bytesEqual } from '@tesel/protocol';
 import type { RadioLink } from '@tesel/radio';
 
+import type { AppDb } from '../storage/app-db.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { LoraSink } from '../sync/lora-events.ts';
+import { loadAirtime, saveAirtime } from './airtime-store.ts';
 import type { RadioFrames } from './radio-frames.ts';
 
 /** A sealed packet, with the secret of the group that sealed it, whose channel it goes out on. */
@@ -23,6 +25,8 @@ type SendingFeed = Pick<GroupFeed, 'radioChannel' | 'radioSent'>;
 interface Sending {
   readonly link: () => RadioLink | null;
   readonly feed: () => SendingFeed | null;
+  /** Where the airtime spent is kept, once the database is open. */
+  readonly db: () => AppDb | null;
   readonly frames: RadioFrames;
   readonly random: () => number;
 }
@@ -73,6 +77,20 @@ export class RadioSender {
     this.#scheduler.observe(event);
   }
 
+  /**
+   * Counts the airtime this device's radio used in the last hour as kept on the device, by an
+   * earlier run of the app or another window: the duty cycle is the radio's (ADR-0111).
+   */
+  async restoreAirtime(): Promise<void> {
+    const db = this.#sending.db();
+    if (db === null) return;
+    try {
+      this.#scheduler.restoreAirtime(await loadAirtime(db), Date.now());
+    } catch (error) {
+      console.warn('Reading the airtime spent failed', error);
+    }
+  }
+
   /** The group of `secret` was left: nothing more of it goes out, own SOS calls included. */
   forget(secret: Uint8Array): void {
     this.#scheduler.forget((packet) => bytesEqual(packet.secret, secret));
@@ -100,7 +118,9 @@ export class RadioSender {
   }
 
   async #sent(packet: RadioPacket): Promise<void> {
-    this.#scheduler.sent(Date.now());
+    const now = Date.now();
+    this.#scheduler.sent(now);
+    this.#keepAirtime(now);
     const feed = this.#sending.feed();
     // An own SOS of a group no longer open went on its channel: that group's feed is closed.
     if (feed === null || !bytesEqual(packet.secret, feed.radioChannel.secret)) return;
@@ -110,5 +130,14 @@ export class RadioSender {
       // The event did go out; at worst a radio linked later sends it once more.
       console.warn('Recording a radio send failed', error);
     }
+  }
+
+  /** Keeps the airtime spent on the device; without room, it counts while the app runs. */
+  #keepAirtime(now: number): void {
+    const db = this.#sending.db();
+    if (db === null) return;
+    saveAirtime(db, this.#scheduler.airtimeUses(now)).catch((error: unknown) => {
+      console.warn('Keeping the airtime spent failed', error);
+    });
   }
 }

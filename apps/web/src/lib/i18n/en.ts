@@ -512,6 +512,8 @@ export const en = {
   radioFailed:
     'Could not connect to the radio. Check that it is on and nearby, and that no other app is using it.',
   radioNotPaired: 'This device is not paired with the radio yet. Do it once:',
+  radioOtherWindow:
+    'Another window of Tesel is using a radio. Use it there, or disconnect it there to use one here.',
   radioPairStep1:
     "In the device's Bluetooth settings, pair the radio with its PIN: the one on its screen or, if it has none, 123456 unless you changed it.",
   radioPairStep2: 'Turn the radio off or unplug it, and turn it on again.',

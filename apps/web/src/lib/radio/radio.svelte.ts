@@ -17,6 +17,7 @@ import { sosNewsIn, type SosElsewhere } from './heard-elsewhere.ts';
 import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
 import { pickedRadioLink } from './radio-families.ts';
 import { RadioFrames } from './radio-frames.ts';
+import { claimRadio, type RadioRelease } from './radio-lock.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { RadioSender } from './radio-sender.svelte.ts';
 import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
@@ -66,6 +67,9 @@ export class RadioSession {
   #unfollow: (() => void)[] = [];
   /** True while the user picks a radio and its link is made. */
   #picking = false;
+  readonly #claim: () => Promise<RadioRelease | null>;
+  /** Lets other windows use the radio: held from connecting until the link is disconnected. */
+  #release: RadioRelease | null = null;
   readonly #relinker = new Relinker(() => this.#linkFeed());
   #feed: RadioFeed | null = null;
   #db: AppDb | null = null;
@@ -76,11 +80,17 @@ export class RadioSession {
   readonly #sender: RadioSender;
   #sosListeners: readonly ((call: SosElsewhere) => void)[] = [];
 
-  constructor(makeLink: () => Promise<RadioLink> = pickedRadioLink, random = Math.random) {
+  constructor(
+    makeLink: () => Promise<RadioLink> = pickedRadioLink,
+    random = Math.random,
+    claim = claimRadio,
+  ) {
     this.#makeLink = makeLink;
+    this.#claim = claim;
     this.#sender = new RadioSender({
       link: () => this.#link,
       feed: () => this.#feed,
+      db: () => this.#db,
       frames: this.#frames,
       random,
     });
@@ -102,6 +112,7 @@ export class RadioSession {
         this.state = state;
         this.name = link.name;
         if (state !== 'ready') this.#unlink();
+        if (state === 'disconnected') this.#letRadioGo();
         // Only a radio that was ready connects again by itself; the user's first try does not.
         this.reconnecting = state === 'connecting' && was === 'ready';
         // Linked each time it is ready: after a drop, and after a failed link made it drop.
@@ -148,15 +159,25 @@ export class RadioSession {
 
   /**
    * Asks the user to pick a radio, connects and links it to the active group. While a radio is
-   * connected or being picked, there is nothing to do: it must be disconnected first.
+   * connected or being picked, there is nothing to do: it must be disconnected first. While
+   * another window of the app drives a radio, this one does not (radio-lock.ts).
    */
   async connect(): Promise<void> {
     if (this.#picking || (this.#link !== null && this.#link.state !== 'disconnected')) return;
     this.problem = null;
     this.#picking = true;
     try {
+      this.#release ??= await this.#claim();
+      if (this.#release === null) {
+        this.problem = 'other-window';
+        return;
+      }
+      // The budget is the radio's: what this or another window spent in the last hour counts.
+      await this.#sender.restoreAirtime();
       await this.#follow(await this.#makeLink()).connect();
     } catch (error) {
+      // No radio was picked, or it did not open: other windows may have it.
+      if (this.#link === null || this.#link.state === 'disconnected') this.#letRadioGo();
       // Closing the browser's picker is not a problem worth reporting.
       if (!(error instanceof DOMException && error.name === 'NotFoundError')) {
         console.warn('Radio connection failed', error);
@@ -228,6 +249,11 @@ export class RadioSession {
       console.warn('Giving the group the radio failed', error);
       return 'failed';
     }
+  }
+
+  #letRadioGo(): void {
+    this.#release?.();
+    this.#release = null;
   }
 
   #unlink(): void {

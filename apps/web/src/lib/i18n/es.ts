@@ -513,6 +513,8 @@ export const es: Messages = {
   radioFailed:
     'No se pudo conectar con la radio. Comprueba que está encendida y cerca, y que ninguna otra app la está usando.',
   radioNotPaired: 'Este dispositivo aún no está emparejado con la radio. Hazlo una sola vez:',
+  radioOtherWindow:
+    'Otra ventana de Tesel está usando una radio. Úsala allí, o desconéctala allí para usar una aquí.',
   radioPairStep1:
     'En los ajustes de Bluetooth del dispositivo, vincula la radio con su PIN: el que muestra su pantalla o, si no tiene, 123456 si no lo has cambiado.',
   radioPairStep2: 'Apaga la radio o desenchúfala, y vuelve a encenderla.',

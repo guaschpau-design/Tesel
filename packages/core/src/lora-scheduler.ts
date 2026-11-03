@@ -10,7 +10,7 @@
 import { eventRefKey } from '@tesel/protocol';
 
 import { AirNews } from './air-news.ts';
-import { AirtimeWindow } from './airtime.ts';
+import { AirtimeWindow, type AirtimeUse } from './airtime.ts';
 import { LIMITS, URGENT, type LoraEvent, type LoraPacket, type LoraSource } from './lora-limits.ts';
 import { rivalKey } from './rivals.ts';
 import { repeatWaitMs, SosRepeats } from './sos-repeats.ts';
@@ -228,6 +228,19 @@ export class LoraScheduler<Packet extends LoraPacket = LoraPacket> {
   /** Airtime used in the current window, in milliseconds. */
   spentMs(now: number): number {
     return this.#airtime.usedMs(now);
+  }
+
+  /** The airtime used in the current window, each send on its own: what the caller keeps. */
+  airtimeUses(now: number): AirtimeUse[] {
+    return this.#airtime.uses(now);
+  }
+
+  /**
+   * Counts airtime used before, kept by the caller (`airtimeUses`): the budget belongs to the
+   * radio, and a restart of the app must not give it a fresh one.
+   */
+  restoreAirtime(uses: readonly AirtimeUse[], now: number): void {
+    this.#airtime.restore(uses, now);
   }
 
   /**

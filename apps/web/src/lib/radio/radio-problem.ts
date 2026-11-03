@@ -6,7 +6,7 @@ import { RadioError, type RadioFamily } from '@tesel/radio';
 import type { MessageKey } from '../i18n/index.ts';
 
 export type RadioProblem =
-  'unsupported' | 'no-free-channel' | 'no-answer' | 'not-paired' | 'failed';
+  'unsupported' | 'no-free-channel' | 'no-answer' | 'not-paired' | 'other-window' | 'failed';
 
 export function problemOf(error: unknown): RadioProblem {
   if (error instanceof RadioError) {
@@ -29,6 +29,8 @@ export function problemMessage(problem: RadioProblem, family: RadioFamily | null
       return meshtastic ? 'radioNoAnswerMeshtastic' : 'radioNoAnswer';
     case 'not-paired':
       return 'radioNotPaired';
+    case 'other-window':
+      return 'radioOtherWindow';
     case 'failed':
       return 'radioFailed';
   }

@@ -62,6 +62,8 @@ export type SettingKey =
   | 'alarmSound'
   | 'notifications'
   | 'radioChannelsToFree'
+  /** The radio's airtime used in the last hour, send by send (radio/airtime-store.ts). */
+  | 'airtimeUsed'
   /** The SOS calls the alarm was raised for, by group (incidents/alarmed-sos.ts). */
   | 'alarmedSos';
 

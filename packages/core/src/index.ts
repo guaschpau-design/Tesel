@@ -1,3 +1,4 @@
+export type { AirtimeUse } from './airtime.ts';
 export { compareEvents, newerOf } from './ordering.ts';
 export {
   EMPTY_STATE,
