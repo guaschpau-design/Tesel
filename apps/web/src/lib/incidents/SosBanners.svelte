@@ -113,6 +113,7 @@
 <style>
   .banners {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
     pointer-events: none;
   }

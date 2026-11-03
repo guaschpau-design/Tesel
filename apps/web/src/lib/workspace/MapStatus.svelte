@@ -232,6 +232,7 @@
     right: calc(var(--control-size) + 1.25rem + env(safe-area-inset-right));
     left: max(0.75rem, env(safe-area-inset-left));
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 0.5rem;
     max-width: 30rem;

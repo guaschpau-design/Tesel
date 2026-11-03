@@ -41,5 +41,6 @@
 
   .notice span {
     flex: 1;
+    overflow-wrap: anywhere;
   }
 </style>

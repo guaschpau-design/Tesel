@@ -75,6 +75,8 @@
     padding: 1rem;
     background: var(--surface);
     color: var(--fg);
+    /* A word longer than the panel is wide, as a member may write, breaks: nothing scrolls sideways. */
+    overflow-wrap: anywhere;
     border-radius: var(--radius-sheet);
     box-shadow: var(--shadow-sheet);
   }

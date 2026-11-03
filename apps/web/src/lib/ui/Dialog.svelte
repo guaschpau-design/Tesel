@@ -45,6 +45,8 @@
     overflow-y: auto;
     padding: 1.25rem;
     color: var(--fg);
+    /* A long word, in a group's name or a server's address, breaks rather than widen the dialog. */
+    overflow-wrap: anywhere;
     background: var(--surface);
     border: none;
     border-radius: var(--radius-sheet);

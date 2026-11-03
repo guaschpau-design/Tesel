@@ -73,6 +73,30 @@ test('an SOS is acknowledged by the group and cancelled by its sender', async ({
   await expect(call).toBeHidden();
 });
 
+test('a long unbroken word in an SOS breaks rather than widen its banner', async ({
+  browser,
+}, testInfo) => {
+  const { ana, berta } = await twoMembers(browser, VIEW);
+  await berta.getByRole('button', { name: 'SOS', exact: true }).click();
+  const dialog = berta.getByRole('dialog', { name: 'Enviar un SOS' });
+  // As long as an SOS's details may be, in one word.
+  await dialog.getByLabel('Detalles (opcional)').fill('x'.repeat(128));
+  await dialog.getByRole('button', { name: 'Enviar SOS' }).click();
+
+  const call = ana.getByRole('region', { name: 'SOS' });
+  await expect(call).toContainText('SOS · Berta');
+  const viewport = ana.viewportSize()?.width ?? 0;
+  const box = await call.boundingBox();
+  expect(box && box.x + box.width).toBeLessThanOrEqual(viewport);
+  // Nothing on top of the map scrolls sideways.
+  const sideways = await call.evaluate((card) => {
+    const stack = card.closest('.top') ?? card;
+    return stack.scrollWidth - stack.clientWidth;
+  });
+  expect(sideways).toBe(0);
+  await ana.screenshot({ path: testInfo.outputPath('sos-long-word.png') });
+});
+
 test('an SOS sent with no link is kept, says it waits, and reaches the group once a link is back', async ({
   browser,
 }) => {

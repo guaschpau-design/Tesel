@@ -289,10 +289,13 @@ textarea {
 }
 
 /* A card on top of the map (ui/MapCard.svelte, the incident banners): what is going on now. An
-   edge in a colour of meaning (--edge) says what kind of thing it is. */
+   edge in a colour of meaning (--edge) says what kind of thing it is. A word longer than the card
+   is wide, as a member may write, breaks rather than widen it past the screen. */
 .map-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
+  overflow-wrap: anywhere;
   padding: 0.75rem;
   color: var(--fg);
   pointer-events: auto;
