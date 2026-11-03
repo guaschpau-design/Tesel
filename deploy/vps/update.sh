@@ -3,15 +3,19 @@
 # images this repository's CI built and signed (docs/decisions/0049-signed-images-and-checked-updates.md):
 #
 #   1. cosign checks the signature of the image TESEL_IMAGE_TAG (default "latest") names and
-#      gives its digest;
-#   2. that digest is pulled and started, and must become healthy (the image's health check
+#      gives its digest, and the number of the CI run that signed it;
+#   2. an image of an older run than the running one is refused, so whoever can move the tag
+#      cannot take the server back to an older signed image; a tag the operator set is followed
+#      wherever it leads;
+#   3. the digest is pulled and started, and must become healthy (the image's health check
 #      asks the server's /healthz);
-#   3. if it does not, the previous image is started again, from the local copy kept for this,
+#   4. if it does not, the previous image is started again, from the local copy kept for this,
 #      and the new digest is remembered as rejected, so it is not tried again.
 #
 # With nothing new it only makes sure the containers run and the server is healthy. The images
 # in use are recorded in the project's .env: TESEL_IMAGE (running), TESEL_IMAGE_PREVIOUS and
-# TESEL_IMAGE_REJECTED.
+# TESEL_IMAGE_REJECTED, with the CI runs of the first two in TESEL_IMAGE_RUN and
+# TESEL_IMAGE_RUN_PREVIOUS.
 #
 # A new image may upgrade the database's schema, which older images cannot read. So before a new
 # image starts, a copy of the database is taken (database.sh copy) and kept, with its schema
@@ -75,17 +79,22 @@ remove_old_images() {
   done
 }
 
-# Prints the digest of the image a tag names, once its signature is verified. cosign tells the
-# journal what it checked.
-verified_digest() {
-  local digest
-  digest="$(cosign verify --certificate-identity "$SIGNER" --certificate-oidc-issuer "$ISSUER" \
-    "$REPOSITORY:$1" | jq -r '.[0].critical.image."docker-manifest-digest"')"
+# Prints the digest of the image a tag names and the number of the CI run that signed it, once
+# its signature is verified: "DIGEST RUN". The run is the "run" annotation of the signed payload;
+# an image signed before CI added it counts as run 0. cosign tells the journal what it checked.
+verified_image() {
+  local signatures digest run
+  signatures="$(cosign verify --certificate-identity "$SIGNER" --certificate-oidc-issuer "$ISSUER" \
+    "$REPOSITORY:$1")"
+  digest="$(jq -r '.[0].critical.image."docker-manifest-digest"' <<< "$signatures")"
   [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
     echo "No image signed by Tesel's CI at $REPOSITORY:$1." >&2
     return 1
   }
-  echo "$digest"
+  # The newest of the image's signatures, should two runs have built the same image.
+  run="$(jq -r '[.[] | .optional.run // "0" | tostring | select(test("^[0-9]+$")) | tonumber]
+    | max // 0' <<< "$signatures")"
+  echo "$digest $run"
 }
 
 # Before going back to an older image: restores the copy of the database COPY, taken while it
@@ -105,6 +114,9 @@ restore_older_schema() {
 }
 
 current="$(setting TESEL_IMAGE)"
+# A server updated before images carried their run has none recorded: any run is newer.
+current_run="$(setting TESEL_IMAGE_RUN)"
+[[ "$current_run" =~ ^[0-9]+$ ]] || current_run=0
 
 case "$ACTION" in
   update) ;;
@@ -114,7 +126,9 @@ case "$ACTION" in
     echo "Going back to $previous; $current is rejected."
     restore_older_schema "$COPY_PREVIOUS" "$(setting TESEL_SCHEMA_PREVIOUS)"
     set_setting TESEL_IMAGE "$previous"
+    set_setting TESEL_IMAGE_RUN "$(setting TESEL_IMAGE_RUN_PREVIOUS)"
     set_setting TESEL_IMAGE_PREVIOUS ""
+    set_setting TESEL_IMAGE_RUN_PREVIOUS ""
     set_setting TESEL_SCHEMA_PREVIOUS ""
     set_setting TESEL_IMAGE_REJECTED "$current"
     start
@@ -127,9 +141,15 @@ case "$ACTION" in
 esac
 
 tag="$(setting TESEL_IMAGE_TAG)"
-candidate="$REPOSITORY@$(verified_digest "${tag:-latest}")"
+tag="${tag:-latest}"
+verified="$(verified_image "$tag")"
+candidate="$REPOSITORY@${verified% *}"
+candidate_run="${verified#* }"
+[[ "$candidate_run" =~ ^[0-9]+$ ]] || candidate_run=0
 
 if [[ "$candidate" == "$current" ]]; then
+  # Records the run of an image started before this script read runs.
+  [[ "$candidate_run" == "$current_run" ]] || set_setting TESEL_IMAGE_RUN "$candidate_run"
   start
   exit 0
 fi
@@ -138,8 +158,16 @@ if [[ "$candidate" == "$(setting TESEL_IMAGE_REJECTED)" ]]; then
   start
   exit 0
 fi
+# CI moves latest forward only, so latest on an older run means someone moved it back. The job
+# fails, which alerts the operator, who can still choose the image by setting TESEL_IMAGE_TAG.
+if [[ "$tag" == latest ]] && ((candidate_run < current_run)); then
+  echo "Staying on $current, of CI run $current_run: $REPOSITORY:latest is $candidate, of the" \
+    "older run $candidate_run." >&2
+  start
+  exit 1
+fi
 
-echo "Updating to $candidate"
+echo "Updating to $candidate, of CI run $candidate_run"
 docker pull --quiet "$candidate" >/dev/null
 if [[ -n "$current" ]]; then
   install -m 0700 -d "$(dirname "$COPY_CURRENT")"
@@ -147,14 +175,16 @@ if [[ -n "$current" ]]; then
   schema="$("$DIR/database.sh" "$DIR" schema)"
 fi
 set_setting TESEL_IMAGE "$candidate"
+set_setting TESEL_IMAGE_RUN "$candidate_run"
 if start; then
   set_setting TESEL_IMAGE_PREVIOUS "$current"
+  set_setting TESEL_IMAGE_RUN_PREVIOUS "$current_run"
   if [[ -n "$current" ]]; then
     mv "$COPY_CURRENT" "$COPY_PREVIOUS"
     set_setting TESEL_SCHEMA_PREVIOUS "$schema"
   fi
   remove_old_images
-  echo "Running $candidate"
+  echo "Running $candidate, of CI run $candidate_run"
   exit 0
 fi
 
@@ -165,6 +195,7 @@ fi
 echo "$candidate is not healthy: going back to $current." >&2
 restore_older_schema "$COPY_CURRENT" "$schema"
 set_setting TESEL_IMAGE "$current"
+set_setting TESEL_IMAGE_RUN "$current_run"
 set_setting TESEL_IMAGE_REJECTED "$candidate"
 start
 exit 1

@@ -125,10 +125,11 @@ jobs:
         run: docker logs tesel
 
   # After a green push to main, the image is published for amd64 and arm64 (for servers on ARM
-  # machines), signed with cosign by this workflow's identity on main, and only then tagged
-  # "latest", the tag servers follow, if its commit is still the newest on main. Servers run only
-  # images signed so. This is the only job that can write packages and get the identity token
-  # that signs (ADR-0109).
+  # machines), signed with cosign by this workflow's identity on main and with the run's number,
+  # and only then tagged "latest", the tag servers follow, if its commit is still the newest on
+  # main. Servers run only images signed so, and none from an older run than the one they run
+  # (deploy/vps/update.sh, ADR-0109). This is the only job that can write packages and get the
+  # identity token that signs.
   image-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [check, e2e, image]
@@ -178,12 +179,14 @@ jobs:
         with:
           # The version servers verify with (deploy/vps/install-cosign.sh).
           cosign-release: v3.1.4
+      # The run's number, signed with the image, grows with every run of this workflow: servers
+      # read it to refuse an image older than theirs.
       - name: Sign, then tag as latest if still the newest
         env:
           DIGEST: ${{ steps.publish.outputs.digest }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cosign sign --yes "$IMAGE@$DIGEST"
+          cosign sign --yes -a "run=$GITHUB_RUN_NUMBER" -a "sha=$GITHUB_SHA" "$IMAGE@$DIGEST"
           head="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
           if [ "$head" != "$GITHUB_SHA" ]; then
             echo "main is at $head now: $GITHUB_SHA is published, and latest stays as it is."

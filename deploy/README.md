@@ -68,9 +68,17 @@ A server installed while the project was called Teselia (in `/opt/teselia`) is m
 
 ### Updates
 
-CI builds the image on every run and starts it as servers do, with read access only. After every green push to `main` a separate job publishes `ghcr.io/guaschpau-design/tesel-server` for amd64 and arm64, signs it with cosign under the identity of its workflow on `main`, and only then moves the `latest` tag to it, if no newer commit has reached `main` meanwhile ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md), [ADR-0068](../docs/decisions/0068-restorable-copies-and-going-back.md)).
+CI builds the image on every run and starts it as servers do, with read access only. After every green push to `main` a separate job publishes `ghcr.io/guaschpau-design/tesel-server` for amd64 and arm64, signs it with cosign under the identity of its workflow on `main`, with the number of the CI run in the signature, and only then moves the `latest` tag to it, if no newer commit has reached `main` meanwhile ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md), [ADR-0068](../docs/decisions/0068-restorable-copies-and-going-back.md), [ADR-0109](../docs/decisions/0109-build-and-updates-resist-tampering.md)).
 
-Every 15 minutes [`vps/update.sh`](vps/update.sh) checks that signature for the image `TESEL_IMAGE_TAG` names (`latest` unless set in `.env`; a commit's SHA pins that version), pulls it by digest, starts it and waits for its health check. A version that does not become healthy is replaced at once by the previous one, kept on disk for this, and is not tried again. `.env` records the digests: `TESEL_IMAGE` (running), `TESEL_IMAGE_PREVIOUS` and `TESEL_IMAGE_REJECTED`. With nothing new the job only checks that the server is healthy, so an unhealthy server shows up as a failed update.
+Every 15 minutes [`vps/update.sh`](vps/update.sh) checks that signature for the image `TESEL_IMAGE_TAG` names (`latest` unless set in `.env`; a commit's SHA pins that version), pulls it by digest, starts it and waits for its health check. A version that does not become healthy is replaced at once by the previous one, kept on disk for this, and is not tried again. `.env` records the digests: `TESEL_IMAGE` (running), `TESEL_IMAGE_PREVIOUS` and `TESEL_IMAGE_REJECTED`, and the CI runs of the first two: `TESEL_IMAGE_RUN` and `TESEL_IMAGE_RUN_PREVIOUS`. With nothing new the job only checks that the server is healthy, so an unhealthy server shows up as a failed update.
+
+`latest` only moves forward, so the job refuses a `latest` signed by an older CI run than the running image's, and fails, which raises the alert below: someone who can move the tag could otherwise take the server back to an old version with a known flaw. A version chosen with `TESEL_IMAGE_TAG` is installed whatever its run. Images signed before runs were recorded count as run 0. Nothing on the server tells that `latest` has stopped moving; compare `TESEL_IMAGE_RUN` with the newest run of CI on `main` on GitHub. To see what an image's signature says, its run and commit among it:
+
+```sh
+cosign verify ghcr.io/guaschpau-design/tesel-server:latest \
+  --certificate-identity https://github.com/guaschpau-design/Tesel/.github/workflows/ci.yml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com | jq '.[].optional'
+```
 
 A new version may upgrade the database's schema, which older versions cannot read. So before starting a new version the job copies the database into `/opt/tesel/rollback`, and an update fails, leaving the server as it was, when the disk has no room for the copy and twice `TESEL_MIN_FREE_DISK_MB` more. Going back to the previous version across a change of schema, at once or by hand (below), restores that copy: what the server stored since is lost from it, and apps, seeing the server's store change, push their own events again.
 
@@ -153,7 +161,7 @@ Keep these somewhere other than the VPS: `/opt/tesel/.env` (settings), `backup.e
 
 ### Updating the installers and the configuration
 
-Changes to the files of [`vps/`](vps) reach a server when its installer runs again; `--domain` is the only option to repeat, the others are kept. Run it again as soon as a version with ADR-0108's changes is published: the server image updates on its own, but believes only the proxy that `compose.yaml` names from then on, so with the older file every client counts as coming from Caddy's address and the limits per address apply to all of them together:
+Changes to the files of [`vps/`](vps) reach a server when its installer runs again; `--domain` is the only option to repeat, the others are kept. Run it again as soon as a version with ADR-0108's changes is published: the server image updates on its own, but believes only the proxy that `compose.yaml` names from then on, so with the older file every client counts as coming from Caddy's address and the limits per address apply to all of them together. Run it again as well once ADR-0109's changes are published, so that `update.sh` refuses to go back to an image of an older CI run:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/guaschpau-design/Tesel/main/deploy/vps/install.sh \
