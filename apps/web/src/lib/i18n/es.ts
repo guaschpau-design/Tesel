@@ -296,6 +296,7 @@ export const es: Messages = {
   climb: '↑ {up} m · ↓ {down} m · pendiente máx. {steepest} %',
   baseMap: 'Mapa base',
   baseMapStreets: 'Callejero',
+  baseMapTactical: 'Táctico',
   baseMapTopo: 'Topográfico',
   baseMapAerial: 'Satélite',
   layersOfGroup: 'Lo del grupo',
@@ -308,6 +309,9 @@ export const es: Messages = {
   restTapToWake: 'Toca para volver',
   keepScreenOn: 'Pantalla siempre encendida',
   fullscreen: 'Pantalla completa',
+  darkMode: 'Modo oscuro',
+  darkModeHint:
+    'Colores oscuros en toda la app, y el callejero pasa a ser el mapa táctico: gris sobre fondo oscuro, para que solo destaque lo del equipo. Hasta que lo cambies aquí, sigue el modo del móvil.',
   diary: 'Diario de la operación',
   diaryEmpty:
     'Aquí quedará, en orden, todo lo que pase en el grupo: quién entra, los mensajes, los SOS y lo que se marque.',

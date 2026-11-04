@@ -240,9 +240,7 @@
   }
 
   /* Ink would vanish on a dark surface: grey still reads as the darkest of the four. */
-  @media (prefers-color-scheme: dark) {
-    .black {
-      --triage: var(--muted);
-    }
+  :global(:root[data-theme='dark']) .black {
+    --triage: var(--muted);
   }
 </style>

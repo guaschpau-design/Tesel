@@ -7,6 +7,7 @@ import { BASE_MAPS } from '../map/style/style.ts';
 import { DUTY_STATUSES, EQUIPMENT, PROFILES } from '../members/member-catalog.ts';
 import { POSITION_MODES } from '../position/position-mode.ts';
 import type { AppDb } from '../storage/app-db.ts';
+import { THEME_CHOICES } from '../ui/appearance.svelte.ts';
 import { choice, flag, Preference, subset, type PreferenceSpec } from './preference.svelte.ts';
 
 const PREFERENCES = {
@@ -59,6 +60,8 @@ const PREFERENCES = {
   notifications: flag('notifications', false),
   /** The interface's language: the browser's, until one is chosen in More. */
   language: choice('language', LANGUAGE_CHOICES, 'auto'),
+  /** Light or dark: this device's look, until one is chosen in Settings (ADR-0114). */
+  theme: choice('theme', THEME_CHOICES, 'auto'),
 };
 
 type Specs = typeof PREFERENCES;

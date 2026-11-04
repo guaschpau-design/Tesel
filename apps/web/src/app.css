@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   font-family:
     system-ui,
     -apple-system,
@@ -108,26 +108,26 @@
   --chip-size: 2.4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1011;
-    --surface: #1c1d20;
-    --fg: var(--pale);
-    --muted: #9fa3a8;
-    --border: #33363a;
-    --control-line: #6c7177;
-    --chrome-bg: #08090a;
-    --accent-line: var(--signal);
-    --danger: #ff5c5f;
-    --map-text: var(--pale);
-    --map-halo: #0f1011;
-    --map-relief: #000000;
-    --map-sky: #0a1824;
-    --map-horizon: #22343f;
-    --map-contour: #b08a68;
-    --map-terrain: #d8c3ad;
-    --map-spring: #7fc3e6;
-  }
+/* The dark look, chosen in Settings or this device's own (ui/appearance.svelte.ts, ADR-0114). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f1011;
+  --surface: #1c1d20;
+  --fg: var(--pale);
+  --muted: #9fa3a8;
+  --border: #33363a;
+  --control-line: #6c7177;
+  --chrome-bg: #08090a;
+  --accent-line: var(--signal);
+  --danger: #ff5c5f;
+  --map-text: var(--pale);
+  --map-halo: #0f1011;
+  --map-relief: #000000;
+  --map-sky: #0a1824;
+  --map-horizon: #22343f;
+  --map-contour: #b08a68;
+  --map-terrain: #d8c3ad;
+  --map-spring: #7fc3e6;
 }
 
 html,

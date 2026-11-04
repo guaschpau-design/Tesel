@@ -59,6 +59,7 @@ export type SettingKey =
   | 'keepScreenOn'
   | 'fullscreen'
   | 'language'
+  | 'theme'
   | 'alarmSound'
   | 'notifications'
   | 'radioChannelsToFree'
