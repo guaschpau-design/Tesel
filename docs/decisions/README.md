@@ -100,7 +100,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0092](0092-moves-not-gps-wandering.md)              | Moves, not the GPS wandering                                                                | Accepted                                                |
 | [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted, amended by 0107, 0111                         |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
-| [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted                                                |
+| [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted, amended by 0116                               |
 | [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted, amended by 0110                               |
 | [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted                                                |
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
@@ -121,3 +121,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
 | [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted                                                |
 | [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
+| [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Accepted                                                |

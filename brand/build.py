@@ -6,7 +6,7 @@
 # three upper tiles rounded into the pin's head and the lower one, lime, its point: the place. The
 # wordmark is "Tesel" in Outfit SemiBold, kept as outlines in wordmark-glyphs.json
 # (extract-wordmark.py), so this build needs only Python's standard library and no font. The design
-# is of 2 November 2026 (ADR-0095).
+# is of 2 November 2026 (ADR-0095), with the rounder head and wider joints of 4 November (ADR-0116).
 import json
 import math
 import os
@@ -21,40 +21,53 @@ with open(os.path.join(HERE, 'wordmark-glyphs.json')) as glyphs_file:
 
 # ---------------------------------------------------------------------------------------------
 # The mark, in a 90 x 90 box: a square whose diagonal is the box, turned 45 degrees about its
-# centre and cut into four tiles by two joints.
+# centre and cut into four tiles by two joints. The head is not rounded tile by tile: the whole
+# square is, at its three upper corners, so its rounding (wider than a tile) runs across the joints
+# as one outline, the pin's, and the tiles are cut out of it as a mosaic is.
 
 MARK = 90
 SIDE = MARK / math.sqrt(2)  # the side of the whole square
-JOINT = 5  # the width of the joints between the tiles
+JOINT = 9  # the width of the joints between the tiles
 TILE = (SIDE - JOINT) / 2
-HEAD = 22  # the rounding of the three outer corners that make the pin's head
-INNER = 2.5  # the rounding of the corners along the joints
+HEAD = 29  # the rounding of the square's three corners that make the pin's head
+INNER = 2.5  # the rounding of the tiles' corners along the joints
 POINT = 1.5  # the rounding of the pin's point, just enough not to be sharp
+ORIGIN = (MARK - SIDE) / 2  # the square's top left corner, before it turns
+OUTLINE_ID = 'tesel-pin'
 
 
 def tile(column, row, fill):
     """One tile of the square before it turns: (0, 0) top left ... (1, 1) bottom right, which the
-    turn brings to the bottom, as the point. Corners are rounded clockwise from the top left."""
-    x = (MARK - SIDE) / 2 + column * (TILE + JOINT)
-    y = (MARK - SIDE) / 2 + row * (TILE + JOINT)
+    turn brings to the bottom, as the point. Its corner on the square's edge is left square, for
+    the outline to round; the others are rounded along the joints."""
+    x = ORIGIN + column * (TILE + JOINT)
+    y = ORIGIN + row * (TILE + JOINT)
     outer = {(0, 0): 'top_left', (1, 0): 'top_right', (0, 1): 'bottom_left', (1, 1): 'bottom_right'}
     radii = {corner: INNER for corner in ('top_left', 'top_right', 'bottom_right', 'bottom_left')}
-    radii[outer[(column, row)]] = POINT if (column, row) == (1, 1) else HEAD
+    radii[outer[(column, row)]] = 0
     return f'<path d="{rounded_square(x, y, TILE, radii)}" fill="{fill}"/>'
 
 
 def mark():
+    outline = rounded_square(ORIGIN, ORIGIN, SIDE, {'top_left': HEAD, 'top_right': HEAD,
+                                                     'bottom_right': POINT, 'bottom_left': HEAD})
     tiles = tile(0, 0, 'currentColor') + tile(1, 0, 'currentColor') + tile(0, 1, 'currentColor')
     point = tile(1, 1, SIGNAL)
-    return f'<g transform="rotate(45 {MARK / 2} {MARK / 2})">{tiles}{point}</g>'
+    return (f'<defs><clipPath id="{OUTLINE_ID}"><path d="{outline}"/></clipPath></defs>'
+            f'<g transform="rotate(45 {MARK / 2} {MARK / 2})" clip-path="url(#{OUTLINE_ID})">{tiles}{point}</g>')
 
 
 def rounded_square(x, y, side, r):
+    """A square with a radius per corner (0 leaves the corner square), clockwise from the top left."""
     tl, tr, br, bl = r['top_left'], r['top_right'], r['bottom_right'], r['bottom_left']
-    return (f'M{fmt(x + tl)} {fmt(y)} H{fmt(x + side - tr)} A{tr} {tr} 0 0 1 {fmt(x + side)} {fmt(y + tr)} '
-            f'V{fmt(y + side - br)} A{br} {br} 0 0 1 {fmt(x + side - br)} {fmt(y + side)} '
-            f'H{fmt(x + bl)} A{bl} {bl} 0 0 1 {fmt(x)} {fmt(y + side - bl)} '
-            f'V{fmt(y + tl)} A{tl} {tl} 0 0 1 {fmt(x + tl)} {fmt(y)} Z')
+
+    def arc(radius, to_x, to_y):
+        return f'A{radius} {radius} 0 0 1 {fmt(to_x)} {fmt(to_y)} ' if radius else ''
+
+    return (f'M{fmt(x + tl)} {fmt(y)} H{fmt(x + side - tr)} {arc(tr, x + side, y + tr)}'
+            f'V{fmt(y + side - br)} {arc(br, x + side - br, y + side)}'
+            f'H{fmt(x + bl)} {arc(bl, x, y + side - bl)}'
+            f'V{fmt(y + tl)} {arc(tl, x + tl, y)}Z')
 
 
 # ---------------------------------------------------------------------------------------------

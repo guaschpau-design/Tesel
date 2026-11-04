@@ -1,10 +1,10 @@
 # Brand
 
-The Tesel mark, wordmark and lockups ([ADR-0095](../docs/decisions/0095-pin-of-four-tiles-logo.md)).
+The Tesel mark, wordmark and lockups ([ADR-0095](../docs/decisions/0095-pin-of-four-tiles-logo.md), with the rounder head and wider joints of [ADR-0116](../docs/decisions/0116-rounder-head-wider-joints.md)).
 
 | File                   | What                                                                                                                                                                         |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mark.svg`             | A map pin made of four tiles: a square on its corner, cut in four, its three upper tiles rounded into the head and the lower one, lime, the point. Tiles take `currentColor` |
+| `mark.svg`             | A map pin made of four tiles: a square on its corner, rounded into the pin's head and cut in four by wide joints, the lower tile, lime, its point. Tiles take `currentColor` |
 | `wordmark.svg`         | "Tesel" in Outfit SemiBold, as outlines: no font needed                                                                                                                      |
 | `lockup.svg`           | Mark and wordmark side by side, ink, for paper                                                                                                                               |
 | `lockup-pale.svg`      | The same, pale, for ink: the headers of the app (imported from here) and of the site (`apps/site/img`, a copy)                                                               |
