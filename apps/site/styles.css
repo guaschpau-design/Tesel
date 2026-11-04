@@ -44,9 +44,9 @@
   --paper-text: #1b1d1f;
   --paper-muted: #565b60;
   --rule: #c9cdca;
-  --signal: #8ce04c; /* the one action on each screen, with ink on it */
-  --signal-hover: #79cc3a;
-  --signal-deep: #356f0f; /* the same, as text and lines on paper */
+  --signal: #99c938; /* the one action on each screen, with ink on it */
+  --signal-hover: #88b52f;
+  --signal-deep: #49660e; /* the same, as text and lines on paper */
   --alert: #b3261e; /* only for what must not be missed: when to call 112 */
   --measure: 62ch;
   font-family:

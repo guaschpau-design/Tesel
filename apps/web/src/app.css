@@ -15,8 +15,8 @@
   /* Brand */
   --ink: #18191b;
   --pale: #ebedeb;
-  --signal: #8ce04c;
-  --signal-deep: #356f0f;
+  --signal: #99c938;
+  --signal-deep: #49660e;
 
   /* Surfaces and text. Content (panels, cards, menus, dialogs) sits on the surface; the chrome
      around the map (the top bar, the dock and the map's controls) is ink. */

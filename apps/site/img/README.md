@@ -7,7 +7,7 @@ by the simulator (`pnpm --filter @tesel/simulator screenshots`, see `tools/simul
 `tablet-chat.png` and `phone-map.png`, resized to 1800 and 640 pixels wide and saved as WebP and
 JPEG. The base map is Tesel's own (OpenStreetMap data, Protomaps). Map data © OpenStreetMap
 contributors, ODbL. When the logo changed (ADR-0095) only the header's logo was redrawn in them, at the size and
-place the app gives it; take them again with the simulator when the app itself changes. For the graphite and lime of ADR-0113, the app's old colours in them were turned into the new ones pixel by pixel (navy into graphite, the old yellow-green into the new lime); the map under them is unchanged.
+place the app gives it; take them again with the simulator when the app itself changes. For ADR-0113 they were taken again with the base map of tesel.eu, read in a browser for the area of the views and given to the simulator with `--tiles`.
 
 `net-coverage.svg`, `net-mesh.svg` and `net-bridge.svg`: the home page's diagrams of how a message travels (ADR-0088, redrawn in ADR-0113): with coverage, through the server; without it, from node to node over the mesh; and through a phone that bridges both. Each is a panel of the dark section with phones, the server and nodes drawn after the MeshTracker X1. No words, so both languages share them. Written by `tools/site-diagrams/build.py`; change them there.
 
