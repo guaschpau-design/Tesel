@@ -64,7 +64,7 @@
         <p class="where warning">{t('sosPlaceUnknown')}</p>
       {/if}
       {#if !call.mine && where.kind !== 'unknown'}
-        <FromHere {t} {locale} at={where.at} />
+        <FromHere {t} {locale} at={where.at} profile={false} />
       {/if}
       {#if call.mine && undelivered.has(call.ref)}
         <p class="warning">{t('sosNotSentYet')}</p>

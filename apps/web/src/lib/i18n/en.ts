@@ -293,6 +293,15 @@ export const en = {
   layerRelief: 'Relief',
   layerCadastre: 'Cadastre',
   climb: '↑ {up} m · ↓ {down} m · steepest {steepest} %',
+  climbShort: '↑ {up} m · ↓ {down} m',
+  elevation: 'Elevation',
+  elevationReading: 'Reading the heights…',
+  elevationUnknown:
+    'No heights for this stretch: they are read online, or from the relief of a downloaded map.',
+  elevationYou: 'You',
+  elevationStretched: 'Height exaggerated ×{times}',
+  elevationProfileLabel:
+    'Terrain profile from you to the point, {distance} away: between {low} m and {high} m',
   baseMap: 'Base map',
   baseMapStreets: 'Streets',
   baseMapTactical: 'Tactical',

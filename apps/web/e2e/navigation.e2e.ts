@@ -1,4 +1,5 @@
 import { device, expect, mapIdle, openMore, test } from './helpers.ts';
+import { serveTerrainRamp } from './terrain-ramp.ts';
 
 test('a point picked on the map tells how far it is and is navigated to', async ({ browser }) => {
   const page = await device(browser, 'Ana');
@@ -47,4 +48,35 @@ test('distances are measured point by point, with the area they enclose', async 
   await expect(page.getByText('área encerrada')).toBeHidden();
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await expect(page.getByRole('button', { name: 'Más', exact: true })).toBeVisible();
+});
+
+test('a point shows, on asking, the profile of the way there and how much it climbs', async ({
+  browser,
+}) => {
+  const page = await device(browser, 'Ana');
+  await serveTerrainRamp(page);
+  await page
+    .getByRole('region', { name: 'Grupos' })
+    .getByRole('button', { name: 'Cerrar' })
+    .click();
+  await page.getByRole('button', { name: 'Mostrar mi ubicación' }).click();
+  await expect(page.getByRole('button', { name: 'Dejar de mostrar mi ubicación' })).toBeVisible();
+  await mapIdle(page);
+  const canvas = page.locator('.maplibregl-canvas');
+  const box = await canvas.boundingBox();
+  if (box === null) throw new Error('no map');
+  await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - 150 } });
+
+  // Closed, the fold reads nothing; opened, it draws the way north, which only climbs.
+  const panel = page.getByRole('region', { name: 'Punto del mapa' });
+  const fold = panel.getByText('Desnivel', { exact: true });
+  await expect(fold).toBeVisible();
+  await fold.click();
+  await expect(
+    panel.getByRole('img', { name: /^Perfil del terreno desde ti hasta el punto/ }),
+  ).toBeVisible();
+  await expect(panel.getByText(/^↑ \d+ m · ↓ 0 m · pendiente máx\. \d+ %$/)).toBeVisible();
+  // Closed again, its gist stays in sight.
+  await fold.click();
+  await expect(panel.getByText(/^↑ \d+ m · ↓ 0 m$/)).toBeVisible();
 });

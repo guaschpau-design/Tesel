@@ -20,6 +20,11 @@ export interface Climb {
   readonly steepest: number;
 }
 
+/** Metres of climb as they are told, to the nearest 5 m: the data is not finer. */
+export function climbMetres(value: number): string {
+  return String(Math.round(value / 5) * 5);
+}
+
 /** Points along the straight way from `from` to `to`, both included. */
 export function samplesAlong(from: LatLon, to: LatLon): LatLon[] {
   const length = distanceMeters(from, to);

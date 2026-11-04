@@ -294,6 +294,15 @@ export const es: Messages = {
   layerRelief: 'Relieve',
   layerCadastre: 'Catastro',
   climb: '↑ {up} m · ↓ {down} m · pendiente máx. {steepest} %',
+  climbShort: '↑ {up} m · ↓ {down} m',
+  elevation: 'Desnivel',
+  elevationReading: 'Leyendo las alturas…',
+  elevationUnknown:
+    'No hay alturas de este tramo: se leen con conexión, o del relieve de un mapa descargado.',
+  elevationYou: 'Tú',
+  elevationStretched: 'Altura exagerada ×{times}',
+  elevationProfileLabel:
+    'Perfil del terreno desde ti hasta el punto, a {distance}: entre {low} m y {high} m',
   baseMap: 'Mapa base',
   baseMapStreets: 'Callejero',
   baseMapTactical: 'Táctico',

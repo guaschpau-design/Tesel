@@ -49,6 +49,7 @@
   const stopFollowingLook = appearance.follow(() => startup.preferences?.theme.value ?? 'auto');
   $effect(() => {
     terrain.reader = startup.preferences?.relief.value ? startup.elevations : null;
+    terrain.onDemand = startup.elevations;
   });
   /** The language chosen in More, or the browser's until preferences are read. */
   const locale: Locale = $derived(
