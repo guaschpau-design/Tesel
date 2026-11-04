@@ -32,21 +32,21 @@
 
 :root {
   /* Ink: the night map. Paper: where the reading happens. */
-  --ink: #10202c;
-  --ink-deep: #0a161f;
-  --ink-raised: #172b39;
-  --ink-text: #e6ebe8;
-  --ink-muted: #93a6ad;
-  --contour: #2a4654;
-  --contour-strong: #3b6072;
-  --paper: #e8ece9;
-  --paper-deep: #dde3df;
-  --paper-text: #15232d;
-  --paper-muted: #4f6069;
-  --rule: #c2ccc7;
-  --signal: #c8f04a; /* the one action on each screen, with ink on it */
-  --signal-hover: #b4dc30;
-  --signal-deep: #4d6e00; /* the same, as text and lines on paper */
+  --ink: #18191b;
+  --ink-deep: #111213;
+  --ink-raised: #222427;
+  --ink-text: #ebedeb;
+  --ink-muted: #9fa3a8;
+  --contour: #313438;
+  --contour-strong: #464a4f;
+  --paper: #eceeec;
+  --paper-deep: #e1e4e1;
+  --paper-text: #1b1d1f;
+  --paper-muted: #565b60;
+  --rule: #c9cdca;
+  --signal: #8ce04c; /* the one action on each screen, with ink on it */
+  --signal-hover: #79cc3a;
+  --signal-deep: #356f0f; /* the same, as text and lines on paper */
   --alert: #b3261e; /* only for what must not be missed: when to call 112 */
   --measure: 62ch;
   font-family:
@@ -329,17 +329,17 @@ h3 {
   background:
     linear-gradient(
       180deg,
-      rgb(16 32 44 / 30%) 0%,
-      rgb(16 32 44 / 0%) 40%,
-      rgb(16 32 44 / 0%) 82%,
+      rgb(24 25 27 / 30%) 0%,
+      rgb(24 25 27 / 0%) 40%,
+      rgb(24 25 27 / 0%) 82%,
       var(--ink) 100%
     ),
     linear-gradient(
       90deg,
       var(--ink) 0%,
-      rgb(16 32 44 / 88%) 30%,
-      rgb(16 32 44 / 30%) 55%,
-      rgb(16 32 44 / 0%) 70%
+      rgb(24 25 27 / 88%) 30%,
+      rgb(24 25 27 / 30%) 55%,
+      rgb(24 25 27 / 0%) 70%
     );
 }
 
@@ -361,7 +361,7 @@ h3 {
   margin: 1.5rem 0 2.2rem;
   font-size: 1.2rem;
   max-width: 38ch;
-  color: #dfe6e3;
+  color: #e4e6e4;
   text-shadow: 0 1px 12px rgb(0 0 0 / 45%);
 }
 
@@ -379,7 +379,7 @@ h3 {
   padding: 0;
   font-size: 0.92rem;
   list-style: none;
-  color: #c2cfd0;
+  color: #c6c9cc;
   text-shadow: 0 1px 8px rgb(0 0 0 / 50%);
 }
 
@@ -403,7 +403,7 @@ h3 {
   margin: 0;
   font-size: 0.55rem;
   letter-spacing: 0.02em;
-  color: rgb(230 235 232 / 18%);
+  color: rgb(235 237 235 / 18%);
 }
 
 @media (max-width: 46rem) {
@@ -423,10 +423,10 @@ h3 {
   .hero::after {
     background: linear-gradient(
       180deg,
-      rgb(16 32 44 / 88%) 0%,
-      rgb(16 32 44 / 70%) 45%,
-      rgb(16 32 44 / 0%) 68%,
-      rgb(16 32 44 / 0%) 88%,
+      rgb(24 25 27 / 88%) 0%,
+      rgb(24 25 27 / 70%) 45%,
+      rgb(24 25 27 / 0%) 68%,
+      rgb(24 25 27 / 0%) 88%,
       var(--ink) 100%
     );
   }
@@ -482,9 +482,9 @@ section.paper + section.paper > .wrap {
   height: auto;
   border-radius: 0.9rem;
   box-shadow:
-    0 0 0 1px rgb(16 32 44 / 12%),
-    0 30px 60px -20px rgb(16 32 44 / 45%),
-    0 12px 24px -12px rgb(16 32 44 / 30%);
+    0 0 0 1px rgb(24 25 27 / 12%),
+    0 30px 60px -20px rgb(24 25 27 / 45%),
+    0 12px 24px -12px rgb(24 25 27 / 30%);
 }
 
 /* On a phone the page shows the app as it looks on a phone. */
@@ -494,8 +494,8 @@ section.paper + section.paper > .wrap {
     margin: 0 auto;
     border-radius: 1.6rem;
     box-shadow:
-      0 0 0 0.4rem #050c12,
-      0 30px 60px -20px rgb(16 32 44 / 55%);
+      0 0 0 0.4rem #08090a,
+      0 30px 60px -20px rgb(24 25 27 / 55%);
   }
 }
 

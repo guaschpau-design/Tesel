@@ -13,26 +13,26 @@
      step) and so does the site. */
 
   /* Brand */
-  --ink: #10202c;
-  --pale: #e6ebe8;
-  --signal: #c8f04a;
-  --signal-deep: #4d6e00;
+  --ink: #18191b;
+  --pale: #ebedeb;
+  --signal: #8ce04c;
+  --signal-deep: #356f0f;
 
   /* Surfaces and text. Content (panels, cards, menus, dialogs) sits on the surface; the chrome
      around the map (the top bar, the dock and the map's controls) is ink. */
-  --bg: #f4f6f4;
+  --bg: #f4f5f4;
   --surface: #ffffff;
   --fg: var(--ink);
-  --muted: #4f6069;
+  --muted: #565b60;
   /* Lines that only separate (cards, lists) are soft. The edge of a control that must be found to
      be used (a text field, a switch) stands out 3:1 from the surface, as WCAG asks. */
-  --border: #cfd8d3;
-  --control-line: #76857f;
+  --border: #d5d8d6;
+  --control-line: #7a7f84;
   --chrome-bg: var(--ink);
   --chrome-fg: var(--pale);
-  --chrome-line: rgb(230 235 232 / 25%);
-  --chrome-muted: #a6aeb0;
-  --chrome-pressed: rgb(230 235 232 / 14%);
+  --chrome-line: rgb(235 237 235 / 25%);
+  --chrome-muted: #a3a7ab;
+  --chrome-pressed: rgb(235 237 235 / 14%);
   /* What has the keyboard's focus is ringed in the line colour; on the chrome, in lime (.chrome). */
   --focus: var(--accent-line);
   /* Links: the line colour, underlined. */
@@ -110,17 +110,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0a161f;
-    --surface: #132531;
+    --bg: #0f1011;
+    --surface: #1c1d20;
     --fg: var(--pale);
-    --muted: #93a6ad;
-    --border: #2a4654;
-    --control-line: #5f7f8c;
-    --chrome-bg: #050c12;
+    --muted: #9fa3a8;
+    --border: #33363a;
+    --control-line: #6c7177;
+    --chrome-bg: #08090a;
     --accent-line: var(--signal);
     --danger: #ff5c5f;
     --map-text: var(--pale);
-    --map-halo: #0a161f;
+    --map-halo: #0f1011;
     --map-relief: #000000;
     --map-sky: #0a1824;
     --map-horizon: #22343f;

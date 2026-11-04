@@ -25,7 +25,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0017](0017-server-serves-site-and-app.md)           | The server serves the landing page and the web app                                          | Accepted                                                |
 | [0018](0018-command-post.md)                         | A command post is a replicating server on its own Wi-Fi, found by name                      | Superseded by 0058                                      |
 | [0019](0019-name-tesel.md)                           | The project is called Tesel                                                                 | Accepted                                                |
-| [0020](0020-colour-and-symbols.md)                   | Signal lime, colours defined once, and symbols of our own                                   | Accepted                                                |
+| [0020](0020-colour-and-symbols.md)                   | Signal lime, colours defined once, and symbols of our own                                   | Accepted, colours revised by 0113                       |
 | [0021](0021-coordinate-formats.md)                   | Write coordinates in four formats, converted by our own code                                | Accepted                                                |
 | [0022](0022-log-files.md)                            | Carry a group's log in files of sealed envelopes                                            | Accepted, amended by 0055                               |
 | [0023](0023-ign-base-maps.md)                        | Topographic and aerial base maps from Spain's IGN, read by the browser                      | Accepted, amended by 0034, 0037, 0041                   |
@@ -118,3 +118,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0110](0110-deception-and-loose-ends.md)             | Guard against look-alike names and invitations, and close loose ends                        | Accepted                                                |
 | [0111](0111-airtime-kept-numbers-per-group.md)       | Keep the radio's airtime, one window on the radio, and numbers per group                    | Accepted                                                |
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
+| [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |

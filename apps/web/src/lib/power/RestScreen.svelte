@@ -65,7 +65,7 @@
     justify-content: center;
     gap: 1.5rem;
     padding: 2rem 1rem;
-    color: #7d8c92;
+    color: #83878c;
     background: #000;
     border: 0;
     border-radius: 0;
@@ -84,7 +84,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
-    color: #b5c2c6;
+    color: #b9bcbf;
   }
 
   .way strong {

@@ -1,6 +1,6 @@
 # 0020. Signal lime, colours defined once, and symbols of our own
 
-- Status: Accepted
+- Status: Accepted, colours revised by [ADR-0113](0113-graphite-and-device-lime.md)
 - Date: 2026-10-26
 
 ## Context

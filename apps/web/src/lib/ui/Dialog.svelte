@@ -54,7 +54,7 @@
   }
 
   dialog::backdrop {
-    background: rgb(15 23 42 / 55%);
+    background: rgb(0 0 0 / 55%);
   }
 
   h2 {
