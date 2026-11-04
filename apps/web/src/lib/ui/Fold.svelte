@@ -14,10 +14,12 @@
      * to open and close, whatever changes inside.
      */
     open?: boolean;
+    /** Each time it is opened, for what is worked out only when looked at. */
+    onopen?: () => void;
     children: Snippet;
   }
 
-  let { title, summary, open = false, children }: Props = $props();
+  let { title, summary, open = false, onopen, children }: Props = $props();
 
   let details: HTMLDetailsElement;
 
@@ -28,7 +30,7 @@
   });
 </script>
 
-<details class="fold" bind:this={details}>
+<details class="fold" bind:this={details} ontoggle={() => details.open && onopen?.()}>
   <summary>
     <span class="title">{title}</span>
     <span class="summary">{summary}</span>

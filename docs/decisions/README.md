@@ -120,3 +120,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
 | [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted                                                |
+| [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
