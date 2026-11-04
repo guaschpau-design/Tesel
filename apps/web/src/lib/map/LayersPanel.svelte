@@ -7,6 +7,7 @@
   import { thirdPartyNoticesUrl } from '../config.ts';
   import type { MessageKey, Translate } from '../i18n/index.ts';
   import type { Preference } from '../settings/preference.svelte.ts';
+  import { appearance } from '../ui/appearance.svelte.ts';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
   import BaseMapPreview from './BaseMapPreview.svelte';
@@ -32,6 +33,11 @@
     aerial: 'baseMapAerial',
   };
 
+  /** In the dark look the street map is the tactical map (ADR-0114), and is named so. */
+  function baseName(base: BaseMap): MessageKey {
+    return base === 'streets' && appearance.theme === 'dark' ? 'baseMapTactical' : BASE_NAMES[base];
+  }
+
   function isOn(name: LayerSwitch): boolean {
     return isFlag(name) ? flags[name].value : !hidden.value.includes(name);
   }
@@ -55,8 +61,8 @@
         aria-checked={base.value === option}
         onclick={() => base.set(option)}
       >
-        <BaseMapPreview base={option} />
-        <span>{t(BASE_NAMES[option])}</span>
+        <BaseMapPreview base={option} theme={appearance.theme} />
+        <span>{t(baseName(option))}</span>
       </button>
     {/each}
   </div>

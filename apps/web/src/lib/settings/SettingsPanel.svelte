@@ -1,6 +1,6 @@
 <!-- The choices of this device, opened from the dock's "More" menu: alarm sound, notifications,
-     keeping the screen on, full screen, the language and how coordinates are written. Each is
-     remembered. -->
+     keeping the screen on, full screen, dark mode, the language and how coordinates are written.
+     Each is remembered. -->
 <script lang="ts">
   import CoordinateFormatSelect from '../coordinates/CoordinateFormatSelect.svelte';
   import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
@@ -11,6 +11,7 @@
     fullscreenSupported,
     fullscreenView,
   } from '../ui/fullscreen.svelte.ts';
+  import { appearance } from '../ui/appearance.svelte.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
@@ -86,6 +87,14 @@
         onclick={toggleFullscreen}
       />
     {/if}
+    <!-- Shown as it is now, the phone's look until chosen here (ADR-0114). -->
+    <SwitchRow
+      icon="moon"
+      label={t('darkMode')}
+      hint={{ text: t('darkModeHint'), label: t('aboutThis', { name: t('darkMode') }) }}
+      on={appearance.theme === 'dark'}
+      onclick={() => void preferences.theme.set(appearance.theme === 'dark' ? 'light' : 'dark')}
+    />
     <!-- The next language, round the list. -->
     <button class="language" onclick={() => void preferences.language.set(nextLocale(locale))}>
       <Pictogram name="language" size={20} />

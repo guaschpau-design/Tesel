@@ -32,7 +32,7 @@ function definitions(block: string): Map<string, string> {
 /** The app's colours in a theme: the light ones, with the dark theme's changes over them. */
 function theme(dark: boolean): (name: string) => string {
   const light = definitions(/^:root \{([^}]*)\}/m.exec(APP_CSS)?.[1] ?? '');
-  const darkBlock = /prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/.exec(APP_CSS)?.[1];
+  const darkBlock = /:root\[data-theme='dark'\] \{([^}]*)\}/.exec(APP_CSS)?.[1];
   const tokens = new Map([...light, ...(dark ? definitions(darkBlock ?? '') : [])]);
   const resolve = (name: string): string => {
     const value = tokens.get(name);

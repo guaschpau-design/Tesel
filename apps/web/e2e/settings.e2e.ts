@@ -1,5 +1,5 @@
 // Choices of the settings panel, opened from the "More" menu, that the app keeps: full screen, on
-// by default and entered at the first tap of each visit, and the language.
+// by default and entered at the first tap of each visit, the language and dark mode.
 
 import type { Page } from '@playwright/test';
 
@@ -46,4 +46,34 @@ test('the language is chosen in the settings and remembered', async ({ browser }
   await page.reload();
   await expect(page.getByRole('button', { name: 'More' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Map', exact: true })).toBeVisible();
+});
+
+test('dark mode is chosen in the settings, and the street map turns tactical', async ({
+  browser,
+}) => {
+  const page = await device(browser, 'Ana');
+  const theme = () => page.evaluate(() => document.documentElement.dataset['theme']);
+  // The phone of these tests is light, and so is the app until dark is chosen.
+  expect(await theme()).toBe('light');
+  await openMore(page, 'Ajustes');
+  const settings = page.getByRole('region', { name: 'Ajustes' });
+  const dark = settings.getByRole('switch', { name: 'Modo oscuro' });
+  await expect(dark).toHaveAttribute('aria-checked', 'false');
+  // Tapped on its name: the middle of the row is its (i).
+  await dark.getByText('Modo oscuro').click();
+  await expect(dark).toHaveAttribute('aria-checked', 'true');
+  await expect.poll(theme).toBe('dark');
+  await settings.getByRole('button', { name: 'Cerrar' }).click();
+
+  await page.getByRole('button', { name: 'Capas del mapa' }).click();
+  const base = page.getByRole('radiogroup', { name: 'Mapa base' });
+  await expect(base.getByRole('radio', { name: 'Táctico' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+
+  // Remembered on the next visit.
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Más', exact: true })).toBeVisible();
+  await expect.poll(theme).toBe('dark');
 });

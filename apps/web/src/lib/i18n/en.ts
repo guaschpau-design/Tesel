@@ -295,6 +295,7 @@ export const en = {
   climb: '↑ {up} m · ↓ {down} m · steepest {steepest} %',
   baseMap: 'Base map',
   baseMapStreets: 'Streets',
+  baseMapTactical: 'Tactical',
   baseMapTopo: 'Topographic',
   baseMapAerial: 'Satellite',
   layersOfGroup: 'From the group',
@@ -307,6 +308,9 @@ export const en = {
   restTapToWake: 'Tap to come back',
   keepScreenOn: 'Screen always on',
   fullscreen: 'Full screen',
+  darkMode: 'Dark mode',
+  darkModeHint:
+    'Dark colours throughout the app, and the street map turns into the tactical map: grey on a dark ground, so only what the team marks stands out. Until changed here, it follows the phone.',
   diary: 'Operation diary',
   diaryEmpty:
     'Everything that happens in the group will be kept here, in order: who joins, the messages, the SOS calls and what is marked.',

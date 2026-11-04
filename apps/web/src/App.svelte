@@ -30,13 +30,10 @@
   import { closePanel, openPanel } from './lib/ui/panels.svelte.ts';
   import { notices } from './lib/ui/notices.svelte.ts';
   import { useStorageFullNotice } from './lib/ui/submission.svelte.ts';
-  import type { MapTheme } from './lib/ui/theme.ts';
+  import { appearance } from './lib/ui/appearance.svelte.ts';
   import DevicePanels from './lib/workspace/DevicePanels.svelte';
   import MapWorkspace from './lib/workspace/MapWorkspace.svelte';
   import TopBar from './lib/workspace/TopBar.svelte';
-
-  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  let theme: MapTheme = $state(darkQuery.matches ? 'dark' : 'light');
 
   // Read an invitation link before anything else, then remove the secret from the address bar
   // and the history (ADR-0012). This runs before the map takes over the URL fragment.
@@ -48,6 +45,8 @@
 
   /** The databases and what waits for them, each as it opens. */
   const startup = new Startup();
+  // The look, light or dark, from the first frame: this device's until the preferences are read.
+  const stopFollowingLook = appearance.follow(() => startup.preferences?.theme.value ?? 'auto');
   $effect(() => {
     terrain.reader = startup.preferences?.relief.value ? startup.elevations : null;
   });
@@ -79,14 +78,12 @@
 
   onMount(() => {
     const stopWatching = watchConnection();
-    const onScheme = (event: MediaQueryListEvent) => (theme = event.matches ? 'dark' : 'light');
-    darkQuery.addEventListener('change', onScheme);
     const stopStarting = startup.start();
 
     return () => {
       stopWatching();
       stopStarting();
-      darkQuery.removeEventListener('change', onScheme);
+      stopFollowingLook();
     };
   });
 
@@ -193,7 +190,7 @@
           base: startup.preferences.baseMap.value,
           relief: startup.preferences.relief.value,
           threeD: ground.raised,
-          theme,
+          theme: appearance.theme,
           lang: locale,
         }}
         locale={mapLibreLocale(t)}
