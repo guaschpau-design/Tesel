@@ -1,5 +1,6 @@
 <!-- The operation diary: everything that has happened in the group, newest first, to read and to
-     download for the report; folded below it, the group's log to save or load on another device. -->
+     download; for whoever coordinates, the debrief of some hours of it as a PDF; folded below it,
+     the group's log to save or load on another device. -->
 <script lang="ts">
   import type { CoordinateFormat } from '../coordinates/coordinates.ts';
   import { formatTime } from '../format.ts';
@@ -13,6 +14,7 @@
   import Panel from '../ui/Panel.svelte';
   import { diaryLines } from './diary.ts';
   import { diaryText, fileName } from './diary-text.ts';
+  import DebriefFold from './DebriefFold.svelte';
   import { attempt } from '../ui/submission.svelte.ts';
 
   interface Props {
@@ -20,10 +22,12 @@
     locale: Locale;
     feed: GroupFeed;
     format: Preference<CoordinateFormat>;
+    /** Whoever coordinates the group makes its debriefs. */
+    coordinator: boolean;
     onclose: () => void;
   }
 
-  let { t, locale, feed, format, onclose }: Props = $props();
+  let { t, locale, feed, format, coordinator, onclose }: Props = $props();
 
   const lines = $derived(diaryLines(feed.state, t));
   const newestFirst = $derived([...lines].reverse());
@@ -72,6 +76,10 @@
         onclick={downloadDiary}
       />
     </div>
+
+    {#if coordinator}
+      <DebriefFold {t} {locale} {feed} {format} {lines} />
+    {/if}
 
     {#if newestFirst.length === 0}
       <p class="hint">{t('diaryEmpty')}</p>
