@@ -13,6 +13,8 @@ import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import type { EnvelopeStore } from './envelope-store.ts';
 import { Heartbeat } from './heartbeat.ts';
 import type { Relay } from './relay.ts';
+import { serveStats } from './stats.ts';
+import type { Usage } from './usage.ts';
 import type { WeatherWarningsService } from './weather/weather-warnings.ts';
 import { serveWeb } from './web.ts';
 import { MAX_FRAME_BYTES } from './ws-text.ts';
@@ -27,12 +29,18 @@ export interface AppOptions {
    * X-Forwarded-For header says which address a client connects from; empty for none.
    */
   readonly trustedProxies: readonly string[];
+  /** Where page views are counted, or null to count none (ADR-0117). */
+  readonly usage: Usage | null;
+  /** The password of the usage page at /stats, or null for no page. */
+  readonly statsKey: string | null;
 }
 
 export const NO_OPTIONS: AppOptions = {
   webRoot: null,
   weather: null,
   trustedProxies: [],
+  usage: null,
+  statsKey: null,
 };
 /** Warnings are gathered every 10 minutes; browsers may keep them a little. */
 const WEATHER_CACHE_CONTROL = 'public, max-age=300';
@@ -79,7 +87,10 @@ export async function buildApp(
         .send(body);
     });
   }
-  if (options.webRoot !== null) await serveWeb(app, options.webRoot);
+  if (options.usage !== null && options.statsKey !== null) {
+    serveStats(app, store, options.usage, options.statsKey);
+  }
+  if (options.webRoot !== null) await serveWeb(app, options.webRoot, options.usage);
 
   const heartbeat = new Heartbeat();
   app.get(

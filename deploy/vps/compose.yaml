@@ -35,6 +35,8 @@ services:
       TESEL_MB_PER_IP_PER_DAY: ${TESEL_MB_PER_IP_PER_DAY:-}
       TESEL_MB_PER_GROUP_FIRST_DAY: ${TESEL_MB_PER_GROUP_FIRST_DAY:-}
       TESEL_MIN_FREE_DISK_MB: ${TESEL_MIN_FREE_DISK_MB:-}
+      TESEL_STATS_KEY: ${TESEL_STATS_KEY:-}
+      TESEL_TIME_ZONE: ${TESEL_TIME_ZONE:-}
       # Caddy, on the network below, names each client in X-Forwarded-For; nobody else is believed.
       TESEL_TRUSTED_PROXIES: ${TESEL_TRUSTED_PROXIES:-172.31.250.0/24}
     volumes:

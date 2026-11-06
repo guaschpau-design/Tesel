@@ -140,6 +140,10 @@ sudo docker compose run --rm --no-deps --no-TTY --entrypoint sh caddy \
 sudo docker compose up --detach
 ```
 
+### Usage figures
+
+`https://DOMAIN/stats` shows how much the site and the app were used in the last 30 days: page views, visitors, the sites visits came from, connections to the server, active groups and stored messages, per day ([ADR-0117](../docs/decisions/0117-anonymous-usage-figures.md)). The browser asks for a user and a password: `tesel` and `TESEL_STATS_KEY` from `/opt/tesel/.env`, which the installer draws on its first run and prints at the end of every run. Nothing there says who: no address, browser or group is kept.
+
 ### Removing a group's junk
 
 Pushes need only a group's ID, so anyone who has one can fill that group with junk, within the limits per address and per new group ([ADR-0107](../docs/decisions/0107-relay-holds-against-floods.md)). Junk expires with `TESEL_RETENTION_DAYS`; to remove it at once, find the group among those that take the most room and purge it, while the server runs:

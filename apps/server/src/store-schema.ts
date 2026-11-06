@@ -14,6 +14,7 @@ const MIGRATIONS: readonly Migration[] = [
   schemaBeforeVersions,
   distinctEnvelopesAndIdentity,
   withoutCommandPosts,
+  withUsage,
 ];
 
 /** The value `PRAGMA auto_vacuum` reads when incremental vacuum is on. */
@@ -154,5 +155,20 @@ function withoutCommandPosts(db: DatabaseSync): void {
     DROP INDEX envelopes_pending_up;
     ALTER TABLE envelopes DROP COLUMN pending_up;
     DROP TABLE upstream_cursors;
+  `);
+}
+
+/**
+ * Version 4: how much the server is used, counted per day (ADR-0117): one number per day and
+ * figure, such as the page views of a page or the envelopes stored, and nothing about who.
+ */
+function withUsage(db: DatabaseSync): void {
+  db.exec(`
+    CREATE TABLE usage (
+      day    TEXT    NOT NULL,
+      metric TEXT    NOT NULL,
+      value  INTEGER NOT NULL,
+      PRIMARY KEY (day, metric)
+    ) WITHOUT ROWID;
   `);
 }

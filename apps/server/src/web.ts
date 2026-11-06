@@ -1,5 +1,5 @@
 // Serving the landing page (/) and the web app (/app/) from the same origin as the relay: one
-// server serves everything a phone needs.
+// server serves everything a phone needs. Each page it sends is counted (usage.ts).
 
 import { existsSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
@@ -7,11 +7,36 @@ import { extname, join, resolve, sep } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import type { FastifyInstance } from 'fastify';
 
+import { STATS_PATH } from './stats.ts';
+import type { Usage } from './usage.ts';
+
 /** Where the web app lives under the site (TESEL_BASE when it is built). */
 const APP_PREFIX = '/app/';
 
-export async function serveWeb(app: FastifyInstance, root: string): Promise<void> {
+export async function serveWeb(
+  app: FastifyInstance,
+  root: string,
+  usage: Usage | null,
+): Promise<void> {
   await app.register(fastifyStatic, { root, wildcard: false, cacheControl: false });
+
+  if (usage !== null) {
+    app.addHook('onResponse', async (request, reply) => {
+      const type = String(reply.getHeader('content-type') ?? '');
+      const path = (request.url.split('?')[0] ?? '').replace(/index\.html$/, '');
+      if (request.method !== 'GET' || reply.statusCode !== 200 || !type.startsWith('text/html')) {
+        return;
+      }
+      if (path.startsWith(STATS_PATH)) return;
+      usage.pageView({
+        path,
+        host: request.hostname,
+        referrer: request.headers.referer,
+        address: request.ip,
+        agent: request.headers['user-agent'],
+      });
+    });
+  }
 
   // Built assets carry a content hash in their name; everything else must be revalidated so a
   // new release reaches phones at once. Routes that say how long to keep their answer keep it,

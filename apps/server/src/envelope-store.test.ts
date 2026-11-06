@@ -216,7 +216,7 @@ describe('envelope store', () => {
 
     // Nothing is left of what a command post kept for its upstream.
     const db = new DatabaseSync(path);
-    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 3 });
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 4 });
     expect(db.prepare('PRAGMA auto_vacuum').get()).toEqual({ auto_vacuum: 2 });
     const columns = db.prepare('PRAGMA table_info(envelopes)').all();
     expect(columns.map((column) => column['name'])).not.toContain('pending_up');

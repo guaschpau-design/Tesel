@@ -1,6 +1,7 @@
 // Encrypted envelopes per group (docs/protocol.md §8), stored in SQLite through node:sqlite.
-// The server never sees anything but group IDs, event keys and ciphertext. The schema and its
-// upgrades live in store-schema.ts.
+// The server never sees anything but group IDs, event keys and ciphertext. The same database keeps
+// the daily figures of how much the server is used (usage.ts). The schema and its upgrades live in
+// store-schema.ts.
 
 import { DatabaseSync, type SQLInputValue, type StatementSync } from 'node:sqlite';
 
@@ -29,6 +30,20 @@ export interface GroupUsage {
   readonly bytes: number;
   readonly firstReceivedAt: number;
   readonly lastReceivedAt: number;
+}
+
+/** One day's figure of how much the server is used (usage.ts). */
+export interface UsageRow {
+  /** The day, YYYY-MM-DD. */
+  readonly day: string;
+  readonly metric: string;
+  readonly value: number;
+}
+
+/** What the server holds now, for the usage page. */
+export interface StoredTotals {
+  readonly groups: number;
+  readonly envelopes: number;
 }
 
 export interface StoreOptions {
@@ -170,6 +185,49 @@ export class EnvelopeStore {
         bytes: Number(row['bytes']),
         firstReceivedAt: Number(row['first']),
         lastReceivedAt: Number(row['last']),
+      }));
+  }
+
+  /** How many groups have envelopes on the server, and how many envelopes they have. */
+  storedTotals(): StoredTotals {
+    const groups = this.#sql('SELECT COUNT(*) AS n FROM group_cursors').get()?.['n'];
+    const envelopes = this.#sql('SELECT COUNT(*) AS n FROM envelopes').get()?.['n'];
+    return { groups: Number(groups ?? 0), envelopes: Number(envelopes ?? 0) };
+  }
+
+  /**
+   * Adds a day's figures: `sums` to what the day already has, and `highs` where they are higher.
+   * Days before `forgetBefore` are deleted in the same transaction.
+   */
+  addUsage(
+    day: string,
+    sums: ReadonlyMap<string, number>,
+    highs: ReadonlyMap<string, number>,
+    forgetBefore: string,
+  ): void {
+    transaction(this.#db, () => {
+      const add = this.#sql(
+        `INSERT INTO usage (day, metric, value) VALUES (?, ?, ?)
+          ON CONFLICT (day, metric) DO UPDATE SET value = value + excluded.value`,
+      );
+      for (const [metric, value] of sums) add.run(day, metric, value);
+      const raise = this.#sql(
+        `INSERT INTO usage (day, metric, value) VALUES (?, ?, ?)
+          ON CONFLICT (day, metric) DO UPDATE SET value = MAX(value, excluded.value)`,
+      );
+      for (const [metric, value] of highs) raise.run(day, metric, value);
+      this.#sql('DELETE FROM usage WHERE day < ?').run(forgetBefore);
+    });
+  }
+
+  /** Every figure from `day` on, oldest first. */
+  usageSince(day: string): UsageRow[] {
+    return this.#sql('SELECT day, metric, value FROM usage WHERE day >= ? ORDER BY day, metric')
+      .all(day)
+      .map((row) => ({
+        day: String(row['day']),
+        metric: String(row['metric']),
+        value: Number(row['value']),
       }));
   }
 

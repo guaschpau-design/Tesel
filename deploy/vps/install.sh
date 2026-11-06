@@ -209,6 +209,10 @@ set_setting TESEL_DOMAIN "$DOMAIN"
 if [[ -n "$REDIRECT_FROM" ]] || ! grep -q '^TESEL_REDIRECT_FROM=' "$INSTALL_DIR/.env"; then
   set_setting TESEL_REDIRECT_FROM "$REDIRECT_FROM"
 fi
+# The password of the usage page, /stats (ADR-0117): drawn once, kept on later runs.
+if [[ -z "$(setting TESEL_STATS_KEY)" ]]; then
+  set_setting TESEL_STATS_KEY "$(tr -dc 'a-z0-9' </dev/urandom | head -c 24)"
+fi
 if [[ -n "$ALERT_URL" ]]; then
   set_setting TESEL_ALERT_URL "$ALERT_URL"
   # A first ping, so the alert service knows the server and starts expecting the jobs' own.
@@ -323,6 +327,7 @@ for _ in $(seq 1 60); do
   if curl -fsS "https://$DOMAIN/healthz" >/dev/null 2>&1; then
     printf '\n\033[32mTesel is running at https://%s\033[0m\n' "$DOMAIN"
     echo "The app is at https://$DOMAIN/app/ and creates its groups on this server."
+    echo "Usage figures: https://$DOMAIN/stats (user tesel, password $(setting TESEL_STATS_KEY))."
     exit 0
   fi
   sleep 5

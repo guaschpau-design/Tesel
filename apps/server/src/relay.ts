@@ -22,6 +22,7 @@ import {
   type RelayLimits,
 } from './relay-limits.ts';
 import { UnreadBytes } from './unread-bytes.ts';
+import type { RelayUsage } from './usage.ts';
 import { frameText } from './ws-text.ts';
 
 export interface RelayOptions {
@@ -29,6 +30,8 @@ export interface RelayOptions {
   readonly now?: () => number;
   /** Whether there is disk space for more envelopes; pushes are refused while there is not. */
   readonly hasRoom?: () => boolean;
+  /** Where connections, groups and stored envelopes are counted (usage.ts). */
+  readonly usage?: RelayUsage;
 }
 
 /** WebSocket close codes (RFC 6455 §7.4.1). */
@@ -63,6 +66,7 @@ export class Relay {
   readonly #store: EnvelopeStore;
   readonly #now: () => number;
   readonly #hasRoom: () => boolean;
+  readonly #usage: RelayUsage | null;
   readonly #limiter: Limiter;
   readonly #pushes: PushLimiter;
   readonly #backlogs: Backlogs;
@@ -75,6 +79,7 @@ export class Relay {
     this.#store = store;
     this.#now = options.now ?? Date.now;
     this.#hasRoom = options.hasRoom ?? (() => true);
+    this.#usage = options.usage ?? null;
     this.#limiter = new Limiter(limits);
     this.#pushes = new PushLimiter(limits, this.#now());
     this.#backlogs = new Backlogs(store, () => this.#limiter.maxBufferedBytes());
@@ -89,6 +94,7 @@ export class Relay {
   /** Serves a client connection from `address`, which `admits` has let in. */
   accept(socket: WebSocket, address: string): void {
     this.#sockets.add(socket);
+    this.#usage?.connected();
     const connection: Connection = {
       socket,
       address,
@@ -111,6 +117,7 @@ export class Relay {
     socket.on('close', () => {
       clearTimeout(connection.joinTimer);
       this.#sockets.delete(socket);
+      this.#usage?.disconnected();
       this.#limiter.closed(address);
       if (connection.joined !== null) this.#leave(socket, connection.joined.pusher.group);
     });
@@ -195,6 +202,7 @@ export class Relay {
     }
     this.#send(socket, { t: 'stored', key });
     if (!stored.isNew) return;
+    this.#usage?.stored(env.length);
     this.#pushes.stored(pusher, env.length, now);
     // Relayed to the group's live clients but its sender, encoded once for all of them.
     const frame = encodeRelayMessage({ t: 'env', cursor: stored.cursor, key, env });
@@ -206,6 +214,7 @@ export class Relay {
   #join(connection: Connection, group: Uint8Array, after: number, now: number): void {
     const { socket, address } = connection;
     const id = toBase64url(group);
+    this.#usage?.joined(id);
     connection.joined = {
       group,
       pusher: {

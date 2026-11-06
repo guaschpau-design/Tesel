@@ -27,7 +27,14 @@ export interface ServerConfig {
    * otherwise name any address it likes, and dodge the limits per address.
    */
   readonly trustedProxies: readonly string[];
+  /** The password of the usage page at /stats (ADR-0117), or null for no page. */
+  readonly statsKey: string | null;
+  /** The time zone whose days usage is counted in. */
+  readonly timeZone: string;
 }
+
+/** The usage page's password is long enough not to be guessed. */
+const LEAST_STATS_KEY = 16;
 
 /**
  * Reads the settings. A setting left out and one set to nothing mean the same, its default: a
@@ -47,7 +54,28 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     limits: limits(env),
     minFreeDiskMegabytes: integer(env, 'TESEL_MIN_FREE_DISK_MB', 500, 0, 1_000_000),
     trustedProxies: list(env, 'TESEL_TRUSTED_PROXIES', 'loopback'),
+    statsKey: statsKey(env),
+    timeZone: timeZone(env),
   };
+}
+
+function statsKey(env: NodeJS.ProcessEnv): string | null {
+  const key = setting(env, 'TESEL_STATS_KEY');
+  if (key === undefined) return null;
+  if (key.length < LEAST_STATS_KEY) {
+    throw new Error(`TESEL_STATS_KEY must be at least ${String(LEAST_STATS_KEY)} characters long`);
+  }
+  return key;
+}
+
+function timeZone(env: NodeJS.ProcessEnv): string {
+  const zone = setting(env, 'TESEL_TIME_ZONE') ?? 'Europe/Madrid';
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: zone });
+  } catch {
+    throw new Error(`TESEL_TIME_ZONE must be a time zone such as Europe/Madrid, got "${zone}"`);
+  }
+  return zone;
 }
 
 /** What clients may ask of the relay; what is not set here is DEFAULT_LIMITS'. */

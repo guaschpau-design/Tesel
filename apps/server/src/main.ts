@@ -6,10 +6,13 @@ import { readConfig } from './config.ts';
 import { DiskSpace } from './disk-space.ts';
 import { EnvelopeStore } from './envelope-store.ts';
 import { Relay } from './relay.ts';
+import { Usage } from './usage.ts';
 import { WeatherWarningsService } from './weather/weather-warnings.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RETENTION_SWEEP_MS = 60 * 60 * 1000;
+/** How often the usage counted in memory is written to the database (usage.ts). */
+const USAGE_FLUSH_MS = 60 * 1000;
 /** Envelopes deleted at a time by the sweep, which lets the server answer between them. */
 const SWEEP_BATCH = 5000;
 /** Shutting down takes longer than this only if something hangs; the server stops anyway. */
@@ -23,7 +26,12 @@ const store = new EnvelopeStore(config.databasePath);
 const disk = inMemory
   ? null
   : new DiskSpace(dirname(config.databasePath), config.minFreeDiskMegabytes * MEGABYTE);
-const relay = new Relay(store, { limits: config.limits, hasRoom: () => disk?.hasRoom() ?? true });
+const usage = new Usage(store, { timeZone: config.timeZone });
+const relay = new Relay(store, {
+  limits: config.limits,
+  hasRoom: () => disk?.hasRoom() ?? true,
+  usage,
+});
 const weather =
   config.weatherCountries.length === 0
     ? null
@@ -34,7 +42,17 @@ const weather =
         maxAgeMinutes: config.weatherMaxAgeMinutes,
       });
 weather?.start();
-const app = await buildApp(store, relay, { ...config, weather });
+const app = await buildApp(store, relay, { ...config, weather, usage });
+
+/** Writes the usage counted so far; a busy or full database leaves it for the next time. */
+function flushUsage(): void {
+  try {
+    usage.flush();
+  } catch (error) {
+    console.error('Usage could not be written:', error);
+  }
+}
+const usageFlusher = setInterval(flushUsage, USAGE_FLUSH_MS);
 
 let stopping = false;
 
@@ -61,10 +79,12 @@ function shutdown(exitCode: number): void {
     process.exit(exitCode === 0 ? 1 : exitCode);
   }, SHUTDOWN_TIMEOUT_MS).unref();
   clearInterval(sweeper);
+  clearInterval(usageFlusher);
   weather?.stop();
   app
     .close()
     .then(() => {
+      flushUsage();
       store.close();
       process.exit(exitCode);
     })

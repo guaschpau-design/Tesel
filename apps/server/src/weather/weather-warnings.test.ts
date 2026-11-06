@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseWeatherWarnings } from '@tesel/protocol';
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildApp } from '../app.ts';
+import { buildApp, NO_OPTIONS } from '../app.ts';
 import { EnvelopeStore } from '../envelope-store.ts';
 import { Relay } from '../relay.ts';
 import { FEED_URLS } from './meteoalarm.ts';
@@ -253,11 +253,7 @@ describe('weather warnings service', () => {
       getJson: meteoalarm().getJson,
       now,
     });
-    const app = await buildApp(store, relay, {
-      webRoot: null,
-      weather: service,
-      trustedProxies: [],
-    });
+    const app = await buildApp(store, relay, { ...NO_OPTIONS, weather: service });
     expect((await app.inject('/v1/weather-warnings')).statusCode).toBe(503);
     await service.refresh();
     const response = await app.inject('/v1/weather-warnings');

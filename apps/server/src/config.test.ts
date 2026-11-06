@@ -16,6 +16,8 @@ describe('configuration', () => {
       limits: DEFAULT_LIMITS,
       minFreeDiskMegabytes: 500,
       trustedProxies: ['loopback'],
+      statsKey: null,
+      timeZone: 'Europe/Madrid',
     });
   });
 
@@ -39,10 +41,19 @@ describe('configuration', () => {
         'TESEL_UNREAD_MB',
         'TESEL_MIN_FREE_DISK_MB',
         'TESEL_TRUSTED_PROXIES',
+        'TESEL_STATS_KEY',
+        'TESEL_TIME_ZONE',
       ].map((name) => [name, '']),
     );
     expect(readConfig(empty)).toEqual(readConfig({}));
     expect(readConfig({ TESEL_TRUSTED_PROXIES: 'none' }).trustedProxies).toEqual([]);
+  });
+
+  it('reads the usage page’s password and the time zone of its days', () => {
+    expect(readConfig({ TESEL_STATS_KEY: 'a-long-enough-key' }).statsKey).toBe('a-long-enough-key');
+    expect(() => readConfig({ TESEL_STATS_KEY: 'short' })).toThrow(/TESEL_STATS_KEY/);
+    expect(readConfig({ TESEL_TIME_ZONE: 'Atlantic/Canary' }).timeZone).toBe('Atlantic/Canary');
+    expect(() => readConfig({ TESEL_TIME_ZONE: 'Mars/Olympus' })).toThrow(/TESEL_TIME_ZONE/);
   });
 
   it('reads the countries whose weather warnings it gathers', () => {
