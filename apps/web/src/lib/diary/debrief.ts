@@ -1,27 +1,14 @@
-// The debrief of an operation, its report once it is over (ADR-0118): what the diary holds between two times that whoever
-// coordinates chooses, with a summary. The times start as the group's last spell of activity,
-// so that most often the debrief is one tap away. Not to be confused with a field report (a
-// "parte", reports/), which the debrief counts.
+// The period of a debrief, the report of an operation once it is over (ADR-0118): two times that
+// whoever coordinates chooses. They start as the group's last spell of activity, so that most
+// often the debrief is one tap away. A debrief is not a field report (a "parte", reports/),
+// which it counts.
 
-import type { GroupState } from '@tesel/core';
-import { eventRefKey } from '@tesel/protocol';
-
-import { aliasOf } from '../members/alias.ts';
 import type { DiaryLine } from './diary.ts';
 
 /** Two times in milliseconds; a line belongs to the period when it falls between them. */
 export interface Period {
   readonly from: number;
   readonly until: number;
-}
-
-export interface DebriefSummary {
-  /** Who did anything in the period, by the name the group knows them by. */
-  readonly people: readonly string[];
-  readonly sos: number;
-  /** Different tasks marked done in the period. */
-  readonly tasksDone: number;
-  readonly reports: number;
 }
 
 /** Hours with nothing in the diary that end one spell of activity and start the next. */
@@ -47,26 +34,6 @@ export function lastActivity(lines: readonly DiaryLine[]): Period | null {
 
 export function linesIn(lines: readonly DiaryLine[], period: Period): DiaryLine[] {
   return lines.filter((line) => within(line.time, period));
-}
-
-export function debriefSummary(state: GroupState, period: Period): DebriefSummary {
-  const people = new Set<string>();
-  const done = new Set<string>();
-  let sos = 0;
-  let reports = 0;
-  for (const event of state.journal) {
-    if (!within(event.time, period)) continue;
-    people.add(aliasOf(state, event.origin));
-    if (event.type === 'sos') sos++;
-    if (event.type === 'report') reports++;
-    if (event.type === 'task' && event.status === 'done') done.add(eventRefKey(event.task));
-  }
-  return {
-    people: [...people].sort((a, b) => a.localeCompare(b)),
-    sos,
-    tasksDone: done.size,
-    reports,
-  };
 }
 
 /** A time in seconds within a period in milliseconds. */

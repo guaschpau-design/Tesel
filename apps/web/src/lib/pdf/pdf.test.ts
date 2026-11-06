@@ -34,7 +34,13 @@ describe('a PDF document', () => {
     const doc = new PdfDocument();
     doc.text(56, 64, 'Primera página', { size: 12 });
     doc.addPage();
-    doc.rule(56, 200, 100, [0.6, 0.79, 0.22], 2);
+    doc.line(
+      [
+        [56, 100],
+        [200, 100],
+      ],
+      { stroke: [0.6, 0.79, 0.22], width: 2 },
+    );
     const file = doc.file({ title: 'Prueba', made: Date.UTC(2026, 10, 6, 9, 0) });
 
     expect(doc.pageCount).toBe(2);

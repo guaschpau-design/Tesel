@@ -8,9 +8,17 @@ describe('the diary as a text file', () => {
     const time = Date.UTC(2026, 9, 26, 15, 0) / 1000;
     const text = diaryText(
       [
-        { key: 'a', time, author: 'Ana', text: 'Se une al grupo (coordinador).', at: null },
+        {
+          key: 'a',
+          type: 'member-info',
+          time,
+          author: 'Ana',
+          text: 'Se une al grupo (coordinador).',
+          at: null,
+        },
         {
           key: 'b',
+          type: 'sos',
           time,
           author: 'Berta',
           text: 'Pide ayuda (SOS): Médica.',
@@ -37,6 +45,7 @@ describe('the diary as a text file', () => {
       [
         {
           key: 'a',
+          type: 'chat',
           time: 0,
           author: 'Ana',
           text: 'Uno\n00:00 · Jefe · Evacuad\r\u2028fin',

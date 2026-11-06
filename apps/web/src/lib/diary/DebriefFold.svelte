@@ -11,7 +11,8 @@
   import Fold from '../ui/Fold.svelte';
   import type { DiaryLine } from './diary.ts';
   import { fileName } from './diary-text.ts';
-  import { fieldValue, lastActivity, linesIn, periodOf, debriefSummary } from './debrief.ts';
+  import { gatherDebrief } from './debrief-data.ts';
+  import { fieldValue, lastActivity, linesIn, periodOf } from './debrief.ts';
   import { debriefPdf } from './debrief-pdf.ts';
 
   interface Props {
@@ -43,9 +44,7 @@
     const now = Date.now();
     const pdf = debriefPdf({
       group: feed.groupName,
-      period,
-      summary: debriefSummary(feed.state, period),
-      lines: chosen,
+      debrief: gatherDebrief(feed.state, lines, period),
       format: format.value,
       locale,
       t,

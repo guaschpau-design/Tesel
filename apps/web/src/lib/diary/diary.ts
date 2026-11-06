@@ -29,6 +29,8 @@ import { shownText } from '../text.ts';
 export interface DiaryLine {
   /** The event's reference key. */
   readonly key: string;
+  /** What kind of event it tells. */
+  readonly type: JournalEvent['type'];
   /** Seconds since the epoch, as the author's device recorded it. */
   readonly time: number;
   readonly author: string;
@@ -53,6 +55,7 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
     return [
       {
         key: eventRefKey(event),
+        type: event.type,
         time: event.time,
         author: aliasOf(state, event.origin),
         // Written from what members wrote: shown without the characters no one sees (ADR-0110).
