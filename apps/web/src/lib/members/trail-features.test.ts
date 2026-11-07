@@ -24,6 +24,8 @@ describe('trail features', () => {
     const state = stateOf([
       { type: 'position', origin: ANA, seq: 1, time: T0, lat: 39.47, ...fix },
       { type: 'position', origin: ANA, seq: 2, time: T0 + 60, lat: 39.48, ...fix },
+      // Still there a minute later: the move is borne out.
+      { type: 'position', origin: ANA, seq: 3, time: T0 + 120, lat: 39.48, ...fix },
       { type: 'position', origin: BERTA, seq: 1, time: T0, lat: 39.4, ...fix },
     ]);
     const { features } = trailFeatures(state, ANA);

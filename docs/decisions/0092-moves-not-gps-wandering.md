@@ -1,6 +1,6 @@
 # 0092. Moves, not the GPS wandering
 
-- Status: Accepted
+- Status: Accepted, amended by [0119](0119-moves-borne-out.md) (a move counts once what follows bears it out)
 - Date: 2026-11-01
 
 ## Context

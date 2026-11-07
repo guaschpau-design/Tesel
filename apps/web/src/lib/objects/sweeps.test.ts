@@ -117,11 +117,13 @@ describe('sweeps', () => {
   });
 
   it('knows who walks a strip and how much of it their trail has swept', () => {
-    const walk = [at(0, 12), at(400, 13)].map((point, index) => ({
+    // The last place again a minute later, as a device standing still publishes it: the walk is
+    // borne out (ADR-0119).
+    const walk = [at(0, 12), at(400, 13), at(400, 13)].map((point, index) => ({
       type: 'position' as const,
       origin: BERTA,
       seq: 30 + index,
-      time: T0 + 30 + index,
+      time: T0 + 30 + index * 60,
       ...point,
       accuracy: 5,
       heading: null,

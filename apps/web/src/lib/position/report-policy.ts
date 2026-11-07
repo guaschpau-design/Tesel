@@ -1,8 +1,9 @@
 // When to publish this device's position over the internet, and what. LoRa has its own, much
 // stricter thinning in the airtime scheduler (ARCHITECTURE.md §4.2). A device standing still is
-// published where it was, however the GPS wanders (movement.ts, ADR-0092).
+// published where it was, however the GPS wanders; a move is published once the fixes after it
+// bear it out (movement.ts, ADR-0092, ADR-0119).
 
-import { isMove, type Placed } from './movement.ts';
+import { confirmMove, isMove, type Placed, type Timed } from './movement.ts';
 
 /** Never more often than this, however fast the device moves. */
 const MIN_INTERVAL_S = 5;
@@ -11,21 +12,50 @@ const MIN_INTERVAL_S = 5;
 const HEARTBEAT_S = 60;
 
 /** What was last published: where, how sure, and when, in seconds since the epoch. */
-export interface Report extends Placed {
-  readonly time: number;
-}
+export type Report = Timed;
 
-/**
- * What to publish when the GPS gives `fix` at `time`: the fix (`'fix'`) if it is the first, a move,
- * or a much sharper idea of where the device is; the place last published (`'again'`), after a
- * minute without either; or nothing.
- */
-export function nextReport(last: Report | null, fix: Placed, time: number): 'fix' | 'again' | null {
-  if (last === null) return 'fix';
-  const elapsed = time - last.time;
-  if (elapsed < MIN_INTERVAL_S) return null;
-  if (isMove(last, fix) || isSharper(fix, last)) return 'fix';
-  return elapsed >= HEARTBEAT_S ? 'again' : null;
+/** The fixes of one stretch of sharing, and what of them to publish. */
+export class ReportPolicy {
+  #last: Report | null = null;
+  /** The first fix away from the place last published, then those since: a move not yet borne out. */
+  #away: Report[] = [];
+
+  /** What was last published, if anything. */
+  get last(): Report | null {
+    return this.#last;
+  }
+
+  /**
+   * What to publish when the GPS gives `fix` at `time`: the fix (`'fix'`) if it is the first, a
+   * move the fixes since have borne out, or a much sharper idea of where the device is; the place
+   * last published (`'again'`), after a minute without either; or nothing. What it answers is
+   * taken as published.
+   */
+  next(fix: Placed, time: number): 'fix' | 'again' | null {
+    const last = this.#last;
+    const timed: Report = { ...fix, time };
+    if (last === null) return this.#publish(timed);
+    const due = time - last.time >= MIN_INTERVAL_S;
+    if (isMove(last, fix)) {
+      const [candidate, ...later] = this.#away;
+      const answer = candidate ? confirmMove(last, candidate, [...later, timed]) : 'unsure';
+      // A jump the other way starts a new wait, from this fix.
+      this.#away = candidate && answer !== 'wandering' ? [...this.#away, timed] : [timed];
+      if (answer === 'move' && due) return this.#publish(timed);
+    } else {
+      this.#away = [];
+      if (due && isSharper(fix, last)) return this.#publish(timed);
+    }
+    if (time - last.time < HEARTBEAT_S) return null;
+    this.#last = { ...last, time };
+    return 'again';
+  }
+
+  #publish(report: Report): 'fix' {
+    this.#last = report;
+    this.#away = [];
+    return 'fix';
+  }
 }
 
 /** A fix at least twice as sure as the one published: the GPS has settled, or the sky opened. */

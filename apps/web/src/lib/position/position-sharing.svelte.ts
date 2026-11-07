@@ -6,7 +6,7 @@ import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import type { DeviceFix, DeviceLocation } from './device-location.svelte.ts';
 import type { PositionMode } from './position-mode.ts';
-import { nextReport, type Report } from './report-policy.ts';
+import { ReportPolicy } from './report-policy.ts';
 
 export class PositionSharing {
   readonly #mode: Preference<PositionMode>;
@@ -16,7 +16,7 @@ export class PositionSharing {
   #feed: GroupFeed | null = null;
   /** Lets go of the GPS; set while sharing. */
   #release: (() => void) | null = null;
-  #last: Report | null = null;
+  #policy = new ReportPolicy();
 
   constructor(
     mode: Preference<PositionMode>,
@@ -73,7 +73,7 @@ export class PositionSharing {
 
   #startReporting(): void {
     if (this.#release !== null) return;
-    this.#last = null;
+    this.#policy = new ReportPolicy();
     this.#release = this.#location.use((fix) => {
       this.#report(fix).catch((error: unknown) => {
         console.warn('Sharing a position failed', error);
@@ -89,16 +89,15 @@ export class PositionSharing {
 
   async #report(fix: DeviceFix): Promise<void> {
     const feed = this.#feed;
-    const last = this.#last;
-    const time = Math.floor(fix.time / 1000);
-    const next = feed === null ? null : nextReport(last, fix, time);
-    if (feed === null || next === null) return;
+    if (feed === null) return;
+    const next = this.#policy.next(fix, Math.floor(fix.time / 1000));
+    if (next === null) return;
     // A heartbeat publishes the place last published again: a device standing still stays put.
+    const last = this.#policy.last;
     const shared: DeviceFix =
       next === 'again' && last !== null
         ? { at: last.at, accuracy: last.accuracy, heading: null, speed: null, time: fix.time }
         : fix;
-    this.#last = { at: shared.at, accuracy: shared.accuracy, time };
     await feed.sharePosition(shared);
   }
 }
