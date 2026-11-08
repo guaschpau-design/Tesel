@@ -13,6 +13,7 @@ import {
   type SweepEvent,
   type TaskEvent,
   type TaskStatus,
+  type ZoneCrossingEvent,
 } from '@tesel/protocol';
 
 import type { MessageKey, Translate } from '../i18n/index.ts';
@@ -21,7 +22,7 @@ import { aliasOf, nameOf } from '../members/alias.ts';
 import { DUTY_STATUSES } from '../members/member-catalog.ts';
 import { SOS_KINDS } from '../incidents/sos-kinds.ts';
 import { objectAnchor } from '../objects/object-anchor.ts';
-import { objectName } from '../objects/object-names.ts';
+import { namedAfter, objectName } from '../objects/object-names.ts';
 import { reportLine } from '../reports/report-summary.ts';
 import { placePoint } from '../tasks/tasks.ts';
 import { shownText } from '../text.ts';
@@ -129,6 +130,12 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
         if (event.dissolved) return t('diaryTeamDissolved', vars);
         return t(known ? 'diaryTeamChanged' : 'diaryTeamCreated', vars);
       }
+      case 'zone-crossing': {
+        const key = eventRefKey(event.zone);
+        const zone = objects.get(key) ?? state.objects.get(key);
+        const label = zone?.type === 'shape' ? zone.label : '';
+        return t(CROSSING_LINES[event.kind][event.crossing], { zone: namedAfter(label, t) });
+      }
       case 'task': {
         const key = eventRefKey(event.task);
         const before = tasks.get(key);
@@ -160,6 +167,14 @@ const TASK_STATUS_LINES = {
   cancelled: 'diaryTaskCancelled',
 } as const satisfies Readonly<Record<TaskStatus, MessageKey>>;
 
+const CROSSING_LINES = {
+  other: { entered: 'diaryZoneEntered', left: 'diaryZoneLeft' },
+  danger: { entered: 'diaryZoneDangerEntered', left: 'diaryZoneDangerLeft' },
+  assigned: { entered: 'diaryZoneTaskEntered', left: 'diaryZoneTaskLeft' },
+} as const satisfies Readonly<
+  Record<ZoneCrossingEvent['kind'], Readonly<Record<ZoneCrossingEvent['crossing'], MessageKey>>>
+>;
+
 function withText(sentence: string, text: string): string {
   return text ? `${sentence} «${text}»` : sentence;
 }
@@ -173,6 +188,7 @@ function placeOf(
     return objectAnchor(event, objects);
   }
   if (event.type === 'sos') return sosPlace(event);
+  if (event.type === 'zone-crossing') return { lat: event.lat, lon: event.lon };
   if (event.type === 'task' || event.type === 'report') return placePoint(event.place, objects);
   return null;
 }

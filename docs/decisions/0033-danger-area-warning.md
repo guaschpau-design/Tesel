@@ -1,6 +1,6 @@
 # 0033. Warning on entering a danger area, worked out on each device
 
-- Status: Accepted
+- Status: Accepted, amended by [0122](0122-zone-crossings-and-telling-outside.md) (a member who shares their position tells the group of a danger area entered)
 - Date: 2026-10-27
 
 ## Context

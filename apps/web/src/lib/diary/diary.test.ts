@@ -177,4 +177,54 @@ describe('the operation diary', () => {
       lon: -0.31,
     });
   });
+
+  it('tells of the areas members enter and leave, by name, and where', () => {
+    const area: TeselEvent = {
+      type: 'shape',
+      origin: ANA,
+      seq: 7,
+      time: T0 + 70,
+      object: { origin: ANA, seq: 7 },
+      style: 0x0001,
+      label: 'Derrumbe',
+      geometry: { kind: 'circle', center: { lat: 39.47, lon: -0.37 }, radius: 50 },
+    };
+    const crossing = (
+      seq: number,
+      kind: 'danger' | 'assigned' | 'other',
+      value: 'entered' | 'left',
+      zone = 7,
+    ): TeselEvent => ({
+      type: 'zone-crossing',
+      origin: BERTA,
+      seq,
+      time: T0 + 70 + seq,
+      zone: { origin: ANA, seq: zone },
+      crossing: value,
+      kind,
+      lat: 39.47,
+      lon: -0.37,
+      accuracy: 6,
+    });
+    const lines = diaryLines(
+      stateOf([
+        ...EVENTS,
+        area,
+        crossing(8, 'danger', 'entered'),
+        crossing(9, 'danger', 'left'),
+        crossing(10, 'assigned', 'entered', 99),
+        crossing(11, 'assigned', 'left', 99),
+        crossing(12, 'other', 'entered'),
+      ]),
+      translator('es'),
+    ).slice(-5);
+    expect(lines.map((line) => line.text)).toEqual([
+      'Entra en la zona de peligro «Derrumbe».',
+      'Sale de la zona de peligro «Derrumbe».',
+      'Llega a la zona de su tarea.',
+      'Sale de la zona de su tarea.',
+      'Entra en la zona «Derrumbe».',
+    ]);
+    expect(lines[0]?.at).toEqual({ lat: 39.47, lon: -0.37 });
+  });
 });

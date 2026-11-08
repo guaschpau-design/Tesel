@@ -12,6 +12,8 @@ import type {
   ShapeEvent,
   ShapeGeometry,
   SosKind,
+  ZoneCrossing,
+  ZoneKind,
 } from '@tesel/protocol';
 
 import type { StoredGroup } from '../groups/group.ts';
@@ -51,6 +53,7 @@ import {
   sweepStrip,
   task,
   team,
+  zoneCrossing,
 } from './member-events.ts';
 import type { SocketLike } from './relay-types.ts';
 
@@ -254,6 +257,16 @@ export class GroupFeed {
   /** Turns the group's safety check-in on after `minutes`, or off with 0. */
   async setCheckInTimer(minutes: number): Promise<void> {
     await this.#sync.publish(checkInTimer(minutes));
+  }
+
+  /** Tells the group this member crossed the edge of an area, at this fix (protocol §3.18). */
+  async tellCrossing(
+    zone: ObjectRef,
+    crossing: ZoneCrossing,
+    kind: ZoneKind,
+    fix: Pick<DeviceFix, 'at' | 'accuracy'>,
+  ): Promise<void> {
+    await this.#sync.publish(zoneCrossing(zone, crossing, kind, fix));
   }
 
   async sendReport(fields: ReportFields): Promise<void> {

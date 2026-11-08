@@ -38,7 +38,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0030](0030-weather-warnings.md)                     | Official weather warnings, gathered by the server from MeteoAlarm                           | Accepted, amended by 0038                               |
 | [0031](0031-practice-mode.md)                        | Practice mode: a simulated group played on the device                                       | Superseded by 0083                                      |
 | [0032](0032-radio-line-of-sight.md)                  | Radio line of sight from the terrain, sure only when it says no                             | Superseded by 0042, amended before by 0037              |
-| [0033](0033-danger-area-warning.md)                  | Warning on entering a danger area, worked out on each device                                | Accepted                                                |
+| [0033](0033-danger-area-warning.md)                  | Warning on entering a danger area, worked out on each device                                | Accepted, amended by 0122                               |
 | [0034](0034-vector-topographic-map.md)               | Topographic map from vector data, relief shaded from IGN's terrain model                    | Accepted, amended by 0037                               |
 | [0035](0035-base-maps-by-purpose.md)                 | Give each base map a purpose of its own                                                     | Accepted, amended by 0120                               |
 | [0036](0036-cadastre-layer.md)                       | The cadastre's parcels as one picture of the view, online only                              | Accepted, amended by 0037                               |
@@ -127,3 +127,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
 | [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |
 | [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |
+| [0122](0122-zone-crossings-and-telling-outside.md)   | Tell the coordinator of zones crossed, and tell those without Tesel where someone is        | Accepted                                                |

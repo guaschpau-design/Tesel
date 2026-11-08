@@ -80,4 +80,36 @@ describe('what is news to a coordinator', () => {
     // Changed by the coordinator: they know already.
     expect(groupNews(open, after(open, task('done', ANA, 6)), ANA, NOW)).toEqual([]);
   });
+
+  it('is a danger area entered or the area of a task left, not the way back', () => {
+    const crossing = (
+      seq: number,
+      kind: 'danger' | 'assigned',
+      value: 'entered' | 'left',
+    ): TeselEvent => ({
+      type: 'zone-crossing',
+      origin: BERTA,
+      seq,
+      time: NOW,
+      zone: { origin: ANA, seq: 1 },
+      crossing: value,
+      kind,
+      lat: 39.47,
+      lon: -0.38,
+      accuracy: 6,
+    });
+    const crossed = after(
+      EMPTY_STATE,
+      crossing(2, 'danger', 'entered'),
+      crossing(3, 'danger', 'left'),
+      crossing(4, 'assigned', 'entered'),
+      crossing(5, 'assigned', 'left'),
+    );
+    expect(groupNews(EMPTY_STATE, crossed, ANA, NOW)).toMatchObject([
+      { kind: 'crossing', crossing: { seq: 2 } },
+      { kind: 'crossing', crossing: { seq: 5 } },
+    ]);
+    expect(groupNews(crossed, crossed, ANA, NOW)).toEqual([]);
+    expect(groupNews(EMPTY_STATE, crossed, BERTA, NOW)).toEqual([]);
+  });
 });

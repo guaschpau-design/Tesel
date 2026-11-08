@@ -69,6 +69,7 @@ The payload follows, up to 139 bytes.
 | `0x10` | `TEAM`            | §3.15                                                  |
 | `0x11` | `REPORT`          | §3.16                                                  |
 | `0x12` | `CHECK_IN_TIMER`  | §3.17                                                  |
+| `0x13` | `ZONE_CROSSING`   | §3.18                                                  |
 
 Codes are never reused. New capabilities are added as new types; existing layouts never change within version 1.
 
@@ -301,6 +302,27 @@ Turns on, changes or turns off the group's safety check-in: a device asks its me
 - The newest `CHECK_IN_TIMER` by `(time, origin, seq)` is the one in force.
 - A device SHOULD ask only while its member's status is active (§3.14), and only for time the app was in use on screen.
 - A member who does not answer within 2 minutes is presumed in trouble: their device SHOULD send an `SOS` (§3.8) of kind general, from where it last was. Answering sends nothing.
+
+### 3.18 `ZONE_CROSSING`
+
+A member's device saw them cross the edge of an area of the group: into a danger area, or out of the area of their task, so that whoever coordinates knows without watching the map.
+
+| Size | Field      | Notes                                                                                                                |
+| ---- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 8    | `zone`     | Object reference of the area: a `SHAPE` polygon or circle                                                            |
+| 1    | `crossing` | `0` entered, `1` left; reserved values read as entered                                                               |
+| 1    | `kind`     | `0` other, `1` a danger area (style `0x0001`, §4.2), `2` the area of a task of theirs; reserved values read as other |
+| 4    | `lat`      | Coordinate: where the member was when the crossing was borne out                                                     |
+| 4    | `lon`      | Coordinate                                                                                                           |
+| 2    | `accuracy` | `u16`, metres, `0xFFFF` unknown                                                                                      |
+
+Encoded size: 34 bytes.
+
+- A device sends it for its own member only, and only while its member shares their position (§3.4): it says where they are.
+- The area of a task of theirs is the place of a `TASK` (§3.11), open or in progress, for the member or their team (§3.15): a `SHAPE` polygon or circle, or the area a `SWEEP` strip sweeps (§3.13).
+- A device SHOULD send a crossing only once it is borne out, so that a fix that wanders across an edge sends nothing: it SHOULD leave out fixes less accurate than 30 m, take a fix closer to the edge than its accuracy, or than 10 m, for neither inside nor outside, and wait for a second fix on the new side at least 10 seconds after the first.
+- A device SHOULD NOT send a crossing the group already has: the newest `ZONE_CROSSING` by `(time, origin, seq)` of its origin for that `zone` is where the group last saw the member, and a device sends only what differs from it, at most once a minute for each area.
+- Receivers keep crossings like reports, in `(time, origin, seq)` order; a newer crossing does not replace an older one. They SHOULD tell whoever coordinates of a danger area entered and of the area of a task left.
 
 ## 4. Symbol and style codes
 

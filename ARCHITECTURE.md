@@ -123,6 +123,7 @@ An event has a fixed 14-byte header — protocol version, type, origin node ID, 
 | `TEAM`                             | Creates or changes a team (ADR-0062)                        |
 | `REPORT`                           | A situation report in a fixed form (ADR-0063)               |
 | `CHECK_IN_TIMER`                   | Sets when the safety check-in asks (ADR-0064)               |
+| `ZONE_CROSSING`                    | A member entered or left an area of the group (ADR-0122)    |
 
 `(origin, seq)` identifies an event in its group. Sequence numbers are per device and group, normally increase by one and are persisted, so a device never reuses one in a group; each group has a counter of its own, so members of one group cannot count a device's events in its others ([ADR-0111](docs/decisions/0111-airtime-kept-numbers-per-group.md)). Nothing proves who wrote an event, though (ADR-0052), so a member can write under another's `(origin, seq)`, and even take a number its owner has not used yet. Different events under one `(origin, seq)` are **rivals**: every device keeps the same of them whatever order they arrive in, every SOS, cancellation and acknowledgement among them, or else the one whose bytes come first; the app tells the user someone writes under that member's name, and a device that sees its own name on a number it has not used skips past it ([ADR-0103](docs/decisions/0103-rivals-full-storage-and-urgent-sync.md)).
 
@@ -137,7 +138,7 @@ The current picture is a pure function of the event log, computed by the reducer
 - **Member states:** latest `MEMBER_STATE` per origin.
 - **Tasks:** like map objects, identified by the `(origin, seq)` of the event that created them, and the last writer wins.
 - **Teams:** the newest `TEAM` per team.
-- **Chat, alerts and reports:** append-only, ordered by `(timestamp, origin, seq)` so every device shows the same order.
+- **Chat, alerts, reports and zone crossings:** append-only, ordered by `(timestamp, origin, seq)` so every device shows the same order.
 - **Check-in:** the newest `CHECK_IN_TIMER`.
 - **SOS:** every `SOS` is kept; one is active until a `SOS_CANCEL` for it arrives, and the first cancellation (by the same order) says who cancelled it.
 - **Roll call:** the newest `ROLL_CALL`; its answers are the acknowledgements of it.

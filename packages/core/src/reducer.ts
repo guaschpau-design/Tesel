@@ -20,6 +20,7 @@ import { sos, sosCancels } from './state/sos.ts';
 import { tasks } from './state/tasks.ts';
 import { teams } from './state/teams.ts';
 import { hasOutlived, outlivedPositions, trails } from './state/trails.ts';
+import { zoneCrossings } from './state/zone-crossings.ts';
 
 export type { ObjectRecord } from './state/objects.ts';
 export type { JournalEvent } from './state/journal.ts';
@@ -42,6 +43,7 @@ const SLICES = {
   teams,
   rollCall,
   checkIn,
+  zoneCrossings,
   journal,
 };
 

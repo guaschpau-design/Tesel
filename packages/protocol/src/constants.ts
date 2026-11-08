@@ -13,6 +13,8 @@ import type {
   SosKind,
   TaskStatus,
   TeamColour,
+  ZoneCrossing,
+  ZoneKind,
 } from './events.ts';
 
 /** §3.1 Protocol version carried in every event header. */
@@ -75,6 +77,7 @@ export const EventTypeCode = {
   TEAM: 0x10,
   REPORT: 0x11,
   CHECK_IN_TIMER: 0x12,
+  ZONE_CROSSING: 0x13,
 } as const;
 
 /** §3.13 A sweep's lanes run in a direction below this, in degrees: the other half are the same. */
@@ -280,6 +283,19 @@ export const SceneAccessCode = {
   difficult: 2,
   blocked: 3,
 } as const satisfies Record<SceneAccess, number>;
+
+/** §3.18 ZONE_CROSSING.crossing. Default: entered. */
+export const ZoneCrossingCode = {
+  entered: 0,
+  left: 1,
+} as const satisfies Record<ZoneCrossing, number>;
+
+/** §3.18 ZONE_CROSSING.kind. Default: other. */
+export const ZoneKindCode = {
+  other: 0,
+  danger: 1,
+  assigned: 2,
+} as const satisfies Record<ZoneKind, number>;
 
 /** §3.16 REPORT.resources: the bit of each, from the lowest. Other bits are ignored. */
 export const ResourceBit = {

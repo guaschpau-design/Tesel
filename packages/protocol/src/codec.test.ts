@@ -101,6 +101,47 @@ describe('event codec', () => {
     );
   });
 
+  it('matches the zone crossing test vector computed independently from the spec', () => {
+    const event: TeselEvent = {
+      type: 'zone-crossing',
+      origin: ALICE,
+      seq: 8,
+      time: T0,
+      zone: { origin: ALICE, seq: 4 },
+      crossing: 'entered',
+      kind: 'danger',
+      lat: 41.3874,
+      lon: 2.1686,
+      accuracy: 12,
+    };
+    const bytes = encodeOrFail(event);
+    expect(bytes.length).toBe(34);
+    expect(toHex(bytes)).toBe(
+      '0113a1b2c3d4080000000013fc68a1b2c3d404000000' + '00015037ab18f0e64a010c00',
+    );
+  });
+
+  it('reads reserved zone crossings and kinds as entered and other', () => {
+    const bytes = encodeOrFail({
+      type: 'zone-crossing',
+      origin: ALICE,
+      seq: 8,
+      time: T0,
+      zone: { origin: ALICE, seq: 4 },
+      crossing: 'left',
+      kind: 'assigned',
+      lat: 41.3874,
+      lon: 2.1686,
+      accuracy: null,
+    });
+    bytes[22] = 9;
+    bytes[23] = 9;
+    expect(decodeEvent(bytes)).toMatchObject({
+      ok: true,
+      value: { crossing: 'entered', kind: 'other' },
+    });
+  });
+
   it('matches the position test vector computed independently from the spec', () => {
     const event: TeselEvent = {
       type: 'position',

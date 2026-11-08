@@ -3,14 +3,17 @@
      finished; "View" opens the report or the task. What the group held when it opened is not
      news. -->
 <script lang="ts">
+  import type { GroupState } from '@tesel/core';
   import { eventRefKey, type NodeId } from '@tesel/protocol';
   import { untrack } from 'svelte';
 
   import type { Locale, Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
+  import { namedAfter } from '../objects/object-names.ts';
   import { reportLines } from '../reports/report-summary.ts';
   import { REPORTS } from '../chat/chat-tabs.ts';
   import { editTask } from '../tasks/task-editor.ts';
+  import { callAttention } from '../power/attention.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { openPanel } from '../ui/panels.svelte.ts';
   import { groupNews, type NewsState } from './group-news.ts';
@@ -18,7 +21,7 @@
   interface Props {
     t: Translate;
     locale: Locale;
-    state: NewsState;
+    state: NewsState & Pick<GroupState, 'objects'>;
     self: NodeId;
   }
 
@@ -28,10 +31,16 @@
     members: state.members,
     reports: state.reports,
     tasks: state.tasks,
+    zoneCrossings: state.zoneCrossings,
   }));
 
   $effect(() => {
-    const now = { members: state.members, reports: state.reports, tasks: state.tasks };
+    const now = {
+      members: state.members,
+      reports: state.reports,
+      tasks: state.tasks,
+      zoneCrossings: state.zoneCrossings,
+    };
     const news = groupNews(seen, now, self, Date.now() / 1000);
     seen = now;
     const joined = news.flatMap((item) => (item.kind === 'joined' ? [aliasOf(now, item.who)] : []));
@@ -48,6 +57,23 @@
             label: t('view'),
             run: () => {
               openPanel(REPORTS);
+            },
+          },
+        });
+      }
+      if (item.kind === 'crossing') {
+        const { origin, zone, kind } = item.crossing;
+        const area = untrack(() => state.objects.get(eventRefKey(zone)));
+        const said = t(kind === 'danger' ? 'newsZoneDanger' : 'newsZoneLeft', {
+          name: aliasOf(now, origin),
+          zone: namedAfter(area?.type === 'shape' ? area.label : '', t),
+        });
+        callAttention();
+        notices.show(said, {
+          action: {
+            label: t('view'),
+            run: () => {
+              openPanel({ name: 'member', member: origin });
             },
           },
         });

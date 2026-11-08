@@ -33,6 +33,12 @@ export function objectName(
   return label ? `${kind} «${label}»` : kind;
 }
 
+/** An area's label as said after what it is, "the danger area «Derrumbe»"; nothing without one. */
+export function namedAfter(label: string, t: Translate): string {
+  const shown = shownText(label);
+  return shown ? t('quotedAfter', { name: shown }) : '';
+}
+
 function stripName(sweep: SweepEvent, objects: GroupState['objects'], t: Translate): string {
   const place = { strip: sweep.strip + 1, strips: sweep.strips };
   const area = objects.get(eventRefKey(sweep.area));

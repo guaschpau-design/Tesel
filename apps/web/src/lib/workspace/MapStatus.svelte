@@ -1,7 +1,8 @@
 <!-- The top of the map, in order of what needs attention first: the tool in use (drawing,
-     measuring), the incidents, a danger area entered, guidance, whether the group sees
-     this device, weather where this device is, the operation area's map, then the app's notices. The stack never runs under the
-     dock: past its height it scrolls. -->
+     measuring), the incidents, a danger area entered (and the watch of the group's areas),
+     guidance, whether the group sees this device, weather where this device is, the operation
+     area's map, then the app's notices. The stack never runs under the dock: past its height it
+     scrolls. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { EventRef, LatLon, NodeId, TaskEvent } from '@tesel/protocol';
@@ -25,6 +26,7 @@
   import type { ImportedShape } from '../objects/shape-import.ts';
   import { planSweep, type SweepRecipe } from '../objects/sweep-actions.ts';
   import SweepPlanner from '../objects/SweepPlanner.svelte';
+  import ZoneCrossings from '../objects/ZoneCrossings.svelte';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
   import DownloadCard from '../offline/DownloadCard.svelte';
   import OperationAreaOffer from '../offline/OperationAreaOffer.svelte';
@@ -178,6 +180,9 @@
   </div>
   {#if group}
     <DangerZoneAlert {t} groupState={group.feed.state} />
+    {#key group.feed}
+      <ZoneCrossings {t} feed={group.feed} self={group.self} sharing={group.sharing} />
+    {/key}
     {@const checkIn = group.feed.state.checkIn}
     {#if checkIn && checkIn.minutes > 0 && dutyActive}
       {@const { feed } = group}

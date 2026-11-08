@@ -1,4 +1,4 @@
-// The payload of every event type (docs/protocol.md §3.3–§3.17), each written next to the code
+// The payload of every event type (docs/protocol.md §3.3–§3.18), each written next to the code
 // that reads it, so that the two halves of a layout cannot drift apart. Adding an event type
 // means adding its entry here: the record is keyed by every `EventType`, so the compiler refuses
 // a type without a layout.
@@ -32,6 +32,8 @@ import {
   UNKNOWN_BATTERY,
   UNKNOWN_COUNT,
   UNKNOWN_U16,
+  ZoneCrossingCode,
+  ZoneKindCode,
 } from './constants.ts';
 import { nodeIdFromPublicKey } from './crypto.ts';
 import { nodeIdFromBytes, nodeIdToBytes } from './node-id.ts';
@@ -284,6 +286,25 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       writer.u16(event.minutes);
     },
     read: (reader, header) => ({ ...header, type: 'check-in-timer', minutes: reader.u16() }),
+  },
+  // §3.18
+  'zone-crossing': {
+    code: EventTypeCode.ZONE_CROSSING,
+    write(writer, event) {
+      writeRef(writer, event.zone);
+      writer.u8(enumCode(ZoneCrossingCode, event.crossing, 'zone crossing'));
+      writer.u8(enumCode(ZoneKindCode, event.kind, 'zone kind'));
+      writePoint(writer, event);
+      writeMeasurement(writer, event.accuracy, ACCURACY_SCALE);
+    },
+    read(reader, header) {
+      const zone = readRef(reader);
+      const crossing = enumValue(ZoneCrossingCode, reader.u8(), 'entered');
+      const kind = enumValue(ZoneKindCode, reader.u8(), 'other');
+      const point = readPoint(reader);
+      const accuracy = readMeasurement(reader, ACCURACY_SCALE);
+      return { ...header, type: 'zone-crossing', zone, crossing, kind, ...point, accuracy };
+    },
   },
   // §3.16
   report: {

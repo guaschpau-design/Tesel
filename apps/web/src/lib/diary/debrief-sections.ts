@@ -265,7 +265,7 @@ export function drawReports({ sheet, debrief, t, clock }: DebriefContext): void 
 function kindColor(type: JournalEvent['type']): Rgb {
   if (type === 'sos' || type === 'sos-cancel' || type === 'ack') return RED;
   if (type === 'task') return BLUE;
-  if (type === 'report') return AMBER;
+  if (type === 'report' || type === 'zone-crossing') return AMBER;
   if (type === 'chat') return INK;
   if (type === 'marker' || type === 'shape' || type === 'sweep' || type === 'object-delete') {
     return LIME_DEEP;

@@ -199,6 +199,26 @@ export interface CheckInTimerEvent extends EventHeader {
   readonly minutes: number;
 }
 
+/** §3.18 Which way a member crossed the edge of a zone. */
+export type ZoneCrossing = 'entered' | 'left';
+
+/** §3.18 What the zone is to the member: a danger area, or where their task is. */
+export type ZoneKind = 'other' | 'danger' | 'assigned';
+
+/**
+ * §3.18 A member's device saw them cross the edge of an area of the group: into a danger area,
+ * out of the area of their task. Where they were when it was borne out, as a POSITION says.
+ */
+export interface ZoneCrossingEvent extends EventHeader, LatLon {
+  readonly type: 'zone-crossing';
+  /** The area: a SHAPE (polygon or circle). */
+  readonly zone: ObjectRef;
+  readonly crossing: ZoneCrossing;
+  readonly kind: ZoneKind;
+  /** Metres, or null if unknown. */
+  readonly accuracy: number | null;
+}
+
 /** §3.16 What a situation report is about. */
 export type IncidentType =
   | 'other'
@@ -321,6 +341,7 @@ export type TeselEvent =
   | MemberStateEvent
   | TeamEvent
   | ReportEvent
-  | CheckInTimerEvent;
+  | CheckInTimerEvent
+  | ZoneCrossingEvent;
 
 export type EventType = TeselEvent['type'];

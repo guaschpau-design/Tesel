@@ -213,4 +213,16 @@ export const SAMPLE_EVENTS: readonly TeselEvent[] = [
     note: 'Nave industrial, dos plantas',
   },
   { type: 'check-in-timer', origin: ALICE, seq: 14, time: T0 + 21, minutes: 30 },
+  {
+    type: 'zone-crossing',
+    origin: BOB,
+    seq: 14,
+    time: T0 + 22,
+    zone: { origin: ALICE, seq: 3 },
+    crossing: 'left',
+    kind: 'assigned',
+    lat: 39.4705,
+    lon: -0.377,
+    accuracy: 8,
+  },
 ];

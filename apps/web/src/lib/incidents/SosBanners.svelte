@@ -1,5 +1,6 @@
 <!-- Active SOS calls, on top of the map until they are cancelled. Another member's call says how
-     far it is and which way, and guides there in one tap; this device's own shows where it is. -->
+     far it is and which way, and guides there in one tap; this device's own shows where it is.
+     Where a call is known, it can be told to someone without Tesel, such as 112. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { EventRef, LatLon, NodeId } from '@tesel/protocol';
@@ -12,6 +13,8 @@
   import MapCard from '../ui/MapCard.svelte';
   import { activeSos } from './incidents.ts';
   import { SOS_KINDS } from './sos-kinds.ts';
+  import { outsideText } from './tell-outside.ts';
+  import TellOutside from './TellOutside.svelte';
 
   interface Props {
     t: Translate;
@@ -106,6 +109,26 @@
           >
         {/if}
       </div>
+      {#if where.kind !== 'unknown'}
+        <TellOutside
+          {t}
+          text={outsideText(
+            {
+              kind: 'sos',
+              name: call.author,
+              what: t(SOS_KINDS[call.event.kind].label),
+              text: shownText(call.event.text),
+            },
+            {
+              at: where.at,
+              accuracy: where.kind === 'called' ? call.event.accuracy : null,
+              time: (where.kind === 'shared' ? where.time : call.event.time) * 1000,
+            },
+            t,
+            locale,
+          )}
+        />
+      {/if}
     </MapCard>
   {/each}
 </div>

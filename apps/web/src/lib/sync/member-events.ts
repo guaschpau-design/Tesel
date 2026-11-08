@@ -14,6 +14,8 @@ import {
   type ShapeGeometry,
   type SosKind,
   type TeselEvent,
+  type ZoneCrossing,
+  type ZoneKind,
 } from '@tesel/protocol';
 
 import type { LocalIdentity } from '../identity/identity.ts';
@@ -152,4 +154,14 @@ export function report(fields: ReportFields): EventBuilder {
 /** A team, new or changed (protocol §3.15). */
 export function team(fields: TeamFields): EventBuilder {
   return (header) => ({ ...header, type: 'team', ...fields });
+}
+
+/** This member crossed the edge of an area, at this fix (protocol §3.18). */
+export function zoneCrossing(
+  zone: ObjectRef,
+  crossing: ZoneCrossing,
+  kind: ZoneKind,
+  { at, accuracy }: Pick<DeviceFix, 'at' | 'accuracy'>,
+): EventBuilder {
+  return (header) => ({ ...header, type: 'zone-crossing', zone, crossing, kind, ...at, accuracy });
 }
