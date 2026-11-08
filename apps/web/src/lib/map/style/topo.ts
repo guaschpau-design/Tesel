@@ -76,7 +76,10 @@ export function contourLayers(): LayerSpecification[] {
   ];
 }
 
-/** The heights of index lines, and the names of the terrain and of springs, under the street map's. */
+/**
+ * The heights of index lines, and the names of the terrain and of springs, under the OpenStreetMap
+ * map's.
+ */
 export function terrainNameLayers(): LayerSpecification[] {
   const halo = themeColor('map-halo');
   const text = (colour: string) => ({

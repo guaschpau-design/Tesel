@@ -73,7 +73,8 @@ export const ORTHO_ATTRIBUTION =
 
 /**
  * IGN's vector map of Spain (Mapa Base): the topographic map reads its names of the terrain. Its
- * tiles go deeper, but the street map's last zoom holds them all, so they are read to that zoom.
+ * tiles go deeper, but the OpenStreetMap map's last zoom holds them all, so they are read to that
+ * zoom.
  */
 export const NAMES_ATTRIBUTION = `${SCNE} · Mapa Base`;
 

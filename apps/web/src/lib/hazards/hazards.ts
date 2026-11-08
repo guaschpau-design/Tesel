@@ -46,7 +46,8 @@ function fireService(satellite: (typeof SATELLITES)[number], daysAgo: number): V
     style: '',
     extra: () => ({ TIME: gibsDay(daysAgo) }),
     credit:
-      '<a href="https://www.earthdata.nasa.gov/data/tools/gibs" target="_blank">NASA EOSDIS GIBS</a> · VIIRS',
+      '<a href="https://www.earthdata.nasa.gov/data/tools/gibs" target="_blank">' +
+      'NASA EOSDIS GIBS</a> · VIIRS',
   };
 }
 
@@ -65,7 +66,8 @@ export const FLOODS: readonly ViewService[] = [
     layers: 'NZ.RiskZone',
     style: '',
     credit:
-      '<a href="https://www.miteco.gob.es/es/agua/temas/gestion-de-los-riesgos-de-inundacion/snczi.html" target="_blank">© Ministerio para la Transición Ecológica y el Reto Demográfico</a> · SNCZI',
+      '<a href="https://www.miteco.gob.es/es/agua/temas/gestion-de-los-riesgos-de-inundacion/snczi.html" ' +
+      'target="_blank">© Ministerio para la Transición Ecológica y el Reto Demográfico</a> · SNCZI',
   },
 ];
 

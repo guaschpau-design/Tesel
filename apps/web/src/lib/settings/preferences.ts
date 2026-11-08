@@ -33,7 +33,7 @@ const PREFERENCES = {
   ),
   /** How coordinates are written: decimal degrees, as phones and 112 apps share them. */
   coordinateFormat: choice('coordinateFormat', COORDINATE_FORMATS, 'decimal'),
-  /** The map under everything: the street map, which covers everywhere and is the lightest. */
+  /** The map under everything: the topographic map, Tesel's base map (ADR-0120). */
   baseMap: choice('baseMap', BASE_MAPS, 'topo'),
   /** Shading of the terrain: off at first, as it downloads elevation data. */
   relief: flag('relief', false),
