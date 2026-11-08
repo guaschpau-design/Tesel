@@ -112,6 +112,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 ### Deployment
 
+- The groundwork of the Android app, free (`apps/mobile`, [ADR-0124](docs/decisions/0124-android-app-first.md)): the web app built for it and carried in a Capacitor project, with Tesel's icon, the location, the camera for QR codes and no backups; invitation links to tesel.eu open in it. CI builds a test APK on every run, to install by hand. Working with the screen off, Bluetooth to nodes and notifications come next.
 - Server image with the relay, the landing page and the web app, for amd64 and arm64 ([ADR-0017](docs/decisions/0017-server-serves-site-and-app.md)).
 - One-command, hardened, self-updating VPS install ([ADR-0013](docs/decisions/0013-self-updating-vps.md)). The server runs only images signed by the project's CI, checks each update and goes back to the previous image if it does not start; CI actions and base images are pinned; the database and certificates are backed up every night, off the host if configured; failures of updates, backups and map builds can raise an alert ([ADR-0049](docs/decisions/0049-signed-images-and-checked-updates.md)).
 - How much the site and the app are used, counted per day and anonymously: page views, visitors, the sites visits come from, connections, active groups and stored messages, with no address, browser or group kept; shown on a private page, `/stats`, behind a password the installer draws ([ADR-0117](docs/decisions/0117-anonymous-usage-figures.md)).

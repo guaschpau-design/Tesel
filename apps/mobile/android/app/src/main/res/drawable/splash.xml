@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Behind the app while it starts: the graphite of its top bar (brand/colors.json). -->
+<color xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/tesel_ink" />

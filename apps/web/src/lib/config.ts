@@ -34,6 +34,17 @@ export function defaultServerUrl(): string | null {
   return configured ? new URL(configured, window.location.href).href : null;
 }
 
+/**
+ * Where invitation links point (protocol §6), ending in `/`: VITE_PUBLIC_APP_URL, the web app on
+ * the internet, in a build not served from there, as the Android app's (ADR-0124); otherwise where
+ * this app is served from. Whoever has the Android app opens such a link in it, anyone else in the
+ * browser.
+ */
+export function invitationAppUrl(): string {
+  const configured = import.meta.env['VITE_PUBLIC_APP_URL'] as string | undefined;
+  return new URL(configured || import.meta.env.BASE_URL, window.location.href).href;
+}
+
 /** EOX's Sentinel-2 cloudless mosaics the satellite map can show from afar (ADR-0051). */
 const SATELLITE_MOSAICS = ['s2cloudless-2024', 's2cloudless-2016'] as const;
 export type SatelliteMosaic = (typeof SATELLITE_MOSAICS)[number];

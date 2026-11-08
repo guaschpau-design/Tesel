@@ -72,4 +72,4 @@ Lo previsto en el briefing más lo aprendido de ATAK. Cada fase se detalla al em
 6. Simbología OTAN APP-6.
 7. Radios Meshtastic: hecha la primera fase (Tesel usa radios Meshtastic como las MeshCore, ADR-0098); falta mostrar en el mapa a quien lleva una radio Meshtastic sin Tesel.
 8. Compatibilidad con ATAK (CoT).
-9. Apps de Android e iPhone con el mismo código: segundo plano, radio en iPhone y avisos con la app cerrada. Aplazadas a propósito: primero la app web completa.
+9. Apps de Android e iPhone con el mismo código: segundo plano, radio en iPhone y avisos con la app cerrada. Primero Android, gratuita (ADR-0124): preparada la base, que se prueba instalándola a mano; siguen el segundo plano, el Bluetooth propio y los avisos con la pantalla apagada. La de iPhone, cuando Tesel dé para pagar la cuenta de Apple.

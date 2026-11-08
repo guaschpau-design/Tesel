@@ -7,6 +7,9 @@ import { thirdPartyNotices } from './scripts/third-party-notices.ts';
 
 // TESEL_BASE lets the app be served from a sub-path, e.g. "/app/" in the server image.
 const base = process.env['TESEL_BASE'] ?? '/';
+// VITE_TARGET "android" builds the app the Android app carries (apps/mobile, ADR-0124): its files
+// are in the app itself, so there is no service worker (lib/platform.ts).
+const inAndroidApp = process.env['VITE_TARGET'] === 'android';
 
 export default defineConfig({
   base,
@@ -35,6 +38,7 @@ export default defineConfig({
       },
     ]),
     VitePWA({
+      disable: inAndroidApp,
       // Updates wait for the user to accept them (see UpdatePrompt.svelte).
       registerType: 'prompt',
       manifest: {

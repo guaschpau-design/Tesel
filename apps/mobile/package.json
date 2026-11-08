@@ -1,0 +1,19 @@
+{
+  "name": "@tesel/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tesel's Android app: the web app inside a native shell (Capacitor).",
+  "license": "EUPL-1.2",
+  "type": "module",
+  "scripts": {
+    "web": "VITE_TARGET=android VITE_SERVER_URL=https://tesel.eu/ VITE_BASEMAP_URL=https://tesel.eu/maps/basemap.pmtiles VITE_PUBLIC_APP_URL=https://tesel.eu/app/ pnpm --dir ../web run build --outDir ../mobile/www --emptyOutDir",
+    "sync": "pnpm web && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}

@@ -3,7 +3,8 @@
 //   pnpm --filter @tesel/web icons
 //
 // Writes apps/web/public/icons: the PWA icons (any and maskable), the Apple touch icon and the
-// favicons. Then stamps the favicon's version in the pages that link the icons (lib/ui/icon-links.ts),
+// favicons; and the Android app's launcher icons (apps/mobile, ADR-0124): square and round, for
+// Android before 8, and the mark alone that Android 8 and later lay on ink in their own shape. Then stamps the favicon's version in the pages that link the icons (lib/ui/icon-links.ts),
 // so browsers fetch the new ones. The mark sits on the ink of the app's top bar; maskable icons keep it inside the
 // safe zone (80 % of the width) that launchers may crop to a circle.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,13 +21,17 @@ const root = join(here, '..', '..', '..');
 const { ink: INK } = JSON.parse(readFileSync(join(root, 'brand', 'colors.json'), 'utf8'));
 const mark = readFileSync(join(root, 'brand', 'mark.svg'), 'utf8');
 const out = join(here, '..', 'public', 'icons');
+const androidRes = join(root, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res');
 
-/** An icon page: the mark at `scale` of the square, on ink, with rounded corners when asked. */
-function page(size, scale, radius) {
+/**
+ * An icon page: the mark at `scale` of the square, on ink with rounded corners when asked, or on
+ * nothing at all (`ground` false).
+ */
+function page(size, scale, radius, ground = true) {
   const inner = Math.round(size * scale);
   const pad = Math.round((size - inner) / 2);
   return `<!doctype html><body style="margin:0;background:transparent">
-    <div style="width:${size}px;height:${size}px;background:${INK};border-radius:${radius}px;overflow:hidden">
+    <div style="width:${size}px;height:${size}px;background:${ground ? INK : 'transparent'};border-radius:${radius}px;overflow:hidden">
       <div style="width:${inner}px;height:${inner}px;margin:${pad}px">${mark.replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}</div>
     </div></body>`;
 }
@@ -41,15 +46,36 @@ const icons = [
   { file: 'favicon-64.png', size: 64, scale: 0.84, radius: 12 },
 ];
 
+// Android's launcher icons at each screen density, by its pixels per dp: 48 dp square and round
+// ones, and the 108 dp foreground of the adaptive icon, whose mark keeps inside the 66 dp that every
+// launcher's shape shows (scale 0.46).
+const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
+const androidIcons = Object.entries(DENSITIES).flatMap(([density, ratio]) => {
+  const folder = join(androidRes, `mipmap-${density}`);
+  const legacy = 48 * ratio;
+  return [
+    { file: join(folder, 'ic_launcher.png'), size: legacy, scale: 0.72, radius: legacy * 0.18 },
+    { file: join(folder, 'ic_launcher_round.png'), size: legacy, scale: 0.6, radius: legacy / 2 },
+    {
+      file: join(folder, 'ic_launcher_foreground.png'),
+      size: 108 * ratio,
+      scale: 0.46,
+      radius: 0,
+      ground: false,
+    },
+  ];
+});
+
 await (async () => {
   const browser = await chromium.launch();
-  for (const icon of icons) {
+  const render = async (icon, file) => {
     const tab = await browser.newPage({ viewport: { width: icon.size, height: icon.size } });
-    await tab.setContent(page(icon.size, icon.scale, icon.radius));
-    const png = await tab.screenshot({ omitBackground: true });
-    writeFileSync(join(out, icon.file), png);
+    await tab.setContent(page(icon.size, icon.scale, icon.radius, icon.ground));
+    writeFileSync(file, await tab.screenshot({ omitBackground: true }));
     await tab.close();
-  }
+  };
+  for (const icon of icons) await render(icon, join(out, icon.file));
+  for (const icon of androidIcons) await render(icon, icon.file);
   await browser.close();
   // The SVG favicon: the mark on a rounded ink square, crisp at any size. The mark keeps its own
   // box (viewBox) inside, pale as the file has it.
@@ -61,4 +87,5 @@ await (async () => {
     writeFileSync(path, stampIconLinks(readFileSync(path, 'utf8'), version));
   }
   console.warn(`${icons.length} icons and favicon.svg written to ${out}, version ${version}`);
+  console.warn(`${androidIcons.length} launcher icons written to ${androidRes}`);
 })();

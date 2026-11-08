@@ -1,10 +1,13 @@
 // The app over the whole screen, without the browser's bars (Fullscreen API), where a browser tab
 // allows it: Chrome and the like on Android and on computers. Installed, the app already has the
 // screen; Safari on the iPhone has no such API. A browser goes full screen only on a tap, and
-// leaves it on a reload, a back gesture or Esc.
+// leaves it on a reload, a back gesture or Esc. The Android app has the screen already.
+
+import { IN_ANDROID_APP } from '../platform.ts';
 
 /** Whether this browser tab can show the app over the whole screen. */
 export const fullscreenSupported =
+  !IN_ANDROID_APP &&
   typeof document !== 'undefined' &&
   document.fullscreenEnabled &&
   window.matchMedia('(display-mode: browser)').matches;

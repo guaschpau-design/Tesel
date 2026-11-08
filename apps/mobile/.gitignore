@@ -1,0 +1,3 @@
+# The web app built for the Android app (pnpm --filter @tesel/mobile web), copied into the
+# Android project by "cap sync".
+www/

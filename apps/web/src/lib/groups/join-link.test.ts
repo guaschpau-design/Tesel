@@ -13,12 +13,12 @@ describe('join links', () => {
     expect(appBaseUrl('https://example.github.io', '/Tesel/')).toBe(
       'https://example.github.io/Tesel/',
     );
-    const link = invitationLink('https://example.github.io', '/Tesel/', invitation);
+    const link = invitationLink(appBaseUrl('https://example.github.io', '/Tesel/'), invitation);
     expect(link.ok && new URL(link.value).pathname).toBe('/Tesel/join');
   });
 
   it('reads the invitation of a join link the app was opened with', () => {
-    const link = invitationLink('http://localhost:5173', '/', invitation);
+    const link = invitationLink(appBaseUrl('http://localhost:5173', '/'), invitation);
     if (!link.ok) throw new Error('link not built');
     const url = new URL(link.value);
     expect(invitationInAddress(url, '/')).toEqual({ ok: true, value: invitation });
@@ -33,7 +33,7 @@ describe('join links', () => {
   });
 
   it('reads a join link that a query or a slash at the end was added to', () => {
-    const link = invitationLink('http://localhost:5173', '/app/', invitation);
+    const link = invitationLink(appBaseUrl('http://localhost:5173', '/app/'), invitation);
     if (!link.ok) throw new Error('link not built');
     const { hash } = new URL(link.value);
     const read = { ok: true, value: invitation };

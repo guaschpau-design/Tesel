@@ -5,6 +5,7 @@
 <script lang="ts">
   import type { NodeId, Role } from '@tesel/protocol';
 
+  import { invitationAppUrl } from '../config.ts';
   import type { Translate } from '../i18n/index.ts';
   import CopyButton from '../ui/CopyButton.svelte';
   import Fold from '../ui/Fold.svelte';
@@ -27,13 +28,7 @@
   let role: Role = $state('member');
   const canShare = 'share' in navigator;
 
-  const link = $derived(
-    invitationLink(
-      window.location.origin,
-      import.meta.env.BASE_URL,
-      invitationFor(group, role, issuer),
-    ),
-  );
+  const link = $derived(invitationLink(invitationAppUrl(), invitationFor(group, role, issuer)));
 
   async function share(text: string): Promise<void> {
     try {

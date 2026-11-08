@@ -1,0 +1,19 @@
+{
+  "appId": "eu.tesel.app",
+  "appName": "Tesel",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "app.tesel.eu"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

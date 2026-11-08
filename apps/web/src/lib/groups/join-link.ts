@@ -48,10 +48,10 @@ export function usableInvitation(
   return { ok: false, error: { code: 'invalid-value', detail: 'server on this device' } };
 }
 
+/** The link of an invitation to the app at `appUrl`, which ends in `/` (config.ts). */
 export function invitationLink(
-  origin: string,
-  base: string,
+  appUrl: string,
   invitation: Invitation,
 ): Result<string, ProtocolError> {
-  return buildInvitationUrl(appBaseUrl(origin, base), invitation);
+  return buildInvitationUrl(appUrl, invitation);
 }

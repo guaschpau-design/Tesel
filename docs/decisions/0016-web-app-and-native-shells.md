@@ -1,6 +1,6 @@
 # 0016. The web app first, and Android and iOS apps built from the same code
 
-- Status: Accepted
+- Status: Accepted, amended by [0124](0124-android-app-first.md) (Android first and free; iOS once Tesel pays for it)
 - Date: 2026-10-25
 - Supersedes: [ADR-0002](0002-pwa-only-client.md) after v0.1 (v0.1 itself ships as a web app only)
 

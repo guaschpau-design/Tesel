@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tesel's graphite ink (brand/colors.json). -->
+    <color name="tesel_ink">#18191B</color>
+</resources>

@@ -15,6 +15,7 @@
   import { ground } from './lib/map/ground.svelte.ts';
   import { mapLibreLocale } from './lib/map/style/maplibre-locale.ts';
   import MapView from './lib/map/MapView.svelte';
+  import { IN_ANDROID_APP } from './lib/platform.ts';
   import { activity } from './lib/power/activity.svelte.ts';
   import RestScreen from './lib/power/RestScreen.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
@@ -243,11 +244,14 @@
 
     <ConfirmDialog {t} />
     <Announcer />
-    <UpdatePrompt
-      {t}
-      hold={feed !== undefined && startup.session?.identity !== undefined && ownSosOpen}
-      radioLinked={radio.linked}
-    />
+    <!-- The Android app updates from its store: its files have no service worker. -->
+    {#if !IN_ANDROID_APP}
+      <UpdatePrompt
+        {t}
+        hold={feed !== undefined && startup.session?.identity !== undefined && ownSosOpen}
+        radioLinked={radio.linked}
+      />
+    {/if}
     {#if startup.failure}
       <StartupProblem {t} failure={startup.failure} />
     {/if}

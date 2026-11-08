@@ -21,7 +21,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0013](0013-self-updating-vps.md)                    | A self-updating VPS behind Caddy, installed by one script                                   | Accepted, partly superseded by 0049                     |
 | [0014](0014-name-teselia.md)                         | The project is called Teselia                                                               | Superseded by 0019                                      |
 | [0015](0015-lora-airtime-policy.md)                  | LoRa airtime policy                                                                         | Accepted, amended by 0043, 0098, 0111                   |
-| [0016](0016-web-app-and-native-shells.md)            | The web app first, and Android and iOS apps built from the same code                        | Accepted                                                |
+| [0016](0016-web-app-and-native-shells.md)            | The web app first, and Android and iOS apps built from the same code                        | Accepted, amended by 0124                               |
 | [0017](0017-server-serves-site-and-app.md)           | The server serves the landing page and the web app                                          | Accepted                                                |
 | [0018](0018-command-post.md)                         | A command post is a replicating server on its own Wi-Fi, found by name                      | Superseded by 0058                                      |
 | [0019](0019-name-tesel.md)                           | The project is called Tesel                                                                 | Accepted                                                |
@@ -129,3 +129,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |
 | [0122](0122-zone-crossings-and-telling-outside.md)   | Tell the coordinator of zones crossed, and tell those without Tesel where someone is        | Accepted                                                |
 | [0123](0123-less-drawing-and-sending.md)             | Draw only what is seen, and send on foot less often                                         | Accepted                                                |
+| [0124](0124-android-app-first.md)                    | The Android app first, free, built from the web app                                         | Accepted                                                |
