@@ -72,11 +72,17 @@ jobs:
       - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @tesel/mobile sync
-      - name: Build the APK
+      # Android's lint first: the native code is tried on no phone before a build is published.
+      - name: Check and build the APK
         working-directory: apps/mobile/android
         env:
           TESEL_VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon lintDebug assembleDebug
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: android-lint
+          path: apps/mobile/android/app/build/reports/lint-results-debug.html
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tesel-android-${{ github.run_number }}
