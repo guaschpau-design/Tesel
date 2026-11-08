@@ -106,18 +106,23 @@ function playTone(context: AudioContext, beeps: number): void {
   }
 }
 
-/** Whether system notifications can be shown here at all. */
-export const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
+/**
+ * Whether system notifications can be shown here at all: looked at when asked, as the Android app
+ * supplies them before the app starts (lib/native).
+ */
+export function notificationsSupported(): boolean {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
 
 /** Asks the user to allow notifications; true if they are allowed. Call it from a tap. */
 export async function allowNotifications(): Promise<boolean> {
-  if (!notificationsSupported) return false;
+  if (!notificationsSupported()) return false;
   if (Notification.permission === 'granted') return true;
   return (await Notification.requestPermission()) === 'granted';
 }
 
 async function notify({ title, body, tag }: AlarmMessage): Promise<void> {
-  if (!notificationsSupported || Notification.permission !== 'granted') return;
+  if (!notificationsSupported() || Notification.permission !== 'granted') return;
   const options: NotificationOptions = { body, tag, requireInteraction: true };
   // Through the service worker where there is one: the only way on Android.
   // (Missing outside a secure context, whatever the types say.)

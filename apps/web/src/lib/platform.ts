@@ -5,4 +5,4 @@
  * The app runs inside the Android app: its files come with it, so it has no service worker and no
  * updates to offer, and the screen is already the app's, with no browser bars to hide.
  */
-export const IN_ANDROID_APP = import.meta.env['VITE_TARGET'] === 'android';
+export const IN_ANDROID_APP = import.meta.env.VITE_TARGET === 'android';

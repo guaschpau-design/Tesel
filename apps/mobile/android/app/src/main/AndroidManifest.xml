@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- What the web app inside uses (ADR-0124): the group's server and the maps, the location,
          the camera for invitation QR codes, and vibration for what must be noticed. -->
@@ -8,6 +9,21 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- With the screen off (ADR-0125): keeping running for the location and a radio linked by
+         Bluetooth, a moment awake to send each fix, and the notifications of an alarm. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Bluetooth to radios (@capacitor-community/bluetooth-le, which declares the rest): looking
+         for them never tells where the phone is, so it needs no location. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
 
     <!-- None is needed to install the app: without a camera, invitations are pasted. -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -49,6 +65,11 @@
             </intent-filter>
 
         </activity>
+
+        <service
+            android:name=".ActiveService"
+            android:exported="false"
+            android:foregroundServiceType="location|connectedDevice" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

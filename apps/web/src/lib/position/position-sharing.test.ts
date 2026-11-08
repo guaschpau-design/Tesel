@@ -24,7 +24,7 @@ async function anaDevice(db?: AppDb) {
   const feed = await GroupFeed.open(database, createGroup('Rescate', null, 0), ana);
   const gps = new FakeGps();
   const mode = (await loadPreferences(database)).positionMode;
-  const sharing = new PositionSharing(mode, new DeviceLocation(gps), NOWHERE_ELSE);
+  const sharing = new PositionSharing(mode, new DeviceLocation(() => gps), NOWHERE_ELSE);
   sharing.attach(feed);
   /** What the group's map shows of Ana: her last position, or that she hid it. */
   const onTheMap = () => feed.state.positions.get(ana.nodeId);
@@ -114,7 +114,7 @@ describe('sharing this device’s position', () => {
     const gps = new FakeGps();
     const sharing = new PositionSharing(
       (await loadPreferences(db)).positionMode,
-      new DeviceLocation(gps),
+      new DeviceLocation(() => gps),
       NOWHERE_ELSE,
     );
     sharing.attach(rescue);
@@ -141,7 +141,7 @@ describe('sharing this device’s position', () => {
     const gps = new FakeGps();
     const sharing = new PositionSharing(
       (await loadPreferences(db)).positionMode,
-      new DeviceLocation(gps),
+      new DeviceLocation(() => gps),
       () => hideInOtherGroups(db, [rescueGroup, otherGroup], ana, otherGroup.id),
     );
     sharing.attach(rescue);

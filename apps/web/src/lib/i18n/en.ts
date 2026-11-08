@@ -728,6 +728,9 @@ export const en = {
   newsReport: 'Report from {name}: {report}',
   newsTaskStarted: '{name} has started “{text}”.',
   newsTaskDone: '{name} has finished “{text}”.',
+  runningTitle: 'Tesel is running',
+  runningLocation: 'Using your location',
+  runningRadio: 'Linked to the node',
   tellOutside: 'Tell someone outside Tesel',
   tellOutsideHint:
     'Send the position to 112, the organisers or family. SMS works without mobile data.',

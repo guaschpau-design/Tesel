@@ -66,6 +66,31 @@ const androidIcons = Object.entries(DENSITIES).flatMap(([density, ratio]) => {
   ];
 });
 
+/**
+ * The mark for Android's status bar, as a vector in one colour, as Android asks: the tiles turned
+ * inside the pin as in the mark.
+ */
+function statusBarIcon() {
+  const clip = /<clipPath[^>]*><path d="([^"]+)"/.exec(mark)?.[1] ?? '';
+  const turn = /rotate\(([-\d.]+) ([-\d.]+) ([-\d.]+)\)/.exec(mark) ?? [];
+  const size = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(mark) ?? [];
+  const tiles = [...mark.matchAll(/<path d="([^"]+)" fill="[^"]+"/g)].map(
+    ([, d]) => `\n        <path android:fillColor="#FFFFFFFF" android:pathData="${d}" />`,
+  );
+  return `<?xml version="1.0" encoding="utf-8"?>
+<!-- Tesel's mark for the status bar, in one colour as Android asks (apps/web/scripts/render-icons.js). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="${size[1]}"
+    android:viewportHeight="${size[2]}">
+    <group android:rotation="${turn[1]}" android:pivotX="${turn[2]}" android:pivotY="${turn[3]}">
+        <clip-path android:pathData="${clip}" />${tiles.join('')}
+    </group>
+</vector>
+`;
+}
+
 await (async () => {
   const browser = await chromium.launch();
   const render = async (icon, file) => {
@@ -87,5 +112,8 @@ await (async () => {
     writeFileSync(path, stampIconLinks(readFileSync(path, 'utf8'), version));
   }
   console.warn(`${icons.length} icons and favicon.svg written to ${out}, version ${version}`);
-  console.warn(`${androidIcons.length} launcher icons written to ${androidRes}`);
+  writeFileSync(join(androidRes, 'drawable', 'ic_stat_tesel.xml'), statusBarIcon());
+  console.warn(
+    `${androidIcons.length} launcher icons and the status bar icon written to ${androidRes}`,
+  );
 })();

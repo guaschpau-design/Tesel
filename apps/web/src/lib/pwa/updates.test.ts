@@ -66,7 +66,10 @@ describe('the parts of the app loaded on first use', () => {
       const name = entry.name;
       if (!entry.isFile() || !/\.(ts|svelte)$/.test(name) || name.includes('.test.')) continue;
       const path = join(entry.parentPath, name);
-      if (path !== own) for (const spec of dynamicImports(path)) elsewhere.add(spec);
+      // The Android app's native layer, which the web build leaves out and which has no updates
+      // of its own to wait for (lib/native/install.ts).
+      if (path === own || path === join(SOURCE, 'lib', 'native', 'install.ts')) continue;
+      for (const spec of dynamicImports(path)) elsewhere.add(spec);
     }
     expect(elsewhere.size).toBeGreaterThan(0);
     expect(new Set(dynamicImports(own))).toEqual(elsewhere);

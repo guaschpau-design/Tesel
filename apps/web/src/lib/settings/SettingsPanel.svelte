@@ -56,7 +56,7 @@
       on={preferences.alarmSound.value}
       onclick={() => void preferences.alarmSound.set(!preferences.alarmSound.value)}
     />
-    {#if notificationsSupported}
+    {#if notificationsSupported()}
       <SwitchRow
         icon="chat"
         label={t('notifications')}

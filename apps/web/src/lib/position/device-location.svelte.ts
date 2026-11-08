@@ -33,8 +33,11 @@ export class DeviceLocation {
   fix: DeviceFix | null = $state.raw(null);
   /** Why there is no fix, if the browser said so. Cleared by the next fix or when the GPS stops. */
   problem: LocationProblem | null = $state(null);
+  /** Something uses the location, whether the GPS is on now or rests between fixes. */
+  inUse = $state(false);
 
-  readonly #source: GeolocationSource;
+  /** Read when the GPS starts, so that the Android app can stand in for it first (lib/native). */
+  readonly #source: () => GeolocationSource;
   /** Whoever uses the location now, each with what to do on a new fix. */
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping, never rendered
   readonly #users = new Set<{ readonly onfix: ((fix: DeviceFix) => void) | undefined }>();
@@ -44,7 +47,7 @@ export class DeviceLocation {
   #nextFix: ReturnType<typeof setTimeout> | undefined;
   #giveUp: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(source: GeolocationSource = navigator.geolocation) {
+  constructor(source: () => GeolocationSource = () => navigator.geolocation) {
     this.#source = source;
   }
 
@@ -77,13 +80,17 @@ export class DeviceLocation {
   use(onfix?: (fix: DeviceFix) => void): () => void {
     const user = { onfix };
     this.#users.add(user);
+    this.inUse = true;
     this.#start();
     // Not tracked: an effect that calls `use` must not rerun, and restart the GPS, on every fix.
     const current = untrack(() => this.fix);
     if (current !== null) onfix?.(current);
     return () => {
       // Letting go twice is harmless: the second time, the user is already gone.
-      if (this.#users.delete(user) && this.#users.size === 0) this.#stop();
+      if (this.#users.delete(user) && this.#users.size === 0) {
+        this.inUse = false;
+        this.#stop();
+      }
     };
   }
 
@@ -95,7 +102,7 @@ export class DeviceLocation {
         this.#rest();
       }, FIX_WINDOW_MS);
     }
-    this.#watch = this.#source.watchPosition(
+    this.#watch = this.#source().watchPosition(
       (position) => {
         this.#receive(position);
       },
@@ -116,7 +123,7 @@ export class DeviceLocation {
 
   /** Turns the GPS off, keeping the latest fix. */
   #pause(): void {
-    if (this.#watch !== null) this.#source.clearWatch(this.#watch);
+    if (this.#watch !== null) this.#source().clearWatch(this.#watch);
     this.#watch = null;
   }
 

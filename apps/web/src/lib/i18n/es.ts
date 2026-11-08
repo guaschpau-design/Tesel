@@ -731,6 +731,9 @@ export const es: Messages = {
   newsReport: 'Parte de {name}: {report}',
   newsTaskStarted: '{name} ha empezado «{text}».',
   newsTaskDone: '{name} ha terminado «{text}».',
+  runningTitle: 'Tesel sigue activo',
+  runningLocation: 'Usando tu ubicación',
+  runningRadio: 'Conectado al nodo',
   tellOutside: 'Avisar fuera de Tesel',
   tellOutsideHint:
     'Envía la posición al 112, a la organización o a la familia. El SMS funciona sin datos.',

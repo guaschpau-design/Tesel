@@ -6,7 +6,7 @@ import { FakeGps } from './fake-gps.ts';
 describe('device location', () => {
   it('runs the GPS once however many use it, and stops when the last one lets go', () => {
     const gps = new FakeGps();
-    const location = new DeviceLocation(gps);
+    const location = new DeviceLocation(() => gps);
     const releaseMap = location.use();
     const releaseSharing = location.use();
     expect(gps.watching).toBe(1);
@@ -19,7 +19,7 @@ describe('device location', () => {
 
   it('hands each fix to its listeners, with unknown values as null', () => {
     const gps = new FakeGps();
-    const location = new DeviceLocation(gps);
+    const location = new DeviceLocation(() => gps);
     const heard: unknown[] = [];
     location.use((fix) => heard.push(fix));
     gps.fix(39.47, -0.37);
@@ -36,7 +36,7 @@ describe('device location', () => {
 
   it('hands a newcomer the fix the GPS already has', () => {
     const gps = new FakeGps();
-    const location = new DeviceLocation(gps);
+    const location = new DeviceLocation(() => gps);
     location.use();
     gps.fix(39.47, -0.37);
     const heard: unknown[] = [];
@@ -46,7 +46,7 @@ describe('device location', () => {
 
   it('forgets the fix and the problem when the GPS stops', () => {
     const gps = new FakeGps();
-    const location = new DeviceLocation(gps);
+    const location = new DeviceLocation(() => gps);
     const release = location.use();
     gps.deny();
     expect(location.problem).toBe('denied');
@@ -59,7 +59,7 @@ describe('device location', () => {
   it('runs the GPS at intervals while paced, keeping the latest fix between them', () => {
     vi.useFakeTimers();
     const gps = new FakeGps();
-    const location = new DeviceLocation(gps);
+    const location = new DeviceLocation(() => gps);
     const fixes: number[] = [];
     const release = location.use((fix) => fixes.push(fix.at.lat));
     location.pace(60_000);

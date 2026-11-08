@@ -1,5 +1,5 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { contentSecurityPolicy } from './scripts/content-security-policy.ts';
@@ -10,6 +10,27 @@ const base = process.env['TESEL_BASE'] ?? '/';
 // VITE_TARGET "android" builds the app the Android app carries (apps/mobile, ADR-0124): its files
 // are in the app itself, so there is no service worker (lib/platform.ts).
 const inAndroidApp = process.env['VITE_TARGET'] === 'android';
+
+/** What stands in for the Android app's native layer in the web build: nothing (lib/native). */
+const NO_ANDROID = '\0tesel:no-android';
+
+/**
+ * Leaves the Android app's native layer out of the web build. Its import is never run there, but
+ * the bundler builds what a dynamic import names all the same, and the service worker would keep it.
+ */
+function webOnly(): Plugin {
+  return {
+    name: 'tesel:web-only',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      const fromInstall = importer?.endsWith('/lib/native/install.ts') ?? false;
+      return !inAndroidApp && fromInstall && source === './android.ts' ? NO_ANDROID : null;
+    },
+    load(id) {
+      return id === NO_ANDROID ? 'export async function installAndroid() {}' : null;
+    },
+  };
+}
 
 export default defineConfig({
   base,
@@ -27,6 +48,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    webOnly(),
     svelte(),
     contentSecurityPolicy(),
     thirdPartyNotices([

@@ -4,4 +4,7 @@
     <string name="title_activity_main">Tesel</string>
     <string name="package_name">eu.tesel.app</string>
     <string name="custom_url_scheme">eu.tesel.app</string>
+    <!-- The kinds of notification, as the phone's settings list them (Notices.java). -->
+    <string name="channel_running">Tesel running</string>
+    <string name="channel_alarms">Alerts (SOS)</string>
 </resources>

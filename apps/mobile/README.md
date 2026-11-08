@@ -11,7 +11,7 @@ The Android app: the web app (`apps/web`) built for it and carried in a Capacito
 | `android/app/src/main/java/…/MainActivity.java` | The app's screen; opens invitation links at the web app's join path                               |
 | `android/test-signing.p12`                      | The public key test builds are signed with (password `tesel-test`): never for published builds    |
 
-The launcher icons are rendered from the mark with the web icons: `pnpm --filter @tesel/web icons`.
+The launcher and status bar icons are rendered from the mark with the web icons: `pnpm --filter @tesel/web icons`. The web app's side of the native code is in `apps/web/src/lib/native`, loaded only in the app's build.
 
 ## Building
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tesel's mark for the status bar, in one colour as Android asks (apps/web/scripts/render-icons.js). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="90"
+    android:viewportHeight="90">
+    <group android:rotation="45" android:pivotX="45.0" android:pivotY="45.0">
+        <clip-path android:pathData="M42.18 13.18 H47.82 A29 29 0 0 1 76.82 42.18 V75.32 A1.5 1.5 0 0 1 75.32 76.82 H42.18 A29 29 0 0 1 13.18 47.82 V42.18 A29 29 0 0 1 42.18 13.18 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M13.18 13.18 H38 A2.5 2.5 0 0 1 40.5 15.68 V38 A2.5 2.5 0 0 1 38 40.5 H15.68 A2.5 2.5 0 0 1 13.18 38 V13.18 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M52 13.18 H76.82 V38 A2.5 2.5 0 0 1 74.32 40.5 H52 A2.5 2.5 0 0 1 49.5 38 V15.68 A2.5 2.5 0 0 1 52 13.18 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M15.68 49.5 H38 A2.5 2.5 0 0 1 40.5 52 V74.32 A2.5 2.5 0 0 1 38 76.82 H13.18 V52 A2.5 2.5 0 0 1 15.68 49.5 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M52 49.5 H74.32 A2.5 2.5 0 0 1 76.82 52 V76.82 H52 A2.5 2.5 0 0 1 49.5 74.32 V52 A2.5 2.5 0 0 1 52 49.5 Z" />
+    </group>
+</vector>

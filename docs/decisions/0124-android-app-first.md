@@ -23,14 +23,14 @@ ADR-0016 planned Android and iOS apps built from the web app inside a native she
 - **Icons** from the mark, by the same script as the web icons (`apps/web/scripts/render-icons.js`): square and round ones, and the mark alone for the shapes of Android 8 and later.
 - **Test builds.** CI builds an APK on every run and keeps it two weeks, to install by hand. It is signed with a test key that is public, in the repository, so that each build installs over the last, numbered by the run. Builds for Google Play will be signed with a key kept out of the repository, under Play App Signing.
 
-**Next, in this order:** the position and the group in the background, with Android's ongoing notification; Bluetooth to nodes from the app itself; and notifications of an SOS or a task with the screen off.
+**Next:** the position and the group in the background, with Android's ongoing notification; Bluetooth to nodes from the app itself; and notifications of an SOS with the screen off ([ADR-0125](0125-android-app-with-the-screen-off.md)).
 
 ## Consequences
 
 - For now the app does what the web app does in Chrome, with the app's icon and invitations that open in it.
 - Some things are missing until the native parts arrive:
-  - Android's web view has no Web Bluetooth, so nodes are linked from the browser until the app links them itself.
-  - It has no dictation, no browser notifications and no share sheet.
+  - Android's web view has no Web Bluetooth, so nodes are linked from the browser until the app links them itself (done in ADR-0125).
+  - It has no dictation, no browser notifications (done in ADR-0125) and no share sheet.
   - The server's anonymous usage figures (ADR-0117) do not count the app, which loads no page from it.
 - Each change to the web app reaches the Android app with its next build.
 - The app's list of third-party licences comes from the web app and does not yet name the native libraries it carries: Capacitor (MIT) and AndroidX (Apache-2.0). It will before the app goes to Google Play.

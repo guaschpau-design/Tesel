@@ -5,6 +5,9 @@
     "apps/web": {
       "entry": ["src/**/*.test.ts", "scripts/*.{ts,js}", "public/*.js", "e2e/**/*.ts"],
       "project": ["src/**/*.{ts,svelte}", "scripts/**/*.{ts,js}", "e2e/**/*.ts"]
+    },
+    "apps/mobile": {
+      "ignoreDependencies": ["@capacitor-community/bluetooth-le"]
     }
   },
   "ignoreUnresolved": ["./scripts/svelte-test-environment.ts"]
