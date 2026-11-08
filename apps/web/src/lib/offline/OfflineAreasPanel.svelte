@@ -1,7 +1,6 @@
 <!-- The maps downloaded for use without a connection: downloading the visible area, its size and
      the button first, and folded under "Options" its name, its detail and, if wanted, the
-     topographic map, the satellite map and the relief; then the list of areas, to show or delete
-     them. -->
+     satellite map; then the list of areas, to show or delete them. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount, untrack } from 'svelte';

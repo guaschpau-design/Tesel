@@ -62,8 +62,8 @@ const DB_NAME = 'tesel-map';
 const DB_VERSION = 5;
 
 /**
- * Room for tiles seen online: some 2,500 tiles of the street map, a city and its surroundings
- * looked at closely. Downloaded areas are where offline maps are meant to come from.
+ * Room for tiles seen online: some 2,500 tiles of the OpenStreetMap map, a city and its
+ * surroundings looked at closely. Downloaded areas are where offline maps are meant to come from.
  */
 const VIEWED_BYTES = 64 * 1024 * 1024;
 /** Tiles seen between two checks of the room they take. */

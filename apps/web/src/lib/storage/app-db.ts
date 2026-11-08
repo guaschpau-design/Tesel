@@ -54,6 +54,8 @@ export type SettingKey =
   | 'mgrsGrid'
   | 'radar'
   | 'cadastre'
+  | 'fires'
+  | 'floods'
   | 'hiddenLayers'
   | 'energySaving'
   | 'keepScreenOn'

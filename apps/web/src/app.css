@@ -53,7 +53,9 @@
   --warning: #f2a516;
   --info: #2f6fde;
 
-  /* The map: this device, the other members, labels over the base map. */
+  /* The map: this device, the other members, labels over the base map. The map has a look of its
+     own, its base map's: the --map-* colours below are the light one's, and the dark one's are
+     under [data-map-theme='dark']. */
   --self: var(--signal);
   --self-ring: var(--ink);
   --member: #3e7bfa;
@@ -120,14 +122,16 @@
   --chrome-bg: #08090a;
   --accent-line: var(--signal);
   --danger: #ff5c5f;
+}
+
+/* The map's own look, its base map's whatever the app's (ui/theme.ts, ADR-0120): what is drawn on
+   the tactical map is drawn for a dark ground. */
+:root[data-map-theme='dark'] {
   --map-text: var(--pale);
   --map-halo: #0f1011;
   --map-relief: #000000;
   --map-sky: #0a1824;
   --map-horizon: #22343f;
-  --map-contour: #b08a68;
-  --map-terrain: #d8c3ad;
-  --map-spring: #7fc3e6;
 }
 
 html,

@@ -32,6 +32,7 @@ function isImage(data: OverlayData): data is MapImage {
 /** Our overlays from bottom to top: each is drawn above every one listed before it. */
 const OVERLAY_LEVELS = [
   'cadastre',
+  'hazards',
   'weather',
   'grid',
   'services',
@@ -46,7 +47,7 @@ const OVERLAY_LEVELS = [
   'point',
   'draft',
 ] as const;
-type OverlayLevel = (typeof OVERLAY_LEVELS)[number];
+export type OverlayLevel = (typeof OVERLAY_LEVELS)[number];
 
 /** Where a layer records its overlay's level, in MapLibre's free-form layer metadata. */
 const LEVEL_KEY = 'tesel:level';

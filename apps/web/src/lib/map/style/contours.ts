@@ -20,7 +20,10 @@ export const HEIGHT_KEY = 'ele';
 /** 1 for an index line, 0 for the others. */
 export const RANK_KEY = 'level';
 
-/** Contour tiles are made from this zoom to the street map's last; MapLibre enlarges it beyond. */
+/**
+ * Contour tiles are made from this zoom to the OpenStreetMap map's last; MapLibre enlarges it
+ * beyond.
+ */
 export const CONTOURS_MIN_ZOOM = 11;
 export const CONTOURS_MAX_ZOOM = BASEMAP_MAX_ZOOM;
 

@@ -40,7 +40,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0032](0032-radio-line-of-sight.md)                  | Radio line of sight from the terrain, sure only when it says no                             | Superseded by 0042, amended before by 0037              |
 | [0033](0033-danger-area-warning.md)                  | Warning on entering a danger area, worked out on each device                                | Accepted                                                |
 | [0034](0034-vector-topographic-map.md)               | Topographic map from vector data, relief shaded from IGN's terrain model                    | Accepted, amended by 0037                               |
-| [0035](0035-base-maps-by-purpose.md)                 | Give each base map a purpose of its own                                                     | Accepted                                                |
+| [0035](0035-base-maps-by-purpose.md)                 | Give each base map a purpose of its own                                                     | Accepted, amended by 0120                               |
 | [0036](0036-cadastre-layer.md)                       | The cadastre's parcels as one picture of the view, online only                              | Accepted, amended by 0037                               |
 | [0037](0037-maps-across-borders.md)                  | Maps across Spain, Portugal and southern France                                             | Accepted, amended by 0041                               |
 | [0038](0038-official-warnings-look.md)               | Draw official warnings unlike the group's own areas                                         | Accepted, amended by 0100                               |
@@ -119,9 +119,10 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0111](0111-airtime-kept-numbers-per-group.md)       | Keep the radio's airtime, one window on the radio, and numbers per group                    | Accepted                                                |
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
-| [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted                                                |
+| [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted, amended by 0120                               |
 | [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
 | [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Accepted                                                |
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
 | [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted                                                |
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
+| [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |

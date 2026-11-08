@@ -183,7 +183,7 @@ function layer(archive: TileArchive, maxZoom: number) {
   return { source: 'basemap' as const, archive, maxZoom, concurrency: 6 };
 }
 
-/** The street map of Valencia to zoom 10, with no waiting between tries. */
+/** The OpenStreetMap map of Valencia to zoom 10, with no waiting between tries. */
 function valencia(archive: TileArchive): AreaRequest {
   return {
     id: 'v',

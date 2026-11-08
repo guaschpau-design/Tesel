@@ -1,14 +1,15 @@
 <!--
-  The layers of the map: the cadastre, the MGRS grid, the radar, weather warnings and public
-  services, then the active group's trails, objects, tasks, reports, members and SOS calls. A tap
-  on a service, an object or a member opens its panel.
+  The layers of the map: the cadastre, fires and flood zones, the MGRS grid, the radar, weather
+  warnings and public services, then the active group's trails, objects, tasks, reports, members
+  and SOS calls. A tap on a service, an object or a member opens its panel.
 -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { NodeId } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
-  import CadastreLayer from '../cadastre/CadastreLayer.svelte';
+  import { CADASTRE_MIN_ZOOM, CADASTRES } from '../cadastre/cadastre.ts';
+  import { FIRES, FIRES_MIN_ZOOM, FLOODS, FLOODS_MIN_ZOOM } from '../hazards/hazards.ts';
   import MgrsGridLayer from '../coordinates/MgrsGridLayer.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import SosLayer from '../incidents/SosLayer.svelte';
@@ -18,6 +19,7 @@
   import TrailLayer from '../members/TrailLayer.svelte';
   import ObjectLayer from '../objects/ObjectLayer.svelte';
   import RadarLayer from '../radar/RadarLayer.svelte';
+  import ViewPictureLayer from '../map/wms/ViewPictureLayer.svelte';
   import ReportLayer from '../reports/ReportLayer.svelte';
   import type { TappedService } from '../services/services.ts';
   import ServicesLayer from '../services/ServicesLayer.svelte';
@@ -60,7 +62,25 @@
 </script>
 
 {#if preferences.cadastre.value}
-  <CadastreLayer {map} />
+  <ViewPictureLayer
+    {map}
+    level="cadastre"
+    services={CADASTRES}
+    minZoom={CADASTRE_MIN_ZOOM}
+    opacity={0.9}
+  />
+{/if}
+{#if preferences.floods.value}
+  <ViewPictureLayer
+    {map}
+    level="hazards"
+    services={FLOODS}
+    minZoom={FLOODS_MIN_ZOOM}
+    opacity={0.6}
+  />
+{/if}
+{#if preferences.fires.value}
+  <ViewPictureLayer {map} level="hazards" services={FIRES} minZoom={FIRES_MIN_ZOOM} opacity={1} />
 {/if}
 {#if preferences.grid.value}
   <MgrsGridLayer {map} />

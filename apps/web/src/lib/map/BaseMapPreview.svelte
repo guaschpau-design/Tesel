@@ -1,33 +1,20 @@
 <!-- A small drawing of what each base map looks like, for choosing one at a glance. Drawn, not a
      picture of real tiles, so it weighs nothing and works offline. Each base map has its drawing in
-     DRAWINGS, so a new base map does not compile without one; in the dark look the street map is
-     drawn as the tactical map it becomes (ADR-0114). -->
+     DRAWINGS, so a new base map does not compile without one. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  import type { MapTheme } from '../ui/theme.ts';
   import type { BaseMap } from './style/style.ts';
 
   interface Props {
     base: BaseMap;
-    theme: MapTheme;
   }
 
-  let { base, theme }: Props = $props();
+  let { base }: Props = $props();
 
-  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { streets, topo, aerial };
-  const drawing = $derived(base === 'streets' && theme === 'dark' ? tactical : DRAWINGS[base]);
+  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { topo, aerial, tactical };
+  const drawing = $derived(DRAWINGS[base]);
 </script>
-
-{#snippet streets()}
-  <rect width="96" height="64" fill="#efe9df" />
-  <rect x="56" y="4" width="34" height="22" rx="3" fill="#c9e2b8" />
-  <path d="M0 50 Q48 30 96 46" stroke="#a9d3f0" stroke-width="6" fill="none" />
-  <g stroke="#ffffff" stroke-width="5" fill="none">
-    <path d="M0 36H96M28 0V64M72 30V64M0 14H48" />
-  </g>
-  <path d="M-4 62L100 6" stroke="#f3c95b" stroke-width="6" />
-{/snippet}
 
 {#snippet tactical()}
   <rect width="96" height="64" fill="#141516" />

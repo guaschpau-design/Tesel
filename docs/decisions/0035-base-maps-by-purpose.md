@@ -1,6 +1,6 @@
 # 0035. Give each base map a purpose of its own
 
-- Status: Accepted
+- Status: Accepted, amended by [0120](0120-three-base-maps-and-hazards.md) (no street map; the tactical map is the third)
 - Date: 2026-10-27
 
 ## Context

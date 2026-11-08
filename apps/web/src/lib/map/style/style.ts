@@ -1,7 +1,9 @@
-// MapLibre styles for each base map, light or dark: the Protomaps OpenStreetMap map as a street
-// map (streets.ts) or as a topographic map, with contour lines and names of the terrain (topo.ts);
-// or the national orthophotos (tiles/ortho.ts) with our labels over them. All served through our tile protocol
-// (tiles/protocol.ts), so downloaded areas work offline whichever is shown.
+// MapLibre styles for each base map (ADR-0120): the Protomaps OpenStreetMap map as a topographic
+// map, with contour lines and names of the terrain (topo.ts); the national orthophotos
+// (tiles/ortho.ts) with our labels over them; or the same OpenStreetMap map as the tactical map, in
+// greys on a dark ground (tactical.ts). Each base map has its own look, whatever the app's. All are
+// served through our tile protocol (tiles/protocol.ts), so downloaded areas work offline whichever
+// is shown.
 
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
@@ -12,9 +14,8 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl';
 
-import { themeColor, type MapTheme } from '../../ui/theme.ts';
+import { lookOfMap, themeColor, type MapTheme } from '../../ui/theme.ts';
 import { CONTOURS_MAX_ZOOM, CONTOURS_MIN_ZOOM, contourTileUrl } from './contours.ts';
-import { streetFlavor } from './streets.ts';
 import { tileUrlTemplate } from '../tiles/protocol.ts';
 import {
   NAMES_ATTRIBUTION,
@@ -32,8 +33,9 @@ import {
   terrainNameLayers,
   topoFlavor,
 } from './topo.ts';
+import { tacticalFlavor } from './tactical.ts';
 
-export const BASE_MAPS = ['streets', 'topo', 'aerial'] as const;
+export const BASE_MAPS = ['topo', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
 
 /** The style's name for the vector base map, in the Protomaps schema. Every style has it. */
@@ -57,8 +59,15 @@ export interface StyleChoice {
   readonly relief: boolean;
   /** The ground raised in 3D (ADR-0102). */
   readonly threeD: boolean;
-  readonly theme: MapTheme;
   readonly lang: string;
+}
+
+/**
+ * The look of a base map, which what is drawn over it follows (ui/theme.ts): dark for the tactical
+ * map, light for the others; labels over photographs are drawn light on dark by the style itself.
+ */
+function mapThemeOf(base: BaseMap): MapTheme {
+  return base === 'tactical' ? 'dark' : 'light';
 }
 
 /** A base map in three bands, so that the relief shading can go between the first two. */
@@ -72,12 +81,15 @@ interface BaseMapLayers {
 }
 
 export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecification {
+  const theme = mapThemeOf(choice.base);
+  // First, so that every colour read for the map from here on is this base map's.
+  lookOfMap(theme);
   const { sources, ground, lines, names } = baseMapLayers(choice);
   // The ground raised in 3D is shaded too, whether or not the relief layer is on: without
   // shadows, raised ground reads as flat (ADR-0106).
-  const relief = choice.relief || choice.threeD ? reliefShading(choice) : null;
-  // Labels over photographs read best light on dark, whatever the app's theme.
-  const sprite = choice.base === 'aerial' ? 'dark' : choice.theme;
+  const relief = choice.relief || choice.threeD ? reliefShading(theme, choice.threeD) : null;
+  // Labels over photographs read best light on dark.
+  const sprite = choice.base === 'aerial' ? 'dark' : theme;
   return {
     version: 8,
     glyphs: `${assetsUrl}fonts/{fontstack}/{range}.pbf`,
@@ -104,7 +116,7 @@ function elevationSource(): SourceSpecification {
   };
 }
 
-function baseMapLayers({ base, theme, lang }: StyleChoice): BaseMapLayers {
+function baseMapLayers({ base, lang }: StyleChoice): BaseMapLayers {
   // Every style has the vector base map, which the services read (services/ServicesLayer.svelte).
   const basemap: SourceSpecification = {
     type: 'vector',
@@ -112,10 +124,10 @@ function baseMapLayers({ base, theme, lang }: StyleChoice): BaseMapLayers {
     maxzoom: BASEMAP_MAX_ZOOM,
     attribution: OSM_ATTRIBUTION,
   };
-  if (base === 'streets') {
+  if (base === 'tactical') {
     return {
       sources: { [BASEMAP_SOURCE]: basemap },
-      ...protomapsLayers(streetFlavor(theme), lang),
+      ...protomapsLayers(tacticalFlavor(), lang),
     };
   }
   if (base === 'topo') {
@@ -132,7 +144,7 @@ function baseMapLayers({ base, theme, lang }: StyleChoice): BaseMapLayers {
       maxzoom: BASEMAP_MAX_ZOOM,
       attribution: NAMES_ATTRIBUTION,
     };
-    const { ground, names } = protomapsLayers(topoFlavor(theme), lang);
+    const { ground, names } = protomapsLayers(topoFlavor(), lang);
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
@@ -188,7 +200,10 @@ function groundSky(): SkySpecification {
  * deeper, and lit from the north-west of the land rather than of the screen, so shadows stay on
  * the slopes that cast them as the view turns.
  */
-function reliefShading({ theme, threeD }: StyleChoice): {
+function reliefShading(
+  theme: MapTheme,
+  threeD: boolean,
+): {
   source: SourceSpecification;
   layer: HillshadeLayerSpecification;
 } {

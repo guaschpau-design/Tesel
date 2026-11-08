@@ -292,6 +292,8 @@ export const en = {
   layerObjects: 'Markers and zones',
   layerRelief: 'Relief',
   layerCadastre: 'Cadastre',
+  layerFires: 'Fires',
+  layerFloods: 'Flood zones',
   climb: '↑ {up} m · ↓ {down} m · steepest {steepest} %',
   climbShort: '↑ {up} m · ↓ {down} m',
   elevation: 'Elevation',
@@ -303,7 +305,6 @@ export const en = {
   elevationProfileLabel:
     'Terrain profile from you to the point, {distance} away: between {low} m and {high} m',
   baseMap: 'Base map',
-  baseMapStreets: 'Streets',
   baseMapTactical: 'Tactical',
   baseMapTopo: 'Topographic',
   baseMapAerial: 'Satellite',
@@ -319,7 +320,7 @@ export const en = {
   fullscreen: 'Full screen',
   darkMode: 'Dark mode',
   darkModeHint:
-    'Dark colours throughout the app, and the street map turns into the tactical map: grey on a dark ground, so only what the team marks stands out. Until changed here, it follows the phone.',
+    'Dark bars and panels, for the night. The map stays as it is: the tactical map is chosen in Layers. Until changed here, it follows the phone.',
   diary: 'Operation diary',
   diaryEmpty:
     'Everything that happens in the group will be kept here, in order: who joins, the messages, the SOS calls and what is marked.',

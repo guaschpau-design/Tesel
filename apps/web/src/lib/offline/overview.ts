@@ -8,7 +8,7 @@ import { downloadTiles } from '../map/tiles/area-download.ts';
 import type { TileArchives } from '../map/tiles/protocol.ts';
 import type { TileStore } from '../map/tiles/store.ts';
 import { roomForMaps } from '../storage/storage-space.svelte.ts';
-import { bytesStillNeeded, downloadLayers } from './offline-maps.ts';
+import { bytesStillNeeded, basemapLayers } from './offline-maps.ts';
 
 /** The owner of the overview's tiles in the tile store. */
 const OVERVIEW = 'overview';
@@ -39,7 +39,7 @@ export function overviewZoom(bounds: Bounds): number {
 export async function keepOverview(store: TileStore, archives: TileArchives): Promise<void> {
   try {
     const bounds = await archives.basemap.bounds();
-    const layers = downloadLayers(archives, overviewZoom(bounds), []);
+    const layers = basemapLayers(archives, overviewZoom(bounds));
     const room = await roomForMaps();
     if (room !== null && room < (await bytesStillNeeded(store, bounds, layers))) return;
     await downloadTiles(store, {

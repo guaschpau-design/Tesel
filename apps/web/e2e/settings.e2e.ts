@@ -48,11 +48,12 @@ test('the language is chosen in the settings and remembered', async ({ browser }
   await expect(page.getByRole('region', { name: 'Map', exact: true })).toBeVisible();
 });
 
-test('dark mode is chosen in the settings, and the street map turns tactical', async ({
+test('dark mode darkens the app and leaves the map, whose looks are chosen in the layers', async ({
   browser,
 }) => {
   const page = await device(browser, 'Ana');
   const theme = () => page.evaluate(() => document.documentElement.dataset['theme']);
+  const mapTheme = () => page.evaluate(() => document.documentElement.dataset['mapTheme']);
   // The phone of these tests is light, and so is the app until dark is chosen.
   expect(await theme()).toBe('light');
   await openMore(page, 'Ajustes');
@@ -65,15 +66,22 @@ test('dark mode is chosen in the settings, and the street map turns tactical', a
   await expect.poll(theme).toBe('dark');
   await settings.getByRole('button', { name: 'Cerrar' }).click();
 
+  // The map is still the topographic map, in its own light look.
   await page.getByRole('button', { name: 'Capas del mapa' }).click();
   const base = page.getByRole('radiogroup', { name: 'Mapa base' });
-  await expect(base.getByRole('radio', { name: 'Táctico' })).toHaveAttribute(
+  await expect(base.getByRole('radio')).toHaveText(['Topográfico', 'Satélite', 'Táctico']);
+  await expect(base.getByRole('radio', { name: 'Topográfico' })).toHaveAttribute(
     'aria-checked',
     'true',
   );
+  expect(await mapTheme()).toBe('light');
+  // The tactical map is chosen there, and draws what is over it for a dark ground.
+  await base.getByRole('radio', { name: 'Táctico' }).click();
+  await expect.poll(mapTheme).toBe('dark');
 
-  // Remembered on the next visit.
+  // Both remembered on the next visit.
   await page.reload();
   await expect(page.getByRole('button', { name: 'Más', exact: true })).toBeVisible();
   await expect.poll(theme).toBe('dark');
+  await expect.poll(mapTheme).toBe('dark');
 });

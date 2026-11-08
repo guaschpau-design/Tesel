@@ -3,8 +3,19 @@
 
 import type { ExpressionSpecification } from 'maplibre-gl';
 
-/** The app's two looks, which the map follows (light and dark styles of every base map). */
+/**
+ * Light or dark: the app's look (ui/appearance.svelte.ts), and apart from it the map's, which is
+ * its base map's (map/style/style.ts, ADR-0120).
+ */
 export type MapTheme = 'light' | 'dark';
+
+/**
+ * Sets the map's look on the page as `data-map-theme`, which app.css reads for the colours of
+ * what is drawn on the map; `themeColor` then reads them for this look.
+ */
+export function lookOfMap(theme: MapTheme): void {
+  document.documentElement.dataset['mapTheme'] = theme;
+}
 
 /** Families of colour for map symbols and shapes, each a `--tone-*` variable in app.css. */
 export const TONES = ['slate', 'red', 'orange', 'amber', 'blue', 'green', 'teal', 'ink'] as const;
