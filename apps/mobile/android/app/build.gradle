@@ -16,6 +16,11 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    lint {
+        // Every finding in CI's log: no phone tries the native code before a build is published.
+        textReport = true
+        textOutput = file('stdout')
+    }
     signingConfigs {
         // Test builds only, installed by hand to try the app: this key is public, in the
         // repository, so that each build installs over the last (ADR-0124). Builds for Google Play
