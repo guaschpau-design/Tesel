@@ -1,12 +1,12 @@
-// The topographic map (ADR-0034, ADR-0037): the street map in a palette that lets the land show,
-// under contour lines worked out from the elevation (contours.ts), each index line carrying its
-// height, and, in Spain, IGN's names of the terrain — mountains, ravines, places, caves — and of
-// springs.
+// The topographic map (ADR-0034, ADR-0037), Tesel's base map (ADR-0120): the OpenStreetMap map in
+// a palette that lets the land show, under contour lines worked out from the elevation
+// (contours.ts), each index line carrying its height, and, in Spain, IGN's names of the terrain —
+// mountains, ravines, places, caves — and of springs.
 
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
-import { themeColor, type MapTheme } from '../../ui/theme.ts';
+import { themeColor } from '../../ui/theme.ts';
 import { CONTOUR_LAYER, HEIGHT_KEY, RANK_KEY } from './contours.ts';
 
 /** The style's names for the contour lines and for IGN's vector map. */
@@ -14,43 +14,32 @@ export const CONTOURS_SOURCE = 'contours';
 export const NAMES_SOURCE = 'ign-names';
 
 /**
- * Changes to the street map's palette: woods and scrub greener than parks, which are only lines on
+ * Changes to Protomaps' light palette: woods and scrub greener than parks, which are only lines on
  * a plan, and tracks and paths brown, as topographic maps draw them.
  */
-const TOPO_PALETTE: Readonly<Record<MapTheme, Partial<Flavor>>> = {
-  light: {
-    background: '#efebe2',
-    earth: '#efebe2',
-    park_a: '#e6ebdb',
-    park_b: '#dde7d0',
-    wood_a: '#dde8d2',
-    wood_b: '#c8dfb6',
-    scrub_a: '#e6eadb',
-    scrub_b: '#dce5cc',
-    other: '#a8754c',
-    landcover: {
-      grassland: 'rgba(228, 236, 214, 1)',
-      barren: 'rgba(240, 233, 216, 1)',
-      urban_area: 'rgba(230, 228, 224, 1)',
-      farmland: 'rgba(236, 238, 222, 1)',
-      glacier: 'rgba(255, 255, 255, 1)',
-      scrub: 'rgba(229, 234, 212, 1)',
-      forest: 'rgba(207, 226, 193, 1)',
-    },
-  },
-  dark: {
-    park_a: '#1f2421',
-    park_b: '#1f2622',
-    wood_a: '#1f2620',
-    wood_b: '#233024',
-    scrub_a: '#222520',
-    scrub_b: '#242a22',
-    other: '#7d6048',
+const TOPO_PALETTE: Partial<Flavor> = {
+  background: '#efebe2',
+  earth: '#efebe2',
+  park_a: '#e6ebdb',
+  park_b: '#dde7d0',
+  wood_a: '#dde8d2',
+  wood_b: '#c8dfb6',
+  scrub_a: '#e6eadb',
+  scrub_b: '#dce5cc',
+  other: '#a8754c',
+  landcover: {
+    grassland: 'rgba(228, 236, 214, 1)',
+    barren: 'rgba(240, 233, 216, 1)',
+    urban_area: 'rgba(230, 228, 224, 1)',
+    farmland: 'rgba(236, 238, 222, 1)',
+    glacier: 'rgba(255, 255, 255, 1)',
+    scrub: 'rgba(229, 234, 212, 1)',
+    forest: 'rgba(207, 226, 193, 1)',
   },
 };
 
-export function topoFlavor(theme: MapTheme): Flavor {
-  return { ...namedFlavor(theme), ...TOPO_PALETTE[theme] };
+export function topoFlavor(): Flavor {
+  return { ...namedFlavor('light'), ...TOPO_PALETTE };
 }
 
 const isIndex: ExpressionSpecification = ['==', ['get', RANK_KEY], 1];

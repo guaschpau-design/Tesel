@@ -1,6 +1,6 @@
 // Light or dark (ADR-0114): the look chosen in Settings, or this device's own until one is chosen.
-// The look in use is written on the root element as `data-theme`, which app.css reads; the map
-// follows it with a style of its own for each, the street map turning into the tactical map.
+// The look in use is written on the root element as `data-theme`, which app.css reads. It is the
+// look of the bars, panels and cards; the map has its own, its base map's (ADR-0120).
 
 import type { MapTheme } from './theme.ts';
 
@@ -24,7 +24,7 @@ class Appearance {
 
   /**
    * The look in use. Reading it first brings the page's colours up to date, so that whatever reads
-   * app.css's colours for this look, such as the map's style (ui/theme.ts), gets this look's.
+   * app.css's colours for this look gets this look's.
    */
   get theme(): MapTheme {
     if (this.#following) this.#write();

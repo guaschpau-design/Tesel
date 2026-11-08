@@ -89,6 +89,8 @@
     flags={{
       relief: preferences.relief,
       cadastre: preferences.cadastre,
+      fires: preferences.fires,
+      floods: preferences.floods,
       grid: preferences.grid,
       radar: preferences.radar,
     }}

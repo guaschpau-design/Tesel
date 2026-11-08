@@ -3,11 +3,13 @@
 import type { Page } from '@playwright/test';
 
 import { chooseAlias, expect, mapIdle, openMore, tapMap, test, twoMembers } from './helpers.ts';
+import { serveTopographicData } from './terrain-ramp.ts';
 
 test('a downloaded area keeps working after going offline and reloading', async ({
   page,
   context,
 }) => {
+  await serveTopographicData(context);
   await page.goto('/#map=13/39.47/-0.36');
   await chooseAlias(page, 'Ana');
   await expect(page.getByRole('button', { name: /^Conexiones: En línea \(WiFi/ })).toBeVisible();
@@ -153,6 +155,7 @@ test('members are offered the map of the operation area their coordinator marks'
   await ana.getByLabel('Etiqueta (opcional)').fill('Sector norte');
   await ana.getByRole('button', { name: 'Guardar' }).click();
 
+  await serveTopographicData(berta);
   const offer = berta.getByRole('region', { name: 'Zona del operativo «Sector norte»' });
   await offer.getByRole('button', { name: 'Descargar' }).click();
   await expect(offer).toBeHidden();

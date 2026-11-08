@@ -1,21 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
-import { CADASTRES, cadastreImage, cadastresIn } from './cadastre.ts';
+import { CADASTRES } from '../../cadastre/cadastre.ts';
+import { servicesIn, viewPicture, type ViewService } from './view-picture.ts';
 
 const VALENCIA = { west: -0.38, south: 39.46, east: -0.37, north: 39.47 };
 /** Across the Bidasoa, Irun and Hendaye. */
 const BIDASOA = { west: -1.8, south: 43.33, east: -1.76, north: 43.37 };
 const [SPAIN, FRANCE] = CADASTRES;
 
-describe('cadastre', () => {
+describe('pictures of the view from map services', () => {
   it('asks each country in view, and no other', () => {
-    expect(cadastresIn(VALENCIA).map((service) => service.id)).toEqual(['spain']);
-    expect(cadastresIn(BIDASOA).map((service) => service.id)).toEqual(['spain', 'france']);
+    expect(servicesIn(CADASTRES, VALENCIA).map((service) => service.id)).toEqual(['spain']);
+    expect(servicesIn(CADASTRES, BIDASOA).map((service) => service.id)).toEqual([
+      'spain',
+      'france',
+    ]);
   });
 
   it('asks for one picture of the view in Web Mercator, and puts it at the view’s corners', () => {
     if (SPAIN === undefined) throw new Error('no Spanish cadastre');
-    const image = cadastreImage(SPAIN, VALENCIA, 800, 600);
+    const image = viewPicture(SPAIN, VALENCIA, 800, 600);
     const query = new URL(image.url).searchParams;
     expect(query.get('SRS')).toBe('EPSG:3857');
     expect(query.get('LAYERS')).toBe('Catastro');
@@ -34,14 +38,22 @@ describe('cadastre', () => {
 
   it('names the projection as each WMS version does', () => {
     if (FRANCE === undefined) throw new Error('no French cadastre');
-    const query = new URL(cadastreImage(FRANCE, BIDASOA, 800, 600).url).searchParams;
+    const query = new URL(viewPicture(FRANCE, BIDASOA, 800, 600).url).searchParams;
     expect(query.get('CRS')).toBe('EPSG:3857');
     expect(query.get('SRS')).toBeNull();
   });
 
   it('keeps the picture within the largest the services draw, in proportion', () => {
     if (SPAIN === undefined) throw new Error('no Spanish cadastre');
-    const query = new URL(cadastreImage(SPAIN, VALENCIA, 4096, 1024).url).searchParams;
+    const query = new URL(viewPicture(SPAIN, VALENCIA, 4096, 1024).url).searchParams;
     expect([query.get('WIDTH'), query.get('HEIGHT')]).toEqual(['2048', '512']);
+  });
+
+  it('adds what the service needs worked out at the time, such as the day', () => {
+    if (SPAIN === undefined) throw new Error('no Spanish cadastre');
+    const daily: ViewService = { ...SPAIN, extra: () => ({ TIME: '2026-11-08' }) };
+    expect(new URL(viewPicture(daily, VALENCIA, 800, 600).url).searchParams.get('TIME')).toBe(
+      '2026-11-08',
+    );
   });
 });

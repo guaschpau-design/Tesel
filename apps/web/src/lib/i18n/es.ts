@@ -293,6 +293,8 @@ export const es: Messages = {
   layerObjects: 'Marcadores y zonas',
   layerRelief: 'Relieve',
   layerCadastre: 'Catastro',
+  layerFires: 'Incendios',
+  layerFloods: 'Zonas inundables',
   climb: '↑ {up} m · ↓ {down} m · pendiente máx. {steepest} %',
   climbShort: '↑ {up} m · ↓ {down} m',
   elevation: 'Desnivel',
@@ -304,7 +306,6 @@ export const es: Messages = {
   elevationProfileLabel:
     'Perfil del terreno desde ti hasta el punto, a {distance}: entre {low} m y {high} m',
   baseMap: 'Mapa base',
-  baseMapStreets: 'Callejero',
   baseMapTactical: 'Táctico',
   baseMapTopo: 'Topográfico',
   baseMapAerial: 'Satélite',
@@ -320,7 +321,7 @@ export const es: Messages = {
   fullscreen: 'Pantalla completa',
   darkMode: 'Modo oscuro',
   darkModeHint:
-    'Colores oscuros en toda la app, y el callejero pasa a ser el mapa táctico: gris sobre fondo oscuro, para que solo destaque lo del equipo. Hasta que lo cambies aquí, sigue el modo del móvil.',
+    'Barras y paneles oscuros, para la noche. El mapa no cambia: el táctico se elige en Capas. Hasta que lo cambies aquí, sigue el modo del móvil.',
   diary: 'Diario de la operación',
   diaryEmpty:
     'Aquí quedará, en orden, todo lo que pase en el grupo: quién entra, los mensajes, los SOS y lo que se marque.',

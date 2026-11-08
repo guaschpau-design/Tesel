@@ -191,7 +191,6 @@
           base: startup.preferences.baseMap.value,
           relief: startup.preferences.relief.value,
           threeD: ground.raised,
-          theme: appearance.theme,
           lang: locale,
         }}
         locale={mapLibreLocale(t)}

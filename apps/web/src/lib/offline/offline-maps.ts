@@ -39,33 +39,34 @@ export interface OfflineMaps {
   readonly archives: TileArchives;
 }
 
-/** What can be downloaded as well as the street map, each from its sources. */
-export const EXTRAS = ['topo', 'aerial', 'relief'] as const;
+/**
+ * What every download holds: the topographic map, Tesel's base map (ADR-0120), which the tactical
+ * map shares — the OpenStreetMap map, IGN's names of the terrain, and the elevation its contour
+ * lines, the relief and the climbs are worked out from.
+ */
+const BASE_SOURCES: readonly TileSourceId[] = ['basemap', 'ign-names', 'terrain'];
+
+/** What can be downloaded as well, each from its sources. */
+export const EXTRAS = ['aerial'] as const;
 export type Extra = (typeof EXTRAS)[number];
 
 const EXTRA_SOURCES: Readonly<Record<Extra, readonly TileSourceId[]>> = {
-  // The names of the terrain, and the elevation the contour lines are worked out from.
-  topo: ['ign-names', 'terrain'],
   aerial: ['ortho'],
-  // For the shading and the climbs.
-  relief: ['terrain'],
 };
 
 export const EXTRA_NAMES: Readonly<Record<Extra, MessageKey>> = {
-  topo: 'baseMapTopo',
   aerial: 'baseMapAerial',
-  relief: 'layerRelief',
 };
 
 /** The name of what each source was downloaded for. */
 const SOURCE_NAMES: Readonly<Record<TileSourceId, MessageKey>> = {
-  basemap: 'baseMapStreets',
-  'ign-names': EXTRA_NAMES.topo,
+  basemap: 'baseMapTopo',
+  'ign-names': 'baseMapTopo',
+  terrain: 'baseMapTopo',
   ortho: EXTRA_NAMES.aerial,
-  terrain: EXTRA_NAMES.relief,
 };
 
-/** What an area holds, by name: the street map and each extra downloaded with it. */
+/** What an area holds, by name: the topographic map and each extra downloaded with it. */
 export function areaContents(area: OfflineArea): MessageKey[] {
   return [...new Set(area.layers.map((layer) => SOURCE_NAMES[layer.source]))];
 }
@@ -92,10 +93,10 @@ const CONCURRENCY: Readonly<Record<TileSourceId, number>> = {
   terrain: 2,
 };
 
-/** How deep each source is downloaded, for a street map to `maxZoom`. */
+/** How deep each source is downloaded, for a map to `maxZoom`. */
 function sourceMaxZoom(source: TileSourceId, maxZoom: number): number {
   switch (source) {
-    // IGN's names go as deep as the street map (map/tiles/sources.ts).
+    // IGN's names go as deep as the OpenStreetMap map (map/tiles/sources.ts).
     case 'basemap':
     case 'ign-names':
       return maxZoom;
@@ -107,18 +108,22 @@ function sourceMaxZoom(source: TileSourceId, maxZoom: number): number {
   }
 }
 
-/** The layers of a download: the street map to `maxZoom`, and the sources of each extra. */
+/** The layers of a download: the topographic map to `maxZoom`, and the sources of each extra. */
 export function downloadLayers(
   archives: TileArchives,
   maxZoom: number,
   extras: readonly Extra[],
 ): DownloadLayer[] {
-  // The topographic map and the relief share the elevation: it is downloaded once.
-  const sources = new Set<TileSourceId>([
-    'basemap',
-    ...extras.flatMap((extra) => EXTRA_SOURCES[extra]),
-  ]);
-  return [...sources].map((source) => layerOf(archives, source, sourceMaxZoom(source, maxZoom)));
+  const sources = [...BASE_SOURCES, ...extras.flatMap((extra) => EXTRA_SOURCES[extra])];
+  return sources.map((source) => layerOf(archives, source, sourceMaxZoom(source, maxZoom)));
+}
+
+/**
+ * The OpenStreetMap map alone to `maxZoom`: enough to know where one is from afar, as the overview
+ * of the whole region is kept (overview.ts).
+ */
+export function basemapLayers(archives: TileArchives, maxZoom: number): DownloadLayer[] {
+  return [layerOf(archives, 'basemap', maxZoom)];
 }
 
 /** The layers of an area, to download again what it is missing (ADR-0056). */
@@ -154,8 +159,8 @@ export async function bytesStillNeeded(
 }
 
 /**
- * The most detailed street map of `bounds` that fits in one download, or null if not even the
- * least detailed does.
+ * The most detailed map of `bounds` that fits in one download, or null if not even the least
+ * detailed does.
  */
 export function detailThatFits(bounds: Bounds, lowestZoom: number): number | null {
   for (let zoom = BASEMAP_MAX_ZOOM; zoom >= lowestZoom; zoom--) {
@@ -164,7 +169,7 @@ export function detailThatFits(bounds: Bounds, lowestZoom: number): number | nul
   return null;
 }
 
-/** Whether a complete downloaded area already holds the street map of `bounds`. */
+/** Whether a complete downloaded area already holds the map of `bounds`. */
 export function isDownloaded(areas: readonly OfflineArea[], bounds: Bounds): boolean {
   return areas.some(
     (area) =>

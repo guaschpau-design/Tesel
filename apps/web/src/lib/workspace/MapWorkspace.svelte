@@ -14,6 +14,7 @@
   import { onMount, untrack } from 'svelte';
 
   import { CADASTRE_CREDITS } from '../cadastre/cadastre.ts';
+  import { FIRES_CREDITS, FLOODS_CREDITS } from '../hazards/hazards.ts';
   import ChatNotice from '../chat/ChatNotice.svelte';
   import { useChatUnread } from '../chat/chat-unread.svelte.ts';
   import GroupNews from '../groups/GroupNews.svelte';
@@ -117,11 +118,14 @@
       MAP_LAYERS.map((layer) => [layer, !preferences.hiddenLayers.value.includes(layer)]),
     ) as Record<MapLayer, boolean>,
   );
-  /** What the map's data asks to be credited for, with the cadastres when they are shown. */
+  /** What the map's data asks to be credited for, with the services over it that are shown. */
   const styleCredits = useStyleCredits(() => map);
-  const credits = $derived(
-    preferences.cadastre.value ? [...styleCredits.list, ...CADASTRE_CREDITS] : styleCredits.list,
-  );
+  const credits = $derived([
+    ...styleCredits.list,
+    ...(preferences.cadastre.value ? CADASTRE_CREDITS : []),
+    ...(preferences.fires.value ? FIRES_CREDITS : []),
+    ...(preferences.floods.value ? FLOODS_CREDITS : []),
+  ]);
   let sosOpen = $state(false);
   useEnergySaving({
     enabled: () => preferences.energySaving.value,

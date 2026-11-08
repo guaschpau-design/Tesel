@@ -13,12 +13,22 @@ const MOST_DETAILED_ZOOM = 13;
 const VALENCIA_ROW = 3117;
 const METRES_PER_PIXEL = 0.5;
 
-/** Serves the rising ground for every elevation tile the page asks for. */
-export async function serveTerrainRamp(page: Page): Promise<void> {
-  await page.route(/^https:\/\/tiles\.mapterhorn\.com\/(\d+)\/\d+\/(\d+)\./, (route) => {
+/** Serves the rising ground for every elevation tile a page, or a whole device, asks for. */
+export async function serveTerrainRamp(target: Pick<Page, 'route'>): Promise<void> {
+  await target.route(/^https:\/\/tiles\.mapterhorn\.com\/(\d+)\/\d+\/(\d+)\./, (route) => {
     const [, zoom = '0', row = '0'] = /\/(\d+)\/\d+\/(\d+)\./.exec(route.request().url()) ?? [];
     return route.fulfill({ contentType: 'image/png', body: rampTile(Number(zoom), Number(row)) });
   });
+}
+
+/**
+ * Stands in for the public services the topographic map is downloaded from besides our own map
+ * (offline/offline-maps.ts): the rising ground for the elevation, and IGN's names of the terrain
+ * answered with no tile, as for a place with no names.
+ */
+export async function serveTopographicData(target: Pick<Page, 'route'>): Promise<void> {
+  await serveTerrainRamp(target);
+  await target.route('https://vt-mapabase.idee.es/**', (route) => route.fulfill({ status: 404 }));
 }
 
 function rampTile(zoom: number, row: number): Buffer {

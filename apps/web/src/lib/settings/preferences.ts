@@ -34,7 +34,7 @@ const PREFERENCES = {
   /** How coordinates are written: decimal degrees, as phones and 112 apps share them. */
   coordinateFormat: choice('coordinateFormat', COORDINATE_FORMATS, 'decimal'),
   /** The map under everything: the street map, which covers everywhere and is the lightest. */
-  baseMap: choice('baseMap', BASE_MAPS, 'streets'),
+  baseMap: choice('baseMap', BASE_MAPS, 'topo'),
   /** Shading of the terrain: off at first, as it downloads elevation data. */
   relief: flag('relief', false),
   /** The MGRS grid over the map: off, for those who coordinate in it. */
@@ -43,6 +43,9 @@ const PREFERENCES = {
   radar: flag('radar', false),
   /** The cadastre's parcels: off, as it asks a public service for a picture of every view. */
   cadastre: flag('cadastre', false),
+  /** Fires detected by satellite, and flood zones: off, as each view asks public services. */
+  fires: flag('fires', false),
+  floods: flag('floods', false),
   /** Map layers the user has hidden: none at first. */
   hiddenLayers: subset('hiddenLayers', MAP_LAYERS, []),
   /**

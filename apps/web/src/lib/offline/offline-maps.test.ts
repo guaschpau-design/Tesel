@@ -18,8 +18,8 @@ const archives: TileArchives = {
 };
 
 describe('offline maps', () => {
-  it('downloads each extra from its sources, each once and to the zoom it needs', () => {
-    const layers = downloadLayers(archives, 14, ['topo', 'aerial', 'relief']);
+  it('downloads the topographic map, and each extra from its sources, to the zoom it needs', () => {
+    const layers = downloadLayers(archives, 14, ['aerial']);
     expect(layers.map(({ source, maxZoom }) => [source, maxZoom])).toEqual([
       ['basemap', 14],
       ['ign-names', 14],
@@ -29,7 +29,7 @@ describe('offline maps', () => {
   });
 
   it('asks the public services for fewer tiles at a time than our own map', () => {
-    const layers = downloadLayers(archives, 14, ['topo', 'aerial', 'relief']);
+    const layers = downloadLayers(archives, 14, ['aerial']);
     const [own, ...others] = layers;
     expect(own?.source).toBe('basemap');
     for (const layer of others) expect(layer.concurrency).toBeLessThan(own?.concurrency ?? 0);
@@ -41,7 +41,7 @@ describe('offline maps', () => {
       name: 'a',
       bounds: { west: 0, south: 0, east: 1, north: 1 },
       minZoom: 0,
-      layers: downloadLayers(archives, 14, ['relief']).map(({ source, maxZoom }) => ({
+      layers: downloadLayers(archives, 14, ['aerial']).map(({ source, maxZoom }) => ({
         source,
         maxZoom,
       })),
@@ -50,7 +50,7 @@ describe('offline maps', () => {
       createdAt: 0,
       complete: true,
     };
-    expect(areaContents(area)).toEqual(['baseMapStreets', 'layerRelief']);
+    expect(areaContents(area)).toEqual(['baseMapTopo', 'baseMapAerial']);
   });
 
   it('resumes an area with the sources, zooms and pace it was downloaded with', () => {
