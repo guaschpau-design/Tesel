@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ServiceCompat;
 import androidx.core.content.ContextCompat;
 
@@ -55,6 +56,7 @@ public class ActiveService extends Service {
     }
 
     /** The kinds of work the app may keep running for: what its permissions allow. */
+    @RequiresApi(Build.VERSION_CODES.Q)
     private static int allowedTypes(Context context) {
         int types = 0;
         if (granted(context, Manifest.permission.ACCESS_FINE_LOCATION) || granted(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {

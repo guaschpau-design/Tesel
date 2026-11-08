@@ -29,9 +29,11 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
-    <!-- No backups: a group's secret and this device's identity stay on it, as in the browser. -->
+    <!-- No backups nor transfers to a new phone: a group's secret and this device's identity stay
+         on it, as in the browser. -->
     <application
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
