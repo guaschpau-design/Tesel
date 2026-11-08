@@ -126,3 +126,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted                                                |
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
 | [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |
+| [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |

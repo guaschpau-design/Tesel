@@ -42,7 +42,7 @@ const weather =
         maxAgeMinutes: config.weatherMaxAgeMinutes,
       });
 weather?.start();
-const app = await buildApp(store, relay, { ...config, weather, usage });
+const app = await buildApp(store, relay, { ...config, weather, usage, floodZones: true });
 
 /** Writes the usage counted so far; a busy or full database leaves it for the next time. */
 function flushUsage(): void {

@@ -2,7 +2,7 @@
 // warning regions. The server builds it with these types; clients read it with
 // `parseWeatherWarnings`, which keeps only what is well formed.
 
-import { WEATHER_WARNINGS_PATH } from './constants.ts';
+import { FLOOD_ZONES_PATH, WEATHER_WARNINGS_PATH } from './constants.ts';
 import { serverBaseUrl } from './relay.ts';
 
 /** §8.2 levels: yellow, orange and red (MeteoAlarm awareness levels). */
@@ -59,6 +59,11 @@ export const WEATHER_WARNINGS_VERSION = 1;
 /** §8.2 The URL of a server's weather warnings. */
 export function weatherWarningsUrl(server: string): string {
   return new URL(WEATHER_WARNINGS_PATH, serverBaseUrl(server)).href;
+}
+
+/** §8.3 Where a server draws the flood zones of a view. */
+export function floodZonesUrl(server: string): string {
+  return new URL(FLOOD_ZONES_PATH, serverBaseUrl(server)).href;
 }
 
 /** Reads a server's answer; null if it is not a weather warnings document of this version. */

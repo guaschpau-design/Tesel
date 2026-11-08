@@ -1,6 +1,6 @@
 # 0120. Topographic, satellite and tactical maps; fires and flood zones over them
 
-- Status: Accepted
+- Status: Accepted, amended by [0121](0121-flood-zones-through-the-server.md) (flood zones from the Ministry's new service, through the server)
 - Date: 2026-11-08
 
 ## Context

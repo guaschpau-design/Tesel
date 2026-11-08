@@ -1,5 +1,6 @@
-// Fires and flood zones over the map: pictures of the view from NASA's GIBS and Spain's SNCZI,
-// stood in for by a blank picture, as the cadastre's are.
+// Fires and flood zones over the map: pictures of the view from NASA's GIBS, and from the app's
+// server for Spain's flood zones (protocol §8.3), stood in for by a blank picture, as the
+// cadastre's are.
 
 import type { Page } from '@playwright/test';
 
@@ -10,10 +11,10 @@ const BLANK_PNG = Buffer.from(
   'base64',
 );
 
-/** Answers a service with a blank picture, and keeps what was asked of it. */
-async function standIn(page: Page, host: string): Promise<URL[]> {
+/** Answers what `pattern` matches with a blank picture, and keeps what was asked. */
+async function standIn(page: Page, pattern: string): Promise<URL[]> {
   const asked: URL[] = [];
-  await page.route(`https://${host}/**`, async (route) => {
+  await page.route(pattern, async (route) => {
     asked.push(new URL(route.request().url()));
     await route.fulfill({ contentType: 'image/png', body: BLANK_PNG });
   });
@@ -33,17 +34,17 @@ test('fires ask GIBS for each satellite’s detections of yesterday and today', 
   browser,
 }) => {
   const page = await device(browser, 'Ana', '/#map=9/39.4750/-0.3700');
-  const asked = await standIn(page, 'gibs.earthdata.nasa.gov');
+  const asked = await standIn(page, 'https://gibs.earthdata.nasa.gov/**');
   await turnOn(page, 'Incendios');
   await expect.poll(() => asked.length).toBe(6);
   expect(new Set(asked.map((url) => url.searchParams.get('TIME'))).size).toBe(2);
   expect(asked.every((url) => url.searchParams.get('SRS') === 'EPSG:3857')).toBe(true);
 });
 
-test('flood zones ask the SNCZI for the view', async ({ browser }) => {
+test('flood zones ask the app’s server for the view', async ({ browser }) => {
   const page = await device(browser, 'Ana', '/#map=12/39.4750/-0.3700');
-  const asked = await standIn(page, 'wms.mapama.gob.es');
+  const asked = await standIn(page, '**/v1/flood-zones?**');
   await turnOn(page, 'Zonas inundables');
   await expect.poll(() => asked.length).toBe(1);
-  expect(asked[0]?.searchParams.get('LAYERS')).toBe('NZ.RiskZone');
+  expect(asked[0]?.searchParams.get('BBOX')?.split(',')).toHaveLength(4);
 });

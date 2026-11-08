@@ -374,6 +374,9 @@ export const SERVER_INFO_PATH = 'healthz';
 /** §8.2 Weather warnings endpoint, relative to the server base URL. */
 export const WEATHER_WARNINGS_PATH = 'v1/weather-warnings';
 
+/** §8.3 Flood zones endpoint, relative to the server base URL. */
+export const FLOOD_ZONES_PATH = 'v1/flood-zones';
+
 /**
  * §7.1 MeshCore application identifier of sealed frames, in MeshCore's development range until
  * registered. It follows 0xFF4D, which carried events unsealed and is now ignored.

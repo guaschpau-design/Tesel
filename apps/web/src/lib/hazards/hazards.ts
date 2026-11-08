@@ -7,8 +7,11 @@
 // only from its EPSG:4326 service, which answers Web Mercator requests too, as GIBS documents.
 //
 // Flood zones: where a flood with a return period of 100 years reaches, Spain's official reference
-// for flood risk, from the Ministry's SNCZI. The Basque Country and Navarre publish their own, not
-// in it.
+// for flood risk, from the Ministry's SNCZI. Browsers cannot always read that service's pictures
+// themselves, so the server that serves the app asks it for them (protocol §8.3, ADR-0121). The
+// Basque Country and Navarre publish their own, not in it.
+
+import { floodZonesUrl } from '@tesel/protocol';
 
 import type { Bounds } from '../map/tiles/math.ts';
 import type { ViewService } from '../map/wms/view-picture.ts';
@@ -57,18 +60,24 @@ export const FIRES: readonly ViewService[] = [1, 0].flatMap((daysAgo) =>
 
 export const FIRES_CREDITS = [...new Set(FIRES.map((service) => service.credit))];
 
-export const FLOODS: readonly ViewService[] = [
-  {
-    id: 'spain-100',
-    bounds: SPAIN,
-    url: 'https://wms.mapama.gob.es/sig/Agua/ZI_LaminasQ100/wms.aspx',
-    version: '1.3.0',
-    layers: 'NZ.RiskZone',
-    style: '',
-    credit:
-      '<a href="https://www.miteco.gob.es/es/agua/temas/gestion-de-los-riesgos-de-inundacion/snczi.html" ' +
-      'target="_blank">© Ministerio para la Transición Ecológica y el Reto Demográfico</a> · SNCZI',
-  },
-];
+const FLOODS_CREDIT =
+  '<a href="https://www.miteco.gob.es/es/agua/temas/gestion-de-los-riesgos-de-inundacion/snczi.html" ' +
+  'target="_blank">© Ministerio para la Transición Ecológica y el Reto Demográfico</a> · SNCZI';
 
-export const FLOODS_CREDITS = FLOODS.map((service) => service.credit);
+/** The flood zones, through `server` (the app's own, config.ts); none without one. */
+export function floodServices(server: string | null): ViewService[] {
+  if (server === null) return [];
+  return [
+    {
+      id: 'spain-100',
+      bounds: SPAIN,
+      url: floodZonesUrl(server),
+      version: '1.3.0',
+      layers: 'Zi_laminas_q100',
+      style: '',
+      credit: FLOODS_CREDIT,
+    },
+  ];
+}
+
+export const FLOODS_CREDITS = [FLOODS_CREDIT];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { viewPicture } from '../map/wms/view-picture.ts';
-import { FIRES, FLOODS, gibsDay } from './hazards.ts';
+import { FIRES, floodServices, gibsDay } from './hazards.ts';
 
 const VALENCIA = { west: -0.5, south: 39.3, east: -0.2, north: 39.6 };
 
@@ -24,11 +24,12 @@ describe('hazards', () => {
     expect([...days]).toEqual([gibsDay(1), gibsDay(0)]);
   });
 
-  it('asks the SNCZI for the zones a 100-year flood reaches', () => {
-    const [floods] = FLOODS;
+  it('asks the app’s server for the flood zones of the view, and nothing without one', () => {
+    const [floods] = floodServices('https://tesel.eu/');
     if (floods === undefined) throw new Error('no flood zones');
-    const query = new URL(viewPicture(floods, VALENCIA, 800, 600).url).searchParams;
-    expect(query.get('LAYERS')).toBe('NZ.RiskZone');
-    expect(query.get('CRS')).toBe('EPSG:3857');
+    const url = new URL(viewPicture(floods, VALENCIA, 800, 600).url);
+    expect(`${url.origin}${url.pathname}`).toBe('https://tesel.eu/v1/flood-zones');
+    expect(url.searchParams.get('CRS')).toBe('EPSG:3857');
+    expect(floodServices(null)).toEqual([]);
   });
 });

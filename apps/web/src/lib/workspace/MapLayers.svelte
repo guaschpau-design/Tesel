@@ -9,7 +9,8 @@
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
   import { CADASTRE_MIN_ZOOM, CADASTRES } from '../cadastre/cadastre.ts';
-  import { FIRES, FIRES_MIN_ZOOM, FLOODS, FLOODS_MIN_ZOOM } from '../hazards/hazards.ts';
+  import { defaultServerUrl } from '../config.ts';
+  import { FIRES, FIRES_MIN_ZOOM, floodServices, FLOODS_MIN_ZOOM } from '../hazards/hazards.ts';
   import MgrsGridLayer from '../coordinates/MgrsGridLayer.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import SosLayer from '../incidents/SosLayer.svelte';
@@ -74,7 +75,7 @@
   <ViewPictureLayer
     {map}
     level="hazards"
-    services={FLOODS}
+    services={floodServices(defaultServerUrl())}
     minZoom={FLOODS_MIN_ZOOM}
     opacity={0.6}
   />

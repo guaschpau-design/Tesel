@@ -11,6 +11,7 @@ import {
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 
 import type { EnvelopeStore } from './envelope-store.ts';
+import { serveFloodZones } from './flood-zones.ts';
 import { Heartbeat } from './heartbeat.ts';
 import type { Relay } from './relay.ts';
 import { serveStats } from './stats.ts';
@@ -33,6 +34,8 @@ export interface AppOptions {
   readonly usage: Usage | null;
   /** The password of the usage page at /stats, or null for no page. */
   readonly statsKey: string | null;
+  /** Whether it draws the flood zones of a view for the apps (protocol §8.3). */
+  readonly floodZones: boolean;
 }
 
 export const NO_OPTIONS: AppOptions = {
@@ -41,6 +44,7 @@ export const NO_OPTIONS: AppOptions = {
   trustedProxies: [],
   usage: null,
   statsKey: null,
+  floodZones: false,
 };
 /** Warnings are gathered every 10 minutes; browsers may keep them a little. */
 const WEATHER_CACHE_CONTROL = 'public, max-age=300';
@@ -87,6 +91,7 @@ export async function buildApp(
         .send(body);
     });
   }
+  if (options.floodZones) serveFloodZones(app);
   if (options.usage !== null && options.statsKey !== null) {
     serveStats(app, store, options.usage, options.statsKey);
   }
