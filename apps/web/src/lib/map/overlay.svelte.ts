@@ -4,7 +4,8 @@
 // change) removes them, and the style may still be loading when they are first added, so they are
 // installed again on every style change and whenever the map settles. Data and visibility set
 // while they are not installed are kept and applied when they are. Each overlay has a level, so
-// the stacking is the same whatever order they were installed in.
+// the stacking is the same whatever order they were installed in. Under the screen at rest no one
+// sees the map, so their data waits there and is drawn as the screen wakes (ADR-0123).
 
 import type { FeatureCollection } from 'geojson';
 import type {
@@ -15,6 +16,8 @@ import type {
   Map as MapLibreMap,
 } from 'maplibre-gl';
 import { untrack } from 'svelte';
+
+import { activity } from '../power/activity.svelte.ts';
 
 /** A picture over part of the map: its address and its corners, clockwise from the top left. */
 export interface MapImage {
@@ -188,7 +191,8 @@ export interface OverlayUse<Source extends string> extends Omit<OverlaySpec<Sour
 
 /**
  * Puts an overlay on the map for as long as the calling component lives, keeping its data and
- * visibility in step with what they are read from. Call it while the component initialises.
+ * visibility in step with what they are read from, its data while the screen is awake. Call it
+ * while the component initialises.
  */
 export function useOverlay<Source extends string>(
   map: () => MapLibreMap,
@@ -203,9 +207,11 @@ export function useOverlay<Source extends string>(
       const data = Object.fromEntries(sources.map((source) => [source, use.data[source]()]));
       return new Overlay(target, { ...use, data: data as Record<Source, OverlayData> });
     });
-    // One effect per source: what changes one source's data uploads that source alone.
+    // One effect per source: what changes one source's data uploads that source alone. At rest,
+    // nothing is read: waking reads and uploads what it is then.
     for (const source of sources) {
       $effect(() => {
+        if (activity.rest !== 'awake') return;
         overlay.setData(source, use.data[source]());
       });
     }

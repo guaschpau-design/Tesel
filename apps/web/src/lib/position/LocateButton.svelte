@@ -1,9 +1,11 @@
-<!-- Among the map's controls: shows this device on the map and keeps the map centred on it. -->
+<!-- Among the map's controls: shows this device on the map and keeps the map centred on it, moving
+     the map only for a fix a few pixels off its centre, and not under the screen at rest. -->
 <script lang="ts">
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount, untrack } from 'svelte';
 
   import type { MessageKey, Translate } from '../i18n/index.ts';
+  import { activity } from '../power/activity.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { deviceLocation } from './device-location.svelte.ts';
   import { afterPan, afterPress, type FollowMode } from './follow.ts';
@@ -17,6 +19,8 @@
 
   /** How close the map zooms in when it starts following. */
   const FOLLOW_ZOOM = 16;
+  /** A fix this few pixels off the centre leaves the map where it is. */
+  const FOLLOW_SLACK_PX = 3;
   /** What pressing the button does, by mode. */
   const ACTIONS: Readonly<Record<FollowMode, MessageKey>> = {
     off: 'locateStart',
@@ -41,8 +45,11 @@
 
   $effect(() => {
     const fix = deviceLocation.fix;
-    if (mode !== 'follow' || fix === null) return;
+    if (mode !== 'follow' || fix === null || activity.rest !== 'awake') return;
     untrack(() => {
+      const at = map.project([fix.at.lon, fix.at.lat]);
+      const centre = map.project(map.getCenter());
+      if (!zoomIn && Math.hypot(at.x - centre.x, at.y - centre.y) < FOLLOW_SLACK_PX) return;
       const zoom = zoomIn ? Math.max(map.getZoom(), FOLLOW_ZOOM) : map.getZoom();
       map.easeTo({ center: [fix.at.lon, fix.at.lat], zoom });
       zoomIn = false;

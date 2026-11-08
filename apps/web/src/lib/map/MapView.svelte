@@ -39,6 +39,8 @@
    */
   let busy = $state(true);
 
+  /** The most pixels per point the map is drawn at. */
+  const MAX_PIXEL_RATIO = 2;
   // Spain and Portugal, until the group is brought into view (start-framing.ts).
   const INITIAL_VIEW = { center: [-3.7, 40.2] as [number, number], zoom: 5 };
 
@@ -55,6 +57,9 @@
       attributionControl: false,
       // Keeps the view in the URL (#map=zoom/lat/lon), so a reload or a shared link keeps it.
       hash: 'map',
+      // Phones of three pixels per point draw the map at two, as sharp to the eye with less than
+      // half the pixels to paint (ADR-0123).
+      pixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
     });
     const startBusy = () => (busy = true);
     instance.on('dataloading', startBusy);

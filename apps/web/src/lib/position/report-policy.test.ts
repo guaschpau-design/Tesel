@@ -34,6 +34,22 @@ describe('position reports', () => {
     expect(policy.last?.at.lat).toBe(39.4705);
   });
 
+  it('reports a move every 5 s at most, on foot every 15 s', () => {
+    /** When a device going north at `speed` m/s is first published after the start. */
+    const firstMove = (speed: number) => {
+      const policy = published({ at: VALENCIA, accuracy: 4 });
+      for (let seconds = 1; seconds <= 30; seconds++) {
+        const lat = 39.4699 + (seconds * speed) / 111_000;
+        if (policy.next(place(lat), 1000 + seconds) === 'fix') return seconds;
+      }
+      return null;
+    };
+    // Running or in a vehicle, as soon as the move is borne out, ten metres on.
+    expect(firstMove(4)).toBe(6);
+    // Briskly on foot, the move is as sure as soon, and waits.
+    expect(firstMove(2.2)).toBe(15);
+  });
+
   it('takes a jump within the two fixes’ uncertainty for the GPS wandering, not a move', () => {
     const policy = published({ at: VALENCIA, accuracy: 25 });
     expect(policy.next({ at: NEARBY, accuracy: 25 }, 1010)).toBeNull();
