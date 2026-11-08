@@ -149,6 +149,9 @@ export async function tapMapUntil(
   expectation: () => Promise<void>,
 ): Promise<void> {
   await expect(async () => {
+    // A tap that came too early opened the panel of the point under it, which takes the keyboard
+    // and stays: closed first, so the next tap finds the map as the first did.
+    await page.keyboard.press('Escape');
     await tapMap(page, dx, dy);
     await expectation();
   }).toPass({ timeout: 15_000 });
