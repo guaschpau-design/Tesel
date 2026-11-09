@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -10,6 +12,12 @@ const base = process.env['TESEL_BASE'] ?? '/';
 // VITE_TARGET "android" builds the app the Android app carries (apps/mobile, ADR-0124): its files
 // are in the app itself, so there is no service worker (lib/platform.ts).
 const inAndroidApp = process.env['VITE_TARGET'] === 'android';
+// The app's version (ADR-0126): this package's, and the number of the build, which CI gives as
+// TESEL_BUILD (its run's number) to the web app and the Android app alike.
+const { version } = JSON.parse(readFileSync(new URL('package.json', import.meta.url), 'utf8')) as {
+  version: string;
+};
+const build = process.env['TESEL_BUILD'] ?? '';
 
 /** What stands in for the Android app's native layer in the web build: nothing (lib/native). */
 const NO_ANDROID = '\0tesel:no-android';
@@ -34,6 +42,10 @@ function webOnly(): Plugin {
 
 export default defineConfig({
   base,
+  define: {
+    'import.meta.env.VITE_VERSION': JSON.stringify(version),
+    'import.meta.env.VITE_BUILD': JSON.stringify(build),
+  },
   build: {
     // MapLibre's chunk is about 1 MB on its own, by design; anything else that big is news.
     chunkSizeWarningLimit: 1100,

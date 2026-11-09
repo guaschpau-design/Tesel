@@ -85,3 +85,10 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
   await expect.poll(theme).toBe('dark');
   await expect.poll(mapTheme).toBe('dark');
 });
+
+test('the settings say which version of the app this is', async ({ browser }) => {
+  const page = await device(browser, 'Ana');
+  await openMore(page, 'Ajustes');
+  const settings = page.getByRole('region', { name: 'Ajustes' });
+  await expect(settings.getByText(/^Tesel, versión \d+\.\d+\.\d+/)).toBeVisible();
+});

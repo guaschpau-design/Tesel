@@ -22,8 +22,8 @@ test('a member’s profile, status and equipment reach the others', async ({ bro
   const me = berta.getByRole('region', { name: 'Yo' });
   await me.getByRole('radio', { name: 'En descanso' }).click();
   await expect(me.getByRole('radio', { name: 'En descanso' })).toBeChecked();
-  // The rest, seldom changed, waits under one line.
-  await me.getByText('Perfil, batería, nodo y equipo').click();
+  // Profile and equipment, seldom changed, wait under one line.
+  await me.getByText('Perfil y equipo').click();
   await me.getByLabel('Perfil').selectOption({ label: 'Protección Civil' });
   await me.getByRole('button', { name: 'Botiquín' }).click();
   await me.getByRole('button', { name: 'Agua' }).click();
@@ -49,7 +49,7 @@ test('much equipment keeps the panel as narrow as a phone', async ({ browser }) 
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
-  await me.getByText('Perfil, batería, nodo y equipo').click();
+  await me.getByText('Perfil y equipo').click();
   const chips = me.locator('button[aria-pressed="false"]');
   for (let left = await chips.count(); left > 0; left -= 1) await chips.first().click();
   const sideways = await me.evaluate((panel) => panel.scrollWidth - panel.clientWidth);
@@ -62,7 +62,7 @@ test('Me says whether a LoRa radio keeps this person in touch, and leads to link
   const page = await device(browser, 'Ana');
   await page.getByRole('button', { name: /^Yo/ }).click();
   const me = page.getByRole('region', { name: 'Yo' });
-  await me.getByText('Perfil, batería, nodo y equipo').click();
+  // In view at once, with the battery: no fold to open.
   await expect(me.getByText('No conectado')).toBeVisible();
   // Not something to pick by hand: the app knows whether a radio is linked.
   await expect(me.getByRole('button', { name: /LoRa/ })).toHaveCount(0);

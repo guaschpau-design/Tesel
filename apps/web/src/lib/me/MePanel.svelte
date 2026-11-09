@@ -140,58 +140,65 @@
       {#snippet position()}
         {#if sharing}
           {@const current = sharing}
-          <SwitchRow
-            icon="locate"
-            label={t('shareMyPosition')}
-            on={current.mode === 'sharing'}
-            onclick={() => {
-              attempt(
-                () => current.setMode(current.mode === 'sharing' ? 'paused' : 'sharing'),
-                t('actionFailed'),
-              );
-            }}
-          />
-          {#if current.mode !== 'sharing'}
+          {@const shared = current.mode === 'sharing'}
+          <div class="sharing">
             <SwitchRow
-              icon="hidden"
-              label={t('hideLastPosition')}
-              on={current.mode === 'hidden'}
+              icon="locate"
+              label={t('shareMyPosition')}
+              on={shared}
               onclick={() => {
-                attempt(
-                  () => current.setMode(current.mode === 'hidden' ? 'paused' : 'hidden'),
-                  t('actionFailed'),
-                );
+                attempt(() => current.setMode(shared ? 'paused' : 'sharing'), t('actionFailed'));
               }}
             />
             <p class="hint">
-              {current.mode === 'hidden' ? t('positionHiddenHint') : t('positionNotSharedHint')}
+              {shared
+                ? t('positionSharedHint')
+                : current.mode === 'hidden'
+                  ? t('positionHiddenHint')
+                  : t('positionNotSharedHint')}
             </p>
-          {/if}
+            {#if !shared}
+              <SwitchRow
+                icon="hidden"
+                label={t('hideLastPosition')}
+                on={current.mode === 'hidden'}
+                onclick={() => {
+                  attempt(
+                    () => current.setMode(current.mode === 'hidden' ? 'paused' : 'hidden'),
+                    t('actionFailed'),
+                  );
+                }}
+              />
+            {/if}
+          </div>
         {/if}
-        {#if deviceLocation.fix}
-          {@const fix = deviceLocation.fix}
-          <CoordinateLine {t} at={fix.at} format={preferences.coordinateFormat} />
-          {#if deviceLocation.fix.accuracy !== null}
-            {@const quality = accuracyQuality(deviceLocation.fix.accuracy)}
-            <p class="accuracy">
-              <StatusDot tone={quality} />
-              {t('gpsQuality', {
-                quality: t(QUALITY[quality]),
-                distance: formatDistance(deviceLocation.fix.accuracy, locale),
-              })}
+        <!-- Where this device is, apart from what the group is told of it. -->
+        <div class="here">
+          {#if deviceLocation.fix}
+            {@const fix = deviceLocation.fix}
+            <CoordinateLine {t} at={fix.at} format={preferences.coordinateFormat} />
+            {#if fix.accuracy !== null}
+              {@const quality = accuracyQuality(fix.accuracy)}
+              <p class="accuracy">
+                <StatusDot tone={quality} />
+                {t('gpsQuality', {
+                  quality: t(QUALITY[quality]),
+                  distance: formatDistance(fix.accuracy, locale),
+                })}
+              </p>
+            {/if}
+            <TellOutside
+              {t}
+              text={outsideText({ kind: 'position', name: name?.alias ?? t('me') }, fix, t, locale)}
+            />
+          {:else if deviceLocation.problem}
+            <p class="warning">
+              {deviceLocation.problem === 'denied' ? t('locationDenied') : t('locationUnavailable')}
             </p>
+          {:else}
+            <p class="hint">{t('navigationWaitingFix')}</p>
           {/if}
-          <TellOutside
-            {t}
-            text={outsideText({ kind: 'position', name: name?.alias ?? t('me') }, fix, t, locale)}
-          />
-        {:else if deviceLocation.problem}
-          <p class="warning">
-            {deviceLocation.problem === 'denied' ? t('locationDenied') : t('locationUnavailable')}
-          </p>
-        {:else}
-          <p class="hint">{t('navigationWaitingFix')}</p>
-        {/if}
+        </div>
       {/snippet}
     </MemberSheet>
   </div>
@@ -213,10 +220,34 @@
     white-space: nowrap;
   }
 
+  /* Sharing: the switch, what it means for the group, and hiding where one was. */
+  .sharing {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .sharing .hint {
+    margin: 0;
+    padding-left: 0.1rem;
+  }
+
+  /* Where this device is: a block of its own, set apart from the switches above. */
+  .here {
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.7rem;
+    background: var(--bg);
+    border-radius: var(--radius-card);
+  }
+
+  .here p {
+    margin: 0;
+  }
+
   .accuracy {
     display: flex;
     gap: 0.45rem;
     align-items: center;
-    margin: 0;
+    font-size: var(--text-secondary);
   }
 </style>

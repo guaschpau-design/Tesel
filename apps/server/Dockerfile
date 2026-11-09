@@ -17,8 +17,11 @@ RUN corepack enable pnpm && corepack install
 COPY . .
 RUN pnpm install --frozen-lockfile --filter @tesel/web...
 # VITE_SERVER_URL "/" makes every server propose itself for new groups, and the base map is the
-# one Caddy serves next to it (deploy/vps/maps.sh).
-RUN TESEL_BASE=/app/ VITE_SERVER_URL=/ VITE_BASEMAP_URL=/maps/basemap.pmtiles \
+# one Caddy serves next to it (deploy/vps/maps.sh). TESEL_BUILD, CI's run, numbers the build the
+# app shows with its version (ADR-0126); it comes after the install, so that the install's layer
+# is still taken from the cache.
+ARG TESEL_BUILD=""
+RUN TESEL_BUILD=$TESEL_BUILD TESEL_BASE=/app/ VITE_SERVER_URL=/ VITE_BASEMAP_URL=/maps/basemap.pmtiles \
     pnpm --filter @tesel/web build
 
 FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS install

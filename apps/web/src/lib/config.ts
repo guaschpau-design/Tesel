@@ -45,6 +45,15 @@ export function invitationAppUrl(): string {
   return new URL(configured || import.meta.env.BASE_URL, window.location.href).href;
 }
 
+/**
+ * This app's version as people read it (ADR-0126): the version, and the build in brackets when CI
+ * built it, "0.1.0-beta (185)". The web app and the Android app built in one run say the same.
+ */
+export function appVersion(): string {
+  const { VITE_VERSION: version, VITE_BUILD: build } = import.meta.env;
+  return build ? `${version} (${build})` : version;
+}
+
 /** EOX's Sentinel-2 cloudless mosaics the satellite map can show from afar (ADR-0051). */
 const SATELLITE_MOSAICS = ['s2cloudless-2024', 's2cloudless-2016'] as const;
 export type SatelliteMosaic = (typeof SATELLITE_MOSAICS)[number];

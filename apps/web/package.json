@@ -1,6 +1,6 @@
 {
   "name": "@tesel/web",
-  "version": "0.0.0",
+  "version": "0.1.0-beta",
   "private": true,
   "description": "Tesel progressive web app.",
   "license": "EUPL-1.2",

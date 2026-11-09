@@ -131,3 +131,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0123](0123-less-drawing-and-sending.md)             | Draw only what is seen, and send on foot less often                                         | Accepted                                                |
 | [0124](0124-android-app-first.md)                    | The Android app first, free, built from the web app                                         | Accepted                                                |
 | [0125](0125-android-app-with-the-screen-off.md)      | The Android app with the screen off: native location, Bluetooth and notifications           | Accepted                                                |
+| [0126](0126-version-numbers.md)                      | A version number, and the build it came from                                                | Accepted                                                |

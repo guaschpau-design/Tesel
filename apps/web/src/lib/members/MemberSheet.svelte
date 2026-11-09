@@ -1,8 +1,9 @@
 <!-- What a member tells the team about themselves, the same for this device (in Me, where it is
-     set) and for anyone tapped on the map: first what matters during an operation, their status,
-     position and tasks; then their profile, battery, whether a LoRa radio is linked (which keeps
-     them in touch without coverage) and equipment. On someone else's card all is in view, a line
-     each; in Me, where these are choices and the equipment a long list, they fold under one line
+     set) and for anyone tapped on the map, in parts read from the top: first what matters during
+     an operation, their status, position and tasks; then their device, the battery and whether a
+     LoRa radio is linked (which keeps them in touch without coverage); last their profile and
+     equipment. On someone else's card all is in view, a line each; in Me, where profile and
+     equipment are choices seldom changed and the equipment a long list, they fold under one line
      that sums them up. -->
 <script lang="ts" module>
   import type { DutyStatus, Equipment, Profile } from '@tesel/protocol';
@@ -65,13 +66,11 @@
   );
   const lora = $derived(state.equipment.includes('lora'));
   const carried = $derived(EQUIPMENT.filter((item) => state.equipment.includes(item.value)));
-  /** Profile, battery and radio in one line, for the fold that holds them in Me. */
-  const aboutSummary = $derived(
-    [t(profileLabel(state.profile)), batteryText, ...(lora ? [t('loraSign')] : [])].join(' · '),
-  );
   const equipmentSummary = $derived(
     carried.length === 0 ? t('equipmentNone') : carried.map((item) => t(item.label)).join(', '),
   );
+  /** Profile and equipment in one line, for the fold that holds them in Me. */
+  const kitSummary = $derived(`${t(profileLabel(state.profile))} · ${equipmentSummary}`);
 
   function toggle(item: Equipment): void {
     const next = state.equipment.includes(item)
@@ -81,26 +80,7 @@
   }
 </script>
 
-{#snippet about()}
-  <SheetPart title={t('profileLabel')} inline>
-    {#if edits}
-      {@const { onprofile } = edits}
-      <select
-        aria-label={t('profileLabel')}
-        value={state.profile}
-        onchange={(event) => {
-          const chosen = PROFILES.find((item) => item.value === event.currentTarget.value);
-          if (chosen) onprofile(chosen.value);
-        }}
-      >
-        {#each PROFILES as item (item.value)}
-          <option value={item.value}>{t(item.label)}</option>
-        {/each}
-      </select>
-    {:else}
-      <p>{t(profileLabel(state.profile))}</p>
-    {/if}
-  </SheetPart>
+{#snippet device()}
   <SheetPart title={t('sheetBattery')} inline>
     <p class="line">
       {#if state.battery !== null}
@@ -124,6 +104,28 @@
         {/if}
       {/if}
     </p>
+  </SheetPart>
+{/snippet}
+
+{#snippet kit()}
+  <SheetPart title={t('profileLabel')} inline>
+    {#if edits}
+      {@const { onprofile } = edits}
+      <select
+        aria-label={t('profileLabel')}
+        value={state.profile}
+        onchange={(event) => {
+          const chosen = PROFILES.find((item) => item.value === event.currentTarget.value);
+          if (chosen) onprofile(chosen.value);
+        }}
+      >
+        {#each PROFILES as item (item.value)}
+          <option value={item.value}>{t(item.label)}</option>
+        {/each}
+      </select>
+    {:else}
+      <p>{t(profileLabel(state.profile))}</p>
+    {/if}
   </SheetPart>
   <SheetPart title={t('sheetEquipment')}>
     {#if edits}
@@ -206,10 +208,11 @@
       {/if}
     </SheetPart>
   {/if}
+  {@render device()}
   {#if edits}
-    <Fold title={t('sheetAbout')} summary={aboutSummary}>{@render about()}</Fold>
+    <Fold title={t('sheetKit')} summary={kitSummary}>{@render kit()}</Fold>
   {:else}
-    {@render about()}
+    {@render kit()}
   {/if}
   {@render more?.()}
 </div>

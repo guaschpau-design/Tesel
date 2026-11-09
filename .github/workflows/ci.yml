@@ -72,11 +72,13 @@ jobs:
       - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @tesel/mobile sync
+        env:
+          TESEL_BUILD: ${{ github.run_number }}
       # Android's lint first: the native code is tried on no phone before a build is published.
       - name: Check and build the APK
         working-directory: apps/mobile/android
         env:
-          TESEL_VERSION_CODE: ${{ github.run_number }}
+          TESEL_BUILD: ${{ github.run_number }}
         run: ./gradlew --no-daemon lintDebug assembleDebug
       - name: What lint found
         if: always()
@@ -149,6 +151,7 @@ jobs:
           context: .
           file: apps/server/Dockerfile
           platforms: linux/amd64
+          build-args: TESEL_BUILD=${{ github.run_number }}
           load: true
           tags: tesel-server:test
           cache-from: type=gha
@@ -214,6 +217,7 @@ jobs:
           context: .
           file: apps/server/Dockerfile
           platforms: linux/amd64,linux/arm64
+          build-args: TESEL_BUILD=${{ github.run_number }}
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max

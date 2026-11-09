@@ -1,7 +1,8 @@
 <!-- The choices of this device, opened from the dock's "More" menu: alarm sound, notifications,
      keeping the screen on, full screen, dark mode, the language and how coordinates are written.
-     Each is remembered. -->
+     Each is remembered. Under them, which version of the app this is (ADR-0126). -->
 <script lang="ts">
+  import { appVersion } from '../config.ts';
   import CoordinateFormatSelect from '../coordinates/CoordinateFormatSelect.svelte';
   import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
   import { LOCALE_NAMES, nextLocale, type Locale, type Translate } from '../i18n/index.ts';
@@ -103,6 +104,8 @@
     </button>
     <CoordinateFormatSelect {t} format={preferences.coordinateFormat} />
   </div>
+  <!-- Which version this is, for whoever reports a problem or checks an update arrived. -->
+  <p class="version">{t('appVersion', { version: appVersion() })}</p>
 </Panel>
 
 <style>
@@ -125,5 +128,12 @@
   .value {
     color: var(--muted);
     font-size: var(--text-secondary);
+  }
+
+  .version {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    font-size: var(--text-small);
+    text-align: center;
   }
 </style>
