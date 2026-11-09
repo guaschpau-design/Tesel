@@ -17,7 +17,7 @@
   import MapView from './lib/map/MapView.svelte';
   import { IN_ANDROID_APP } from './lib/platform.ts';
   import { activity } from './lib/power/activity.svelte.ts';
-  import RestScreen from './lib/power/RestScreen.svelte';
+  import PocketScreen from './lib/power/PocketScreen.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { hasOwnSos } from './lib/incidents/incidents.ts';
   import { useSosElsewhere } from './lib/incidents/sos-elsewhere.svelte.ts';
@@ -256,8 +256,8 @@
       <StartupProblem {t} failure={startup.failure} />
     {/if}
   </main>
-  {#if startup.preferences?.energySaving.value && activity.rest !== 'awake'}
-    <RestScreen {t} {locale} {linkInput} />
+  {#if activity.rest !== 'awake'}
+    <PocketScreen {t} {locale} {linkInput} />
   {/if}
 </div>
 

@@ -150,6 +150,7 @@ export const GLYPHS = {
     ['M6 10h5v4H6z'],
   ),
   fullscreen: glyph(['M4 9V4h5', 'M15 4h5v5', 'M20 15v5h-5', 'M9 20H4v-5']),
+  lock: glyph(['M6.5 10.5h11v9h-11z', 'M9 10.5V8a3 3 0 0 1 6 0v2.5', 'M12 14.2v2']),
   moon: glyph(['M19.5 14.6A8 8 0 1 1 9.4 4.5a6.4 6.4 0 0 0 10.1 10.1z']),
   language: glyph([
     'M12 3.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 1 1 0-17z',

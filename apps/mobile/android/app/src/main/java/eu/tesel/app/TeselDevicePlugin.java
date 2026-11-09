@@ -1,6 +1,7 @@
 package eu.tesel.app;
 
 import android.Manifest;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Build;
 
@@ -19,8 +20,8 @@ import org.json.JSONObject;
 
 /**
  * What the web app asks of Android (apps/web/src/lib/native/tesel-device.ts, ADR-0125): the
- * location, which goes on with the screen off; keeping the app running meanwhile; and the
- * notifications of an alarm.
+ * location, which goes on with the screen off; keeping the app running meanwhile; the
+ * notifications of an alarm; and Android's share menu, for what goes to another app.
  */
 @CapacitorPlugin(
     name = "TeselDevice",
@@ -124,6 +125,16 @@ public class TeselDevicePlugin extends Plugin {
         if (!getBridge().getApp().isActive()) {
             Notices.alarm(getContext(), call.getString("title", ""), call.getString("body", ""), call.getString("tag", ""));
         }
+        call.resolve();
+    }
+
+    /** Android's share menu with a text, to send by WhatsApp, SMS or any other app. */
+    @PluginMethod
+    public void share(PluginCall call) {
+        Intent send = new Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, call.getString("text", ""));
+        getActivity().startActivity(Intent.createChooser(send, null));
         call.resolve();
     }
 

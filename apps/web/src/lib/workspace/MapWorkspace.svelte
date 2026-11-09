@@ -41,8 +41,10 @@
   import ImpersonationNotice from '../members/ImpersonationNotice.svelte';
   import type { OfflineMaps } from '../offline/offline-maps.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
+  import { activity } from '../power/activity.svelte.ts';
   import { useEnergySaving } from '../power/energy-saving.svelte.ts';
   import LocateButton from '../position/LocateButton.svelte';
+  import PocketButton from '../power/PocketButton.svelte';
   import SelfLayer from '../position/SelfLayer.svelte';
   import { radio } from '../radio/radio.svelte.ts';
   import type { Preferences } from '../settings/preferences.ts';
@@ -96,12 +98,13 @@
 
   // Kept on when the user asks, and always while guiding to a target.
   // A phone that carries the radio for the group must not sleep: with the screen off the browser
-  // stops it, and with it the bridge between the radio and the server. Saving energy keeps it on
-  // too, dark at rest, so that the app goes on working (power/).
+  // stops it, and with it the bridge between the radio and the server. Pocket mode keeps it on
+  // too, almost black, so that the app goes on working (power/).
   keepScreenAwake(
     () =>
       preferences.keepScreenOn.value ||
       preferences.energySaving.value ||
+      activity.rest !== 'awake' ||
       navigation.target !== null ||
       radio.linked,
   );
@@ -128,7 +131,7 @@
   ]);
   let sosOpen = $state(false);
   useEnergySaving({
-    enabled: () => preferences.energySaving.value,
+    automatic: () => preferences.energySaving.value,
     busy: () => tools.drawingOrMeasuring || sosOpen,
     calling: () => group !== null && hasOwnSos(group.feed.state, group.self),
   });
@@ -300,6 +303,7 @@
   <CompassButton {t} {map} />
   <LocateButton {t} {map} />
   <GroundButton {t} {map} />
+  <PocketButton {t} />
   <button
     aria-label={t('layers')}
     title={t('layers')}

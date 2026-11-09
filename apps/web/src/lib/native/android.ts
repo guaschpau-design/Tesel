@@ -19,6 +19,9 @@ export async function installAndroid(): Promise<void> {
   standIn(navigator, 'geolocation', new NativeGeolocation(teselDevice));
   standIn(navigator, 'bluetooth', new NativeBluetooth(BleClient));
   standIn(window, 'Notification', await nativeNotification(teselDevice));
+  standIn(navigator, 'share', (data: ShareData) =>
+    teselDevice.share({ text: [data.text, data.url].filter(Boolean).join('\n') }),
+  );
   keepRunningWhile(
     teselDevice,
     () => ({ located: deviceLocation.inUse, linked: radio.linked }),

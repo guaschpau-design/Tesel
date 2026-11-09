@@ -102,7 +102,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
 | [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted, amended by 0116                               |
 | [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted, amended by 0110                               |
-| [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted, amended by 0123                               |
+| [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted, amended by 0123 and 0127                      |
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
 | [0099](0099-sealed-radio-frames.md)                  | Seal every radio frame with keys of Tesel's own                                             | Accepted, amended by 0111                               |
 | [0100](0100-warnings-leave-the-map-clear.md)         | Weather warnings leave the map clear to work on                                             | Accepted                                                |
@@ -127,8 +127,9 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
 | [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |
 | [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |
-| [0122](0122-zone-crossings-and-telling-outside.md)   | Tell the coordinator of zones crossed, and tell those without Tesel where someone is        | Accepted                                                |
+| [0122](0122-zone-crossings-and-telling-outside.md)   | Tell the coordinator of zones crossed, and tell those without Tesel where someone is        | Accepted, amended by 0127                               |
 | [0123](0123-less-drawing-and-sending.md)             | Draw only what is seen, and send on foot less often                                         | Accepted                                                |
 | [0124](0124-android-app-first.md)                    | The Android app first, free, built from the web app                                         | Accepted                                                |
 | [0125](0125-android-app-with-the-screen-off.md)      | The Android app with the screen off: native location, Bluetooth and notifications           | Accepted                                                |
 | [0126](0126-version-numbers.md)                      | A version number, and the build it came from                                                | Accepted                                                |
+| [0127](0127-pocket-mode-and-sos-outside.md)          | Pocket mode, and telling an SOS outside Tesel from the call itself                          | Accepted                                                |

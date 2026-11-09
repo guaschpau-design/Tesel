@@ -1,6 +1,6 @@
-// Zone notices and telling someone without Tesel (ADR-0122): whoever coordinates is told when a
-// member who shares their position enters a danger area; Me and an SOS card prepare the text that
-// goes by SMS, WhatsApp or the clipboard.
+// Zone notices and telling someone without Tesel (ADR-0122, ADR-0127): whoever coordinates is told
+// when a member who shares their position enters a danger area; an SOS card sends the call's
+// location from the phone's share menu, or copies it, and the caller's own calls 112.
 
 import type { Page } from '@playwright/test';
 
@@ -78,23 +78,11 @@ test('a member who does not share their position tells the group of no area', as
   await expect(diary).not.toContainText('Entra en la zona de peligro');
 });
 
-test('a position and an SOS are told to someone without Tesel', async ({ browser }) => {
+test('an SOS is told to someone without Tesel, and its caller can call 112', async ({
+  browser,
+}) => {
   const { ana, berta } = await twoMembers(browser, VIEW);
   await ana.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-
-  await ana.getByRole('button', { name: /^Yo/ }).click();
-  const me = ana.getByRole('region', { name: 'Yo' });
-  await me.getByRole('button', { name: 'Avisar fuera de Tesel' }).click();
-  await expect(me.getByText(/El SMS funciona sin datos/)).toBeVisible();
-  await expect(me.getByRole('button', { name: 'SMS' })).toBeVisible();
-  await expect(me.getByRole('button', { name: 'WhatsApp' })).toBeVisible();
-  await me.getByRole('button', { name: 'Copiar', exact: true }).click();
-  const position = await ana.evaluate(() => navigator.clipboard.readText());
-  expect(position).toMatch(/^Posición de Ana · /);
-  expect(position).toContain('39.46990, -0.37630');
-  expect(position).toContain('UTM 30S');
-  expect(position).toContain('https://maps.google.com/?q=39.46990,-0.37630');
-  await me.getByRole('button', { name: 'Cerrar' }).click();
 
   await berta.getByRole('button', { name: 'SOS', exact: true }).click();
   const dialog = berta.getByRole('dialog', { name: 'Enviar un SOS' });
@@ -102,10 +90,18 @@ test('a position and an SOS are told to someone without Tesel', async ({ browser
   await dialog.getByLabel('Detalles (opcional)').fill('Tobillo roto');
   await dialog.getByRole('button', { name: 'Enviar SOS' }).click();
 
+  // Her own call: 112 at hand, whose call sends her position, and her location to send.
+  const own = berta.getByRole('region', { name: 'SOS' });
+  await expect(own.getByRole('link', { name: 'Llamar al 112' })).toHaveAttribute('href', 'tel:112');
+  await expect(own.getByRole('button', { name: 'Enviar mi ubicación' })).toBeVisible();
+
+  // Someone else's: theirs to send. A computer has no share menu, so it is copied.
   const call = ana.getByRole('region', { name: 'SOS' });
-  await call.getByRole('button', { name: 'Avisar fuera de Tesel' }).click();
-  await call.getByRole('button', { name: 'Copiar', exact: true }).click();
+  await expect(call.getByRole('link', { name: 'Llamar al 112' })).toHaveCount(0);
+  await call.getByRole('button', { name: 'Enviar su ubicación' }).click();
+  await expect(ana.getByText('Ubicación copiada')).toBeVisible();
   const sos = await ana.evaluate(() => navigator.clipboard.readText());
   expect(sos).toMatch(/^SOS de Berta \(Médica\) «Tobillo roto» · /);
+  expect(sos).toContain('39.46990, -0.37630');
   expect(sos).toContain('maps.google.com');
 });

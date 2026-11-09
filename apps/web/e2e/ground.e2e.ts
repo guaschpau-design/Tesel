@@ -1,9 +1,11 @@
 // The ground in 3D (ADR-0102): one button raises it and leans the map back, and lays both flat
-// again; a screen at rest lays them flat by itself.
+// again; pocket mode lays them flat by itself.
 
 import { device, expect, test } from './helpers.ts';
 
-test('the ground is raised in 3D and laid flat again, by hand or at rest', async ({ browser }) => {
+test('the ground is raised in 3D and laid flat again, by hand or in pocket mode', async ({
+  browser,
+}) => {
   const page = await device(browser, 'Ana');
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -16,7 +18,7 @@ test('the ground is raised in 3D and laid flat again, by hand or at rest', async
 
   await raise.click();
   await page.clock.install();
-  const rest = page.getByRole('button', { name: 'Toca para volver' });
+  const rest = page.getByRole('dialog', { name: 'Modo bolsillo' });
   await expect(async () => {
     await page.clock.fastForward('01:10');
     await expect(rest).toBeVisible({ timeout: 1000 });

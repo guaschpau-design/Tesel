@@ -1,5 +1,6 @@
 // The Android app's own native plugin (apps/mobile, TeselDevicePlugin.java, ADR-0125): the
-// location from Android, keeping the app running with the screen off, and system notifications.
+// location from Android, keeping the app running with the screen off, system notifications, and
+// Android's share menu.
 
 import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 
@@ -44,6 +45,8 @@ export interface TeselDevicePlugin {
     readonly body: string;
     readonly tag: string;
   }): Promise<void>;
+  /** Android's share menu with a text, to send by WhatsApp, SMS or any other app. */
+  share(options: { readonly text: string }): Promise<void>;
   addListener(event: 'fix', listener: (fix: NativeFix) => void): Promise<PluginListenerHandle>;
   addListener(
     event: 'fixProblem',

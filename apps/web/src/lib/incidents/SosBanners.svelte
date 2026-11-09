@@ -1,6 +1,6 @@
 <!-- Active SOS calls, on top of the map until they are cancelled. Another member's call says how
      far it is and which way, and guides there in one tap; this device's own shows where it is.
-     Where a call is known, it can be told to someone without Tesel, such as 112. -->
+     Each can be told to someone without Tesel; one's own, to 112 too (SosOutside.svelte). -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { EventRef, LatLon, NodeId } from '@tesel/protocol';
@@ -13,8 +13,8 @@
   import MapCard from '../ui/MapCard.svelte';
   import { activeSos } from './incidents.ts';
   import { SOS_KINDS } from './sos-kinds.ts';
+  import SosOutside from './SosOutside.svelte';
   import { outsideText } from './tell-outside.ts';
-  import TellOutside from './TellOutside.svelte';
 
   interface Props {
     t: Translate;
@@ -109,26 +109,26 @@
           >
         {/if}
       </div>
-      {#if where.kind !== 'unknown'}
-        <TellOutside
-          {t}
-          text={outsideText(
-            {
-              kind: 'sos',
-              name: call.author,
-              what: t(SOS_KINDS[call.event.kind].label),
-              text: shownText(call.event.text),
-            },
-            {
-              at: where.at,
-              accuracy: where.kind === 'called' ? call.event.accuracy : null,
-              time: (where.kind === 'shared' ? where.time : call.event.time) * 1000,
-            },
-            t,
-            locale,
-          )}
-        />
-      {/if}
+      <SosOutside
+        {t}
+        mine={call.mine}
+        text={outsideText(
+          {
+            name: call.author,
+            what: t(SOS_KINDS[call.event.kind].label),
+            text: shownText(call.event.text),
+            time: call.event.time * 1000,
+          },
+          where.kind === 'unknown'
+            ? null
+            : {
+                at: where.at,
+                accuracy: where.kind === 'called' ? call.event.accuracy : null,
+              },
+          t,
+          locale,
+        )}
+      />
     </MapCard>
   {/each}
 </div>

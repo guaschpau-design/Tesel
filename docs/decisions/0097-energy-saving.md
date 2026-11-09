@@ -1,6 +1,6 @@
 # 0097. Save energy with a screen at rest and the GPS at intervals
 
-- Status: Accepted, amended by [0123](0123-less-drawing-and-sending.md) (the map waits under the screen at rest)
+- Status: Accepted, amended by [0123](0123-less-drawing-and-sending.md) (the map waits under the screen at rest) and [0127](0127-pocket-mode-and-sos-outside.md) (pocket mode: asked for, and left with a slide)
 - Date: 2026-11-02
 
 ## Context

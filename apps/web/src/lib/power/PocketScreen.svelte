@@ -1,6 +1,7 @@
-<!-- The screen at rest (ADR-0097): black, which costs a phone's OLED screen almost nothing, with
-     the time, how the device is linked to its group and "Tap to come back"; while guiding, the way
-     to go in large. Any touch brings the app back where it was; the app keeps working meanwhile. -->
+<!-- Pocket mode (ADR-0097, ADR-0127): black, which costs a phone's OLED screen almost nothing,
+     with the time and how the device is linked to its group; while guiding, the way to go in large.
+     A touch does nothing but show how to leave: sliding the handle at the foot brings the app back
+     where it was. The app keeps working meanwhile. -->
 <script lang="ts">
   import { formatBearing, formatDistance, formatTime } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
@@ -8,6 +9,7 @@
   import { navigation } from '../navigation/navigation.svelte.ts';
   import Pictogram from '../ui/Pictogram.svelte';
   import { activity } from './activity.svelte.ts';
+  import SlideOut from './SlideOut.svelte';
 
   interface Props {
     t: Translate;
@@ -30,15 +32,24 @@
 
   const link = $derived(linkOf(linkInput));
   const leg = $derived(navigation.leg);
+
+  /** How long the way out stands out after a touch that did nothing, in milliseconds. */
+  const CALLED_MS = 2500;
+  let called = $state(false);
+  let seen = activity.nudges;
+  $effect(() => {
+    if (activity.nudges === seen) return;
+    seen = activity.nudges;
+    called = true;
+    const timer = setTimeout(() => (called = false), CALLED_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  });
 </script>
 
-<button
-  class="rest"
-  aria-label={t('restTapToWake')}
-  onclick={() => {
-    activity.wake();
-  }}
->
+<div class="rest" role="dialog" aria-modal="true" aria-label={t('pocketMode')}>
+  <span class="title"><Pictogram name="lock" size={16} />{t('pocketMode')}</span>
   <span class="time">{formatTime(now, locale, now)}</span>
   {#if leg}
     <span class="way">
@@ -50,8 +61,16 @@
     </span>
   {/if}
   <span class="link">{t(linkWord(link))}</span>
-  <span class="hint">{t('restTapToWake')}</span>
-</button>
+  <div class="out">
+    <SlideOut
+      label={t('pocketSlide')}
+      {called}
+      onout={() => {
+        activity.wake();
+      }}
+    />
+  </div>
+</div>
 
 <style>
   /* Pure black lights no pixel of an OLED screen; the words are dim, enough to read at night. */
@@ -67,10 +86,18 @@
     padding: 2rem 1rem;
     color: #83878c;
     background: #000;
-    border: 0;
-    border-radius: 0;
-    font: inherit;
-    cursor: pointer;
+    /* Nothing in it scrolls, zooms or selects: a hand in a pocket finds nothing to do. */
+    touch-action: none;
+    user-select: none;
+  }
+
+  .title {
+    position: absolute;
+    top: max(1.5rem, env(safe-area-inset-top));
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    font-size: 0.9rem;
   }
 
   .time {
@@ -95,13 +122,16 @@
     display: block;
   }
 
-  .link,
-  .hint {
+  .link {
     font-size: 0.95rem;
   }
 
-  .hint {
+  .out {
     position: absolute;
+    right: 1rem;
     bottom: max(2rem, env(safe-area-inset-bottom));
+    left: 1rem;
+    display: flex;
+    justify-content: center;
   }
 </style>

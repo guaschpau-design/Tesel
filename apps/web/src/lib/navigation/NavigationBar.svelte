@@ -28,7 +28,7 @@
   let { t, map, title, leg, edge, children, actions, onstop }: Props = $props();
   const bearing = $derived(leg?.bearing ?? null);
 
-  // The screen at rest shows the way too (power/RestScreen.svelte).
+  // Pocket mode shows the way too (power/PocketScreen.svelte).
   $effect(() => {
     navigation.leg = leg;
     return () => {

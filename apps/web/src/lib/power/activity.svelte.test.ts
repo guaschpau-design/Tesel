@@ -20,49 +20,63 @@ describe('how long the device has been left untouched', () => {
     vi.unstubAllGlobals();
   });
 
-  it('rests after a minute, rests deeply after ten and wakes at a touch', () => {
+  it('goes into pocket mode after a minute, deeper after ten, and a touch does not bring it back', () => {
     const activity = new Activity();
-    const stop = activity.follow(() => false);
+    const stop = activity.follow(
+      () => false,
+      () => true,
+    );
     vi.advanceTimersByTime(55_000);
     expect(activity.rest).toBe('awake');
     vi.advanceTimersByTime(10_000);
     expect(activity.rest).toBe('resting');
+    target.dispatchEvent(new Event('pointerdown'));
+    target.dispatchEvent(new Event('keydown'));
+    expect(activity.nudges).toBe(2);
     vi.advanceTimersByTime(9 * 60_000);
     expect(activity.rest).toBe('deep');
-    target.dispatchEvent(new Event('pointerdown'));
-    target.dispatchEvent(new Event('pointerup'));
+    activity.wake();
     expect(activity.rest).toBe('awake');
     stop();
   });
 
-  it('keeps the touch that wakes the screen from what is under it', () => {
+  it('goes into pocket mode when asked, even if not by itself', () => {
     const activity = new Activity();
-    const stop = activity.follow(() => false);
-    const under = vi.fn();
-    for (const type of ['pointerdown', 'pointerup', 'click']) target.addEventListener(type, under);
-    vi.advanceTimersByTime(65_000);
-    expect(activity.rest).toBe('resting');
-
-    // The screen stays while the finger is down, to take its lift, and goes as it lifts.
-    target.dispatchEvent(new Event('pointerdown', { cancelable: true }));
-    expect(activity.rest).toBe('resting');
-    target.dispatchEvent(new Event('pointerup', { cancelable: true }));
+    const stop = activity.follow(
+      () => false,
+      () => false,
+    );
+    vi.advanceTimersByTime(5 * 60_000);
     expect(activity.rest).toBe('awake');
-    vi.advanceTimersByTime(300);
-    target.dispatchEvent(new Event('click', { cancelable: true }));
-    expect(under).not.toHaveBeenCalled();
+    activity.pocket();
+    expect(activity.rest).toBe('resting');
+    vi.advanceTimersByTime(9 * 60_000 + 5000);
+    expect(activity.rest).toBe('deep');
+    stop();
+    expect(activity.rest).toBe('awake');
+  });
 
-    // The next touch is the user's as ever, however soon it comes.
-    target.dispatchEvent(new Event('pointerdown', { cancelable: true }));
-    target.dispatchEvent(new Event('click', { cancelable: true }));
-    expect(under).toHaveBeenCalledTimes(2);
+  it('counts a touch while awake as being there', () => {
+    const activity = new Activity();
+    const stop = activity.follow(
+      () => false,
+      () => true,
+    );
+    vi.advanceTimersByTime(50_000);
+    target.dispatchEvent(new Event('pointerdown'));
+    vi.advanceTimersByTime(50_000);
+    expect(activity.rest).toBe('awake');
+    expect(activity.nudges).toBe(0);
     stop();
   });
 
   it('does not rest while something holds it off', () => {
     const activity = new Activity();
     let held = true;
-    const stop = activity.follow(() => held);
+    const stop = activity.follow(
+      () => held,
+      () => true,
+    );
     vi.advanceTimersByTime(5 * 60_000);
     expect(activity.rest).toBe('awake');
     held = false;

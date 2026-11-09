@@ -1,7 +1,6 @@
 <!-- "Me": the name this person goes by, which the pencil beside it changes; what they tell the
      team (profile, status, equipment), their battery, radio and tasks, and their position: one
-     switch to share it, where they are, and a way to tell it to someone without Tesel. The GPS
-     runs while the panel is open. -->
+     switch to share it, and where they are. The GPS runs while the panel is open. -->
 <script lang="ts">
   import { teamOf, type GroupState } from '@tesel/core';
   import type { DutyStatus, Equipment, NodeId, Profile } from '@tesel/protocol';
@@ -28,8 +27,6 @@
   import type { StatusTone } from '../ui/status-tone.ts';
   import { attempt, Submission } from '../ui/submission.svelte.ts';
   import type { SelfName } from '../workspace/workspace.ts';
-  import { outsideText } from '../incidents/tell-outside.ts';
-  import TellOutside from '../incidents/TellOutside.svelte';
   import { deviceBattery } from './battery.svelte.ts';
 
   interface Props {
@@ -187,10 +184,6 @@
                 })}
               </p>
             {/if}
-            <TellOutside
-              {t}
-              text={outsideText({ kind: 'position', name: name?.alias ?? t('me') }, fix, t, locale)}
-            />
           {:else if deviceLocation.problem}
             <p class="warning">
               {deviceLocation.problem === 'denied' ? t('locationDenied') : t('locationUnavailable')}
