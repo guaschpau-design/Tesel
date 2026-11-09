@@ -18,7 +18,7 @@ Telling someone without Tesel (ADR-0122) sat in Me, apart from the moment it is 
 - **A touch does nothing.** Only sliding the handle at the foot to the end of its track brings the app back (`SlideOut.svelte`). From the keyboard, Enter on the handle does it. A touch shows how to leave, a moment brighter.
 - **It shows little:** the time and how the device is linked, and the way while guiding.
 - **What must be seen still ends it** (ADR-0097): another member's SOS, a task handed over, a danger area entered, the check-in.
-- While it lasts, the screen is kept from locking, so that the app goes on working. Ten minutes untouched, the GPS goes to a fix a minute, as before.
+- While it lasts, the screen is kept from locking, so that the app goes on working. Ten minutes untouched, the GPS goes to a fix a minute, as before. On an iPhone the browser grants that only right after a touch, the first time: asked for when the app opens, it is refused, so it is asked for again at the next touch (`ui/screen-awake.svelte.ts`). Nothing keeps a web page working once the screen is turned off with the side button.
 
 **Telling an SOS outside Tesel, on the call's card** (`incidents/SosOutside.svelte`):
 
