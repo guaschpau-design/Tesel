@@ -107,6 +107,7 @@ export const es: Messages = {
   joinQuestion: '¿Unirte a «{group}» como {role}?',
   joinWarning:
     'Quienes forman parte del grupo ven las posiciones, los mensajes y el mapa de todo el grupo.',
+  sharesOnEntering: 'En el grupo compartirás tu posición; puedes pausarla desde Yo.',
   joinServer: 'Su servidor: {server}.',
   joinNoServer: 'Sin servidor: solo por la malla.',
   joinSameName:

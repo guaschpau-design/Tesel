@@ -10,14 +10,15 @@ test('a marker drawn by one member can be opened and deleted by another', async 
   await ana.getByRole('button', { name: 'Añadir' }).click();
   await ana.getByRole('menuitem', { name: 'Marcador' }).click();
   await expect(ana.getByText(/Toca el mapa donde va/)).toBeVisible();
-  await tapMap(ana);
+  // Beside the centre, where Ana is: she shares her position since she created the group.
+  await tapMap(ana, 80, 0);
   await ana.getByRole('radio', { name: 'Fuego' }).check();
   await ana.getByLabel('Etiqueta (opcional)').fill('Foco norte');
   await ana.getByRole('button', { name: 'Guardar' }).click();
 
   // Berta taps the same spot until the marker has arrived and been drawn.
   const details = berta.getByRole('region', { name: 'Foco norte' });
-  await tapMapUntil(berta, {}, () => expect(details).toBeVisible({ timeout: 2000 }));
+  await tapMapUntil(berta, { dx: 80 }, () => expect(details).toBeVisible({ timeout: 2000 }));
   await expect(details).toContainText('Último cambio de Ana');
 
   // Berta corrects its label: changing and deleting wait in the "⋯" menu.
@@ -38,7 +39,7 @@ test('a marker drawn by one member can be opened and deleted by another', async 
     .click();
   await expect(renamed).toBeHidden();
   // Ana taps the same spot until the deletion has arrived and the marker opens no more.
-  await tapMapUntil(ana, {}, () =>
+  await tapMapUntil(ana, { dx: 80 }, () =>
     expect(ana.getByRole('region', { name: 'Foco sur' })).toBeHidden({ timeout: 2000 }),
   );
 });

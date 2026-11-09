@@ -1,6 +1,6 @@
 <!-- Creating a group: only its name is asked. The server it uses is proposed and can be changed
      under "Advanced options", which most people never open: folded, it says only whether it is
-     Tesel's. -->
+     Tesel's. Creating it shares the position there, as it says (ADR-0128). -->
 <script lang="ts">
   import { GROUP_NAME_MAX_BYTES } from '@tesel/protocol';
 
@@ -15,11 +15,13 @@
   interface Props {
     t: Translate;
     session: Session;
+    /** The group was created and is the one in use: the position is shared in it. */
+    oncreated: () => Promise<void>;
     /** Leaves the form: created, or given up. */
     onclose: () => void;
   }
 
-  let { t, session, onclose }: Props = $props();
+  let { t, session, oncreated, onclose }: Props = $props();
 
   let newName = $state('');
   const groupName = $derived(normalizeGroupName(newName));
@@ -39,7 +41,11 @@
     if (groupName === null || server === undefined) return;
     const name = groupName;
     const chosen = server;
-    if (await submission.run(() => session.createGroup(name, chosen))) onclose();
+    const created = await submission.run(async () => {
+      await session.createGroup(name, chosen);
+      await oncreated();
+    });
+    if (created) onclose();
   }
 </script>
 
@@ -66,6 +72,7 @@
       {server === undefined ? t('serverInvalid') : t('serverHint')}
     </p>
   </Fold>
+  <p class="hint">{t('sharesOnEntering')}</p>
   {#if submission.failed}<p class="warning">{t('sendFailed')}</p>{/if}
   <div class="row">
     <button

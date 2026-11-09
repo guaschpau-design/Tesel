@@ -1,6 +1,6 @@
 <!-- First launch: the user picks an alias and the device creates its identity. Arriving through an
-     invitation, the same step joins its group: the invitation was opened on purpose, and asking
-     again would be one step too many. -->
+     invitation, the same step joins its group and shares the position in it, as it says: the
+     invitation was opened on purpose, and asking again would be one step too many (ADR-0128). -->
 <script lang="ts">
   import type { Invitation } from '@tesel/protocol';
 
@@ -46,7 +46,7 @@
           role: t(ROLE_LABELS[invitation.role]),
         })}
       </p>
-      <p class="hint">{t('joinWarning')}</p>
+      <p class="hint">{t('joinWarning')} {t('sharesOnEntering')}</p>
     {/if}
     <AliasField {t} {text} ontext={(typed: string) => (text = typed)} />
     {#if submission.failed}<p class="warning">{t('actionFailed')}</p>{/if}

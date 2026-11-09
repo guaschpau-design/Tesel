@@ -24,7 +24,7 @@ export const test = base.extend<{ closeDevices: undefined }>({
   ],
 });
 
-const VALENCIA = { latitude: 39.4699, longitude: -0.3763 };
+export const VALENCIA = { latitude: 39.4699, longitude: -0.3763 };
 
 /** Goes through the first-launch dialog, which every new browser profile shows. */
 export async function chooseAlias(page: Page, alias: string): Promise<void> {

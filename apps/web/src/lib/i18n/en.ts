@@ -107,6 +107,7 @@ export const en = {
   joinTitle: 'Join a group',
   joinQuestion: 'Join “{group}” as {role}?',
   joinWarning: 'Group members see the positions, messages and map of the whole group.',
+  sharesOnEntering: 'In the group you will share your position; you can pause it from Me.',
   joinServer: 'Its server: {server}.',
   joinNoServer: 'No server: over the mesh only.',
   joinSameName:

@@ -144,13 +144,21 @@
   );
 
   /**
-   * The first launch. Arriving through an invitation, it joins its group in the same step; without
-   * one, it goes straight on to the ways into a group, rather than leave the user on an empty map.
+   * The first launch. Arriving through an invitation, it joins its group in the same step, and
+   * shares the position there, as the welcome says (ADR-0128); without one, it goes straight on to
+   * the ways into a group, rather than leave the user on an empty map.
    */
   async function createIdentity(alias: string): Promise<void> {
     await startup.session?.createIdentity(alias);
-    if (incoming?.ok) await join(incoming.value, false);
-    else openPanel({ name: 'groups', start: 'home' });
+    if (incoming?.ok) {
+      await join(incoming.value, false);
+      await shareInGroup();
+    } else openPanel({ name: 'groups', start: 'home' });
+  }
+
+  /** Entering a group by creating it, or by the invitation one arrived with, shares the position. */
+  async function shareInGroup(): Promise<void> {
+    await startup.sharing?.setMode('sharing');
   }
 
   async function rename(alias: string): Promise<void> {
@@ -227,6 +235,7 @@
       {feed}
       {linkInput}
       oninvitation={received}
+      oncreated={shareInGroup}
     />
 
     {#if startup.session && !startup.session.identity}

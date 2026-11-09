@@ -2,7 +2,7 @@
 
 import type { Page } from '@playwright/test';
 
-import { chooseAlias, createGroup, device, expect, shareAs, test } from './helpers.ts';
+import { chooseAlias, createGroup, device, expect, shareAs, test, VALENCIA } from './helpers.ts';
 import { SERVER_URL } from './ports.ts';
 
 async function invitationLink(page: Page, role: 'miembro' | 'coordinador'): Promise<string> {
@@ -26,18 +26,28 @@ test('a second device joins a group through its invitation link', async ({ brows
   const memberLink = await invitationLink(coordinator, 'miembro');
   expect(new URL(memberLink).pathname).toBe('/join');
 
-  const member = await (await browser.newContext()).newPage();
+  const member = await (
+    await browser.newContext({ permissions: ['geolocation'], geolocation: VALENCIA })
+  ).newPage();
   await member.goto(memberLink);
   await expect(
     member.getByText('Te han invitado a «Rescate Valencia» como miembro.'),
   ).toBeVisible();
   // The secret must not stay in the address bar or the history.
   expect(member.url()).not.toContain('join');
-  // Naming oneself joins, in one step.
+  // Naming oneself joins, in one step, and shares the position there, as the welcome says.
   const welcome = member.getByRole('dialog', { name: 'Te damos la bienvenida a Tesel' });
+  await expect(welcome).toContainText('En el grupo compartirás tu posición');
   await welcome.getByLabel('Tu nombre en el grupo').fill('Berta');
   await welcome.getByRole('button', { name: 'Entrar en «Rescate Valencia»' }).click();
   await expect(member.getByText('Te has unido a «Rescate Valencia».')).toBeVisible();
+  await expect(member.getByRole('region', { name: 'No compartes tu posición' })).toHaveCount(0);
+  await member.getByRole('button', { name: /^Yo/ }).click();
+  await expect(member.getByRole('switch', { name: 'Compartir mi posición' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await member.getByRole('button', { name: 'Cerrar' }).click();
 
   // Membership survives a restart, and members do not invite.
   await member.reload();

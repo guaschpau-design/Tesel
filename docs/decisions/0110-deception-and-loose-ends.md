@@ -1,6 +1,6 @@
 # 0110. Guard against look-alike names and invitations, and close loose ends
 
-- Status: Accepted
+- Status: Accepted, amended by [0128](0128-entering-a-group-shares-the-position.md) (a first launch through an invitation, and creating a group, share the position)
 - Date: 2026-11-03
 - Amends: [ADR-0096](0096-same-names-told-apart.md) (how names are compared), [ADR-0012](0012-invitation-links-under-a-base-path.md) (links with a query), [`protocol.md`](../protocol.md) §6 (server URLs and invitation links)
 
@@ -23,7 +23,7 @@ An audit of how the web app can be deceived, and of a few small gaps in its robu
 - The join dialog always says which server the group uses (its host), or that it has none.
 - When the device belongs to another group whose name looks the same, the dialog says, in a framed warning, that this is a **different group with the same name**, to join only knowing who sent it.
 - Wherever the app names the device's groups (the top bar, the groups panel, notices, the SOS of another group), groups of names that look the same are told apart as members are: the first joined keeps the name, the others show "Rescate ②". A number, not the server: an outsider is as likely to use the same public server.
-- **Position sharing is not carried into a new group without asking.** When the device shares its position and joins a group it was not in, the dialog asks with a box, unticked, whether to share it there; left unticked, sharing is paused before the group becomes the active one, so no position reaches it, and the notice says so. Asking every time a device that shares joins a new group is one tick for a real team, and it is the only moment the user can be sure where the position goes; pausing rather than hiding keeps the last position in the group the user came from, as pausing does anywhere. A first launch through an invitation does not ask: the device shares nothing until the user chooses to.
+- **Position sharing is not carried into a new group without asking.** When the device shares its position and joins a group it was not in, the dialog asks with a box, unticked, whether to share it there; left unticked, sharing is paused before the group becomes the active one, so no position reaches it, and the notice says so. Asking every time a device that shares joins a new group is one tick for a real team, and it is the only moment the user can be sure where the position goes; pausing rather than hiding keeps the last position in the group the user came from, as pausing does anywhere. A first launch through an invitation does not ask: the device shares nothing until the user chooses to. (ADR-0128 changed this: entering the group on a first launch shares the position, as the welcome says.)
 
 ### Names are compared by what they look like, the same way everywhere
 

@@ -34,10 +34,22 @@
     linkInput: LinkInput;
     /** An invitation was pasted or scanned; the caller asks the user to confirm it. */
     oninvitation: (invitation: Invitation) => void;
+    /** A group was created: the position is shared in it. */
+    oncreated: () => Promise<void>;
   }
 
-  let { t, locale, map, offline, preferences, session, feed, linkInput, oninvitation }: Props =
-    $props();
+  let {
+    t,
+    locale,
+    map,
+    offline,
+    preferences,
+    session,
+    feed,
+    linkInput,
+    oninvitation,
+    oncreated,
+  }: Props = $props();
 </script>
 
 {#if map && offline && isOpen('offline')}
@@ -65,6 +77,7 @@
       {session}
       activeFeed={feed}
       {oninvitation}
+      {oncreated}
       onleft={(group: StoredGroup) => {
         attempt(() => radio.forgetGroup(group.secret), t('actionFailed'));
       }}

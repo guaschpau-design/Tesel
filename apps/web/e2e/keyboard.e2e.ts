@@ -4,7 +4,7 @@
 
 import type { Locator } from '@playwright/test';
 
-import { createGroup, device, expect, test } from './helpers.ts';
+import { createGroup, device, expect, shareAs, test } from './helpers.ts';
 
 test('panels and menus take the focus, close with Escape and give it back', async ({ browser }) => {
   const page = await device(browser, 'Ana');
@@ -70,6 +70,8 @@ test('in a phone held sideways, menus and panels rise over the cards', async ({ 
   const page = await device(browser, 'Ana', '/', { viewport: { width: 740, height: 360 } });
   await createGroup(page, 'Rescate');
   await page.getByRole('button', { name: 'Cerrar' }).click();
+  // Creating the group shared the position; paused, a card says so.
+  await shareAs(page, 'Pausar');
   const card = page.getByRole('region', { name: 'No compartes tu posición' });
   await expect(card).toBeVisible();
 

@@ -115,7 +115,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0107](0107-relay-holds-against-floods.md)           | Keep the relay fair, responsive and bounded under a flood                                   | Accepted                                                |
 | [0108](0108-deployment-holds-against-floods.md)      | Keep the VPS's disk, settings and proxy safe from what the relay faces                      | Accepted                                                |
 | [0109](0109-build-and-updates-resist-tampering.md)   | Keep the build, the publishing and the updates safe from tampering                          | Accepted                                                |
-| [0110](0110-deception-and-loose-ends.md)             | Guard against look-alike names and invitations, and close loose ends                        | Accepted                                                |
+| [0110](0110-deception-and-loose-ends.md)             | Guard against look-alike names and invitations, and close loose ends                        | Accepted, amended by 0128                               |
 | [0111](0111-airtime-kept-numbers-per-group.md)       | Keep the radio's airtime, one window on the radio, and numbers per group                    | Accepted                                                |
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
@@ -133,3 +133,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0125](0125-android-app-with-the-screen-off.md)      | The Android app with the screen off: native location, Bluetooth and notifications           | Accepted                                                |
 | [0126](0126-version-numbers.md)                      | A version number, and the build it came from                                                | Accepted                                                |
 | [0127](0127-pocket-mode-and-sos-outside.md)          | Pocket mode, and telling an SOS outside Tesel from the call itself                          | Accepted                                                |
+| [0128](0128-entering-a-group-shares-the-position.md) | Entering a group shares the position                                                        | Accepted                                                |

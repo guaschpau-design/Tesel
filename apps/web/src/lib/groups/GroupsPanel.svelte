@@ -33,6 +33,8 @@
     activeFeed: GroupFeed | undefined;
     /** An invitation was pasted or scanned; the caller asks the user to confirm it. */
     oninvitation: (invitation: Invitation) => void;
+    /** A group was created: the position is shared in it. */
+    oncreated: () => Promise<void>;
     /** A group was left: its channel goes from the radio. */
     onleft: (group: StoredGroup) => void;
     /** Where the panel opens: its list, or straight on creating or joining. */
@@ -40,7 +42,7 @@
     onclose: () => void;
   }
 
-  let { t, session, activeFeed, oninvitation, onleft, start, onclose }: Props = $props();
+  let { t, session, activeFeed, oninvitation, oncreated, onleft, start, onclose }: Props = $props();
 
   type View = { kind: GroupsStart | 'scan' } | { kind: 'invite'; group: StoredGroup };
   let view: View = $state.raw(untrack(() => ({ kind: start })));
@@ -104,7 +106,7 @@
 
 <Panel title={t('groups')} closeLabel={t('close')} {onclose}>
   {#if view.kind === 'create'}
-    <CreateGroupForm {t} {session} onclose={home} />
+    <CreateGroupForm {t} {session} {oncreated} onclose={home} />
   {:else if view.kind === 'join'}
     <JoinGroup {t} {oninvitation} onscan={() => (view = { kind: 'scan' })} oncancel={home} />
   {:else if view.kind === 'scan'}
