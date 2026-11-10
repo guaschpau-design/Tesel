@@ -14,7 +14,7 @@ Telling someone without Tesel (ADR-0122) sat in Me, apart from the moment it is 
 
 **Pocket mode** (`power/`):
 
-- **It comes at once** from a padlock among the map's controls, or by itself after a minute untouched if the switch in Settings, «Modo bolsillo automático», allows it (on by default, as before).
+- **It comes at once** from a padlock, the last of the map's controls, or by itself after a minute untouched if the switch in Settings, «Modo bolsillo automático», allows it (on by default, as before).
 - **A touch does nothing.** Only sliding the handle at the foot to the end of its track brings the app back (`SlideOut.svelte`). From the keyboard, Enter on the handle does it. A touch shows how to leave, a moment brighter.
 - **It shows little:** the time and how the device is linked, and the way while guiding.
 - **What must be seen still ends it** (ADR-0097): another member's SOS, a task handed over, a danger area entered, the check-in.

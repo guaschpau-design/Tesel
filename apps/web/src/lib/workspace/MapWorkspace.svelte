@@ -303,7 +303,6 @@
   <CompassButton {t} {map} />
   <LocateButton {t} {map} />
   <GroundButton {t} {map} />
-  <PocketButton {t} />
   <button
     aria-label={t('layers')}
     title={t('layers')}
@@ -314,6 +313,8 @@
   >
     <Pictogram name="layers" size={18} />
   </button>
+  <!-- Last, apart from what changes the map. -->
+  <PocketButton {t} />
 </MapControl>
 <MapScale {map} />
 <!-- Shown again with each base map, which brings its own sources. -->
