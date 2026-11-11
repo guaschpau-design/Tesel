@@ -20,4 +20,14 @@ describe("Android's notifications as the browser's", () => {
       tag: 'g/1',
     });
   });
+
+  it('starts all the same when Android cannot say whether it may notify', async () => {
+    const device = {
+      noticePermission: vi.fn(() => Promise.reject(new Error('refused'))),
+      requestNotices: vi.fn(() => Promise.resolve({ state: 'granted' as const })),
+      alarm: vi.fn(() => Promise.resolve()),
+    };
+    const Notice = await nativeNotification(device);
+    expect(Notice.permission).toBe('default');
+  });
 });

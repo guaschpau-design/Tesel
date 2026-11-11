@@ -57,7 +57,7 @@ export function mapLink({ lat, lon }: LatLon): string {
 
 /**
  * Sends the text from the phone's share menu, where the user picks WhatsApp, SMS or any other;
- * where there is none (a computer), copies it, and says so: 'copied'.
+ * where there is none (a computer), or it fails to open, copies it, and says so: 'copied'.
  */
 export async function sendOutside(text: string): Promise<'shared' | 'copied'> {
   // Not in every browser, whatever the types say: none on a computer with Linux.
@@ -65,10 +65,11 @@ export async function sendOutside(text: string): Promise<'shared' | 'copied'> {
   if (phone.share) {
     try {
       await phone.share({ text });
-    } catch {
-      // The user closed the menu.
+      return 'shared';
+    } catch (error) {
+      // The user closed the menu: nothing more to do.
+      if (error instanceof Error && error.name === 'AbortError') return 'shared';
     }
-    return 'shared';
   }
   await phone.clipboard.writeText(text);
   return 'copied';

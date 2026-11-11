@@ -26,6 +26,8 @@ The Android app (ADR-0124) carries the web app as it is. Inside Android's web vi
 
 `TeselDevicePlugin.java` is the one native plugin of the app's own. It asks for the location and the notifications when the web app first needs them, as a browser would.
 
+**A failure on Android's side never closes the app.** Capacitor rethrows what a plugin method throws, which ends the whole app: Android 12 and later, for one, refuse to start `ActiveService` while the app is not on screen. Each method of `TeselDevicePlugin` catches what it throws and rejects its call instead, and the web app goes on without it: keeping the app running is asked for again when the app is back on screen, a share menu that does not open copies the text, and a notification permission Android cannot tell is taken as not asked yet. If what the Android app adds cannot be installed at all, the web app starts with what the web view has.
+
 ## Consequences
 
 - With the app open and the screen off, the position is shared, the radio stays linked and an SOS sounds. A web page in a browser does none of this.

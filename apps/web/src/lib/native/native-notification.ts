@@ -11,7 +11,11 @@ type Device = Pick<TeselDevicePlugin, 'noticePermission' | 'requestNotices' | 'a
  * the browser's is there at once; asking for it updates it.
  */
 export async function nativeNotification(device: Device): Promise<typeof Notification> {
-  let permission: NoticePermission = (await device.noticePermission()).state;
+  // Unknown if Android could not say: asked again when the alarm asks for it.
+  let permission: NoticePermission = await device.noticePermission().then(
+    ({ state }) => state,
+    (): NoticePermission => 'default',
+  );
 
   class NativeNotification {
     readonly title: string;
