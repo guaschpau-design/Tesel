@@ -16,10 +16,10 @@
   "dependencies": {
     "@tesel/protocol": "workspace:*",
     "@tesel/scenario": "workspace:*",
-    "ws": "^8.22.0"
+    "ws": "^8.22.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.1",
     "@types/ws": "^8.18.2"
   }
 }

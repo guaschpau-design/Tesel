@@ -12,12 +12,12 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@fastify/static": "10.1.7",
-    "@fastify/websocket": "11.3.4",
+    "@fastify/static": "10.1.9",
+    "@fastify/websocket": "11.3.7",
     "@tesel/core": "workspace:*",
     "@tesel/protocol": "workspace:*",
-    "fastify": "^5.12.7",
-    "ws": "^8.22.0"
+    "fastify": "^5.12.8",
+    "ws": "^8.22.1"
   },
   "devDependencies": {
     "@types/ws": "^8.18.2"
