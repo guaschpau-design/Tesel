@@ -36,46 +36,42 @@ function page(size, scale, radius, ground = true) {
     </div></body>`;
 }
 
-// The mark fills its own box corner to corner (a square on its point), so these scales are its
-// share of the icon; the maskable one keeps its corners inside the safe circle (scale <= 0.8).
+// The mark's box keeps a margin round its T (the drawing spans 72 % of it, its far corners 48 %
+// of the box from the centre), so these scales are the box's share of the icon; the maskable one
+// keeps those corners inside the safe circle, 40 % of the icon from its centre (scale <= 0.83).
 const icons = [
-  { file: 'icon-192.png', size: 192, scale: 0.72, radius: 0 },
-  { file: 'icon-512.png', size: 512, scale: 0.72, radius: 0 },
-  { file: 'maskable-512.png', size: 512, scale: 0.6, radius: 0 },
-  { file: 'apple-touch-icon.png', size: 180, scale: 0.72, radius: 0 },
-  { file: 'favicon-64.png', size: 64, scale: 0.84, radius: 12 },
+  { file: 'icon-192.png', size: 192, scale: 0.86, radius: 0 },
+  { file: 'icon-512.png', size: 512, scale: 0.86, radius: 0 },
+  { file: 'maskable-512.png', size: 512, scale: 0.78, radius: 0 },
+  { file: 'apple-touch-icon.png', size: 180, scale: 0.86, radius: 0 },
+  { file: 'favicon-64.png', size: 64, scale: 1, radius: 12 },
 ];
 
 // Android's launcher icons at each screen density, by its pixels per dp: 48 dp square and round
 // ones, and the 108 dp foreground of the adaptive icon, whose mark keeps inside the 66 dp that every
-// launcher's shape shows (scale 0.46).
+// launcher's shape shows (scale 0.6: its far corners 29 % of the icon from the centre, within 30.5 %).
 const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
 const androidIcons = Object.entries(DENSITIES).flatMap(([density, ratio]) => {
   const folder = join(androidRes, `mipmap-${density}`);
   const legacy = 48 * ratio;
   return [
-    { file: join(folder, 'ic_launcher.png'), size: legacy, scale: 0.72, radius: legacy * 0.18 },
-    { file: join(folder, 'ic_launcher_round.png'), size: legacy, scale: 0.6, radius: legacy / 2 },
+    { file: join(folder, 'ic_launcher.png'), size: legacy, scale: 0.86, radius: legacy * 0.18 },
+    { file: join(folder, 'ic_launcher_round.png'), size: legacy, scale: 0.82, radius: legacy / 2 },
     {
       file: join(folder, 'ic_launcher_foreground.png'),
       size: 108 * ratio,
-      scale: 0.46,
+      scale: 0.6,
       radius: 0,
       ground: false,
     },
   ];
 });
 
-/**
- * The mark for Android's status bar, as a vector in one colour, as Android asks: the tiles turned
- * inside the pin as in the mark.
- */
+/** The mark for Android's status bar, as a vector in one colour, as Android asks. */
 function statusBarIcon() {
-  const clip = /<clipPath[^>]*><path d="([^"]+)"/.exec(mark)?.[1] ?? '';
-  const turn = /rotate\(([-\d.]+) ([-\d.]+) ([-\d.]+)\)/.exec(mark) ?? [];
   const size = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(mark) ?? [];
-  const tiles = [...mark.matchAll(/<path d="([^"]+)" fill="[^"]+"/g)].map(
-    ([, d]) => `\n        <path android:fillColor="#FFFFFFFF" android:pathData="${d}" />`,
+  const shapes = [...mark.matchAll(/<path d="([^"]+)" fill="[^"]+"/g)].map(
+    ([, d]) => `\n    <path android:fillColor="#FFFFFFFF" android:pathData="${d}" />`,
   );
   return `<?xml version="1.0" encoding="utf-8"?>
 <!-- Tesel's mark for the status bar, in one colour as Android asks (apps/web/scripts/render-icons.js). -->
@@ -83,10 +79,7 @@ function statusBarIcon() {
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="${size[1]}"
-    android:viewportHeight="${size[2]}">
-    <group android:rotation="${turn[1]}" android:pivotX="${turn[2]}" android:pivotY="${turn[3]}">
-        <clip-path android:pathData="${clip}" />${tiles.join('')}
-    </group>
+    android:viewportHeight="${size[2]}">${shapes.join('')}
 </vector>
 `;
 }
@@ -103,8 +96,8 @@ await (async () => {
   for (const icon of androidIcons) await render(icon, icon.file);
   await browser.close();
   // The SVG favicon: the mark on a rounded ink square, crisp at any size. The mark keeps its own
-  // box (viewBox) inside, pale as the file has it.
-  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/>${mark.trim().replace('<svg ', '<svg x="8" y="8" width="84" height="84" ')}</svg>`;
+  // box (viewBox), margin included, pale as the file has it.
+  const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="${INK}"/>${mark.trim().replace('<svg ', '<svg x="0" y="0" width="100" height="100" ')}</svg>`;
   writeFileSync(join(out, 'favicon.svg'), favicon);
   const version = iconVersion(favicon);
   for (const page of PAGES_WITH_ICONS) {

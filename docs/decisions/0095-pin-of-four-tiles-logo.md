@@ -1,6 +1,6 @@
 # 0095. The logo: a pin of four tiles beside "Tesel" in Outfit
 
-- Status: Accepted, amended by [0116](0116-rounder-head-wider-joints.md) (a rounder head and wider joints)
+- Status: Superseded by [0129](0129-the-word-and-a-tile.md)
 - Date: 2026-11-02
 
 ## Context

@@ -1,14 +1,12 @@
-# Builds the Tesel mark, wordmark and lockups as SVG, into this folder.
+# Builds the Tesel logo and mark as SVG, into this folder.
 #
 #   python3 brand/build.py
 #
-# The mark is a map pin made of four tiles: a square stood on its corner and cut into four, its
-# three upper tiles rounded into the pin's head and the lower one, lime, its point: the place. The
-# wordmark is "Tesel" in Outfit SemiBold, kept as outlines in wordmark-glyphs.json
-# (extract-wordmark.py), so this build needs only Python's standard library and no font. The design
-# is of 2 November 2026 (ADR-0095), with the rounder head and wider joints of 4 November (ADR-0116).
+# The logo is "Tesel" in Outfit SemiBold followed by a lime tile on its baseline, as a full stop.
+# The mark, for where the word does not fit, is a T with that tile at the foot of its stem. The
+# word is kept as outlines in wordmark-glyphs.json (extract-wordmark.py), so this build needs only
+# Python's standard library and no font. The design is of 11 November 2026 (ADR-0129).
 import json
-import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -20,54 +18,32 @@ with open(os.path.join(HERE, 'wordmark-glyphs.json')) as glyphs_file:
     GLYPHS = json.load(glyphs_file)
 
 # ---------------------------------------------------------------------------------------------
-# The mark, in a 90 x 90 box: a square whose diagonal is the box, turned 45 degrees about its
-# centre and cut into four tiles by two joints. The head is not rounded tile by tile: the whole
-# square is, at its three upper corners, so its rounding (wider than a tile) runs across the joints
-# as one outline, the pin's, and the tiles are cut out of it as a mosaic is.
+# The mark, in a 100 x 100 box: a T of two rounded bars, and at the foot of its stem, on the same
+# line, a lime tile: the logo's tile beside its first letter. It stands for the name where the word
+# does not fit (app icons, the favicon, the top bar of a narrow screen). The box keeps a margin
+# round the drawing, so icons lay it on their ground as it is.
 
-MARK = 90
-SIDE = MARK / math.sqrt(2)  # the side of the whole square
-JOINT = 9  # the width of the joints between the tiles
-TILE = (SIDE - JOINT) / 2
-HEAD = 29  # the rounding of the square's three corners that make the pin's head
-INNER = 2.5  # the rounding of the tiles' corners along the joints
-POINT = 1.5  # the rounding of the pin's point, just enough not to be sharp
-ORIGIN = (MARK - SIDE) / 2  # the square's top left corner, before it turns
-OUTLINE_ID = 'tesel-pin'
-
-
-def tile(column, row, fill):
-    """One tile of the square before it turns: (0, 0) top left ... (1, 1) bottom right, which the
-    turn brings to the bottom, as the point. Its corner on the square's edge is left square, for
-    the outline to round; the others are rounded along the joints."""
-    x = ORIGIN + column * (TILE + JOINT)
-    y = ORIGIN + row * (TILE + JOINT)
-    outer = {(0, 0): 'top_left', (1, 0): 'top_right', (0, 1): 'bottom_left', (1, 1): 'bottom_right'}
-    radii = {corner: INNER for corner in ('top_left', 'top_right', 'bottom_right', 'bottom_left')}
-    radii[outer[(column, row)]] = 0
-    return f'<path d="{rounded_square(x, y, TILE, radii)}" fill="{fill}"/>'
+MARK = 100
+BAR = (14, 18, 56, 17)  # x, y, width, height of the T's crossbar
+STEM = (33.5, 18, 17, 64)  # and of its stem, which runs down to the line the tile sits on
+TILE_BOX = (66, 62, 20, 20)  # the lime tile, its foot on that line
+BAR_ROUNDING = 3
+TILE_ROUNDING = 4
 
 
 def mark():
-    outline = rounded_square(ORIGIN, ORIGIN, SIDE, {'top_left': HEAD, 'top_right': HEAD,
-                                                     'bottom_right': POINT, 'bottom_left': HEAD})
-    tiles = tile(0, 0, 'currentColor') + tile(1, 0, 'currentColor') + tile(0, 1, 'currentColor')
-    point = tile(1, 1, SIGNAL)
-    return (f'<defs><clipPath id="{OUTLINE_ID}"><path d="{outline}"/></clipPath></defs>'
-            f'<g transform="rotate(45 {MARK / 2} {MARK / 2})" clip-path="url(#{OUTLINE_ID})">{tiles}{point}</g>')
+    return (rounded_rect(*BAR, BAR_ROUNDING, 'currentColor')
+            + rounded_rect(*STEM, BAR_ROUNDING, 'currentColor')
+            + rounded_rect(*TILE_BOX, TILE_ROUNDING, SIGNAL))
 
 
-def rounded_square(x, y, side, r):
-    """A square with a radius per corner (0 leaves the corner square), clockwise from the top left."""
-    tl, tr, br, bl = r['top_left'], r['top_right'], r['bottom_right'], r['bottom_left']
-
-    def arc(radius, to_x, to_y):
-        return f'A{radius} {radius} 0 0 1 {fmt(to_x)} {fmt(to_y)} ' if radius else ''
-
-    return (f'M{fmt(x + tl)} {fmt(y)} H{fmt(x + side - tr)} {arc(tr, x + side, y + tr)}'
-            f'V{fmt(y + side - br)} {arc(br, x + side - br, y + side)}'
-            f'H{fmt(x + bl)} {arc(bl, x, y + side - bl)}'
-            f'V{fmt(y + tl)} {arc(tl, x + tl, y)}Z')
+def rounded_rect(x, y, width, height, r, fill):
+    """A rectangle with rounded corners, as a path: what the PDF and Android's vectors read."""
+    d = (f'M{fmt(x + r)} {fmt(y)} H{fmt(x + width - r)} A{fmt(r)} {fmt(r)} 0 0 1 {fmt(x + width)} {fmt(y + r)} '
+         f'V{fmt(y + height - r)} A{fmt(r)} {fmt(r)} 0 0 1 {fmt(x + width - r)} {fmt(y + height)} '
+         f'H{fmt(x + r)} A{fmt(r)} {fmt(r)} 0 0 1 {fmt(x)} {fmt(y + height - r)} '
+         f'V{fmt(y + r)} A{fmt(r)} {fmt(r)} 0 0 1 {fmt(x + r)} {fmt(y)} Z')
+    return f'<path d="{d}" fill="{fill}"/>'
 
 
 # ---------------------------------------------------------------------------------------------
@@ -102,32 +78,28 @@ def word_width(height):
 
 
 # ---------------------------------------------------------------------------------------------
-# The lockups. Side by side, the mark is 1.22 times as tall as the l and centred on it, so it
-# reaches as far above the word as below its baseline, where the point hangs like a descender;
-# between them, 0.28 of the mark's height. Stacked, the word is 1.7 times as wide as the mark and
-# a third of the mark's height below it. Clear space around either: one tile.
+# The logo: the word and, after it, a lime tile standing on the baseline, as a full stop. In ems
+# of the type: the tile is 0.222 wide, rounded 0.042, and 0.142 from the l's ink. Clear space
+# around it: the height of the tile.
 
-MARK_OVER_WORD = 1.22
-SPACING = 0.28
-STACKED_WIDTH, STACKED_SPACING = 1.7, 1 / 3
-
-
-def lockup(color):
-    word_h = MARK / MARK_OVER_WORD
-    x = MARK + SPACING * MARK
-    baseline = (MARK + word_h) / 2
-    width = x + word_width(word_h)
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {fmt(width)} {MARK}" color="{color}">'
-            f'{mark()}{wordmark(x, baseline, word_h)}</svg>')
+LOGO_TILE = 0.222
+LOGO_TILE_ROUNDING = 0.042
+LOGO_GAP = 0.142
+# How far round letters (e, s) dip below the baseline, in font units.
+OVERSHOOT = 12
 
 
-def stacked(color):
-    width = STACKED_WIDTH * MARK
-    word_h = width * ASCENDER / (INK_RIGHT - INK_LEFT)
-    baseline = MARK + STACKED_SPACING * MARK + word_h
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {fmt(width)} {fmt(baseline)}" color="{color}">'
-            f'<g transform="translate({fmt((width - MARK) / 2)} 0)">{mark()}</g>'
-            f'{wordmark(0, baseline, word_h)}</svg>')
+def logo(color, height=100):
+    """The logo, `height` from the top of the l to the baseline, in `color` with the lime tile."""
+    em = EM * height / ASCENDER
+    side = LOGO_TILE * em
+    x = word_width(height) + LOGO_GAP * em
+    width = x + side
+    tile = rounded_rect(x, height - side, side, side, LOGO_TILE_ROUNDING * em, SIGNAL)
+    # Round letters dip a little below the baseline: the box keeps room for them.
+    depth = height + OVERSHOOT * em / EM
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {fmt(width)} {fmt(depth)}" color="{color}">'
+            f'{wordmark(0, height, height)}{tile}</svg>')
 
 
 def fmt(value, places=2):
@@ -136,17 +108,13 @@ def fmt(value, places=2):
 
 def main():
     write('mark.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {MARK} {MARK}" color="{PALE}">{mark()}</svg>')
-    word_h = 100
-    write('wordmark.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {fmt(word_width(word_h))} {word_h}" '
-                          f'color="{INK}">{wordmark(0, word_h, word_h)}</svg>')
-    write('lockup.svg', lockup(INK))
-    write('lockup-stacked.svg', stacked(INK))
+    write('logo.svg', logo(INK))
     # The headers of the app and the site are always ink, so both show a pale copy as an image. The
     # site is static and cannot reach this folder, so it gets its own copy.
-    pale = lockup(PALE)
-    write('lockup-pale.svg', pale)
-    write(os.path.join('..', 'apps', 'site', 'img', 'lockup-pale.svg'), pale)
-    print("mark.svg, wordmark.svg, lockup.svg, lockup-stacked.svg, lockup-pale.svg and the site's copy written")
+    pale = logo(PALE)
+    write('logo-pale.svg', pale)
+    write(os.path.join('..', 'apps', 'site', 'img', 'logo-pale.svg'), pale)
+    print("mark.svg, logo.svg, logo-pale.svg and the site's copy written")
 
 
 def write(name, svg):

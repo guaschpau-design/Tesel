@@ -2,7 +2,7 @@
      right how this device reaches it, which opens the connections panel. -->
 <script lang="ts">
   // The logo comes from brand/, built by brand/build.py; the header is always ink, hence pale.
-  import lockupUrl from '../../../../../brand/lockup-pale.svg';
+  import logoUrl from '../../../../../brand/logo-pale.svg';
   import markUrl from '../../../../../brand/mark.svg';
   import type { Translate } from '../i18n/index.ts';
   import { connection } from '../links/connection.svelte.ts';
@@ -27,7 +27,7 @@
 
 <header class="bar chrome">
   <span class="brand">
-    <img class="lockup" src={lockupUrl} alt="Tesel" />
+    <img class="logo" src={logoUrl} alt="Tesel" />
     <img class="mark" src={markUrl} alt="Tesel" />
   </span>
   {#if session?.identity}
@@ -83,7 +83,7 @@
 
   .brand img {
     display: block;
-    height: 1.45rem;
+    height: 1.2rem;
     width: auto;
   }
 
@@ -93,13 +93,13 @@
 
   /* On narrow screens the mark stands for the name. */
   @media (max-width: 30rem) {
-    .brand .lockup {
+    .brand .logo {
       display: none;
     }
 
     .brand .mark {
       display: block;
-      height: 1.7rem;
+      height: 2rem;
     }
   }
 

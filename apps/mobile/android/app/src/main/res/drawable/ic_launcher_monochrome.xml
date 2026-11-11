@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The mark in one colour, for the themed icons of Android 13 and later: as large as on the
-     adaptive icon's foreground (scale 0.46 of its 108 dp, apps/web/scripts/render-icons.js). -->
+     adaptive icon's foreground (scale 0.6 of its 108 dp, apps/web/scripts/render-icons.js). -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/ic_stat_tesel"
-    android:inset="27%" />
+    android:inset="20%" />

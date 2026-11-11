@@ -152,29 +152,12 @@ export class PdfDocument {
     this.#write('Q');
   }
 
-  /**
-   * Shapes drawn as SVG paths, in the SVG's own units and directions: clipped to `clip` when
-   * given, turned `rotate` degrees about `about`, as an SVG's `rotate(a cx cy)`.
-   */
-  svg(
-    at: SvgPlacement,
-    shapes: readonly SvgShape[],
-    options: { clip?: string; rotate?: number; about?: Point } = {},
-  ): void {
+  /** Shapes drawn as SVG paths, in the SVG's own units and directions. */
+  svg(at: SvgPlacement, shapes: readonly SvgShape[]): void {
     const ops = [
       'q',
       `${num(at.scale)} 0 0 ${num(-at.scale)} ${num(at.x)} ${num(PAGE_HEIGHT - at.y)} cm`,
     ];
-    if (options.clip !== undefined) ops.push(`${svgPathOperators(options.clip)} W n`);
-    if (options.rotate !== undefined) {
-      const [cx, cy] = options.about ?? [0, 0];
-      const radians = (options.rotate * Math.PI) / 180;
-      const cos = Math.cos(radians);
-      const sin = Math.sin(radians);
-      ops.push(`1 0 0 1 ${num(cx)} ${num(cy)} cm`);
-      ops.push(`${fine(cos)} ${fine(sin)} ${fine(-sin)} ${fine(cos)} 0 0 cm`);
-      ops.push(`1 0 0 1 ${num(-cx)} ${num(-cy)} cm`);
-    }
     for (const shape of shapes) ops.push(`${rgb(shape.fill)} rg ${svgPathOperators(shape.d)} f`);
     ops.push('Q');
     this.#write(ops.join('\n'));

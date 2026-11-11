@@ -100,7 +100,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0092](0092-moves-not-gps-wandering.md)              | Moves, not the GPS wandering                                                                | Accepted, amended by [0119](0119-moves-borne-out.md)    |
 | [0093](0093-gaps-an-audit-found.md)                  | Close the gaps an audit of the whole code found                                             | Accepted, amended by 0107, 0111                         |
 | [0094](0094-found-by-search-engines.md)              | Let search engines find the home page                                                       | Accepted                                                |
-| [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Accepted, amended by 0116                               |
+| [0095](0095-pin-of-four-tiles-logo.md)               | The logo: a pin of four tiles beside "Tesel" in Outfit                                      | Superseded by 0129                                      |
 | [0096](0096-same-names-told-apart.md)                | Members who share a name are told apart                                                     | Accepted, amended by 0110                               |
 | [0097](0097-energy-saving.md)                        | Save energy with a screen at rest and the GPS at intervals                                  | Accepted, amended by 0123 and 0127                      |
 | [0098](0098-meshtastic-radios.md)                    | Meshtastic radios, in code of our own, on one radio contract                                | Accepted, amended by 0099                               |
@@ -121,7 +121,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
 | [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted, amended by 0120                               |
 | [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
-| [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Accepted                                                |
+| [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Superseded by 0129                                      |
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
 | [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted                                                |
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
@@ -134,3 +134,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0126](0126-version-numbers.md)                      | A version number, and the build it came from                                                | Accepted                                                |
 | [0127](0127-pocket-mode-and-sos-outside.md)          | Pocket mode, and telling an SOS outside Tesel from the call itself                          | Accepted                                                |
 | [0128](0128-entering-a-group-shares-the-position.md) | Entering a group shares the position                                                        | Accepted                                                |
+| [0129](0129-the-word-and-a-tile.md)                  | The logo: the word and a tile                                                               | Accepted                                                |

@@ -1,6 +1,6 @@
 # 0116. The logo's pin: a rounder head and wider joints
 
-- Status: Accepted
+- Status: Superseded by [0129](0129-the-word-and-a-tile.md)
 - Date: 2026-11-04
 
 ## Context
