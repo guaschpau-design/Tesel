@@ -6,6 +6,7 @@ import { MAP_LAYERS } from '../map/layers.ts';
 import { BASE_MAPS } from '../map/style/style.ts';
 import { DUTY_STATUSES, EQUIPMENT, PROFILES } from '../members/member-catalog.ts';
 import { POSITION_MODES } from '../position/position-mode.ts';
+import { HANDHELD } from '../platform.ts';
 import type { AppDb } from '../storage/app-db.ts';
 import { THEME_CHOICES } from '../ui/appearance.svelte.ts';
 import { choice, flag, Preference, subset, type PreferenceSpec } from './preference.svelte.ts';
@@ -50,13 +51,17 @@ const PREFERENCES = {
   hiddenLayers: subset('hiddenLayers', MAP_LAYERS, []),
   /**
    * Saving energy: the screen goes dark after a minute untouched and the GPS runs at intervals
-   * after ten, the app still working (power/). On, since phones must last an operation.
+   * after ten, the app still working (power/). On, since phones must last an operation; a
+   * computer has no pocket mode (ADR-0131).
    */
   energySaving: flag('energySaving', true),
   /** Keep the screen on while the app is open: off, to spare the battery. */
   keepScreenOn: flag('keepScreenOn', false),
-  /** The app over the whole screen, where a browser tab allows it: on, until switched off in More. */
-  fullscreen: flag('fullscreen', true),
+  /**
+   * The app over the whole screen, where a browser tab allows it: on a phone or a tablet, until
+   * switched off in More; on a computer, only once switched on there (ADR-0131).
+   */
+  fullscreen: flag('fullscreen', HANDHELD),
   /** A tone for an SOS of someone else: on, since it must not be missed. */
   alarmSound: flag('alarmSound', true),
   /** System notifications for them while the app is not on screen: off until the user allows them. */

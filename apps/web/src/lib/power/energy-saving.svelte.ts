@@ -1,7 +1,8 @@
 // Saving energy while the app is open (ADR-0097, ADR-0127): pocket mode (PocketScreen.svelte) when
-// the user asks, or by itself after a minute untouched if they let it; ten minutes untouched and
-// the GPS runs once a minute. Nothing goes into pocket mode by itself while something needs the
-// screen (drawing, a tool, an own SOS), and the GPS stays on while guiding or calling for help.
+// the user asks, or by itself after a minute untouched if they let it, on a phone or a tablet only
+// (ADR-0131); ten minutes untouched and the GPS runs once a minute. Nothing goes into pocket mode
+// by itself while something needs the screen (drawing, a tool, an own SOS), and the GPS stays on
+// while guiding or calling for help.
 // Call it while the map's workspace initialises.
 
 import { navigation } from '../navigation/navigation.svelte.ts';

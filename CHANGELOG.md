@@ -154,6 +154,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Entering a group shares the position at once: by the invitation the app first opens with, and by creating a group, each says so; the card «No compartes tu posición» no longer asks a second time. Joining from a device already in another group still asks ([ADR-0128](docs/decisions/0128-entering-a-group-shares-the-position.md)).
 - On an iPhone the screen now stays on in pocket mode and with «Pantalla siempre encendida»: Safari refused to keep it on when asked as the app opened, before any touch, and it was not asked again; now it is, at the next touch ([ADR-0127](docs/decisions/0127-pocket-mode-and-sos-outside.md)).
 - Less battery for the same: the map is not drawn while the screen at rest covers it, and draws what arrived as it wakes; it is drawn at two pixels per point at most; this device's dot is drawn again only once it has moved a pixel, and the map follows it only past 3; and on foot a move goes out every 15 seconds at most, so that the phone's modem rests between two, while running or in a vehicle it is still every 5 ([ADR-0123](docs/decisions/0123-less-drawing-and-sending.md)).
+- On a computer there is no pocket mode, neither its padlock nor by itself, and full screen starts off, still in Settings; phones and tablets keep both ([ADR-0131](docs/decisions/0131-pocket-mode-on-phones-only.md)).
 
 ### Known limits
 

@@ -45,6 +45,7 @@
   import { useEnergySaving } from '../power/energy-saving.svelte.ts';
   import LocateButton from '../position/LocateButton.svelte';
   import PocketButton from '../power/PocketButton.svelte';
+  import { HANDHELD } from '../platform.ts';
   import SelfLayer from '../position/SelfLayer.svelte';
   import { radio } from '../radio/radio.svelte.ts';
   import type { Preferences } from '../settings/preferences.ts';
@@ -131,7 +132,8 @@
   ]);
   let sosOpen = $state(false);
   useEnergySaving({
-    automatic: () => preferences.energySaving.value,
+    // A computer has no pocket mode (ADR-0131).
+    automatic: () => HANDHELD && preferences.energySaving.value,
     busy: () => tools.drawingOrMeasuring || sosOpen,
     calling: () => group !== null && hasOwnSos(group.feed.state, group.self),
   });
@@ -313,8 +315,10 @@
   >
     <Pictogram name="layers" size={18} />
   </button>
-  <!-- Last, apart from what changes the map. -->
-  <PocketButton {t} />
+  <!-- Last, apart from what changes the map; only on a phone or a tablet (ADR-0131). -->
+  {#if HANDHELD}
+    <PocketButton {t} />
+  {/if}
 </MapControl>
 <MapScale {map} />
 <!-- Shown again with each base map, which brings its own sources. -->

@@ -18,6 +18,7 @@
   import Pictogram from '../ui/Pictogram.svelte';
   import { screenWakeSupported } from '../ui/screen-awake.svelte.ts';
   import SwitchRow from '../ui/SwitchRow.svelte';
+  import { HANDHELD } from '../platform.ts';
   import type { Preferences } from './preferences.ts';
 
   interface Props {
@@ -65,13 +66,16 @@
         onclick={() => void toggleNotifications()}
       />
     {/if}
-    <SwitchRow
-      icon="battery"
-      label={t('energySaving')}
-      hint={{ text: t('energySavingHint'), label: t('aboutThis', { name: t('energySaving') }) }}
-      on={preferences.energySaving.value}
-      onclick={() => void preferences.energySaving.set(!preferences.energySaving.value)}
-    />
+    <!-- A computer has no pocket mode (ADR-0131). -->
+    {#if HANDHELD}
+      <SwitchRow
+        icon="battery"
+        label={t('energySaving')}
+        hint={{ text: t('energySavingHint'), label: t('aboutThis', { name: t('energySaving') }) }}
+        on={preferences.energySaving.value}
+        onclick={() => void preferences.energySaving.set(!preferences.energySaving.value)}
+      />
+    {/if}
     {#if screenWakeSupported}
       <SwitchRow
         icon="screen"
