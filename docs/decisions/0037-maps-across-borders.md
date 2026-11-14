@@ -35,7 +35,8 @@ Open services cover the rest:
   - every 100 m on a regional view;
   - every 25 m at a town's zoom;
   - every 10 m closer;
-  - every index line carries its height.
+  - every index line carries its height;
+  - only above sea level: the elevation model is noisy at sea, which drew rings marked 0 offshore, and the coast is already the base map's. Land below sea level, rare in Europe, has no contour lines.
 
   IGN's vector map is kept for the names of the terrain in Spain.
 

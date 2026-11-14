@@ -43,6 +43,11 @@ export function topoFlavor(): Flavor {
 }
 
 const isIndex: ExpressionSpecification = ['==', ['get', RANK_KEY], 1];
+/**
+ * Lines above sea level only: the elevation is noisy at sea, which drew rings marked 0 offshore,
+ * and the coast is the base map's.
+ */
+const aboveSea: ExpressionSpecification = ['>', ['get', HEIGHT_KEY], 0];
 
 /** The contour lines, drawn over the relief shading and under every name. */
 export function contourLayers(): LayerSpecification[] {
@@ -56,7 +61,7 @@ export function contourLayers(): LayerSpecification[] {
     {
       ...common,
       id: 'contours',
-      filter: ['!', isIndex],
+      filter: ['all', aboveSea, ['!', isIndex]],
       paint: {
         'line-color': colour,
         'line-opacity': 0.4,
@@ -66,7 +71,7 @@ export function contourLayers(): LayerSpecification[] {
     {
       ...common,
       id: 'contours-index',
-      filter: isIndex,
+      filter: ['all', aboveSea, isIndex],
       paint: {
         'line-color': colour,
         'line-opacity': 0.75,
@@ -94,7 +99,7 @@ export function terrainNameLayers(): LayerSpecification[] {
       source: CONTOURS_SOURCE,
       'source-layer': CONTOUR_LAYER,
       minzoom: 13,
-      filter: isIndex,
+      filter: ['all', aboveSea, isIndex],
       layout: {
         'symbol-placement': 'line',
         'text-field': ['to-string', ['get', HEIGHT_KEY]],
