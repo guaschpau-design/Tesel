@@ -248,6 +248,14 @@
     pointer-events: none;
   }
 
+  /* A phone held sideways (ADR-0130): clear of the dock's rail and the SOS button on the left. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .top {
+      top: 0.5rem;
+      left: var(--side-clearance);
+    }
+  }
+
   /* Its cards take their places in the stack, as if the box were not there. */
   .aside {
     display: contents;

@@ -35,4 +35,14 @@
     border: 2px solid var(--map-text);
     border-top: 0;
   }
+
+  /* A phone held sideways (ADR-0130) has no height for the scale under the controls: it goes
+     beside them, at their foot. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    :global(.maplibregl-ctrl-top-right) {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-end;
+    }
+  }
 </style>

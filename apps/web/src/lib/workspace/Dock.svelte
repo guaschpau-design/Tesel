@@ -124,6 +124,35 @@
     box-shadow: var(--shadow-float);
   }
 
+  /* A phone held sideways (ADR-0130): the dock is a rail down the left edge, its buttons without
+     their words, and the SOS button at the foot of the map beside it, or under it when there is
+     room: the bottom is left to the map. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .bottom {
+      top: 0.5rem;
+      right: auto;
+      bottom: calc(0.5rem + env(safe-area-inset-bottom));
+      left: max(0.5rem, env(safe-area-inset-left));
+      flex-direction: column;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .dock {
+      flex-direction: column;
+      margin-left: 0;
+    }
+
+    .sos {
+      order: 1;
+      width: 3.4rem;
+      height: 3.4rem;
+      margin-top: auto;
+    }
+  }
+
   /* Room for five buttons beside the SOS on the narrowest phones, the SOS first. */
   @media (max-width: 22.5rem) {
     .sos {

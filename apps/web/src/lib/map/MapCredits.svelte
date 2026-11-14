@@ -52,6 +52,13 @@
     pointer-events: auto;
   }
 
+  /* A phone held sideways (ADR-0130): at the foot of the map, past the rail and the SOS button. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .credits {
+      left: var(--side-clearance);
+    }
+  }
+
   .credits :global(a) {
     color: inherit;
   }

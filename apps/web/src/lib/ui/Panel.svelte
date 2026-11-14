@@ -125,4 +125,18 @@
     margin: 0;
     font-size: var(--text-title);
   }
+
+  /* A phone held sideways (ADR-0130): a sheet on the right, the whole height, beside the map's
+     controls; the map stays in view at the left, with the dock's rail and the SOS button. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .panel,
+    .panel.fill {
+      top: 0.5rem;
+      right: calc(var(--control-size) + 1.25rem + env(safe-area-inset-right));
+      bottom: var(--dock-clearance);
+      left: auto;
+      width: min(24rem, calc(100% - var(--side-clearance) - var(--control-size) - 2rem));
+      max-height: none;
+    }
+  }
 </style>

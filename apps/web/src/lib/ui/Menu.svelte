@@ -139,6 +139,17 @@
     overscroll-behavior: contain;
   }
 
+  /* On the rail of a phone held sideways (ADR-0130), the dock's menus open to its right. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .dock .menu {
+      top: 0;
+      right: auto;
+      bottom: auto;
+      left: calc(100% + 0.5rem);
+      max-height: calc(100cqh - 1rem);
+    }
+  }
+
   /* Items are buttons with a pictogram, a name and, for a choice, its switch. */
   .menu :global(button) {
     display: grid;

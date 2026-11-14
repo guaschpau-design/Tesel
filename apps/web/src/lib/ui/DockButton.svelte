@@ -25,7 +25,7 @@
     <Pictogram name={icon} size={22} />
     {#if count > 0}<span class="count" aria-hidden="true">{count}</span>{/if}
   </span>
-  <span>{label}</span>
+  <span class="label">{label}</span>
 </button>
 
 <style>
@@ -69,5 +69,26 @@
 
   .dock-button.on :global(svg) {
     color: var(--signal);
+  }
+
+  /* On the rail of a phone held sideways (ADR-0130), the pictogram alone, a finger's size: the
+     word is still the button's name for screen readers. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .dock-button {
+      flex: none;
+      width: var(--control-size);
+      height: var(--control-size);
+      min-width: 0;
+      padding: 0;
+    }
+
+    .label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   }
 </style>

@@ -135,3 +135,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0127](0127-pocket-mode-and-sos-outside.md)          | Pocket mode, and telling an SOS outside Tesel from the call itself                          | Accepted                                                |
 | [0128](0128-entering-a-group-shares-the-position.md) | Entering a group shares the position                                                        | Accepted                                                |
 | [0129](0129-the-word-and-a-tile.md)                  | The logo: the word and a tile                                                               | Accepted                                                |
+| [0130](0130-a-phone-held-sideways.md)                | A phone held sideways                                                                       | Accepted                                                |

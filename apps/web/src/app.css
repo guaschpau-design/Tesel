@@ -104,6 +104,9 @@
   /* The room the dock and the SOS button take at the bottom of the map: on phones, panels and
      the cards at the top stop above it, so the SOS button is always within reach. */
   --dock-clearance: calc(5.5rem + env(safe-area-inset-bottom));
+  /* A phone held sideways (ADR-0130): the dock is a rail at the left, so nothing sits at the
+     bottom; panels and cards keep clear of the rail and of the SOS button beside it. */
+  --side-clearance: calc(8.4rem + env(safe-area-inset-left));
   /* The height of a button, an input or a map control: large enough for a gloved finger. */
   --control-size: 2.75rem;
   /* A chip is lower: many sit together, and each is a short word wide. */
@@ -111,6 +114,13 @@
 }
 
 /* The dark look, chosen in Settings or this device's own (ui/appearance.svelte.ts, ADR-0114). */
+/* A phone held sideways (ADR-0130): the same query in every part that changes for it. */
+@media (orientation: landscape) and (max-height: 32rem) {
+  :root {
+    --dock-clearance: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 :root[data-theme='dark'] {
   color-scheme: dark;
   --bg: #0f1011;

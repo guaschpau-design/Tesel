@@ -103,6 +103,22 @@
     }
   }
 
+  /* A phone held sideways (ADR-0130): a lower bar, the group's name on one line. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .bar {
+      padding-top: calc(0.2rem + env(safe-area-inset-top));
+      padding-bottom: 0.2rem;
+    }
+
+    .bar :global(button) {
+      min-height: 2.25rem;
+    }
+
+    .group .caption {
+      display: none;
+    }
+  }
+
   /* Says what it is above the group's name, which is cut short rather than crowd the bar. */
   .group {
     display: grid;
