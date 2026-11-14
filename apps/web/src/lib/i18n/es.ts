@@ -265,6 +265,7 @@ export const es: Messages = {
   positionSharedHint: 'El grupo ve dónde estás.',
   batteryUnknown: 'Desconocida',
   batteryPercent: '{percent} %',
+  aboutBattery: 'Por qué no se ve la batería',
   batteryUnsupported: 'Este navegador no deja ver la batería; en iPhone no se puede.',
   equipmentNone: 'Nada marcado',
   tasksNone: 'Ninguna pendiente',

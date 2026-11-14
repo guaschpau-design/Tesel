@@ -113,3 +113,19 @@ test('a member not on the map is told so, and shows themselves in one tap', asyn
   await expect(card.getByRole('button', { name: 'Guíame' })).toBeVisible();
   await expect(card).toContainText('Último contacto');
 });
+
+test('a battery the browser hides says why behind an (i)', async ({ browser }) => {
+  const page = await device(browser, 'Ana', VIEW);
+  // As on an iPhone: the browser has no battery to read.
+  await page.context().addInitScript(() => {
+    Reflect.deleteProperty(Navigator.prototype, 'getBattery');
+  });
+  await page.reload();
+  await page.getByRole('button', { name: /^Yo/ }).click();
+  const me = page.getByRole('region', { name: 'Yo' });
+  await expect(me.getByText('Desconocida')).toBeVisible();
+  const why = me.getByText('Este navegador no deja ver la batería; en iPhone no se puede.');
+  await expect(why).toBeHidden();
+  await me.getByRole('button', { name: 'Por qué no se ve la batería' }).click();
+  await expect(why).toBeVisible();
+});

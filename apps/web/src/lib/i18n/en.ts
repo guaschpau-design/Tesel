@@ -264,6 +264,7 @@ export const en = {
   positionSharedHint: 'The group sees where you are.',
   batteryUnknown: 'Unknown',
   batteryPercent: '{percent} %',
+  aboutBattery: 'Why the battery is not shown',
   batteryUnsupported: 'This browser does not tell the battery; on an iPhone it cannot.',
   equipmentNone: 'Nothing marked',
   tasksNone: 'None to do',

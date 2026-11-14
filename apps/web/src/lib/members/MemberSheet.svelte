@@ -27,6 +27,7 @@
   import type { TaskRow } from '../tasks/tasks.ts';
   import { TEAM_COLOURS } from '../teams/teams.ts';
   import { shownText } from '../text.ts';
+  import Explained from '../ui/Explained.svelte';
   import Fold from '../ui/Fold.svelte';
   import StatusDot from '../ui/StatusDot.svelte';
   import {
@@ -80,15 +81,23 @@
   }
 </script>
 
+{#snippet battery()}
+  <p class="line">
+    {#if state.battery !== null}
+      <StatusDot tone={state.battery <= LOW_BATTERY ? 'poor' : 'good'} />
+    {/if}
+    {batteryText}
+  </p>
+{/snippet}
+
 {#snippet device()}
   <SheetPart title={t('sheetBattery')} inline>
-    <p class="line">
-      {#if state.battery !== null}
-        <StatusDot tone={state.battery <= LOW_BATTERY ? 'poor' : 'good'} />
-      {/if}
-      {batteryText}
-    </p>
-    {#if batteryNote}<p class="hint">{batteryNote}</p>{/if}
+    <!-- Why it may be unknown: behind an (i), read once (ADR-0101). -->
+    {#if batteryNote}
+      <Explained label={t('aboutBattery')} text={batteryNote}>{@render battery()}</Explained>
+    {:else}
+      {@render battery()}
+    {/if}
   </SheetPart>
   <SheetPart title={t('sheetRadio')} inline>
     <p class="line">
