@@ -12,7 +12,6 @@ import {
   type Connector,
   type RadioLink,
   type RadioLinkState,
-  type RadioText,
   type ReceivedFrame,
   type SendOutcome,
 } from '@tesel/radio';
@@ -23,9 +22,7 @@ import {
   FLOOD,
   PUSH_MSG_WAITING,
   type ChannelInfo,
-  type ChannelMessage,
   type CompanionConnection,
-  type ContactMessage,
   type SyncedMessage,
 } from './companion.ts';
 import { ACCEPTED_DATA_TYPES, SEND_DATA_TYPE } from './data-type.ts';
@@ -46,9 +43,6 @@ export class MeshCoreRadio implements RadioLink {
   #drainingOn: CompanionConnection | null = null;
   #drainRequested = false;
   readonly #receivers = new Set<(frame: ReceivedFrame) => void>();
-  readonly #textListeners = new Set<(message: RadioText) => void>();
-  /** Channel names by slot, learnt when configuring the group channel. */
-  #channelNames = new Map<number, string>();
   readonly #onMessageWaiting = () => void this.#drain();
   readonly #onDisconnected = () => {
     this.#keeper.lost();
@@ -93,7 +87,6 @@ export class MeshCoreRadio implements RadioLink {
       const name = channelName(groupName, CHANNEL_NAME_MAX_BYTES);
       await this.#command(() => connection.setChannel(choice.index, name, secret));
       this.#channelSecrets.set(choice.index, secret);
-      this.#channelNames.set(choice.index, name);
     }
     this.#channel = choice.index;
     // Pick up anything that arrived for the group before we were listening.
@@ -136,11 +129,6 @@ export class MeshCoreRadio implements RadioLink {
     return () => this.#receivers.delete(listener);
   }
 
-  onText(listener: (message: RadioText) => void): () => void {
-    this.#textListeners.add(listener);
-    return () => this.#textListeners.delete(listener);
-  }
-
   onStateChange(listener: (state: RadioLinkState) => void): () => void {
     return this.#keeper.onStateChange(listener);
   }
@@ -150,7 +138,6 @@ export class MeshCoreRadio implements RadioLink {
   }
 
   #learn(channels: readonly ChannelInfo[]): void {
-    this.#channelNames = new Map(channels.map((channel) => [channel.channelIdx, channel.name]));
     this.#channelSecrets = new Map(
       channels
         .filter((channel) => channel.channelIdx !== 0 && channel.secret.some((byte) => byte !== 0))
@@ -209,19 +196,16 @@ export class MeshCoreRadio implements RadioLink {
     }
   }
 
+  /**
+   * Passes on Tesel's frames. Text messages of other MeshCore apps leave the radio's queue all the
+   * same, as reading it takes them, and are dropped: Tesel shows none (ADR-0132).
+   */
   #deliver(message: NonNullable<SyncedMessage>): void {
-    if ('channelData' in message) {
-      const { channelIdx, dataType, data, snr } = message.channelData;
-      const secret = this.#channelSecrets.get(channelIdx);
-      if (secret === undefined || !ACCEPTED_DATA_TYPES.includes(dataType)) return;
-      for (const receiver of this.#receivers) receiver({ bytes: data, snr, secret });
-      return;
-    }
-    const text =
-      'channelMessage' in message
-        ? channelText(message.channelMessage, this.#channelNames)
-        : directText(message.contactMessage);
-    for (const listener of this.#textListeners) listener(text);
+    if (!('channelData' in message)) return;
+    const { channelIdx, dataType, data, snr } = message.channelData;
+    const secret = this.#channelSecrets.get(channelIdx);
+    if (secret === undefined || !ACCEPTED_DATA_TYPES.includes(dataType)) return;
+    for (const receiver of this.#receivers) receiver({ bytes: data, snr, secret });
   }
 
   /** One companion command through the keeper's queue. */
@@ -234,28 +218,4 @@ export class MeshCoreRadio implements RadioLink {
 function rethrowAsRefused(error: unknown): never {
   if (error instanceof Error) throw error;
   throw new RadioError('refused', 'the radio refused the command');
-}
-
-/** MeshCore puts the sender's name at the start of channel messages: "Name: text". */
-function channelText(message: ChannelMessage, names: ReadonlyMap<number, string>): RadioText {
-  const separator = message.text.indexOf(': ');
-  const named = separator > 0 && separator <= 32;
-  return {
-    kind: 'channel',
-    channel: names.get(message.channelIdx) ?? null,
-    sender: named ? message.text.slice(0, separator) : null,
-    text: named ? message.text.slice(separator + 2) : message.text,
-    time: message.senderTimestamp,
-  };
-}
-
-function directText(message: ContactMessage): RadioText {
-  const hex = [...message.pubKeyPrefix].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-  return {
-    kind: 'direct',
-    channel: null,
-    sender: hex,
-    text: message.text,
-    time: message.senderTimestamp,
-  };
 }

@@ -12,7 +12,6 @@ export {
   type RadioFamily,
   type RadioLink,
   type RadioLinkState,
-  type RadioText,
   type ReceivedFrame,
   type SendOutcome,
 } from './radio-link.ts';

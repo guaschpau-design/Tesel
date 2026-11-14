@@ -14,7 +14,6 @@ import {
   type Connector,
   type RadioLink,
   type RadioLinkState,
-  type RadioText,
   type ReceivedFrame,
   type SendOutcome,
 } from '@tesel/radio';
@@ -41,7 +40,6 @@ export class MeshtasticRadio implements RadioLink {
   #unsubscribe: (() => void)[] = [];
   readonly #nodes = new NodeBook();
   readonly #receivers = new Set<(frame: ReceivedFrame) => void>();
-  readonly #textListeners = new Set<(message: RadioText) => void>();
   readonly #nodeListeners = new Set<(node: MeshtasticNode) => void>();
 
   constructor(connector: Connector<MeshtasticConnection>) {
@@ -145,11 +143,6 @@ export class MeshtasticRadio implements RadioLink {
     return () => this.#receivers.delete(listener);
   }
 
-  onText(listener: (message: RadioText) => void): () => void {
-    this.#textListeners.add(listener);
-    return () => this.#textListeners.delete(listener);
-  }
-
   /**
    * Subscribes to the other Meshtastic nodes this radio hears: their names and where they say they
    * are, each time that changes, starting with those the radio knew when it connected. Not part of
@@ -198,9 +191,6 @@ export class MeshtasticRadio implements RadioLink {
       case MESHTASTIC_PORTNUM:
         this.#hearFrame(packet);
         return;
-      case PORT.textMessage:
-        this.#hearText(packet);
-        return;
       case PORT.nodeInfo:
       case PORT.position:
         this.#hearNode(packet);
@@ -216,19 +206,6 @@ export class MeshtasticRadio implements RadioLink {
     for (const receiver of this.#receivers) {
       receiver({ bytes: packet.payload, snr: packet.rxSnr, secret });
     }
-  }
-
-  #hearText(packet: MeshPacket): void {
-    const channel = this.#setup.channels.find(({ index }) => index === packet.channel);
-    const text: RadioText = {
-      kind: packet.to === BROADCAST ? 'channel' : 'direct',
-      // The primary channel often has no name of its own: Meshtastic shows its preset's.
-      channel: channel === undefined || channel.name === '' ? null : channel.name,
-      sender: this.#nodes.nameOf(packet.from),
-      text: new TextDecoder().decode(packet.payload),
-      time: packet.rxTime === 0 ? Math.floor(Date.now() / 1000) : packet.rxTime,
-    };
-    for (const listener of this.#textListeners) listener(text);
   }
 
   #hearNode(packet: MeshPacket): void {

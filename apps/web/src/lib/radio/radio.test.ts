@@ -161,23 +161,6 @@ describe('radio session', () => {
     expect(radio.lastSnr).toBe(7.5);
   });
 
-  it('keeps MeshCore text messages across restarts', async () => {
-    vi.useRealTimers();
-    const db = await openAppDb('radio-session-texts');
-    const link = new FakeLink();
-    const radio = new RadioSession(() => Promise.resolve(link));
-    await radio.useStorage(db);
-    await radio.connect();
-    link.say({ kind: 'channel', channel: 'Public', sender: 'Marta', text: 'Hola', time: 1 });
-    expect(radio.texts.map((text) => text.text)).toEqual(['Hola']);
-
-    await vi.waitFor(async () => {
-      const restarted = new RadioSession(() => Promise.resolve(new FakeLink()));
-      await restarted.useStorage(db);
-      expect(restarted.texts.map((text) => text.text)).toEqual(['Hola']);
-    });
-  });
-
   it('keeps what it hears on the channel of another of this device’s groups in that group’s log', async () => {
     vi.useRealTimers();
     const db = await openAppDb('radio-session-other-group');
@@ -185,7 +168,7 @@ describe('radio session', () => {
     await saveGroup(db, other);
     const link = new FakeLink();
     const radio = new RadioSession(() => Promise.resolve(link));
-    await radio.useStorage(db);
+    radio.useStorage(db);
     const feed = new FakeFeed();
     await radio.connect();
     await radio.useFeed(feed);
@@ -203,7 +186,7 @@ describe('radio session', () => {
     const link = new FakeLink();
     link.held = [left.secret];
     const radio = new RadioSession(() => Promise.resolve(link));
-    await radio.useStorage(db);
+    radio.useStorage(db);
     await radio.forgetGroup(left.secret);
     expect(link.forgotten).toEqual([]);
     await radio.connect();
@@ -235,8 +218,8 @@ describe('radio session', () => {
     await radio.disconnect();
     await radio.connect();
     expect(radio.family).toBe('meshtastic');
-    meshcore.say({ kind: 'channel', channel: null, sender: null, text: 'Antes', time: 1 });
-    expect(radio.texts).toEqual([]);
+    meshcore.hear(sealedFor(bytes));
+    expect(radio.lastSnr).toBeNull();
   });
 
   it('unlinks the feed when the radio goes away', async () => {

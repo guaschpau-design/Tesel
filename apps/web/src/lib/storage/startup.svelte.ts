@@ -105,7 +105,7 @@ export class Startup {
         opened('app');
         this.db = database;
         if (server !== null) this.weather = WeatherFeed.start(database, server);
-        await radio.useStorage(database);
+        radio.useStorage(database);
         // Before any group opens: what was alarmed for before does not sound again.
         await alarmedSos.useStorage(database);
         const preferences = await loadPreferences(database);

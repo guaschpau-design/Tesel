@@ -7,7 +7,6 @@ import { openDB, unwrap, type DBSchema, type IDBPDatabase } from 'idb';
 
 import type { StoredGroup } from '../groups/group.ts';
 import type { LocalIdentity } from '../identity/identity.ts';
-import type { StoredRadioText } from '../radio/radio-texts.ts';
 import type { RelayPosition } from '../sync/relay-types.ts';
 import { IGNORE_VERSION_CHANGE, type VersionChange } from './version-change.ts';
 
@@ -104,8 +103,6 @@ interface AppSchema extends DBSchema {
   outbox: { key: EventKey; value: OutboxEntry; indexes: { byGroup: string } };
   /** How far this device has read each group's envelopes on its server, and in which store. */
   cursors: { key: CursorKey; value: RelayPosition };
-  /** Text messages of other apps (MeshCore or Meshtastic chat) heard by the radio, oldest first. */
-  radioTexts: { key: number; value: StoredRadioText };
   /** The weather warnings last read from the server, under the key `latest` (protocol §8.2). */
   weather: { key: 'latest'; value: WeatherWarnings };
 }
@@ -113,7 +110,7 @@ interface AppSchema extends DBSchema {
 export type AppDb = IDBPDatabase<AppSchema>;
 
 const DB_NAME = 'tesel';
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 export async function openAppDb(
   name: string = DB_NAME,
@@ -145,9 +142,7 @@ export async function openAppDb(
         outbox.createIndex('byGroup', 'groupId');
         database.createObjectStore('cursors');
       }
-      if (oldVersion < 3) {
-        database.createObjectStore('radioTexts', { autoIncrement: true });
-      }
+      // Version 3 added a store, gone since version 9, of the text messages of other apps.
       if (oldVersion < 4) {
         // Cursors are now kept per server; old ones are dropped and the backlog fetched again.
         // Version 4 also added a store, gone since version 7, of what servers said about themselves.
@@ -172,6 +167,11 @@ export async function openAppDb(
       // Version 8 changes no store: sequence numbers are kept per group from it on (ADR-0111),
       // starting above the one number all groups shared. A window of an older version, which
       // would go on numbering with that one, has to let the database go first.
+      if (oldVersion < 9) {
+        // Text messages of other MeshCore or Meshtastic apps are no longer shown (ADR-0132).
+        const stores = unwrap(database);
+        if (stores.objectStoreNames.contains('radioTexts')) stores.deleteObjectStore('radioTexts');
+      }
     },
   });
   return db;

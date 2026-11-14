@@ -178,41 +178,21 @@ describe('MeshCore radio', () => {
     expect(fake.waiting).toEqual([]);
   });
 
-  it('keeps the text messages of other MeshCore apps instead of losing them', async () => {
+  it('takes the text messages of other MeshCore apps off the radio and drops them', async () => {
     const fake = new FakeCompanion(slots(['Public', EMPTY], ['Rescate', SECRET]));
     const radio = await connected(fake);
-    const texts: unknown[] = [];
-    radio.onText((text) => texts.push(text));
+    const frames: ReceivedFrame[] = [];
+    radio.onReceive((frame) => frames.push(frame));
     await radio.configureGroupChannel('Rescate', SECRET);
     fake.waiting.push(
-      {
-        channelMessage: {
-          channelIdx: 0,
-          senderTimestamp: 100,
-          text: 'Marta: ¿Alguien en Benimaclet?',
-        },
-      },
-      {
-        contactMessage: {
-          pubKeyPrefix: new Uint8Array([0xab, 0xcd, 1, 2, 3, 4]),
-          senderTimestamp: 101,
-          text: 'Hola',
-        },
-      },
+      { channelMessage: { channelIdx: 0, senderTimestamp: 100, text: 'Marta: Hola' } },
+      { contactMessage: { pubKeyPrefix: new Uint8Array(6), senderTimestamp: 101, text: 'Hola' } },
     );
     fake.emit(PUSH_MSG_WAITING);
     await vi.waitFor(() => {
-      expect(texts).toEqual([
-        {
-          kind: 'channel',
-          channel: 'Public',
-          sender: 'Marta',
-          text: '¿Alguien en Benimaclet?',
-          time: 100,
-        },
-        { kind: 'direct', channel: null, sender: 'abcd01020304', text: 'Hola', time: 101 },
-      ]);
+      expect(fake.waiting).toEqual([]);
     });
+    expect(frames).toEqual([]);
   });
 
   it('reconnects to the same radio by itself when the Bluetooth link drops', async () => {

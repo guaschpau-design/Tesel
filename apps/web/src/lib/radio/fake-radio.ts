@@ -7,7 +7,6 @@ import type {
   RadioFamily,
   RadioLink,
   RadioLinkState,
-  RadioText,
   ReceivedFrame,
   SendOutcome,
 } from '@tesel/radio';
@@ -33,7 +32,6 @@ export class FakeLink implements RadioLink {
   held: Uint8Array[] = [];
   #receive: ((frame: ReceivedFrame) => void) | null = null;
   #stateChange: ((state: RadioLinkState) => void) | null = null;
-  #text: ((message: RadioText) => void) | null = null;
 
   constructor(family: RadioFamily = 'meshcore') {
     this.family = family;
@@ -78,23 +76,14 @@ export class FakeLink implements RadioLink {
 
   onReceive(listener: (frame: ReceivedFrame) => void): () => void {
     this.#receive = listener;
-    return () => undefined;
+    return () => {
+      this.#receive = null;
+    };
   }
 
   onStateChange(listener: (state: RadioLinkState) => void): () => void {
     this.#stateChange = listener;
     return () => undefined;
-  }
-
-  onText(listener: (message: RadioText) => void): () => void {
-    this.#text = listener;
-    return () => {
-      this.#text = null;
-    };
-  }
-
-  say(message: RadioText): void {
-    this.#text?.(message);
   }
 
   disconnect(): Promise<void> {

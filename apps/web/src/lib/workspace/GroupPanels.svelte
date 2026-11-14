@@ -14,7 +14,6 @@
   import ObjectForm from '../objects/ObjectForm.svelte';
   import { objectTitle } from '../objects/object-names.ts';
   import { removeSweep } from '../objects/sweep-actions.ts';
-  import { radio } from '../radio/radio.svelte.ts';
   import ReportForm from '../reports/ReportForm.svelte';
   import type { Preferences } from '../settings/preferences.ts';
   import type { ReportFields } from '../sync/event-fields.ts';
@@ -141,8 +140,6 @@
       openPanel('report');
     }}
     {onplace}
-    radioTexts={radio.texts}
-    showRadioTab={radio.state !== 'disconnected' || radio.texts.length > 0}
     onclose={closePanel}
   />
 {/if}

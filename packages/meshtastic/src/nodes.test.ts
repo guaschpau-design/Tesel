@@ -21,10 +21,11 @@ describe('the nodes a Meshtastic radio hears', () => {
     book.heard(1, names('Marta'));
     book.heard(MAX_NODES + 1, names('Otro'));
     // Marta was heard again before the book overflowed: node 2, heard least recently, went.
-    expect(book.nameOf(1)).toBe('Marta');
-    expect(book.nameOf(2)).toBe('!00000002');
-    expect(book.nameOf(3)).toBe('Nodo 3');
-    expect(book.nameOf(MAX_NODES + 1)).toBe('Otro');
+    const again = (num: number) => book.heard(num, { at: 2 }).longName;
+    expect(again(3)).toBe('Nodo 3');
+    expect(again(1)).toBe('Marta');
+    expect(again(MAX_NODES + 1)).toBe('Otro');
+    expect(again(2)).toBeNull();
   });
 
   it('takes no position off the Earth', () => {

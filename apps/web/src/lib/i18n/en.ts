@@ -585,11 +585,6 @@ export const en = {
   radioConnectHint:
     'If it asks for a PIN, it is the one on the node’s screen or, if it has none, 123456 from the factory. Node not listed? Turn it off and on again.',
   chatGroup: 'Group',
-  chatMesh: 'Public mesh',
-  noMeshMessages: 'No messages from other mesh apps have arrived yet.',
-  meshcoreChannel: 'Channel {name}',
-  meshcoreUnknownChannel: '(unknown)',
-  meshcoreDirect: 'Private message',
   tasks: 'Tasks',
   tasksForYou: 'Tasks: {count} for you',
   tasksDone: 'Done ({count})',

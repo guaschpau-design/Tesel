@@ -40,4 +40,4 @@ Web Bluetooth is available in Chrome and Edge on Android, Windows, macOS and Lin
 
 If the system never asks for the PIN, Tesel says the device is not paired and shows how to do it: pair the radio in the system's Bluetooth settings with its PIN, switch the radio off and on (the system stays connected to it after pairing, and a radio that is connected is not listed), and connect again. A radio not listed at all is usually held by another device or app: switching it off and on frees it.
 
-While connected, Tesel reads every message the radio holds. Text messages of other MeshCore apps appear in the chat's MeshCore tab, read-only; disconnect in the panel to reply from the MeshCore app.
+While connected, Tesel reads every message the radio holds. Text messages of other MeshCore or Meshtastic apps are not shown, and those Tesel read are gone from the radio: to chat in MeshCore or Meshtastic, disconnect the radio in Tesel and use that app ([ADR-0132](decisions/0132-no-texts-of-other-apps.md)).

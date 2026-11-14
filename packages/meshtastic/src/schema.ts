@@ -60,7 +60,7 @@ export const ADMIN_MESSAGE = { setChannel: 33 } as const;
 export const CHANNEL_ROLE = { disabled: 0, primary: 1, secondary: 2 } as const;
 
 /** `PortNum` values Tesel reads or writes; Tesel's own is in @tesel/protocol (protocol §7.2). */
-export const PORT = { textMessage: 1, position: 3, nodeInfo: 4, admin: 6 } as const;
+export const PORT = { position: 3, nodeInfo: 4, admin: 6 } as const;
 
 /** The `to` of a packet for every node. */
 export const BROADCAST = 0xffffffff;

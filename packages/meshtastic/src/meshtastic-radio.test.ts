@@ -1,5 +1,5 @@
 import { MESHTASTIC_PORTNUM } from '@tesel/protocol';
-import { RadioError, type OpenedRadio, type RadioText, type ReceivedFrame } from '@tesel/radio';
+import { RadioError, type OpenedRadio, type ReceivedFrame } from '@tesel/radio';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Incoming, MeshtasticConnection, RadioSetup } from './connection.ts';
@@ -180,25 +180,6 @@ describe('Meshtastic radio', () => {
     expect(frames).toEqual([
       { bytes: ours, snr: 6.25, secret: SECRET },
       { bytes: ours, snr: 1, secret: OTHER },
-    ]);
-  });
-
-  it('keeps the text messages of Meshtastic chat, named by who sent them', async () => {
-    const marta = { num: MARTA, user: { longName: 'Marta', shortName: 'MR' }, position: null };
-    const radio = new FakeRadio({
-      channels: channels(['Rescate', SECRET]),
-      nodes: [{ ...marta, lastHeard: 1 }],
-    });
-    const link = await connected(radio);
-    const texts: RadioText[] = [];
-    link.onText((text) => texts.push(text));
-    const hola = new TextEncoder().encode('¿Alguien en Benimaclet?');
-    radio.hear({ portnum: PORT.textMessage, payload: hola, channel: 1, rxTime: 100 });
-    radio.hear({ portnum: PORT.textMessage, payload: hola, to: ME, from: 0x1234, rxTime: 101 });
-    const text = '¿Alguien en Benimaclet?';
-    expect(texts).toEqual([
-      { kind: 'channel', channel: 'Rescate', sender: 'Marta', text, time: 100 },
-      { kind: 'direct', channel: null, sender: '!00001234', text, time: 101 },
     ]);
   });
 

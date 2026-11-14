@@ -14,4 +14,4 @@ It implements the `RadioLink` contract of [`@tesel/radio`](../radio), on that pa
 | `companion.ts`      | The typed subset of the companion connection used here                                                                                                               |
 | `web-ble.ts`        | Opening a radio over Web Bluetooth with the MIT-licensed `@liamcottle/meshcore.js`                                                                                   |
 
-While Tesel is connected it reads every message the radio holds. Text messages of other MeshCore apps are passed to `onText` so the app can keep and show them.
+While Tesel is connected it reads every message the radio holds. Text messages of other MeshCore apps are dropped (ADR-0132).

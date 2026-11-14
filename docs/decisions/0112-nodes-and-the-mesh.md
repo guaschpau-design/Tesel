@@ -12,7 +12,7 @@ The app and the site called the LoRa devices "radios" and the way without covera
 - The devices are **nodes** ("nodo"; "nodo de bolsillo" where the site first introduces them; "nodo LoRa" where the kind matters). The network they make is **the mesh** ("la malla", "red de malla"). Messages go **over the mesh** ("por la malla").
 - The site says once what a node is: a long-range, very low-power LoRa transmitter; and that the nodes link up into a mesh of the team's own, with no masts and no operators.
 - Its sign is three nodes linked to each other (`mesh` in ui/glyphs.ts), not an antenna mast: on the connections card, in the top bar and beside members reached over the mesh. The mast stays the map symbol of a command post.
-- In the app: "Conectar nodo", the connections card "Malla" / "Mesh", the chat tab "Malla pública" / "Public mesh", "Te llega por la malla", "Sin nodo".
+- In the app: "Conectar nodo", the connections card "Malla" / "Mesh", "Te llega por la malla", "Sin nodo".
 - Code, comments, the protocol and the technical documents keep the technical words (radio, LoRa, link): they are for programmers, for whom they are exact.
 - "Emisora" (a radio set a member carries, in the kit list) and "radio" of a circle are other things and keep their words.
 

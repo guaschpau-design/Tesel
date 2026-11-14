@@ -14,24 +14,11 @@ interface ChannelData {
   readonly data: Uint8Array;
 }
 
-/** A text message of another MeshCore app, on a channel. The text starts with "Sender: ". */
-export interface ChannelMessage {
-  readonly channelIdx: number;
-  readonly senderTimestamp: number;
-  readonly text: string;
-}
-
-/** A private text message of another MeshCore app, to this radio. */
-export interface ContactMessage {
-  readonly pubKeyPrefix: Uint8Array;
-  readonly senderTimestamp: number;
-  readonly text: string;
-}
-
 export type SyncedMessage =
   | { readonly channelData: ChannelData }
-  | { readonly channelMessage: ChannelMessage }
-  | { readonly contactMessage: ContactMessage }
+  // Text messages of other MeshCore apps, which Tesel drops (ADR-0132).
+  | { readonly channelMessage: unknown }
+  | { readonly contactMessage: unknown }
   | null;
 
 export interface CompanionConnection {

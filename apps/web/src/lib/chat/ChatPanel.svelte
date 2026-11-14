@@ -9,7 +9,6 @@
   import { formatTime } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { aliasOf } from '../members/alias.ts';
-  import type { StoredRadioText } from '../radio/radio-texts.ts';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
   import ReportCard from '../reports/ReportCard.svelte';
@@ -37,9 +36,6 @@
     /** The tab shown, and how another one is shown. */
     tab: ChatTab;
     ontab: (tab: ChatTab) => void;
-    /** Text messages of other MeshCore apps heard by the radio; shown in their own tab. */
-    radioTexts: readonly StoredRadioText[];
-    showRadioTab: boolean;
     onclose: () => void;
   }
 
@@ -54,23 +50,12 @@
     onplace,
     tab,
     ontab,
-    radioTexts,
-    showRadioTab,
     onclose,
   }: Props = $props();
 
   /** Newest first. */
   const reports = $derived([...groupState.reports].reverse());
   const casualtiesTotal = $derived(casualtiesLine(addedUp(groupState.reports), t));
-
-  /** Where a text of another MeshCore app was heard, and who sent it if it says. */
-  function heardIn(message: StoredRadioText): string {
-    const where =
-      message.kind === 'direct'
-        ? t('meshcoreDirect')
-        : t('meshcoreChannel', { name: message.channel ?? t('meshcoreUnknownChannel') });
-    return message.sender ? `${where} · ${message.sender}` : where;
-  }
 
   const draft = new ChatDraft(speechRecognizer());
   onDestroy(() => draft.dictation?.cancel());
@@ -105,14 +90,7 @@
 
 <Panel title={t('chat')} closeLabel={t('close')} {onclose} fill>
   {#snippet header()}
-    <ChatTabs
-      {t}
-      {tab}
-      {ontab}
-      {showRadioTab}
-      reportCount={reports.length}
-      radioTextCount={radioTexts.length}
-    />
+    <ChatTabs {t} {tab} {ontab} reportCount={reports.length} />
   {/snippet}
 
   <div id="chat-tabpanel" class="tabpanel" role="tabpanel" aria-labelledby="chat-tab-{tab}">
@@ -135,22 +113,6 @@
         <Pictogram name="pushpin" size={18} />
         {t('reportNew')}
       </button>
-    {:else if tab === 'mesh' && showRadioTab}
-      <div class="scroll stack">
-        {#if radioTexts.length === 0}
-          <p class="hint">{t('noMeshMessages')}</p>
-        {:else}
-          <ol class="messages">
-            {#each radioTexts as message, index (index)}
-              <ChatLine
-                text={message.text}
-                time={formatTime(message.receivedAt, locale)}
-                meta={heardIn(message)}
-              />
-            {/each}
-          </ol>
-        {/if}
-      </div>
     {:else}
       {#if entries.length === 0}
         <p class="hint scroll">{t('noMessages')}</p>

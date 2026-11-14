@@ -41,23 +41,6 @@ export interface ReceivedFrame {
   readonly secret: Uint8Array;
 }
 
-/**
- * A text message of another app on the same radio network (MeshCore or Meshtastic chat) that
- * reached this radio. Tesel reads every message the radio holds, so it keeps these instead of
- * losing them.
- */
-export interface RadioText {
-  /** A channel message, or a private one to this radio. */
-  readonly kind: 'channel' | 'direct';
-  /** Channel name, when known. */
-  readonly channel: string | null;
-  /** The sender's name, or an identifier of the sender's radio in hex when it has none. */
-  readonly sender: string | null;
-  readonly text: string;
-  /** Seconds since the epoch: when it was sent, by the sender's clock, or else when it was heard. */
-  readonly time: number;
-}
-
 export type SendOutcome =
   { readonly status: 'sent' } | { readonly status: 'failed'; readonly reason: string };
 
@@ -103,9 +86,6 @@ export interface RadioLink {
    * those of other groups this radio carried before; returns an unsubscribe function.
    */
   onReceive(listener: (frame: ReceivedFrame) => void): () => void;
-
-  /** Subscribes to text messages of other apps; returns an unsubscribe function. */
-  onText(listener: (message: RadioText) => void): () => void;
 
   /** Subscribes to state changes; returns an unsubscribe function. */
   onStateChange(listener: (state: RadioLinkState) => void): () => void;

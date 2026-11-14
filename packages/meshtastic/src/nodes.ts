@@ -63,11 +63,6 @@ export class NodeBook {
     }
     return node;
   }
-
-  /** The name to show for a node: its long name, or its id until it has said one. */
-  nameOf(num: number): string {
-    return this.#nodes.get(num)?.longName ?? nodeId(num);
-  }
 }
 
 /** Meshtastic's way to write a node number: "!" and 8 hex digits. */

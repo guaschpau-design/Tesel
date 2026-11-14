@@ -49,7 +49,7 @@ describe('the radio’s airtime', () => {
     await saveAirtime(db, spent);
     const link = new FakeLink();
     const radio = new RadioSession(() => Promise.resolve(link));
-    await radio.useStorage(db);
+    radio.useStorage(db);
     const feed = new FakeFeed();
     await radio.useFeed(feed);
     await radio.connect();

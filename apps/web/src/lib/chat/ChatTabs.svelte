@@ -1,6 +1,5 @@
-<!-- The chat panel's tabs, heading it beside its close button: the group's messages, its reports
-     with how many there are, and the texts of other MeshCore apps while the radio has any to
-     show. They control the panel's one tab panel (#chat-tabpanel). -->
+<!-- The chat panel's tabs, heading it beside its close button: the group's messages, and its
+     reports with how many there are. They control the panel's one tab panel (#chat-tabpanel). -->
 <script lang="ts">
   import { tick } from 'svelte';
 
@@ -13,16 +12,12 @@
     /** The tab shown, and how another one is shown. */
     tab: ChatTab;
     ontab: (tab: ChatTab) => void;
-    showRadioTab: boolean;
     reportCount: number;
-    radioTextCount: number;
   }
 
-  let { t, tab, ontab, showRadioTab, reportCount, radioTextCount }: Props = $props();
+  let { t, tab, ontab, reportCount }: Props = $props();
 
-  const tabs: readonly ChatTab[] = $derived(
-    showRadioTab ? ['group', 'reports', 'mesh'] : ['group', 'reports'],
-  );
+  const tabs: readonly ChatTab[] = ['group', 'reports'];
 
   /** Arrow keys, Home and End move between the tabs, as in any tab list. */
   function moveTab(event: KeyboardEvent): void {
@@ -55,13 +50,10 @@
     >
       {#if each === 'group'}
         {t('chatGroup')}
-      {:else if each === 'reports'}
+      {:else}
         <Pictogram name="pushpin" size={16} />
         {t('reportsTab')}
         {#if reportCount > 0}<span class="count">{reportCount}</span>{/if}
-      {:else}
-        {t('chatMesh')}
-        {#if radioTextCount > 0}<span class="count">{radioTextCount}</span>{/if}
       {/if}
     </button>
   {/each}

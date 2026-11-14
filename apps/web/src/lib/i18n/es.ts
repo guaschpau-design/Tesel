@@ -588,11 +588,6 @@ export const es: Messages = {
   radioConnectHint:
     'Si te pide un PIN, es el que muestra la pantalla del nodo o, si no tiene, el de fábrica: 123456. ¿No aparece tu nodo? Apágalo y vuelve a encenderlo.',
   chatGroup: 'Grupo',
-  chatMesh: 'Malla pública',
-  noMeshMessages: 'Todavía no ha llegado ningún mensaje de otros nodos.',
-  meshcoreChannel: 'Canal {name}',
-  meshcoreUnknownChannel: '(desconocido)',
-  meshcoreDirect: 'Mensaje privado',
   tasks: 'Tareas',
   tasksForYou: 'Tareas: {count} para ti',
   tasksDone: 'Hechas ({count})',

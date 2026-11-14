@@ -25,7 +25,6 @@ describe('app database', () => {
       'groups',
       'identity',
       'outbox',
-      'radioTexts',
       'sequence',
       'settings',
       'weather',
@@ -68,6 +67,7 @@ describe('app database', () => {
     expect(await db.get('sequence', 'next')).toBe(8);
     expect(await db.getAll('cursors')).toEqual([]);
     expect([...db.objectStoreNames]).not.toContain('servers');
+    expect([...db.objectStoreNames]).not.toContain('radioTexts');
   });
 
   it('lets a newer version have the database only once this window lets it go', async () => {

@@ -69,10 +69,6 @@ class AirLink implements RadioLink {
     return () => undefined;
   }
 
-  onText(): () => void {
-    return () => undefined;
-  }
-
   disconnect(): Promise<void> {
     return Promise.resolve();
   }

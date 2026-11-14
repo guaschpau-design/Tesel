@@ -9,7 +9,6 @@ import type { RadioFamily, RadioLink, RadioLinkState } from '@tesel/radio';
 
 import { groupId } from '../groups/group.ts';
 import type { AppDb } from '../storage/app-db.ts';
-import { storageRefusals } from '../storage/storage-space.svelte.ts';
 import type { GroupFeed } from '../sync/group-feed.svelte.ts';
 import { sosNewsIn, type SosElsewhere } from './heard-elsewhere.ts';
 import { freeLeftChannels, noteLeftChannel } from './left-channels.ts';
@@ -19,8 +18,6 @@ import { RadioIntake } from './radio-intake.ts';
 import { claimRadio, type RadioRelease } from './radio-lock.ts';
 import { problemOf, type RadioProblem } from './radio-problem.ts';
 import { RadioSender } from './radio-sender.svelte.ts';
-import { loadRadioTexts, saveRadioText } from './radio-text-store.ts';
-import { MAX_RADIO_TEXTS, type StoredRadioText } from './radio-texts.ts';
 import { Relinker, type LinkAttempt } from './relinker.ts';
 
 /** What the radio needs from the active group's feed. */
@@ -44,8 +41,6 @@ export class RadioSession {
   problem: RadioProblem | null = $state(null);
   /** Signal-to-noise ratio of the last packet received, in dB. */
   lastSnr: number | null = $state(null);
-  /** Text messages of other apps on the radio network, oldest first, the newest `MAX_RADIO_TEXTS`. */
-  texts: readonly StoredRadioText[] = $state.raw([]);
 
   /** Asks the user to pick a radio and makes the link to it. */
   readonly #makeLink: () => Promise<RadioLink>;
@@ -118,23 +113,13 @@ export class RadioSession {
         }
         void this.#intake.take(secret, event);
       }),
-      link.onText((text) => {
-        const stored = { ...text, receivedAt: Date.now() };
-        this.texts = [...this.texts, stored].slice(-MAX_RADIO_TEXTS);
-        if (this.#db === null) return;
-        saveRadioText(this.#db, stored).catch((error: unknown) => {
-          console.warn('Keeping a radio text failed', error);
-          storageRefusals.note(error);
-        });
-      }),
     ];
     return link;
   }
 
-  /** Where heard text messages of other apps and other groups' events are kept. */
-  async useStorage(db: AppDb): Promise<void> {
+  /** Where other groups' events, and the channels of groups left, are kept. */
+  useStorage(db: AppDb): void {
     this.#db = db;
-    this.texts = [...(await loadRadioTexts(db)), ...this.texts].slice(-MAX_RADIO_TEXTS);
   }
 
   /** Tells `listener` of each SOS call or cancellation heard for a group that is not open. */
