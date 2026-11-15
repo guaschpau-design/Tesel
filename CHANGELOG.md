@@ -158,6 +158,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Me reads in cards: the profile is a tag beside the name, tapped to choose it, and so on every member's card; the equipment shows what is carried, each with a cross, and «Añadir» offers first what the profile usually carries ([ADR-0133](docs/decisions/0133-me-in-cards-profile-as-a-tag.md)).
 - A simpler diary: what happened fills it, by day, with the app's signs and calls for help in red; one button at its foot downloads the report as a PDF, for anyone in the group; the diary as text is gone and the backup copy moved to the groups panel ([ADR-0134](docs/decisions/0134-a-simpler-diary.md)).
 - Measuring shows the ground: «Desnivel» on its card draws the elevation profile of the path tapped, with how much it climbs and descends. «Ir a una coordenada» is gone from «Más»: a dictated coordinate is typed as a marker or a task's place ([ADR-0135](docs/decisions/0135-measuring-shows-the-ground.md)).
+- The topographic map reads like OpenStreetMap's own in the hills: tracks in brown dashes, footpaths in red dots, steps, streams in blue and dashed where they run dry, small trees over woods, and huts with their sign, offline as online ([ADR-0136](docs/decisions/0136-the-ground-as-walkers-read-it.md)).
 
 ### Known limits
 

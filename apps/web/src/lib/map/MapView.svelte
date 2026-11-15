@@ -15,6 +15,7 @@
   import { mapAssetsUrl } from '../config.ts';
   import type { MapLibreLocale } from './style/maplibre-locale.ts';
   import { buildStyle, type StyleChoice } from './style/style.ts';
+  import { addTerrainImages } from './style/terrain-images.ts';
 
   interface Props {
     /** What the map looks like: base map, relief, theme and the language of its names. */
@@ -65,6 +66,10 @@
     instance.on('dataloading', startBusy);
     instance.on('movestart', startBusy);
     instance.on('idle', () => (busy = false));
+    // The topographic map's trees and hut signs, in every style as it loads.
+    instance.on('styledata', () => {
+      addTerrainImages(instance);
+    });
     // A tile that could not be had is drawn blank and kept so: when the connection comes back,
     // every tile source is asked again (what is stored answers at once, the rest from the network).
     const reload = () => {

@@ -1,7 +1,8 @@
 // The topographic map (ADR-0034, ADR-0037), Tesel's base map (ADR-0120): the OpenStreetMap map in
 // a palette that lets the land show, under contour lines worked out from the elevation
 // (contours.ts), each index line carrying its height, and, in Spain, IGN's names of the terrain —
-// mountains, ravines, places, caves — and of springs.
+// mountains, ravines, places, caves — and of springs. Tracks, footpaths, streams, woods and huts are
+// drawn as walkers read them (trails.ts, ADR-0136).
 
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';

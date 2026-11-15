@@ -34,6 +34,7 @@ import {
   topoFlavor,
 } from './topo.ts';
 import { tacticalFlavor } from './tactical.ts';
+import { hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
 
 export const BASE_MAPS = ['topo', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
@@ -151,9 +152,9 @@ function baseMapLayers({ base, lang }: StyleChoice): BaseMapLayers {
         [CONTOURS_SOURCE]: contours,
         [NAMES_SOURCE]: terrainNames,
       },
-      ground,
+      ground: walkersGround(ground),
       lines: contourLayers(),
-      names: [...terrainNameLayers(), ...names],
+      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang), ...names],
     };
   }
   const ortho: SourceSpecification = {
@@ -169,6 +170,20 @@ function baseMapLayers({ base, lang }: StyleChoice): BaseMapLayers {
     lines: [],
     names: layers(BASEMAP_SOURCE, namedFlavor('dark'), { lang, labelsOnly: true }),
   };
+}
+
+/**
+ * The topographic map's ground as a walker reads it (trails.ts, ADR-0136): trees over the woods,
+ * streams and tracks and footpaths each in their own look, in place of the base map's.
+ */
+function walkersGround(ground: readonly LayerSpecification[]): LayerSpecification[] {
+  return ground.flatMap((layer) => {
+    if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE)];
+    if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE);
+    if (layer.id === 'water_stream') return [];
+    if (layer.id === 'roads_other') return trailLayers(BASEMAP_SOURCE, layer);
+    return [layer];
+  });
 }
 
 /** The Protomaps map in a palette, split where its names begin. */

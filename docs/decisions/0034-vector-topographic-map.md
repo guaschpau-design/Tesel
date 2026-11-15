@@ -1,6 +1,6 @@
 # 0034. Draw the topographic map from vector data, and shade the relief from IGN's terrain model
 
-- Status: Accepted, amended by [0037](0037-maps-across-borders.md) (contours and shading from Mapterhorn)
+- Status: Accepted, amended by [0037](0037-maps-across-borders.md) (contours and shading from Mapterhorn) and [0136](0136-the-ground-as-walkers-read-it.md) (tracks, footpaths, streams, woods and huts as walkers read them)
 - Date: 2026-10-27
 
 ## Context

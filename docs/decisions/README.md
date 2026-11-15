@@ -39,7 +39,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0031](0031-practice-mode.md)                        | Practice mode: a simulated group played on the device                                       | Superseded by 0083                                      |
 | [0032](0032-radio-line-of-sight.md)                  | Radio line of sight from the terrain, sure only when it says no                             | Superseded by 0042, amended before by 0037              |
 | [0033](0033-danger-area-warning.md)                  | Warning on entering a danger area, worked out on each device                                | Accepted, amended by 0122                               |
-| [0034](0034-vector-topographic-map.md)               | Topographic map from vector data, relief shaded from IGN's terrain model                    | Accepted, amended by 0037                               |
+| [0034](0034-vector-topographic-map.md)               | Topographic map from vector data, relief shaded from IGN's terrain model                    | Accepted, amended by 0037, 0136                         |
 | [0035](0035-base-maps-by-purpose.md)                 | Give each base map a purpose of its own                                                     | Accepted, amended by 0120                               |
 | [0036](0036-cadastre-layer.md)                       | The cadastre's parcels as one picture of the view, online only                              | Accepted, amended by 0037                               |
 | [0037](0037-maps-across-borders.md)                  | Maps across Spain, Portugal and southern France                                             | Accepted, amended by 0041                               |
@@ -141,3 +141,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0133](0133-me-in-cards-profile-as-a-tag.md)         | Me in cards, the profile as a tag                                                           | Accepted                                                |
 | [0134](0134-a-simpler-diary.md)                      | A simpler diary                                                                             | Accepted                                                |
 | [0135](0135-measuring-shows-the-ground.md)           | Measuring shows the ground; no "Ir a una coordenada"                                        | Accepted                                                |
+| [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted                                                |
