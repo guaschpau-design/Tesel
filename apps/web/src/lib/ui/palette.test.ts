@@ -66,6 +66,7 @@ const PAIRS: readonly (readonly [string, string, number])[] = [
   ['muted', 'bg', TEXT],
   ['danger', 'surface', TEXT],
   ['danger', 'bg', TEXT],
+  ['danger', 'danger-tint', TEXT],
   ['on-danger', 'danger-fill', TEXT],
   ['link', 'surface', TEXT],
   ['link', 'bg', TEXT],

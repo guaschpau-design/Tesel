@@ -114,14 +114,7 @@
 {/if}
 
 {#if isOpen('diary')}
-  <DiaryPanel
-    {t}
-    {locale}
-    {feed}
-    format={preferences.coordinateFormat}
-    coordinator={role === 'coordinator'}
-    onclose={closePanel}
-  />
+  <DiaryPanel {t} {locale} {feed} format={preferences.coordinateFormat} onclose={closePanel} />
 {/if}
 
 {#if panels.open?.name === 'chat'}

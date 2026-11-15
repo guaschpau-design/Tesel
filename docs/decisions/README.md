@@ -27,7 +27,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0019](0019-name-tesel.md)                           | The project is called Tesel                                                                 | Accepted                                                |
 | [0020](0020-colour-and-symbols.md)                   | Signal lime, colours defined once, and symbols of our own                                   | Accepted, colours revised by 0113                       |
 | [0021](0021-coordinate-formats.md)                   | Write coordinates in four formats, converted by our own code                                | Accepted                                                |
-| [0022](0022-log-files.md)                            | Carry a group's log in files of sealed envelopes                                            | Accepted, amended by 0055                               |
+| [0022](0022-log-files.md)                            | Carry a group's log in files of sealed envelopes                                            | Accepted, amended by 0055, 0134                         |
 | [0023](0023-ign-base-maps.md)                        | Topographic and aerial base maps from Spain's IGN, read by the browser                      | Accepted, amended by 0034, 0037, 0041                   |
 | [0024](0024-terrain-tiles-for-relief.md)             | Relief from the open Terrain Tiles, read by the browser                                     | Superseded by 0037                                      |
 | [0025](0025-tasks.md)                                | Tasks as one event type, changed by anyone, last writer wins                                | Accepted, amended by [0059](0059-routes.md)             |
@@ -123,7 +123,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
 | [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Superseded by 0129                                      |
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
-| [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted                                                |
+| [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted, amended by 0134                               |
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
 | [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |
 | [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |
@@ -139,3 +139,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0131](0131-pocket-mode-on-phones-only.md)           | Pocket mode and full screen on phones and tablets only                                      | Accepted                                                |
 | [0132](0132-no-texts-of-other-apps.md)               | No text messages of other MeshCore or Meshtastic apps                                       | Accepted                                                |
 | [0133](0133-me-in-cards-profile-as-a-tag.md)         | Me in cards, the profile as a tag                                                           | Accepted                                                |
+| [0134](0134-a-simpler-diary.md)                      | A simpler diary                                                                             | Accepted                                                |

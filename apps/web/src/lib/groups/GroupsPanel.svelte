@@ -1,6 +1,7 @@
 <!-- The groups: the one in use, the others, and two big buttons to create or join one. With a group
      in use, the others and the ways to a new one fold under
-     it, and leaving it comes last, apart: both are seldom needed during an operation. Creating,
+     it, then its backup copy (GroupBackup), and leaving it comes last, apart: all seldom needed
+     during an operation. Creating,
      joining, inviting and scanning each open in the panel and come back here; the welcome card on
      the map opens it straight on one of them (`start`). -->
 <script lang="ts">
@@ -17,6 +18,7 @@
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
   import ActiveGroup from './ActiveGroup.svelte';
+  import GroupBackup from './GroupBackup.svelte';
   import CreateGroupForm from './CreateGroupForm.svelte';
   import type { StoredGroup } from './group.ts';
   import InviteView from './InviteView.svelte';
@@ -146,6 +148,10 @@
         </Fold>
       {:else}
         {@render elsewhere()}
+      {/if}
+
+      {#if activeFeed}
+        <GroupBackup {t} feed={activeFeed} />
       {/if}
 
       {#if session.activeGroup}

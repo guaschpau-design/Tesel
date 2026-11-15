@@ -1,139 +1,137 @@
-<!-- The operation diary: everything that has happened in the group, newest first, to read and to
-     download; for whoever coordinates, the debrief of some hours of it as a PDF; folded below it,
-     the group's log to save or load on another device. -->
+<!-- The operation diary (ADR-0134): what has happened in the group, by day with the newest first,
+     each line with its time, the app's sign for what it tells and who did it; a call for help
+     stands out in red. At its foot, the report of the operation as a PDF. -->
 <script lang="ts">
   import type { CoordinateFormat } from '../coordinates/coordinates.ts';
-  import { formatTime } from '../format.ts';
-  import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
+  import type { Locale, Translate } from '../i18n/index.ts';
   import type { Preference } from '../settings/preference.svelte.ts';
   import type { GroupFeed } from '../sync/group-feed.svelte.ts';
-  import type { LogImport } from '../sync/log-file.ts';
-  import ActionButton from '../ui/ActionButton.svelte';
-  import { downloadFile } from '../ui/download.ts';
-  import Fold from '../ui/Fold.svelte';
+  import { clockEvery } from '../ui/now.svelte.ts';
   import Panel from '../ui/Panel.svelte';
+  import Pictogram from '../ui/Pictogram.svelte';
+  import { diaryDays, isCall, LINE_SIGNS } from './diary-days.ts';
   import { diaryLines } from './diary.ts';
-  import { diaryText, fileName } from './diary-text.ts';
-  import DebriefFold from './DebriefFold.svelte';
-  import { attempt } from '../ui/submission.svelte.ts';
+  import DiaryReport from './DiaryReport.svelte';
 
   interface Props {
     t: Translate;
     locale: Locale;
     feed: GroupFeed;
     format: Preference<CoordinateFormat>;
-    /** Whoever coordinates the group makes its debriefs. */
-    coordinator: boolean;
     onclose: () => void;
   }
 
-  let { t, locale, feed, format, coordinator, onclose }: Props = $props();
+  let { t, locale, feed, format, onclose }: Props = $props();
 
+  /** "Hoy" becomes "Ayer" at midnight with the panel open. */
+  const now = clockEvery(60_000);
   const lines = $derived(diaryLines(feed.state, t));
-  const newestFirst = $derived([...lines].reverse());
-  let loaded: LogImport | null = $state(null);
-  let picker: HTMLInputElement | undefined = $state();
+  const days = $derived(diaryDays(lines, { t, locale, now: now.seconds * 1000 }));
 
-  const OUTCOMES: Readonly<Record<Exclude<LogImport['kind'], 'loaded'>, MessageKey>> = {
-    'other-group': 'logOtherGroup',
-    unreadable: 'logUnreadable',
-  };
-
-  function downloadDiary(): void {
-    const now = Date.now();
-    const text = diaryText(lines, { group: feed.groupName, format: format.value, locale, t, now });
-    downloadFile(fileName(feed.groupName, now, 'txt'), text, 'text/plain;charset=utf-8');
-  }
-
-  function saveLog(): void {
-    const name = fileName(feed.groupName, Date.now(), 'tesel');
-    attempt(async () => {
-      downloadFile(name, await feed.exportLog(), 'application/json');
-    }, t('actionFailed'));
-  }
-
-  function loadLog(event: Event & { currentTarget: HTMLInputElement }): void {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (file === undefined) return;
-    attempt(async () => {
-      try {
-        loaded = await feed.importLog(await file.text());
-      } finally {
-        input.value = '';
-      }
-    }, t('actionFailed'));
+  function timeOf(seconds: number): string {
+    return new Date(seconds * 1000).toLocaleTimeString(locale, { timeStyle: 'short' });
   }
 </script>
 
-<Panel title={t('diary')} closeLabel={t('close')} {onclose}>
-  <div class="stack section">
-    <div class="row">
-      <ActionButton
-        icon="download"
-        label={t('diaryDownload')}
-        disabled={lines.length === 0}
-        onclick={downloadDiary}
-      />
-    </div>
-
-    {#if coordinator}
-      <DebriefFold {t} {locale} {feed} {format} {lines} />
-    {/if}
-
-    {#if newestFirst.length === 0}
-      <p class="hint">{t('diaryEmpty')}</p>
+<Panel title={t('diary')} closeLabel={t('close')} {onclose} fill>
+  <div class="scroll">
+    {#each days as day (day.key)}
+      <section class="day">
+        <h3>{day.name}</h3>
+        <ol>
+          {#each day.lines as line (line.key)}
+            <li class:call={isCall(line)}>
+              <span class="time">{timeOf(line.time)}</span>
+              <Pictogram name={LINE_SIGNS[line.type]} size={18} />
+              <span class="what">
+                <span class="who">{line.author}</span>
+                {line.text}
+              </span>
+            </li>
+          {/each}
+        </ol>
+      </section>
     {:else}
-      <ol class="diary">
-        {#each newestFirst as line (line.key)}
-          <li>
-            <span class="hint">{formatTime(line.time * 1000, locale)} · {line.author}</span>
-            <span>{line.text}</span>
-          </li>
-        {/each}
-      </ol>
-    {/if}
+      <p class="hint">{t('diaryEmpty')}</p>
+    {/each}
   </div>
-
-  <div class="section">
-    <Fold title={t('logTitle')} summary={t('logSummary')}>
-      <div class="row">
-        <button onclick={saveLog}>{t('logSave')}</button>
-        <button onclick={() => picker?.click()}>{t('logLoad')}</button>
-        <input
-          bind:this={picker}
-          type="file"
-          accept=".tesel,application/json"
-          hidden
-          onchange={loadLog}
-        />
-      </div>
-      {#if loaded?.kind === 'loaded'}
-        <p role="status">{t('logLoaded', { count: loaded.added, total: loaded.total })}</p>
-      {:else if loaded}
-        <p class="warning" role="status">{t(OUTCOMES[loaded.kind])}</p>
-      {/if}
-    </Fold>
-  </div>
+  <DiaryReport {t} {locale} {feed} {format} {lines} />
 </Panel>
 
 <style>
-  .diary {
-    display: grid;
-    gap: 0.6rem;
-    max-height: 45dvh;
+  /* The days take the height left by the report at the foot, and scroll. */
+  .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .day + .day {
+    margin-top: 0.9rem;
+  }
+
+  h3 {
+    margin: 0 0 0.15rem;
+    color: var(--muted);
+    font-size: var(--text-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  ol {
     margin: 0;
     padding: 0;
-    overflow-y: auto;
     list-style: none;
   }
 
-  .diary li {
+  /* The time, the sign and what happened, in three columns. */
+  li {
     display: grid;
-    gap: 0.1rem;
+    grid-template-columns: 3rem 1.1rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+    padding: 0.55rem 0;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
   }
 
-  .diary .hint {
+  li:last-child {
+    border-bottom: none;
+  }
+
+  .time {
     font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.45rem;
+  }
+
+  .what {
+    display: grid;
+    color: var(--fg);
+    overflow-wrap: anywhere;
+  }
+
+  .who {
+    color: var(--muted);
+    font-size: var(--text-small);
+    font-weight: 600;
+  }
+
+  /* A call for help, in red: the line that must not be missed. */
+  li.call {
+    margin: 0.15rem -0.4rem;
+    padding-inline: 0.4rem;
+    color: var(--danger);
+    font-weight: 600;
+    background: var(--danger-tint);
+    border-bottom: none;
+    border-radius: var(--radius-card);
+  }
+
+  li.call .what,
+  li.call .who {
+    color: var(--danger);
   }
 </style>

@@ -1,6 +1,6 @@
 # 0022. Carry a group's log in files of sealed envelopes
 
-- Status: Accepted, amended by [0055](0055-forget-outlived-positions.md) (a log file leaves out the positions the trails have outlived)
+- Status: Accepted, amended by [0055](0055-forget-outlived-positions.md) (a log file leaves out the positions the trails have outlived) and [0134](0134-a-simpler-diary.md) (no diary as text; the backup copy is in the groups panel)
 - Date: 2026-10-26
 
 ## Context

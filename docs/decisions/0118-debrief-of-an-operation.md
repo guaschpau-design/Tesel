@@ -1,6 +1,6 @@
 # 0118. The debrief of an operation, as a PDF of the hours chosen
 
-- Status: Accepted
+- Status: Accepted, amended by [0134](0134-a-simpler-diary.md) (the report is a button at the foot of the diary, for anyone in the group)
 - Date: 2026-11-06
 
 ## Context

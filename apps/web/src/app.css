@@ -47,6 +47,8 @@
      faint lime. */
   --accent-tint: #eef5df;
   --accent-tint-line: #c9dfa0;
+  /* A line that must not be missed among others, as a call for help in the diary (ADR-0134). */
+  --danger-tint: #fbeaea;
 
   /* Meanings. Danger fills the SOS button and the buttons that destroy, with white on it; text
      and lines in danger on a surface take --danger, which the dark theme lightens, since one red
@@ -137,6 +139,7 @@
   --accent-line: var(--signal);
   --accent-tint: #232b14;
   --accent-tint-line: #45591d;
+  --danger-tint: #3a1717;
   --danger: #ff5c5f;
 }
 
