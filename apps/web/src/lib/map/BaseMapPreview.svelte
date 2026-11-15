@@ -59,7 +59,7 @@
     <path d="M0 25H96M0 48H64M30 0V64M64 0V64" />
   </g>
   <path d="M38 25h10M45 22l3 3-3 3" stroke="#6b6f74" stroke-width="1.2" fill="none" />
-  <text x="6" y="16" font-size="8" font-weight="600" fill="#2f3337">23</text>
+  <path d="M6 12h8M36 12h12M70 12h10" stroke="#2f3337" stroke-width="1.6" />
 {/snippet}
 
 {#snippet aerial()}
