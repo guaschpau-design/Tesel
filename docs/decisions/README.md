@@ -144,3 +144,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted                                                |
 | [0137](0137-the-urban-map.md)                        | The urban map                                                                               | Accepted                                                |
 | [0138](0138-pedestrian-streets-on-the-urban-map.md)  | Pedestrian streets stand apart on the urban map                                             | Accepted                                                |
+| [0139](0139-cadastre-buildings-and-addresses.md)     | The cadastre's buildings, official house numbers and addresses, in Spain                    | Accepted                                                |

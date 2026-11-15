@@ -8,11 +8,16 @@ import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { themeColor } from '../../ui/theme.ts';
+import type { BuildingLook } from './cadastre.ts';
 import type { PedestrianLook } from './trails.ts';
 
 const BUILDING = '#d4d0c8';
 const BUILDING_EDGE = '#a9a39a';
 const STREET_NAME = '#2f3337';
+
+/** The cadastre's buildings as OpenStreetMap's, and its house numbers as its own (cadastre.ts). */
+export const URBAN_BUILDINGS: BuildingLook = { fill: BUILDING, edge: BUILDING_EDGE };
+export const URBAN_HOUSE_NUMBER = STREET_NAME;
 
 /** Neutral land, buildings darker than it, streets white on a casing that stands out. */
 const URBAN_PALETTE: Partial<Flavor> = {
@@ -65,8 +70,11 @@ export function urbanLayers(
   names: readonly LayerSpecification[],
 ): { ground: LayerSpecification[]; names: LayerSpecification[] } {
   return {
+    // Buildings at full strength, as the cadastre's drawn over them (cadastre.ts), and edged.
     ground: ground.flatMap((layer) =>
-      layer.id === 'buildings' ? [layer, buildingEdges(source)] : [layer],
+      layer.id === 'buildings' && layer.type === 'fill'
+        ? [{ ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } }, buildingEdges(source)]
+        : [layer],
     ),
     names: names.map((layer) => {
       if (layer.type !== 'symbol') return layer;

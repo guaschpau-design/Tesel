@@ -21,6 +21,7 @@ import { tileUrlTemplate } from '../tiles/protocol.ts';
 import {
   NAMES_ATTRIBUTION,
   BASEMAP_MAX_ZOOM,
+  IGN_MAX_ZOOM,
   ORTHO_ATTRIBUTION,
   ORTHO_MAX_ZOOM,
   TERRAIN_ATTRIBUTION,
@@ -32,12 +33,26 @@ import {
   contourLayers,
   NAMES_SOURCE,
   terrainNameLayers,
+  TOPO_BUILDINGS,
   topoFlavor,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
 import { tacticalFlavor } from './tactical.ts';
 import { hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
-import { raisedBuildings, URBAN_PEDESTRIAN, urbanFlavor, urbanLayers } from './urban.ts';
+import {
+  raisedBuildings,
+  URBAN_BUILDINGS,
+  URBAN_HOUSE_NUMBER,
+  URBAN_PEDESTRIAN,
+  urbanFlavor,
+  urbanLayers,
+} from './urban.ts';
+import {
+  cadastreBuildingLayers,
+  houseNumberLayer,
+  raisedCadastreBuildings,
+  type BuildingLook,
+} from './cadastre.ts';
 
 export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
@@ -138,14 +153,20 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
   if (base === 'urban') {
     const all = protomapsLayers(urbanFlavor(), lang);
     const { ground, names } = urbanLayers(BASEMAP_SOURCE, all.ground, all.names);
+    // Footpaths and steps as on the topographic map: the ways on foot between streets.
+    const walked = ground.flatMap((layer) =>
+      layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer, URBAN_PEDESTRIAN) : [layer],
+    );
     return {
-      sources: { [BASEMAP_SOURCE]: basemap },
-      // Footpaths and steps as on the topographic map: the ways on foot between streets.
-      ground: ground.flatMap((layer) =>
-        layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer, URBAN_PEDESTRIAN) : [layer],
-      ),
-      lines: threeD ? [raisedBuildings(BASEMAP_SOURCE)] : [],
-      names,
+      sources: { [BASEMAP_SOURCE]: basemap, [NAMES_SOURCE]: ignSource() },
+      ground: withCadastre(walked, URBAN_BUILDINGS),
+      lines: threeD
+        ? [
+            raisedCadastreBuildings(NAMES_SOURCE, URBAN_BUILDINGS.fill),
+            raisedBuildings(BASEMAP_SOURCE),
+          ]
+        : [],
+      names: [houseNumberLayer(NAMES_SOURCE, URBAN_HOUSE_NUMBER), ...names],
     };
   }
   if (base === 'topo') {
@@ -156,20 +177,15 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
       maxzoom: CONTOURS_MAX_ZOOM,
       attribution: TERRAIN_ATTRIBUTION,
     };
-    const terrainNames: SourceSpecification = {
-      type: 'vector',
-      tiles: [tileUrlTemplate('ign-names')],
-      maxzoom: BASEMAP_MAX_ZOOM,
-      attribution: NAMES_ATTRIBUTION,
-    };
-    const { ground, names } = protomapsLayers(topoFlavor(), lang);
+    const flavor = topoFlavor();
+    const { ground, names } = protomapsLayers(flavor, lang);
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
         [CONTOURS_SOURCE]: contours,
-        [NAMES_SOURCE]: terrainNames,
+        [NAMES_SOURCE]: ignSource(),
       },
-      ground: walkersGround(ground),
+      ground: withCadastre(walkersGround(ground), TOPO_BUILDINGS),
       lines: contourLayers(),
       names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang), ...names],
     };
@@ -187,6 +203,29 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     lines: [],
     names: layers(BASEMAP_SOURCE, namedFlavor('dark'), { lang, labelsOnly: true }),
   };
+}
+
+/**
+ * IGN's vector map of Spain: the names of the terrain, the cadastre's buildings and the official
+ * house numbers, read a zoom deeper than the OpenStreetMap map (ADR-0139).
+ */
+function ignSource(): SourceSpecification {
+  return {
+    type: 'vector',
+    tiles: [tileUrlTemplate('ign-names')],
+    maxzoom: IGN_MAX_ZOOM,
+    attribution: NAMES_ATTRIBUTION,
+  };
+}
+
+/** The cadastre's buildings over OpenStreetMap's, in the map's own look (cadastre.ts). */
+function withCadastre(
+  ground: readonly LayerSpecification[],
+  look: BuildingLook,
+): LayerSpecification[] {
+  return ground.flatMap((layer) =>
+    layer.id === 'buildings' ? [layer, ...cadastreBuildingLayers(NAMES_SOURCE, look)] : [layer],
+  );
 }
 
 /**

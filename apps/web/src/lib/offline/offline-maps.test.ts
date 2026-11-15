@@ -22,7 +22,7 @@ describe('offline maps', () => {
     const layers = downloadLayers(archives, 14, ['aerial']);
     expect(layers.map(({ source, maxZoom }) => [source, maxZoom])).toEqual([
       ['basemap', 14],
-      ['ign-names', 14],
+      ['ign-names', 15],
       ['terrain', TERRAIN_MAX_ZOOM],
       ['ortho', 17],
     ]);

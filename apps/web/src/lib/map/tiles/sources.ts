@@ -72,11 +72,16 @@ export const ORTHO_ATTRIBUTION =
   '<a href="https://www.ign.fr" target="_blank">IGN – BD ORTHO</a>';
 
 /**
- * IGN's vector map of Spain (Mapa Base): the topographic map reads its names of the terrain. Its
- * tiles go deeper, but the OpenStreetMap map's last zoom holds them all, so they are read to that
- * zoom.
+ * IGN's vector map of Spain (Mapa Base): the topographic map reads its names of the terrain, and
+ * both it and the urban map the cadastre's buildings and the official house numbers (ADR-0139).
  */
 export const NAMES_ATTRIBUTION = `${SCNE} · Mapa Base`;
+
+/**
+ * IGN's vector map is read one zoom deeper than the OpenStreetMap map: its buildings and house
+ * numbers are only in its tiles from zoom 16, which hold them all; MapLibre enlarges them beyond.
+ */
+export const IGN_MAX_ZOOM = BASEMAP_MAX_ZOOM + 1;
 
 export function namesTileUrl(z: number, x: number, y: number): string {
   return `https://vt-mapabase.idee.es/1.0.0/mapabase/${String(z)}/${String(x)}/${String(y)}.pbf`;

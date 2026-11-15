@@ -16,6 +16,7 @@ import type { TileStore } from '../map/tiles/store.ts';
 import type { OfflineArea } from '../map/tiles/store-schema.ts';
 import {
   BASEMAP_MAX_ZOOM,
+  IGN_MAX_ZOOM,
   ORTHO_EXTRA_ZOOM,
   TERRAIN_MAX_ZOOM,
   type TileSourceId,
@@ -40,9 +41,10 @@ export interface OfflineMaps {
 }
 
 /**
- * What every download holds: the topographic map, Tesel's base map (ADR-0120), which the tactical
- * map shares — the OpenStreetMap map, IGN's names of the terrain, and the elevation its contour
- * lines, the relief and the climbs are worked out from.
+ * What every download holds: the topographic map, Tesel's base map (ADR-0120), which the urban and
+ * tactical maps share — the OpenStreetMap map, IGN's map of Spain (its names of the terrain, the
+ * cadastre's buildings and the house numbers, ADR-0139), and the elevation its contour lines, the
+ * relief and the climbs are worked out from.
  */
 const BASE_SOURCES: readonly TileSourceId[] = ['basemap', 'ign-names', 'terrain'];
 
@@ -96,10 +98,11 @@ const CONCURRENCY: Readonly<Record<TileSourceId, number>> = {
 /** How deep each source is downloaded, for a map to `maxZoom`. */
 function sourceMaxZoom(source: TileSourceId, maxZoom: number): number {
   switch (source) {
-    // IGN's names go as deep as the OpenStreetMap map (map/tiles/sources.ts).
     case 'basemap':
-    case 'ign-names':
       return maxZoom;
+    // IGN's map goes a zoom deeper, where its buildings and house numbers are (map/tiles/sources.ts).
+    case 'ign-names':
+      return maxZoom + IGN_MAX_ZOOM - BASEMAP_MAX_ZOOM;
     case 'ortho':
       return maxZoom + ORTHO_EXTRA_ZOOM;
     // Elevation is coarse: deeper tiles hold no more of it.

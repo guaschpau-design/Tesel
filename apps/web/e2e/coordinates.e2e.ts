@@ -35,11 +35,12 @@ test('a marker and a task’s place are given by their coordinates, typed as dic
   await page.getByRole('button', { name: 'Añadir' }).click();
   await page.getByRole('menuitem', { name: 'Marcador' }).click();
   const bar = page.getByRole('region', { name: 'Nuevo marcador' });
-  await bar.getByRole('button', { name: 'Escribir coordenadas' }).click();
-  await bar.getByRole('textbox', { name: 'Coordenadas' }).fill('al lado del puente');
+  await bar.getByRole('button', { name: 'Escribir coordenadas o dirección' }).click();
+  const field = bar.getByRole('textbox', { name: 'Coordenadas o dirección' });
+  await field.fill('30S 725695');
   await bar.getByRole('button', { name: 'Añadir' }).click();
   await expect(bar).toContainText('Tesel no reconoce estas coordenadas.');
-  await bar.getByRole('textbox', { name: 'Coordenadas' }).fill('30S 725695 4372210');
+  await field.fill('30S 725695 4372210');
   await bar.getByRole('button', { name: 'Añadir' }).click();
   const form = page.getByRole('dialog', { name: 'Nuevo marcador' });
   await form.getByLabel('Etiqueta (opcional)').fill('Fuente');
@@ -57,9 +58,52 @@ test('a marker and a task’s place are given by their coordinates, typed as dic
   await tasks.getByLabel('Qué hay que hacer').fill('Revisar la fuente');
   await tasks.getByRole('button', { name: 'Elegir en el mapa' }).click();
   const picker = page.getByRole('region', { name: 'Elegir en el mapa' });
-  await picker.getByRole('button', { name: 'Escribir coordenadas' }).click();
-  await picker.getByRole('textbox', { name: 'Coordenadas' }).fill('39,4699 -0,3763');
+  await picker.getByRole('button', { name: 'Escribir coordenadas o dirección' }).click();
+  await picker.getByRole('textbox', { name: 'Coordenadas o dirección' }).fill('39,4699 -0,3763');
   await picker.getByRole('button', { name: 'Usar' }).click();
   await expect(tasks.getByLabel('Qué hay que hacer')).toHaveValue('Revisar la fuente');
   await expect(tasks.getByText('Lugar: ninguno')).toBeHidden();
+});
+
+test('a marker is put at an address of Spain, picked among those CartoCiudad finds', async ({
+  browser,
+}) => {
+  const page = await device(browser, 'Ana', '/#map=15/39.4699/-0.3763');
+  // CartoCiudad stands in: one street with two numbers, and nothing for anything else.
+  await page.context().route('https://www.cartociudad.es/**', (route) => {
+    const asked = new URL(route.request().url()).searchParams.get('q') ?? '';
+    const found = asked.toLowerCase().includes('llovera')
+      ? [
+          { address: 'CALLE LLOVERA 10, Reus', lat: 39.47, lng: -0.3763, type: 'portal' },
+          { address: 'CALLE LLOVERA 12, Reus', lat: 39.4702, lng: -0.3762, type: 'portal' },
+        ]
+      : [];
+    return route.fulfill({ json: found, headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  await createGroup(page, 'Norte');
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+
+  await page.getByRole('button', { name: 'Añadir' }).click();
+  await page.getByRole('menuitem', { name: 'Marcador' }).click();
+  const bar = page.getByRole('region', { name: 'Nuevo marcador' });
+  await bar.getByRole('button', { name: 'Escribir coordenadas o dirección' }).click();
+  const field = bar.getByRole('textbox', { name: 'Coordenadas o dirección' });
+  await field.fill('al lado del puente');
+  await bar.getByRole('button', { name: 'Añadir' }).click();
+  await expect(bar).toContainText('No se encuentra esa dirección.');
+
+  await field.fill('calle llovera 10, reus');
+  await bar.getByRole('button', { name: 'Añadir' }).click();
+  const found = bar.getByRole('list', { name: 'Direcciones encontradas' });
+  await expect(found.getByRole('button')).toHaveText([
+    'CALLE LLOVERA 10, Reus',
+    'CALLE LLOVERA 12, Reus',
+  ]);
+  await found.getByRole('button', { name: 'CALLE LLOVERA 10, Reus' }).click();
+  const form = page.getByRole('dialog', { name: 'Nuevo marcador' });
+  await form.getByLabel('Etiqueta (opcional)').fill('Portal 10');
+  await form.getByRole('button', { name: 'Guardar' }).click();
+  await expect(form).toBeHidden();
+  const marker = page.getByRole('region', { name: 'Portal 10' });
+  await tapMapUntil(page, {}, () => expect(marker).toBeVisible({ timeout: 2000 }));
 });
