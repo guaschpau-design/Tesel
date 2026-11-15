@@ -1,16 +1,14 @@
 <!-- What a member tells the team about themselves, the same for this device (in Me, where it is
-     set) and for anyone tapped on the map, in parts read from the top: first what matters during
-     an operation, their status, position and tasks; then their device, the battery and whether a
-     LoRa radio is linked (which keeps them in touch without coverage); last their profile and
-     equipment. On someone else's card all is in view, a line each; in Me, where profile and
-     equipment are choices seldom changed and the equipment a long list, they fold under one line
-     that sums them up. -->
+     set) and for anyone tapped on the map, read from the top (ADR-0133): their status and tasks,
+     then a card each for where they are and what they carry, and last two small ones for their
+     battery and whether a LoRa radio is linked (which keeps them in touch without coverage). Their
+     profile is a tag beside their name, over the sheet (ProfileTag). In Me the equipment shows
+     what is carried, each with a way to drop it, and the rest is picked in a dialog. -->
 <script lang="ts" module>
-  import type { DutyStatus, Equipment, Profile } from '@tesel/protocol';
+  import type { DutyStatus, Equipment } from '@tesel/protocol';
 
   /** How this device's own sheet changes what it tells. */
   export interface SheetEdits {
-    onprofile: (profile: Profile) => void;
     onstatus: (status: DutyStatus) => void;
     onequipment: (equipment: readonly Equipment[]) => void;
     /** Opens where a LoRa radio is linked. */
@@ -28,15 +26,10 @@
   import { TEAM_COLOURS } from '../teams/teams.ts';
   import { shownText } from '../text.ts';
   import Explained from '../ui/Explained.svelte';
-  import Fold from '../ui/Fold.svelte';
+  import Pictogram from '../ui/Pictogram.svelte';
   import StatusDot from '../ui/StatusDot.svelte';
-  import {
-    DUTY_STATUSES,
-    EQUIPMENT,
-    EQUIPMENT_GROUPS,
-    PROFILES,
-    profileLabel,
-  } from './member-catalog.ts';
+  import CarriedEquipment from './CarriedEquipment.svelte';
+  import { DUTY_STATUSES, EQUIPMENT } from './member-catalog.ts';
   import SheetPart from './SheetPart.svelte';
 
   interface Props {
@@ -70,15 +63,6 @@
   const equipmentSummary = $derived(
     carried.length === 0 ? t('equipmentNone') : carried.map((item) => t(item.label)).join(', '),
   );
-  /** Profile and equipment in one line, for the fold that holds them in Me. */
-  const kitSummary = $derived(`${t(profileLabel(state.profile))} · ${equipmentSummary}`);
-
-  function toggle(item: Equipment): void {
-    const next = state.equipment.includes(item)
-      ? state.equipment.filter((value) => value !== item)
-      : [...state.equipment, item];
-    edits?.onequipment(next);
-  }
 </script>
 
 {#snippet battery()}
@@ -88,76 +72,6 @@
     {/if}
     {batteryText}
   </p>
-{/snippet}
-
-{#snippet device()}
-  <SheetPart title={t('sheetBattery')} inline>
-    <!-- Why it may be unknown: behind an (i), read once (ADR-0101). -->
-    {#if batteryNote}
-      <Explained label={t('aboutBattery')} text={batteryNote}>{@render battery()}</Explained>
-    {:else}
-      {@render battery()}
-    {/if}
-  </SheetPart>
-  <SheetPart title={t('sheetRadio')} inline>
-    <p class="line">
-      {#if lora}
-        <StatusDot tone="good" />
-        {t('loraLinked')}
-      {:else}
-        <span class="hint">{t('loraNotLinked')}</span>
-        {#if edits}
-          <button class="small" onclick={edits.onconnectradio} aria-label={t('radioConnect')}
-            >{t('connect')}</button
-          >
-        {/if}
-      {/if}
-    </p>
-  </SheetPart>
-{/snippet}
-
-{#snippet kit()}
-  <SheetPart title={t('profileLabel')} inline>
-    {#if edits}
-      {@const { onprofile } = edits}
-      <select
-        aria-label={t('profileLabel')}
-        value={state.profile}
-        onchange={(event) => {
-          const chosen = PROFILES.find((item) => item.value === event.currentTarget.value);
-          if (chosen) onprofile(chosen.value);
-        }}
-      >
-        {#each PROFILES as item (item.value)}
-          <option value={item.value}>{t(item.label)}</option>
-        {/each}
-      </select>
-    {:else}
-      <p>{t(profileLabel(state.profile))}</p>
-    {/if}
-  </SheetPart>
-  <SheetPart title={t('sheetEquipment')}>
-    {#if edits}
-      {#each EQUIPMENT_GROUPS as group (group.label)}
-        <fieldset>
-          <legend>{t(group.label)}</legend>
-          <div class="chips">
-            {#each group.items as item (item.value)}
-              <button
-                class="chip"
-                aria-pressed={state.equipment.includes(item.value)}
-                onclick={() => {
-                  toggle(item.value);
-                }}>{t(item.label)}</button
-              >
-            {/each}
-          </div>
-        </fieldset>
-      {/each}
-    {:else}
-      <p>{equipmentSummary}</p>
-    {/if}
-  </SheetPart>
 {/snippet}
 
 <div class="sheet">
@@ -189,15 +103,12 @@
       {t(status.label)}
     </p>
   {/if}
-
-  <SheetPart title={t('sheetPosition')}>
-    {@render position()}
-  </SheetPart>
   {#if tasks}
-    <SheetPart title={t('sheetTasks')} inline={tasks.length === 0}>
-      {#if tasks.length === 0}
-        <p class="hint">{t('tasksNone')}</p>
-      {:else}
+    {#if tasks.length === 0}
+      <!-- Nothing to do is a line, not a card. -->
+      <p class="line hint"><Pictogram name="check" size={16} />{t('tasksNoneLine')}</p>
+    {:else}
+      <SheetPart title={t('sheetTasks')}>
         <ul class="tasks">
           {#each tasks as row (row.key)}
             <li>
@@ -214,15 +125,50 @@
             </li>
           {/each}
         </ul>
+      </SheetPart>
+    {/if}
+  {/if}
+
+  <SheetPart title={t('sheetPosition')}>
+    {@render position()}
+  </SheetPart>
+  <SheetPart title={t('sheetEquipment')}>
+    {#if edits}
+      <CarriedEquipment
+        {t}
+        profile={state.profile}
+        equipment={state.equipment}
+        onequipment={edits.onequipment}
+      />
+    {:else}
+      <p>{equipmentSummary}</p>
+    {/if}
+  </SheetPart>
+  <!-- The device: looked at seldom, two small cards side by side. -->
+  <div class="device">
+    <SheetPart title={t('sheetBattery')}>
+      <!-- Why it may be unknown: behind an (i), read once (ADR-0101). -->
+      {#if batteryNote}
+        <Explained label={t('aboutBattery')} text={batteryNote}>{@render battery()}</Explained>
+      {:else}
+        {@render battery()}
       {/if}
     </SheetPart>
-  {/if}
-  {@render device()}
-  {#if edits}
-    <Fold title={t('sheetKit')} summary={kitSummary}>{@render kit()}</Fold>
-  {:else}
-    {@render kit()}
-  {/if}
+    <SheetPart title={t('sheetRadio')}>
+      {#if lora}
+        <p class="line"><StatusDot tone="good" />{t('loraLinked')}</p>
+      {:else}
+        <p class="hint">{t('loraNotLinked')}</p>
+        {#if edits}
+          <button
+            class="small connect"
+            onclick={edits.onconnectradio}
+            aria-label={t('radioConnect')}>{t('connect')}</button
+          >
+        {/if}
+      {/if}
+    </SheetPart>
+  </div>
   {@render more?.()}
 </div>
 
@@ -241,14 +187,15 @@
     margin: 0;
   }
 
-  .line .small {
-    margin-left: auto;
+  /* Each the same: the device's two cards, side by side. */
+  .device {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
   }
 
-  /* The groups of equipment are named small, under the part's own title. */
-  legend {
-    color: var(--muted);
-    font-size: var(--text-small);
+  .connect {
+    justify-self: start;
   }
 
   .swatch {

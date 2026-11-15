@@ -12,7 +12,9 @@
   import AliasField from '../identity/AliasField.svelte';
   import { normalizeAlias } from '../identity/identity.ts';
   import { ownEquipment } from '../members/member-catalog.ts';
+  import MemberHeading from '../members/MemberHeading.svelte';
   import MemberSheet from '../members/MemberSheet.svelte';
+  import ProfileTag from '../members/ProfileTag.svelte';
   import { accuracyQuality } from '../position/accuracy.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import type { PositionSharing } from '../position/position-sharing.svelte.ts';
@@ -75,8 +77,12 @@
 {#snippet who()}
   {#if name}
     {@const alias = name.alias}
-    <div class="who">
-      <h2>{alias}</h2>
+    <MemberHeading name={alias}>
+      <ProfileTag
+        {t}
+        profile={preferences.profile.value}
+        onprofile={(profile: Profile) => void preferences.profile.set(profile)}
+      />
       <button
         class="icon"
         aria-label={t('renameSelf')}
@@ -88,7 +94,7 @@
       >
         <Pictogram name="pencil" size={18} />
       </button>
-    </div>
+    </MemberHeading>
   {/if}
 {/snippet}
 
@@ -122,7 +128,6 @@
         equipment: ownEquipment(preferences.equipment.value, radio.linked),
       }}
       edits={{
-        onprofile: (profile: Profile) => void preferences.profile.set(profile),
         onstatus: (status: DutyStatus) => void preferences.dutyStatus.set(status),
         onequipment: (equipment: readonly Equipment[]) =>
           void preferences.equipment.set(ownEquipment(equipment, false)),
@@ -198,21 +203,6 @@
 </Panel>
 
 <style>
-  .who {
-    display: flex;
-    gap: 0.25rem;
-    align-items: center;
-    min-width: 0;
-  }
-
-  .who h2 {
-    margin: 0;
-    overflow: hidden;
-    font-size: var(--text-title);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   /* Sharing: the switch, what it means for the group, and hiding where one was. */
   .sharing {
     display: grid;
@@ -224,13 +214,10 @@
     padding-left: 0.1rem;
   }
 
-  /* Where this device is: a block of its own, set apart from the switches above. */
+  /* Where this device is, under the switches, in the same card. */
   .here {
     display: grid;
     gap: 0.55rem;
-    padding: 0.7rem;
-    background: var(--bg);
-    border-radius: var(--radius-card);
   }
 
   .here p {

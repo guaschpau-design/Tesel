@@ -18,7 +18,9 @@
   import { clockEvery } from '../ui/now.svelte.ts';
   import Panel from '../ui/Panel.svelte';
   import { aliasOf } from './alias.ts';
+  import MemberHeading from './MemberHeading.svelte';
   import MemberSheet from './MemberSheet.svelte';
+  import ProfileTag from './ProfileTag.svelte';
   import SheetPart from './SheetPart.svelte';
 
   interface Props {
@@ -64,7 +66,11 @@
   );
 </script>
 
-<Panel title={alias} closeLabel={t('close')} {onclose}>
+{#snippet who()}
+  <MemberHeading name={alias}><ProfileTag {t} profile={state.profile} /></MemberHeading>
+{/snippet}
+
+<Panel title={alias} closeLabel={t('close')} {onclose} header={who}>
   <div class="stack section">
     {#if role === 'coordinator'}<p class="hint">{t(ROLE_LABELS[role])}</p>{/if}
     {#if report?.type === 'position'}
@@ -98,7 +104,7 @@
         {/if}
       {/snippet}
       {#snippet more()}
-        <SheetPart title={t('heardTitle')} inline>
+        <SheetPart title={t('heardTitle')}>
           <p>{lastHeard}</p>
         </SheetPart>
       {/snippet}

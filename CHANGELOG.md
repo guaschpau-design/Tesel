@@ -155,6 +155,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Less battery for the same: the map is not drawn while the screen at rest covers it, and draws what arrived as it wakes; it is drawn at two pixels per point at most; this device's dot is drawn again only once it has moved a pixel, and the map follows it only past 3; and on foot a move goes out every 15 seconds at most, so that the phone's modem rests between two, while running or in a vehicle it is still every 5 ([ADR-0123](docs/decisions/0123-less-drawing-and-sending.md)).
 - On a computer there is no pocket mode, neither its padlock nor by itself, and full screen starts off, still in Settings; phones and tablets keep both ([ADR-0131](docs/decisions/0131-pocket-mode-on-phones-only.md)).
 - The chat no longer has the «Malla pública» tab of text messages of other MeshCore and Meshtastic apps, which confused more than it helped; they are dropped, and the device forgets those it kept ([ADR-0132](docs/decisions/0132-no-texts-of-other-apps.md)).
+- Me reads in cards: the profile is a tag beside the name, tapped to choose it, and so on every member's card; the equipment shows what is carried, each with a cross, and «Añadir» offers first what the profile usually carries ([ADR-0133](docs/decisions/0133-me-in-cards-profile-as-a-tag.md)).
 
 ### Known limits
 

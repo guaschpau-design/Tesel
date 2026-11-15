@@ -43,6 +43,10 @@
   --accent: var(--signal);
   --on-accent: var(--ink);
   --accent-line: var(--signal-deep);
+  /* A tag that names something chosen, as a member's profile (ADR-0133): the line colour on a
+     faint lime. */
+  --accent-tint: #eef5df;
+  --accent-tint-line: #c9dfa0;
 
   /* Meanings. Danger fills the SOS button and the buttons that destroy, with white on it; text
      and lines in danger on a surface take --danger, which the dark theme lightens, since one red
@@ -131,6 +135,8 @@
   --control-line: #6c7177;
   --chrome-bg: #08090a;
   --accent-line: var(--signal);
+  --accent-tint: #232b14;
+  --accent-tint-line: #45591d;
   --danger: #ff5c5f;
 }
 

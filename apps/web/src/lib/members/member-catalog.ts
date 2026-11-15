@@ -87,6 +87,22 @@ export const EQUIPMENT_GROUPS: readonly {
   },
 ];
 
+/**
+ * What each profile most often carries, offered first when equipment is added (ADR-0133): a few
+ * items, so that the usual is marked in a tap or two. None for a profile that says nothing of it.
+ */
+export const TYPICAL_EQUIPMENT: Readonly<Record<Profile, readonly Equipment[]>> = {
+  unspecified: [],
+  'civil-protection': ['light', 'generator', 'pump', 'megaphone', 'radio'],
+  firefighters: ['extinguisher', 'chainsaw', 'rope', 'light', 'pump'],
+  police: ['light', 'vehicle', 'radio', 'megaphone', 'first-aid'],
+  medical: ['first-aid', 'defibrillator', 'oxygen', 'stretcher', 'blankets'],
+  rescue: ['rope', 'light', 'search-dog', 'thermal-camera', 'drone'],
+  volunteer: ['water', 'food', 'blankets', 'light', 'first-aid'],
+  military: ['radio', 'satellite-phone', 'light', 'first-aid', 'four-by-four'],
+  other: [],
+};
+
 /** Everything that can be picked, group after group. */
 export const EQUIPMENT: readonly EquipmentItem[] = EQUIPMENT_GROUPS.flatMap((group) => group.items);
 
