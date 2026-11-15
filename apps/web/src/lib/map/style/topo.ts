@@ -9,6 +9,7 @@ import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { themeColor } from '../../ui/theme.ts';
 import { CONTOUR_LAYER, HEIGHT_KEY, RANK_KEY } from './contours.ts';
+import type { PedestrianLook } from './trails.ts';
 
 /** The style's names for the contour lines and for IGN's vector map. */
 export const CONTOURS_SOURCE = 'contours';
@@ -28,6 +29,7 @@ const TOPO_PALETTE: Partial<Flavor> = {
   scrub_a: '#e6eadb',
   scrub_b: '#dce5cc',
   other: '#a8754c',
+  pedestrian: '#f6f3ec',
   landcover: {
     grassland: 'rgba(228, 236, 214, 1)',
     barren: 'rgba(240, 233, 216, 1)',
@@ -38,6 +40,9 @@ const TOPO_PALETTE: Partial<Flavor> = {
     forest: 'rgba(207, 226, 193, 1)',
   },
 };
+
+/** Pedestrian streets are streets like the others here: the urban map is where they stand apart. */
+export const TOPO_PEDESTRIAN: PedestrianLook = { line: '#ffffff', casing: '#d6d0c4' };
 
 export function topoFlavor(): Flavor {
   return { ...namedFlavor('light'), ...TOPO_PALETTE };

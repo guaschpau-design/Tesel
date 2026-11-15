@@ -8,6 +8,7 @@ import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { themeColor } from '../../ui/theme.ts';
+import type { PedestrianLook } from './trails.ts';
 
 const BUILDING = '#d4d0c8';
 const BUILDING_EDGE = '#a9a39a';
@@ -24,12 +25,18 @@ const URBAN_PALETTE: Partial<Flavor> = {
   park_b: '#d9e4d3',
   wood_a: '#dfe6da',
   wood_b: '#d6e0cf',
-  pedestrian: '#e8e3d6',
+  pedestrian: '#e2dfeb',
   minor_casing: '#c4c0b8',
   minor_service_casing: '#cfcbc4',
   roads_label_minor: STREET_NAME,
   roads_label_major: STREET_NAME,
 };
+
+/**
+ * Pedestrian streets apart from the others, in a lilac grey as OpenStreetMap's map draws them:
+ * where a vehicle cannot go, and people gather (ADR-0138).
+ */
+export const URBAN_PEDESTRIAN: PedestrianLook = { line: '#dcd9e8', casing: '#a9a5bd' };
 
 export function urbanFlavor(): Flavor {
   return { ...namedFlavor('light'), ...URBAN_PALETTE };

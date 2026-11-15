@@ -1,6 +1,6 @@
 // What the topographic map draws of the ground as a walker reads it (ADR-0136), in the conventions
 // of the OpenStreetMap map: tracks in brown dashes and footpaths in red dots, steps in short red
-// bars; streams in blue, dashed where they run dry; woods with small trees over their green; huts
+// bars, pedestrian streets as each map wants them (ADR-0138); streams in blue, dashed where they run dry; woods with small trees over their green; huts
 // and shelters with their sign. All from the Protomaps base map (its "roads", "water", "landuse"
 // and "pois" layers), so it is drawn offline wherever the map was downloaded.
 
@@ -21,6 +21,7 @@ const HALO = 'rgba(255, 255, 255, 0.6)';
 const detail: ExpressionSpecification = ['get', 'kind_detail'];
 const isTrack: ExpressionSpecification = ['==', detail, 'track'];
 const isSteps: ExpressionSpecification = ['==', detail, 'steps'];
+const isPedestrian: ExpressionSpecification = ['==', detail, 'pedestrian'];
 /** Ways on foot, by horse or by bike outside the streets: not pavements nor pedestrian streets. */
 const isFootpath: ExpressionSpecification = [
   'all',
@@ -46,13 +47,24 @@ const width = (at13: number, at16: number, at18: number): ExpressionSpecificatio
   at18,
 ];
 
+/** How pedestrian streets are drawn: as streets on the topographic map, apart on the urban one. */
+export interface PedestrianLook {
+  readonly line: string;
+  readonly casing: string;
+}
+
 /**
- * The tracks, footpaths and steps, in place of the base map's one brown line for them all
- * (`other`, its "roads_other"), whose look stays for what is left of it: pavements and the like.
+ * The tracks, footpaths, steps and pedestrian streets, in place of the base map's one brown line
+ * for them all (`other`, its "roads_other"), whose look stays for what is left of it: pavements and
+ * the like.
  */
-export function trailLayers(source: string, other: LayerSpecification): LayerSpecification[] {
+export function trailLayers(
+  source: string,
+  other: LayerSpecification,
+  pedestrian: PedestrianLook,
+): LayerSpecification[] {
   const common = { type: 'line', source, 'source-layer': 'roads', minzoom: 13 } as const;
-  const trails: ExpressionSpecification = ['any', isTrack, isSteps, isFootpath];
+  const trails: ExpressionSpecification = ['any', isTrack, isSteps, isFootpath, isPedestrian];
   return [
     {
       id: other.id,
@@ -70,8 +82,20 @@ export function trailLayers(source: string, other: LayerSpecification): LayerSpe
     },
     {
       ...common,
+      id: 'pedestrian-casing',
+      filter: ['all', onGround, isPedestrian],
+      paint: { 'line-color': pedestrian.casing, 'line-width': width(2.5, 7.5, 16) },
+    },
+    {
+      ...common,
+      id: 'pedestrian',
+      filter: ['all', onGround, isPedestrian],
+      paint: { 'line-color': pedestrian.line, 'line-width': width(1.5, 6, 14) },
+    },
+    {
+      ...common,
       id: 'trails-halo',
-      filter: ['all', onGround, trails],
+      filter: ['all', onGround, ['any', isTrack, isSteps, isFootpath]],
       paint: { 'line-color': HALO, 'line-width': width(2.5, 4, 7) },
     },
     {

@@ -33,10 +33,11 @@ import {
   NAMES_SOURCE,
   terrainNameLayers,
   topoFlavor,
+  TOPO_PEDESTRIAN,
 } from './topo.ts';
 import { tacticalFlavor } from './tactical.ts';
 import { hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
-import { raisedBuildings, urbanFlavor, urbanLayers } from './urban.ts';
+import { raisedBuildings, URBAN_PEDESTRIAN, urbanFlavor, urbanLayers } from './urban.ts';
 
 export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
@@ -141,7 +142,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
       sources: { [BASEMAP_SOURCE]: basemap },
       // Footpaths and steps as on the topographic map: the ways on foot between streets.
       ground: ground.flatMap((layer) =>
-        layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer) : [layer],
+        layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer, URBAN_PEDESTRIAN) : [layer],
       ),
       lines: threeD ? [raisedBuildings(BASEMAP_SOURCE)] : [],
       names,
@@ -197,7 +198,7 @@ function walkersGround(ground: readonly LayerSpecification[]): LayerSpecificatio
     if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE)];
     if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE);
     if (layer.id === 'water_stream') return [];
-    if (layer.id === 'roads_other') return trailLayers(BASEMAP_SOURCE, layer);
+    if (layer.id === 'roads_other') return trailLayers(BASEMAP_SOURCE, layer, TOPO_PEDESTRIAN);
     return [layer];
   });
 }

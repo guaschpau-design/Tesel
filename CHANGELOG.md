@@ -160,6 +160,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Measuring shows the ground: «Desnivel» on its card draws the elevation profile of the path tapped, with how much it climbs and descends. «Ir a una coordenada» is gone from «Más»: a dictated coordinate is typed as a marker or a task's place ([ADR-0135](docs/decisions/0135-measuring-shows-the-ground.md)).
 - The topographic map reads like OpenStreetMap's own in the hills: tracks in brown dashes, footpaths in red dots, steps, streams in blue and dashed where they run dry, small trees over woods, and huts with their sign, offline as online ([ADR-0136](docs/decisions/0136-the-ground-as-walkers-read-it.md)).
 - A fourth base map, «Urbano», for operations in towns: light and neutral, street names larger, house numbers close up, one-way arrows, buildings edged and, in 3D, raised to their height, public services larger; no contour lines or relief. Offline with the same downloaded areas ([ADR-0137](docs/decisions/0137-the-urban-map.md)).
+- Pedestrian streets stand apart on the urban map, in a lilac grey, and are streets like the others on the topographic map ([ADR-0138](docs/decisions/0138-pedestrian-streets-on-the-urban-map.md)).
 
 ### Known limits
 

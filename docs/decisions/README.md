@@ -143,3 +143,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0135](0135-measuring-shows-the-ground.md)           | Measuring shows the ground; no "Ir a una coordenada"                                        | Accepted                                                |
 | [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted                                                |
 | [0137](0137-the-urban-map.md)                        | The urban map                                                                               | Accepted                                                |
+| [0138](0138-pedestrian-streets-on-the-urban-map.md)  | Pedestrian streets stand apart on the urban map                                             | Accepted                                                |
