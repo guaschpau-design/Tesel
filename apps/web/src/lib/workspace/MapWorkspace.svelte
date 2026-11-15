@@ -150,7 +150,7 @@
     openPanel({ name: 'point', at, title: t('mapPoint') });
   }
 
-  /** A coordinate typed in the panel: shown on the map. */
+  /** A point of the map, shown with its panel: a task's place. */
   function find(at: LatLon): void {
     inspect(at);
     showPoint(map, at);
@@ -264,7 +264,6 @@
   {preferences}
   weather={shown.weather ? weather : null}
   {credits}
-  onfind={find}
   onmark={tools.markAt}
 />
 <SelfLayer {map} label={t('youOnMap')} />

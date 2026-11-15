@@ -19,7 +19,7 @@
   let { t, from, to, terrain }: Props = $props();
 
   const way = new WayClimb(
-    () => ({ from, to }),
+    () => [from, to],
     () => terrain,
   );
   const climb = $derived(way.current?.climb ?? null);

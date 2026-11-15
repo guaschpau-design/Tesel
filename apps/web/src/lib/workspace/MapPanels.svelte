@@ -1,10 +1,9 @@
-<!-- The panels about the map and this device, with or without a group: a point of the map, finding
-     a coordinate, this device's position and the map's layers. -->
+<!-- The panels about the map and this device, with or without a group: a point of the map, this
+     device's position and the map's layers. -->
 <script lang="ts">
   import type { LatLon } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
-  import FindCoordinatePanel from '../coordinates/FindCoordinatePanel.svelte';
   import PointLayer from '../coordinates/PointLayer.svelte';
   import PointPanel from '../coordinates/PointPanel.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
@@ -30,14 +29,11 @@
     weather: WeatherFeed | null;
     /** What the map's data asks to be credited for, listed in the layers panel. */
     credits: readonly string[];
-    /** Shows a coordinate found: its point, on the map. */
-    onfind: (at: LatLon) => void;
     /** Starts a marker at a point of the group's map. */
     onmark: (at: LatLon) => void;
   }
 
-  let { t, locale, map, group, selfName, preferences, weather, credits, onfind, onmark }: Props =
-    $props();
+  let { t, locale, map, group, selfName, preferences, weather, credits, onmark }: Props = $props();
 </script>
 
 {#if panels.open?.name === 'point'}
@@ -71,8 +67,6 @@
       {/if}
     {/snippet}
   </PointPanel>
-{:else if isOpen('find')}
-  <FindCoordinatePanel {t} {onfind} onclose={closePanel} />
 {:else if isOpen('me')}
   <MePanel
     {t}

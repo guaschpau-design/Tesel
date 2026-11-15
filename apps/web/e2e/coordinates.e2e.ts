@@ -1,30 +1,19 @@
 import { createGroup, device, expect, openMore, stored, tapMapUntil, test } from './helpers.ts';
 
-test('a dictated coordinate is found on the map and read in another format', async ({
-  browser,
-}) => {
-  const page = await device(browser, 'Ana');
-  await openMore(page, 'Ir a una coordenada');
-  // What can be typed is shown on asking, without sending the form.
-  const formats = page.getByText('En grados, UTM o MGRS');
-  await expect(formats).toBeHidden();
-  await page.getByRole('button', { name: 'Qué formatos se pueden escribir' }).click();
-  await expect(formats).toBeVisible();
-  await expect(page.getByText('Tesel no reconoce')).toBeHidden();
-  await page.getByLabel('Coordenadas').fill('39,4699 -0,3763');
-  await page.getByRole('button', { name: 'Ir', exact: true }).click();
+test('a point of the map is read in the format chosen in Settings', async ({ browser }) => {
+  const page = await device(browser, 'Ana', '/#map=15/39.4699/-0.3763');
   const panel = page.getByRole('region', { name: 'Punto del mapa' });
-  await expect(panel.locator('output')).toHaveText('39.46990, -0.37630');
+  await tapMapUntil(page, {}, () => expect(panel).toBeVisible({ timeout: 2000 }));
+  await expect(panel.locator('output')).toHaveText(/^-?\d+\.\d{5}, -?\d+\.\d{5}$/);
+  await panel.getByRole('button', { name: 'Cerrar' }).click();
 
   // The format is chosen once, in Settings, and every coordinate follows it.
   await openMore(page, 'Ajustes');
   const settings = page.getByRole('region', { name: 'Ajustes' });
   await settings.getByLabel('Formato de coordenadas').selectOption('MGRS');
   await settings.getByRole('button', { name: 'Cerrar' }).click();
-  await openMore(page, 'Ir a una coordenada');
-  await page.getByLabel('Coordenadas').fill('39,4699 -0,3763');
-  await page.getByRole('button', { name: 'Ir', exact: true }).click();
-  await expect(panel.locator('output')).toHaveText('30S YJ 25695 72210');
+  await tapMapUntil(page, {}, () => expect(panel).toBeVisible({ timeout: 2000 }));
+  await expect(panel.locator('output')).toHaveText(/^\d{1,2}[C-X] [A-Z]{2} \d{5} \d{5}$/);
 
   // The format is remembered.
   await expect.poll(() => stored(page, 'settings', 'coordinateFormat')).toBe('mgrs');
@@ -33,16 +22,6 @@ test('a dictated coordinate is found on the map and read in another format', asy
   await expect(page.getByRole('region', { name: 'Punto del mapa' }).locator('output')).toHaveText(
     /^\d{1,2}[C-X] [A-Z]{2} \d{5} \d{5}$/,
   );
-});
-
-test('a coordinate that cannot be read says which formats can', async ({ browser }) => {
-  const page = await device(browser, 'Ana');
-  await openMore(page, 'Ir a una coordenada');
-  await page.getByLabel('Coordenadas').fill('al lado del puente');
-  await page.getByRole('button', { name: 'Ir', exact: true }).click();
-  await expect(
-    page.getByText('Tesel no reconoce estas coordenadas.', { exact: false }),
-  ).toBeVisible();
 });
 
 test('a marker and a task’s place are given by their coordinates, typed as dictated', async ({

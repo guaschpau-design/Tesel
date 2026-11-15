@@ -1,8 +1,8 @@
-// How much a straight way climbs and descends, and its steepest stretch, from elevations sampled
-// along it, every 30 m: often enough for a way on foot, and slopes are taken over a few samples,
+// How much a way climbs and descends, and its steepest stretch, from elevations sampled along it,
+// every 30 m: a straight way to a point, or a path measured on the map (ADR-0135); often enough for a way on foot, and slopes are taken over a few samples,
 // not between neighbours, to keep noise out.
 
-import { distanceMeters } from '@tesel/core';
+import { distanceMeters, pathMeters } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
 
 /** How far apart the way is sampled. */
@@ -25,17 +25,38 @@ export function climbMetres(value: number): string {
   return String(Math.round(value / 5) * 5);
 }
 
-/** Points along the straight way from `from` to `to`, both included. */
-export function samplesAlong(from: LatLon, to: LatLon): LatLon[] {
-  const length = distanceMeters(from, to);
+/**
+ * Points evenly spread along a path, its first and last points included, so that a profile drawn
+ * from them is to scale along the way however its stretches differ in length.
+ */
+export function samplesAlong(path: readonly LatLon[]): LatLon[] {
+  const first = path[0];
+  if (first === undefined) return [];
+  const length = pathMeters(path);
   const count = Math.min(MAX_SAMPLES, Math.max(2, Math.ceil(length / SAMPLE_SPACING_M) + 1));
-  return Array.from({ length: count }, (_, index) => {
-    const share = index / (count - 1);
-    return {
-      lat: from.lat + (to.lat - from.lat) * share,
-      lon: from.lon + (to.lon - from.lon) * share,
-    };
-  });
+  const samples: LatLon[] = [];
+  /** The stretch reached so far, and how far along the path it starts. */
+  let stretch = 0;
+  let before = 0;
+  for (let index = 0; index < count; index++) {
+    const along = length === 0 ? 0 : (length * index) / (count - 1);
+    let start = path[stretch] ?? first;
+    let end = path[stretch + 1] ?? start;
+    let span = distanceMeters(start, end);
+    while (stretch < path.length - 2 && before + span < along) {
+      before += span;
+      stretch += 1;
+      start = end;
+      end = path[stretch + 1] ?? start;
+      span = distanceMeters(start, end);
+    }
+    const share = span === 0 ? 0 : Math.min(1, (along - before) / span);
+    samples.push({
+      lat: start.lat + (end.lat - start.lat) * share,
+      lon: start.lon + (end.lon - start.lon) * share,
+    });
+  }
+  return samples;
 }
 
 /** The climb along samples and their elevations; null if any elevation is unknown. */

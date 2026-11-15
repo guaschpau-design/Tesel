@@ -49,7 +49,7 @@
   /** The fold has been opened: from then on the way is read, and its gist shown when closed. */
   let asked = $state(false);
   const way = new WayClimb(
-    () => (deviceLocation.fix ? { from: deviceLocation.fix.at, to: at } : null),
+    () => (deviceLocation.fix ? [deviceLocation.fix.at, at] : null),
     () => (profile && (asked || terrain.reader) ? terrain.onDemand : null),
   );
   const gist = $derived(

@@ -1,3 +1,4 @@
+import { distanceMeters } from '@tesel/core';
 import { describe, expect, it } from 'vitest';
 
 import { climbOf, samplesAlong } from './climb.ts';
@@ -60,14 +61,27 @@ describe('elevation tiles', () => {
 
 describe('climb along a way', () => {
   it('samples about every 30 m, both ends included', () => {
-    const samples = samplesAlong(A, B);
+    const samples = samplesAlong([A, B]);
     expect(samples.length).toBe(39);
     expect(samples[0]).toEqual(A);
     expect(samples.at(-1)).toEqual(B);
   });
 
+  it('spreads the samples evenly along a path of several stretches, through its corners', () => {
+    const corner = { lat: 39.47, lon: -0.36 };
+    const end = { lat: 39.48, lon: -0.36 };
+    const samples = samplesAlong([A, corner, end]);
+    expect(samples[0]).toEqual(A);
+    expect(samples.at(-1)?.lat).toBeCloseTo(end.lat, 9);
+    expect(samples.at(-1)?.lon).toBeCloseTo(end.lon, 9);
+    const gaps = samples.slice(1).map((sample, i) => distanceMeters(samples[i] ?? sample, sample));
+    // Even, but for the one gap that cuts the corner, and shorter.
+    const sorted = [...gaps].sort((a, b) => a - b);
+    expect((sorted.at(-1) ?? 0) - (sorted[1] ?? 0)).toBeLessThan(0.5);
+  });
+
   it('adds up ups and downs and finds the steepest stretch', () => {
-    const samples = samplesAlong(A, B);
+    const samples = samplesAlong([A, B]);
     // Up 60 m over the first 290 m, then down 10 m, then flat.
     const elevations = samples.map((_, i) => (i <= 10 ? i * 6 : i <= 15 ? 60 - (i - 10) * 2 : 50));
     const climb = climbOf(samples, elevations);
@@ -78,7 +92,7 @@ describe('climb along a way', () => {
   });
 
   it('gives no climb when any elevation is unknown', () => {
-    const samples = samplesAlong(A, B);
+    const samples = samplesAlong([A, B]);
     expect(
       climbOf(
         samples,

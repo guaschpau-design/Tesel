@@ -32,13 +32,6 @@
       },
     },
     {
-      icon: 'search',
-      label: 'findCoordinate',
-      run: () => {
-        openPanel('find');
-      },
-    },
-    {
       icon: 'journal',
       label: 'diary',
       run: () => {

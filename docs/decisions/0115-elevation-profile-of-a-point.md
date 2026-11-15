@@ -1,6 +1,6 @@
 # 0115. The elevation profile of the way to a point, on asking
 
-- Status: Accepted
+- Status: Accepted, amended by [0135](0135-measuring-shows-the-ground.md) (the measuring tool shows the profile of its path too)
 - Date: 2026-11-04
 
 ## Context

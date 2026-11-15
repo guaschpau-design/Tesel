@@ -50,6 +50,34 @@ test('distances are measured point by point, with the area they enclose', async 
   await expect(page.getByRole('button', { name: 'Más', exact: true })).toBeVisible();
 });
 
+test('a measured path shows, on asking, its profile and how much it climbs', async ({
+  browser,
+}) => {
+  const page = await device(browser, 'Ana');
+  await serveTerrainRamp(page);
+  await openMore(page, 'Medir distancias');
+  const card = page.getByRole('region', { name: 'Medir distancias' });
+  const canvas = page.locator('.maplibregl-canvas');
+  // Northwards, where the ground only rises, in two stretches.
+  for (const position of [
+    { x: 200, y: 500 },
+    { x: 220, y: 400 },
+    { x: 200, y: 300 },
+  ]) {
+    await canvas.click({ position });
+  }
+  await card.getByRole('button', { name: 'Desnivel' }).click();
+  await expect(
+    card.getByRole('img', { name: /^Perfil del terreno a lo largo de lo medido/ }),
+  ).toBeVisible();
+  await expect(card.getByText(/^↑ \d+ m · ↓ 0 m · pendiente máx\. \d+ %$/)).toBeVisible();
+  await expect(card.getByText('Inicio')).toBeVisible();
+  // Hidden again, the climb stays on the line of the length.
+  await card.getByRole('button', { name: 'Desnivel' }).click();
+  await expect(card.getByRole('img')).toHaveCount(0);
+  await expect(card).toContainText(/↑ \d+ m · ↓ 0 m/);
+});
+
 test('a point shows, on asking, the profile of the way there and how much it climbs', async ({
   browser,
 }) => {

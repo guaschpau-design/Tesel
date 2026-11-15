@@ -26,7 +26,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0018](0018-command-post.md)                         | A command post is a replicating server on its own Wi-Fi, found by name                      | Superseded by 0058                                      |
 | [0019](0019-name-tesel.md)                           | The project is called Tesel                                                                 | Accepted                                                |
 | [0020](0020-colour-and-symbols.md)                   | Signal lime, colours defined once, and symbols of our own                                   | Accepted, colours revised by 0113                       |
-| [0021](0021-coordinate-formats.md)                   | Write coordinates in four formats, converted by our own code                                | Accepted                                                |
+| [0021](0021-coordinate-formats.md)                   | Write coordinates in four formats, converted by our own code                                | Accepted, amended by 0135                               |
 | [0022](0022-log-files.md)                            | Carry a group's log in files of sealed envelopes                                            | Accepted, amended by 0055, 0134                         |
 | [0023](0023-ign-base-maps.md)                        | Topographic and aerial base maps from Spain's IGN, read by the browser                      | Accepted, amended by 0034, 0037, 0041                   |
 | [0024](0024-terrain-tiles-for-relief.md)             | Relief from the open Terrain Tiles, read by the browser                                     | Superseded by 0037                                      |
@@ -120,7 +120,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
 | [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted, amended by 0120                               |
-| [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted                                                |
+| [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted, amended by 0135                               |
 | [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Superseded by 0129                                      |
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
 | [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted, amended by 0134                               |
@@ -140,3 +140,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0132](0132-no-texts-of-other-apps.md)               | No text messages of other MeshCore or Meshtastic apps                                       | Accepted                                                |
 | [0133](0133-me-in-cards-profile-as-a-tag.md)         | Me in cards, the profile as a tag                                                           | Accepted                                                |
 | [0134](0134-a-simpler-diary.md)                      | A simpler diary                                                                             | Accepted                                                |
+| [0135](0135-measuring-shows-the-ground.md)           | Measuring shows the ground; no "Ir a una coordenada"                                        | Accepted                                                |

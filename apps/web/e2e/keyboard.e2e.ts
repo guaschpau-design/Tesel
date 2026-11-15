@@ -28,9 +28,9 @@ test('panels and menus take the focus, close with Escape and give it back', asyn
   // button.
   await page.keyboard.press('Enter');
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('menuitem', { name: 'Ir a una coordenada' })).toBeFocused();
+  await expect(page.getByRole('menuitem', { name: 'Mapas sin conexión' })).toBeFocused();
   await page.keyboard.press('Enter');
-  const panel = page.getByRole('region', { name: 'Ir a una coordenada' });
+  const panel = page.getByRole('region', { name: 'Mapas sin conexión' });
   await expect(panel).toBeFocused();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Escape');

@@ -197,7 +197,6 @@ export const en = {
   locateStop: 'Stop showing my location',
   locateCentre: 'Centre the map on me',
   coordinates: 'Coordinates',
-  coordinatesIntro: 'In degrees, UTM or MGRS. For those of a point of the map, tap it.',
   coordinateFormat: 'Coordinate format',
   formatDecimal: 'Degrees',
   formatDms: 'DMS',
@@ -205,8 +204,6 @@ export const en = {
   formatMgrs: 'MGRS',
   formatOutOfRange: 'Too close to the pole for this format',
   copy: 'Copy',
-  findCoordinate: 'Go to a coordinate',
-  find: 'Go',
   coordinateUnreadable:
     'These are not coordinates Tesel can read. Try degrees (39.4699, -0.3763), UTM (30S 725695 4372210) or MGRS (30S YJ 25695 72210).',
   markHere: 'Mark',
@@ -307,6 +304,9 @@ export const en = {
   elevationUnknown:
     'No heights for this stretch: they are read online, or from the relief of a downloaded map.',
   elevationYou: 'You',
+  elevationStart: 'Start',
+  elevationPathLabel:
+    'Terrain profile along what was measured, {distance}: between {low} m and {high} m',
   elevationStretched: 'Height exaggerated ×{times}',
   elevationProfileLabel:
     'Terrain profile from you to the point, {distance} away: between {low} m and {high} m',
@@ -789,7 +789,6 @@ export const en = {
   aboutRadioConnect: 'Help pairing the node',
   aboutOfflineAreas: 'What downloaded maps are for',
   aboutDownloadAlso: 'Which areas they cover',
-  aboutCoordinates: 'Which formats can be typed',
   thirdPartyLicences: 'Third-party licences',
 } as const;
 

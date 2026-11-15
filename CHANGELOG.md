@@ -12,7 +12,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - OpenStreetMap vector base map, installable as an app and usable offline.
 - This device on the map where it is now, with its accuracy, and a button that keeps the map centred on it. The GPS runs only while something uses it.
-- Coordinates in decimal degrees, degrees-minutes-seconds, UTM and MGRS ([ADR-0021](docs/decisions/0021-coordinate-formats.md)): a long press on the map shows a point's coordinates, ready to copy, and coordinates typed as they were dictated are found on the map. Markers and circles show theirs.
+- Coordinates in decimal degrees, degrees-minutes-seconds, UTM and MGRS ([ADR-0021](docs/decisions/0021-coordinate-formats.md)): a long press on the map shows a point's coordinates, ready to copy, and coordinates typed as they were dictated place a marker or a task's place ([ADR-0135](docs/decisions/0135-measuring-shows-the-ground.md)). Markers and circles show theirs.
 - A circle is at most 1 000 km in radius, and none breaks the map: a larger one is refused when sent and discarded when received, and near a pole a circle's ring and bounds stop at the pole, where MapLibre threw for every member of the group (protocol §3.7, [ADR-0105](docs/decisions/0105-circles-stay-on-the-earth.md)).
 - Distance and bearing from this device to any point, marker, circle or member, while the app may use the location, and guidance to it: a card with the distance, the bearing and an arrow that points the way on the map, and a line to follow. The target moves with a member and the guidance ends if it leaves the map.
 - An "Elevation" fold under a point's distance: opened, the profile of the straight way there drawn to scale, with round heights marked, and metres up, metres down and the steepest stretch; closed, the metres up and down. It needs no relief switched on ([ADR-0115](docs/decisions/0115-elevation-profile-of-a-point.md)).
@@ -157,6 +157,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - The chat no longer has the «Malla pública» tab of text messages of other MeshCore and Meshtastic apps, which confused more than it helped; they are dropped, and the device forgets those it kept ([ADR-0132](docs/decisions/0132-no-texts-of-other-apps.md)).
 - Me reads in cards: the profile is a tag beside the name, tapped to choose it, and so on every member's card; the equipment shows what is carried, each with a cross, and «Añadir» offers first what the profile usually carries ([ADR-0133](docs/decisions/0133-me-in-cards-profile-as-a-tag.md)).
 - A simpler diary: what happened fills it, by day, with the app's signs and calls for help in red; one button at its foot downloads the report as a PDF, for anyone in the group; the diary as text is gone and the backup copy moved to the groups panel ([ADR-0134](docs/decisions/0134-a-simpler-diary.md)).
+- Measuring shows the ground: «Desnivel» on its card draws the elevation profile of the path tapped, with how much it climbs and descends. «Ir a una coordenada» is gone from «Más»: a dictated coordinate is typed as a marker or a task's place ([ADR-0135](docs/decisions/0135-measuring-shows-the-ground.md)).
 
 ### Known limits
 

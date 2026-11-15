@@ -16,7 +16,6 @@ export type PlainPanelName =
   | 'settings'
   | 'layers'
   | 'me'
-  | 'find'
   | 'diary'
   /** A new situation report. */
   | 'report';

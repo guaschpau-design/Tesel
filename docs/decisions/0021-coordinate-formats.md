@@ -1,6 +1,6 @@
 # 0021. Write coordinates in four formats, converted by our own code
 
-- Status: Accepted
+- Status: Accepted, amended by [0135](0135-measuring-shows-the-ground.md) (a dictated coordinate is typed as a marker or a task's place; no panel to find it)
 - Date: 2026-10-26
 
 ## Context

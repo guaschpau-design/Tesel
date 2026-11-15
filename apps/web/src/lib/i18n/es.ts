@@ -198,7 +198,6 @@ export const es: Messages = {
   locateStop: 'Dejar de mostrar mi ubicación',
   locateCentre: 'Centrar el mapa en mí',
   coordinates: 'Coordenadas',
-  coordinatesIntro: 'En grados, UTM o MGRS. Las de un punto del mapa: tócalo.',
   coordinateFormat: 'Formato de coordenadas',
   formatDecimal: 'Grados',
   formatDms: 'GMS',
@@ -206,8 +205,6 @@ export const es: Messages = {
   formatMgrs: 'MGRS',
   formatOutOfRange: 'Demasiado cerca del polo para este formato',
   copy: 'Copiar',
-  findCoordinate: 'Ir a una coordenada',
-  find: 'Ir',
   coordinateUnreadable:
     'Tesel no reconoce estas coordenadas. Prueba en grados (39.4699, -0.3763), UTM (30S 725695 4372210) o MGRS (30S YJ 25695 72210).',
   markHere: 'Marcar',
@@ -308,6 +305,9 @@ export const es: Messages = {
   elevationUnknown:
     'No hay alturas de este tramo: se leen con conexión, o del relieve de un mapa descargado.',
   elevationYou: 'Tú',
+  elevationStart: 'Inicio',
+  elevationPathLabel:
+    'Perfil del terreno a lo largo de lo medido, {distance}: entre {low} m y {high} m',
   elevationStretched: 'Altura exagerada ×{times}',
   elevationProfileLabel:
     'Perfil del terreno desde ti hasta el punto, a {distance}: entre {low} m y {high} m',
@@ -792,6 +792,5 @@ export const es: Messages = {
   aboutRadioConnect: 'Ayuda para emparejar el nodo',
   aboutOfflineAreas: 'Para qué sirven los mapas descargados',
   aboutDownloadAlso: 'Qué zonas abarcan',
-  aboutCoordinates: 'Qué formatos se pueden escribir',
   thirdPartyLicences: 'Licencias de terceros',
 };

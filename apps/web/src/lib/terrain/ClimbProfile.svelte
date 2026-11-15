@@ -1,6 +1,7 @@
-<!-- The elevation profile of the straight way from this device to a point (ADR-0115): the ground
-     drawn to scale, with round heights marked, this device at the left and the point at the right;
-     below it, how much the way climbs and descends and its steepest stretch. -->
+<!-- The elevation profile of a way (ADR-0115): the straight way from this device to a point, or a
+     path measured on the map (ADR-0135). The ground drawn to scale, with round heights marked, the
+     start at the left and the end at the right; below it, how much the way climbs and descends and
+     its steepest stretch. -->
 <script lang="ts">
   import { formatDistance } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
@@ -15,9 +16,11 @@
     way: WayElevations | null;
     /** Its length, in metres. */
     length: number;
+    /** A path measured on the map, which starts where its first point is, not at this device. */
+    measured?: boolean;
   }
 
-  let { t, locale, way, length }: Props = $props();
+  let { t, locale, way, length, measured = false }: Props = $props();
 
   const drawing = $derived(
     way?.climb ? profileDrawing(way.elevations as readonly number[], length) : null,
@@ -38,7 +41,7 @@
     <svg
       viewBox="0 0 {PROFILE_WIDTH} {PROFILE_HEIGHT}"
       role="img"
-      aria-label={t('elevationProfileLabel', {
+      aria-label={t(measured ? 'elevationPathLabel' : 'elevationProfileLabel', {
         low: String(Math.round(Math.min(...heights))),
         high: String(Math.round(Math.max(...heights))),
         distance: formatDistance(length, locale),
@@ -58,7 +61,9 @@
       {/each}
       <path class="ground" d={drawing.area} />
       <path class="line" d={drawing.line} />
-      <text class="axis" x={drawing.left} y={PROFILE_HEIGHT - 6}>{t('elevationYou')}</text>
+      <text class="axis" x={drawing.left} y={PROFILE_HEIGHT - 6}
+        >{t(measured ? 'elevationStart' : 'elevationYou')}</text
+      >
       <text class="axis" x={drawing.right} y={PROFILE_HEIGHT - 6} text-anchor="end">
         {formatDistance(length, locale)}
       </text>

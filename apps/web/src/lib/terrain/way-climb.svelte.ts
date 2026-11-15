@@ -1,6 +1,7 @@
-// The elevations along the straight way from one point to another, and how much it climbs: read
-// again when the start has moved a little or the end changes. The climb under guidance (ClimbLine)
-// and the elevation profile of a point (FromHere) both follow a way with it.
+// The elevations along a way, and how much it climbs: read again when its start has moved a little
+// or anything else about it changes. The climb under guidance (ClimbLine), the elevation profile
+// of a point (FromHere), both the straight way from this device, and that of a path measured on
+// the map (MeasureBar, ADR-0135) follow a way with it.
 
 import { distanceMeters } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
@@ -13,11 +14,6 @@ import type { ElevationReader } from './elevation.ts';
  * the elevation itself, about 10 m apart, is finer.
  */
 const RECOMPUTE_AFTER_M = 25;
-
-export interface WayEnds {
-  readonly from: LatLon;
-  readonly to: LatLon;
-}
 
 /** A way sampled along, with what is known of its elevations. */
 export interface WayElevations {
@@ -35,27 +31,22 @@ export class WayClimb {
   reading = $state(false);
 
   /**
-   * Follows the way `ends` gives, reading it with the reader `reader` gives; nothing is read while
-   * either is null. Made while a component starts, which it follows until it goes.
+   * Follows the way `path` gives, from its first point to its last, reading it with the reader
+   * `reader` gives; nothing is read while either is null. Made while a component starts, which it
+   * follows until it goes.
    */
-  constructor(ends: () => WayEnds | null, reader: () => ElevationReader | null) {
-    /** The ends of the way last read, so small moves do not read it again. */
-    let worked: WayEnds | null = null;
+  constructor(path: () => readonly LatLon[] | null, reader: () => ElevationReader | null) {
+    /** The way last read, so small moves of its start do not read it again. */
+    let worked: readonly LatLon[] | null = null;
     /** Only the latest request may set the result; an older one may answer later. */
     let latest = 0;
     $effect(() => {
-      const way = ends();
+      const way = path();
       const terrain = reader();
-      if (way === null || terrain === null) return;
-      if (
-        worked !== null &&
-        distanceMeters(worked.from, way.from) < RECOMPUTE_AFTER_M &&
-        distanceMeters(worked.to, way.to) < 1
-      ) {
-        return;
-      }
+      if (way === null || way.length < 2 || terrain === null) return;
+      if (worked !== null && sameWay(worked, way)) return;
       worked = way;
-      const samples = samplesAlong(way.from, way.to);
+      const samples = samplesAlong(way);
       const request = ++latest;
       this.reading = true;
       void terrain.elevations(samples).then((elevations) => {
@@ -65,4 +56,16 @@ export class WayClimb {
       });
     });
   }
+}
+
+/** The same way as far as its samples can tell: its start moved a little at most, the rest not. */
+function sameWay(before: readonly LatLon[], now: readonly LatLon[]): boolean {
+  return (
+    before.length === now.length &&
+    now.every((point, index) => {
+      const was = before[index];
+      if (was === undefined) return false;
+      return distanceMeters(was, point) < (index === 0 ? RECOMPUTE_AFTER_M : 1);
+    })
+  );
 }
