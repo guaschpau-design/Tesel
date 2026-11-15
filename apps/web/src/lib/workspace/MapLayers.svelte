@@ -96,7 +96,14 @@
 {#if weather}
   <WeatherLayer {map} regions={weather.regions} visible={shown.weather} />
 {/if}
-<ServicesLayer {map} {taps} {locale} visible={shown.services} onselect={inspectService} />
+<ServicesLayer
+  {map}
+  {taps}
+  {locale}
+  visible={shown.services}
+  large={preferences.baseMap.value === 'urban'}
+  onselect={inspectService}
+/>
 
 {#if group}
   {@const { feed, self } = group}

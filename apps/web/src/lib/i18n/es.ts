@@ -314,6 +314,7 @@ export const es: Messages = {
   baseMap: 'Mapa base',
   baseMapTactical: 'Táctico',
   baseMapTopo: 'Topográfico',
+  baseMapUrban: 'Urbano',
   baseMapAerial: 'Satélite',
   layersOfGroup: 'Lo del grupo',
   layersOfMap: 'Información del mapa',

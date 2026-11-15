@@ -69,11 +69,20 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
   // The map is still the topographic map, in its own light look.
   await page.getByRole('button', { name: 'Capas del mapa' }).click();
   const base = page.getByRole('radiogroup', { name: 'Mapa base' });
-  await expect(base.getByRole('radio')).toHaveText(['Topográfico', 'Satélite', 'Táctico']);
+  await expect(base.getByRole('radio')).toHaveText([
+    'Topográfico',
+    'Urbano',
+    'Satélite',
+    'Táctico',
+  ]);
   await expect(base.getByRole('radio', { name: 'Topográfico' })).toHaveAttribute(
     'aria-checked',
     'true',
   );
+  expect(await mapTheme()).toBe('light');
+  // The urban map is light too, for a town by day.
+  await base.getByRole('radio', { name: 'Urbano' }).click();
+  await expect(base.getByRole('radio', { name: 'Urbano' })).toHaveAttribute('aria-checked', 'true');
   expect(await mapTheme()).toBe('light');
   // The tactical map is chosen there, and draws what is over it for a dark ground.
   await base.getByRole('radio', { name: 'Táctico' }).click();

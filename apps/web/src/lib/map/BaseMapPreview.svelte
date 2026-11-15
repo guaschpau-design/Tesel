@@ -12,7 +12,7 @@
 
   let { base }: Props = $props();
 
-  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { topo, aerial, tactical };
+  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { topo, urban, aerial, tactical };
   const drawing = $derived(DRAWINGS[base]);
 </script>
 
@@ -42,6 +42,24 @@
     stroke-dasharray="4 2.5"
     fill="none"
   />
+{/snippet}
+
+{#snippet urban()}
+  <rect width="96" height="64" fill="#e7e5e0" />
+  <g fill="#d4d0c8" stroke="#a9a39a" stroke-width="0.8">
+    <rect x="4" y="4" width="22" height="16" />
+    <rect x="34" y="4" width="26" height="16" />
+    <rect x="68" y="4" width="24" height="16" />
+    <rect x="4" y="30" width="22" height="14" />
+    <rect x="34" y="30" width="26" height="14" />
+    <rect x="68" y="30" width="24" height="30" />
+    <rect x="4" y="52" width="56" height="10" />
+  </g>
+  <g stroke="#ffffff" stroke-width="5" fill="none">
+    <path d="M0 25H96M0 48H64M30 0V64M64 0V64" />
+  </g>
+  <path d="M38 25h10M45 22l3 3-3 3" stroke="#6b6f74" stroke-width="1.2" fill="none" />
+  <text x="6" y="16" font-size="8" font-weight="600" fill="#2f3337">23</text>
 {/snippet}
 
 {#snippet aerial()}

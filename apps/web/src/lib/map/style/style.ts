@@ -1,5 +1,6 @@
 // MapLibre styles for each base map (ADR-0120): the Protomaps OpenStreetMap map as a topographic
-// map, with contour lines and names of the terrain (topo.ts); the national orthophotos
+// map, with contour lines and names of the terrain (topo.ts); as an urban map, for a town's streets,
+// house numbers and buildings (urban.ts, ADR-0137); the national orthophotos
 // (tiles/ortho.ts) with our labels over them; or the same OpenStreetMap map as the tactical map, in
 // greys on a dark ground (tactical.ts). Each base map has its own look, whatever the app's. All are
 // served through our tile protocol (tiles/protocol.ts), so downloaded areas work offline whichever
@@ -35,8 +36,9 @@ import {
 } from './topo.ts';
 import { tacticalFlavor } from './tactical.ts';
 import { hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
+import { raisedBuildings, urbanFlavor, urbanLayers } from './urban.ts';
 
-export const BASE_MAPS = ['topo', 'aerial', 'tactical'] as const;
+export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
 
 /** The style's name for the vector base map, in the Protomaps schema. Every style has it. */
@@ -87,8 +89,9 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
   lookOfMap(theme);
   const { sources, ground, lines, names } = baseMapLayers(choice);
   // The ground raised in 3D is shaded too, whether or not the relief layer is on: without
-  // shadows, raised ground reads as flat (ADR-0106).
-  const relief = choice.relief || choice.threeD ? reliefShading(theme, choice.threeD) : null;
+  // shadows, raised ground reads as flat (ADR-0106). A town's map has no shading (ADR-0137).
+  const shaded = (choice.relief || choice.threeD) && choice.base !== 'urban';
+  const relief = shaded ? reliefShading(theme, choice.threeD) : null;
   // Labels over photographs read best light on dark.
   const sprite = choice.base === 'aerial' ? 'dark' : theme;
   return {
@@ -117,7 +120,7 @@ function elevationSource(): SourceSpecification {
   };
 }
 
-function baseMapLayers({ base, lang }: StyleChoice): BaseMapLayers {
+function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
   // Every style has the vector base map, which the services read (services/ServicesLayer.svelte).
   const basemap: SourceSpecification = {
     type: 'vector',
@@ -129,6 +132,19 @@ function baseMapLayers({ base, lang }: StyleChoice): BaseMapLayers {
     return {
       sources: { [BASEMAP_SOURCE]: basemap },
       ...protomapsLayers(tacticalFlavor(), lang),
+    };
+  }
+  if (base === 'urban') {
+    const all = protomapsLayers(urbanFlavor(), lang);
+    const { ground, names } = urbanLayers(BASEMAP_SOURCE, all.ground, all.names);
+    return {
+      sources: { [BASEMAP_SOURCE]: basemap },
+      // Footpaths and steps as on the topographic map: the ways on foot between streets.
+      ground: ground.flatMap((layer) =>
+        layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer) : [layer],
+      ),
+      lines: threeD ? [raisedBuildings(BASEMAP_SOURCE)] : [],
+      names,
     };
   }
   if (base === 'topo') {

@@ -125,7 +125,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
 | [0118](0118-debrief-of-an-operation.md)              | The debrief of an operation, as a PDF of the hours chosen                                   | Accepted, amended by 0134                               |
 | [0119](0119-moves-borne-out.md)                      | A move counts once what follows bears it out                                                | Accepted                                                |
-| [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted                                                |
+| [0120](0120-three-base-maps-and-hazards.md)          | Topographic, satellite and tactical maps; fires and floods                                  | Accepted, amended by 0121, 0137                         |
 | [0121](0121-flood-zones-through-the-server.md)       | Flood zones through the server that serves the app                                          | Accepted                                                |
 | [0122](0122-zone-crossings-and-telling-outside.md)   | Tell the coordinator of zones crossed, and tell those without Tesel where someone is        | Accepted, amended by 0127                               |
 | [0123](0123-less-drawing-and-sending.md)             | Draw only what is seen, and send on foot less often                                         | Accepted                                                |
@@ -142,3 +142,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0134](0134-a-simpler-diary.md)                      | A simpler diary                                                                             | Accepted                                                |
 | [0135](0135-measuring-shows-the-ground.md)           | Measuring shows the ground; no "Ir a una coordenada"                                        | Accepted                                                |
 | [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted                                                |
+| [0137](0137-the-urban-map.md)                        | The urban map                                                                               | Accepted                                                |

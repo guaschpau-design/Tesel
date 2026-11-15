@@ -28,6 +28,7 @@
 
   const BASE_NAMES: Readonly<Record<BaseMap, MessageKey>> = {
     topo: 'baseMapTopo',
+    urban: 'baseMapUrban',
     aerial: 'baseMapAerial',
     tactical: 'baseMapTactical',
   };

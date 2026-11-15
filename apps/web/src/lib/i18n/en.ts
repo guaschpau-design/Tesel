@@ -313,6 +313,7 @@ export const en = {
   baseMap: 'Base map',
   baseMapTactical: 'Tactical',
   baseMapTopo: 'Topographic',
+  baseMapUrban: 'Urban',
   baseMapAerial: 'Satellite',
   layersOfGroup: 'From the group',
   layersOfMap: 'Map information',

@@ -25,10 +25,12 @@
     taps: MapTaps;
     locale: Locale;
     visible: boolean;
+    /** Larger, over the urban map, where they are what a team in a town looks for (ADR-0137). */
+    large: boolean;
     onselect: (service: TappedService) => void;
   }
 
-  let { map, taps, locale, visible, onselect }: Props = $props();
+  let { map, taps, locale, visible, large, onselect }: Props = $props();
 
   const LAYER = 'tesel-services';
   /**
@@ -61,11 +63,12 @@
         filter: ['in', ['get', 'kind'], ['literal', SERVICE_KINDS.flatMap((k) => k.osmKinds)]],
         layout: {
           'icon-image': serviceIconExpression(),
+          'icon-size': large ? 1.25 : 1,
           'icon-allow-overlap': true,
           'text-field': ['coalesce', ['get', `name:${locale}`], ['get', 'name']],
           'text-font': ['Noto Sans Medium'],
-          'text-size': 11,
-          'text-offset': [0, 1.4],
+          'text-size': large ? 12.5 : 11,
+          'text-offset': [0, large ? 1.6 : 1.4],
           'text-anchor': 'top',
           'text-optional': true,
         },
