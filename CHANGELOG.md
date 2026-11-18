@@ -162,6 +162,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - A fourth base map, «Urbano», for operations in towns: light and neutral, street names larger, house numbers close up, one-way arrows, buildings edged and, in 3D, raised to their height, public services larger; no contour lines or relief. Offline with the same downloaded areas ([ADR-0137](docs/decisions/0137-the-urban-map.md)).
 - Pedestrian streets stand apart on the urban map, in a lilac grey, and are streets like the others on the topographic map ([ADR-0138](docs/decisions/0138-pedestrian-streets-on-the-urban-map.md)).
 - In Spain, every building of the cadastre on the topographic and urban maps, and the official house numbers on the urban map, from IGN's map, offline in areas downloaded from now on; and an address typed where coordinates are, «Calle Mayor 23, Reus», found by CartoCiudad with the network ([ADR-0139](docs/decisions/0139-cadastre-buildings-and-addresses.md)).
+- In Spain, the topographic map shows which way each stream flows, with small blue arrows along it from close up, from IGN's map and offline in the areas already downloaded ([ADR-0140](docs/decisions/0140-which-way-streams-flow.md)).
 
 ### Known limits
 

@@ -1,6 +1,6 @@
 # 0136. The ground as walkers read it
 
-- Status: Accepted
+- Status: Accepted, amended by [0140](0140-which-way-streams-flow.md) (arrows the way streams flow, from IGN's map)
 - Date: 2026-11-15
 
 ## Context

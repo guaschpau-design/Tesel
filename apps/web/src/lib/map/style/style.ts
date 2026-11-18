@@ -38,7 +38,7 @@ import {
   TOPO_PEDESTRIAN,
 } from './topo.ts';
 import { tacticalFlavor } from './tactical.ts';
-import { hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
+import { flowLayer, hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
 import {
   raisedBuildings,
   URBAN_BUILDINGS,
@@ -187,7 +187,13 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
       },
       ground: withCadastre(walkersGround(ground), TOPO_BUILDINGS),
       lines: contourLayers(),
-      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang), ...names],
+      // The arrows first among the names: any name has the place before them.
+      names: [
+        flowLayer(NAMES_SOURCE),
+        ...terrainNameLayers(),
+        hutLayer(BASEMAP_SOURCE, lang),
+        ...names,
+      ],
     };
   }
   const ortho: SourceSpecification = {

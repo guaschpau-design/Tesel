@@ -141,7 +141,8 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0133](0133-me-in-cards-profile-as-a-tag.md)         | Me in cards, the profile as a tag                                                           | Accepted                                                |
 | [0134](0134-a-simpler-diary.md)                      | A simpler diary                                                                             | Accepted                                                |
 | [0135](0135-measuring-shows-the-ground.md)           | Measuring shows the ground; no "Ir a una coordenada"                                        | Accepted                                                |
-| [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted                                                |
+| [0136](0136-the-ground-as-walkers-read-it.md)        | The ground as walkers read it                                                               | Accepted, amended by 0140                               |
 | [0137](0137-the-urban-map.md)                        | The urban map                                                                               | Accepted                                                |
 | [0138](0138-pedestrian-streets-on-the-urban-map.md)  | Pedestrian streets stand apart on the urban map                                             | Accepted                                                |
 | [0139](0139-cadastre-buildings-and-addresses.md)     | The cadastre's buildings, official house numbers and addresses, in Spain                    | Accepted                                                |
+| [0140](0140-which-way-streams-flow.md)               | Which way streams flow, on the topographic map                                              | Accepted                                                |
