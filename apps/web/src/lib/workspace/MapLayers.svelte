@@ -15,6 +15,7 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import SosLayer from '../incidents/SosLayer.svelte';
   import type { MapLayer } from '../map/layers.ts';
+  import { isTactical } from '../map/style/style.ts';
   import type { MapTaps } from '../map/taps.ts';
   import MemberLayer from '../members/MemberLayer.svelte';
   import TrailLayer from '../members/TrailLayer.svelte';
@@ -84,7 +85,7 @@
   <ViewPictureLayer {map} level="hazards" services={FIRES} minZoom={FIRES_MIN_ZOOM} opacity={1} />
 {/if}
 {#if preferences.grid.value}
-  <MgrsGridLayer {map} />
+  <MgrsGridLayer {map} edges={isTactical(preferences.baseMap.value)} />
 {/if}
 {#if preferences.radar.value}
   <RadarLayer
@@ -102,6 +103,7 @@
   {locale}
   visible={shown.services}
   large={preferences.baseMap.value === 'urban'}
+  look={isTactical(preferences.baseMap.value) ? 'key' : 'round'}
   onselect={inspectService}
 />
 

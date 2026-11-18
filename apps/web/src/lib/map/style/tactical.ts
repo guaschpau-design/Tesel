@@ -1,8 +1,26 @@
-// The tactical map's palette (ADR-0114, ADR-0120): the OpenStreetMap map all in greys on a dark
-// ground, for the night and for a screen where only what the team marks should stand out. It is a
-// base map of its own, whatever the app's look.
+// The tactical map (ADR-0114, ADR-0120, ADR-0141): the OpenStreetMap map in greys on a dark ground,
+// read as a military map is. The ground has its shape (relief and contour lines), water its blue,
+// woods a texture of cover; bridges, where a way crosses water, stand out in amber; place names are
+// in capitals. Its night version is the same map in reds on black. Each is a base map of its own,
+// whatever the app's look.
 
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
+import type { LayerSpecification } from 'maplibre-gl';
+
+/** The images of the woods' texture and of a stream's flow, by day and by night (terrain-images.ts). */
+export const TACTICAL_IMAGES = {
+  day: { woods: 'tactical-woods', flow: 'tactical-flow' },
+  night: { woods: 'night-woods', flow: 'night-flow' },
+} as const;
+
+/** The colours those images are drawn in. */
+export const TACTICAL_INKS = {
+  day: { woods: 'rgba(120, 160, 128, 0.35)', flow: '#5aaee8', edge: 'rgba(0, 0, 0, 0.75)' },
+  night: { woods: 'rgba(150, 30, 30, 0.45)', flow: '#c0392b', edge: 'rgba(0, 0, 0, 0.8)' },
+} as const;
+
+/** Bridges' edges: where a way crosses water or a valley, a point every crossing depends on. */
+const BRIDGE = '#c98a1e';
 
 /**
  * Graphite land, like the app's own dark surfaces, and every line in greys that grow lighter with
@@ -29,7 +47,7 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
   beach: '#1d1c19',
   aerodrome: '#18191b',
   runway: '#2b2e32',
-  water: '#0e161c',
+  water: '#0f2a3d',
   zoo: '#161d18',
   military: '#1a1918',
   landcover: {
@@ -69,11 +87,11 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
   highway_casing_late: '#0f1011',
   railway: '#6d7278',
   boundaries: '#4b5158',
-  bridges_other_casing: '#0b0c0d',
-  bridges_minor_casing: '#0b0c0d',
-  bridges_link_casing: '#0b0c0d',
-  bridges_major_casing: '#0b0c0d',
-  bridges_highway_casing: '#0b0c0d',
+  bridges_other_casing: BRIDGE,
+  bridges_minor_casing: BRIDGE,
+  bridges_link_casing: BRIDGE,
+  bridges_major_casing: BRIDGE,
+  bridges_highway_casing: BRIDGE,
   bridges_other: '#464b51',
   bridges_minor: '#5c6269',
   bridges_link: '#80868d',
@@ -83,7 +101,7 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
   roads_label_minor_halo: '#0f1011',
   roads_label_major: '#9ca2a8',
   roads_label_major_halo: '#0f1011',
-  ocean_label: '#5d7584',
+  ocean_label: '#6aa6d4',
   subplace_label: '#8b9198',
   subplace_label_halo: '#0f1011',
   city_label: '#c6cacd',
@@ -95,6 +113,65 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
   address_label_halo: '#0f1011',
 };
 
-export function tacticalFlavor(): Flavor {
-  return { ...namedFlavor('dark'), ...TACTICAL_PALETTE };
+export function tacticalFlavor(night: boolean): Flavor {
+  const flavor = { ...namedFlavor('dark'), ...TACTICAL_PALETTE };
+  return night ? inRed(flavor) : flavor;
+}
+
+/** The streams' blue by day; by night, a red. */
+export function tacticalStream(night: boolean): string {
+  return night ? '#7a1c1c' : '#2f78b0';
+}
+
+/**
+ * Every colour of a palette as a red of the same lightness on black: what is light stays light, so
+ * the map reads as by day, without a colour that would dazzle eyes used to the dark.
+ */
+export function inRed<T>(palette: T): T {
+  return JSON.parse(JSON.stringify(palette), (_key, value: unknown) =>
+    typeof value === 'string' ? redOf(value) : value,
+  ) as T;
+}
+
+function redOf(colour: string): string {
+  const parts = channels(colour);
+  if (parts === null) return colour;
+  const [red, green, blue, alpha] = parts;
+  const lightness = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  const channel = (factor: number) => Math.min(255, Math.round(lightness * factor));
+  return `rgba(${String(channel(1.15))}, ${String(channel(0.2))}, ${String(channel(0.16))}, ${String(alpha)})`;
+}
+
+/** Red, green, blue and alpha of a colour written as #rgb, #rrggbb or rgb()/rgba(); else null. */
+function channels(colour: string): [number, number, number, number] | null {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(colour)?.[1];
+  if (hex !== undefined) {
+    const full = hex.length === 3 ? hex.replace(/./g, '$&$&') : hex;
+    const value = Number.parseInt(full, 16);
+    return [(value >> 16) & 255, (value >> 8) & 255, value & 255, 1];
+  }
+  const numbers = /^rgba?\(([^)]+)\)$/i.exec(colour)?.[1]?.split(',').map(Number);
+  if (numbers === undefined || numbers.length < 3 || numbers.some(Number.isNaN)) return null;
+  const [red = 0, green = 0, blue = 0, alpha = 1] = numbers;
+  return [red, green, blue, alpha];
+}
+
+/** The names a military map writes in capitals: places, water and the terrain. */
+function inCapitals(id: string): boolean {
+  return id.startsWith('places_') || id.startsWith('water') || id === 'terrain-names';
+}
+
+/**
+ * Names of places, water and the terrain in capitals and spaced, as military maps write them;
+ * streets keep their names as they are signed.
+ */
+export function tacticalNames(names: readonly LayerSpecification[]): LayerSpecification[] {
+  return names.map((layer) =>
+    layer.type === 'symbol' && inCapitals(layer.id)
+      ? {
+          ...layer,
+          layout: { ...layer.layout, 'text-transform': 'uppercase', 'text-letter-spacing': 0.12 },
+        }
+      : layer,
+  );
 }

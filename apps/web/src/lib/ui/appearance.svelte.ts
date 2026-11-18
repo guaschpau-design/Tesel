@@ -2,14 +2,14 @@
 // The look in use is written on the root element as `data-theme`, which app.css reads. It is the
 // look of the bars, panels and cards; the map has its own, its base map's (ADR-0120).
 
-import type { MapTheme } from './theme.ts';
+import type { Look } from './theme.ts';
 
 /** What can be chosen: this device's look (the starting point), light or dark. */
 export const THEME_CHOICES = ['auto', 'light', 'dark'] as const;
 export type ThemeChoice = (typeof THEME_CHOICES)[number];
 
 /** The look in use for a choice, given whether this device is in dark mode. */
-export function resolveTheme(choice: ThemeChoice, deviceDark: boolean): MapTheme {
+export function resolveTheme(choice: ThemeChoice, deviceDark: boolean): Look {
   if (choice === 'auto') return deviceDark ? 'dark' : 'light';
   return choice;
 }
@@ -19,14 +19,14 @@ class Appearance {
   /** Where the choice is read; this device's look until `follow` says. */
   #choice: () => ThemeChoice = $state.raw(() => 'auto');
 
-  #theme: MapTheme = $derived(resolveTheme(this.#choice(), this.#deviceDark));
+  #theme: Look = $derived(resolveTheme(this.#choice(), this.#deviceDark));
   #following = false;
 
   /**
    * The look in use. Reading it first brings the page's colours up to date, so that whatever reads
    * app.css's colours for this look gets this look's.
    */
-  get theme(): MapTheme {
+  get theme(): Look {
     if (this.#following) this.#write();
     return this.#theme;
   }

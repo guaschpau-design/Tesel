@@ -11,7 +11,7 @@
   import Pictogram from '../ui/Pictogram.svelte';
   import BaseMapPreview from './BaseMapPreview.svelte';
   import { isFlag, LAYER_GROUPS, type LayerSwitch, type MapFlag, type MapLayer } from './layers.ts';
-  import { BASE_MAPS, type BaseMap } from './style/style.ts';
+  import { BASE_MAPS, isTactical, type BaseMap } from './style/style.ts';
 
   interface Props {
     t: Translate;
@@ -31,7 +31,14 @@
     urban: 'baseMapUrban',
     aerial: 'baseMapAerial',
     tactical: 'baseMapTactical',
+    night: 'baseMapNight',
   };
+
+  /** A tactical map comes with its MGRS grid, which can then be hidden as any layer (ADR-0141). */
+  async function choose(option: BaseMap): Promise<void> {
+    await base.set(option);
+    if (isTactical(option) && !flags.grid.value) await flags.grid.set(true);
+  }
 
   function isOn(name: LayerSwitch): boolean {
     return isFlag(name) ? flags[name].value : !hidden.value.includes(name);
@@ -54,7 +61,7 @@
         class="base"
         role="radio"
         aria-checked={base.value === option}
-        onclick={() => base.set(option)}
+        onclick={() => void choose(option)}
       >
         <BaseMapPreview base={option} />
         <span>{t(BASE_NAMES[option])}</span>

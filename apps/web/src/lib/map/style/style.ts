@@ -1,8 +1,9 @@
 // MapLibre styles for each base map (ADR-0120): the Protomaps OpenStreetMap map as a topographic
 // map, with contour lines and names of the terrain (topo.ts); as an urban map, for a town's streets,
 // house numbers and buildings (urban.ts, ADR-0137); the national orthophotos
-// (tiles/ortho.ts) with our labels over them; or the same OpenStreetMap map as the tactical map, in
-// greys on a dark ground (tactical.ts). Each base map has its own look, whatever the app's. All are
+// (tiles/ortho.ts) with our labels over them; or the same OpenStreetMap map as the tactical map, read
+// as a military map in greys on a dark ground, and at night in reds on black (tactical.ts,
+// ADR-0141). Each base map has its own look, whatever the app's. All are
 // served through our tile protocol (tiles/protocol.ts), so downloaded areas work offline whichever
 // is shown.
 
@@ -37,8 +38,16 @@ import {
   topoFlavor,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
-import { tacticalFlavor } from './tactical.ts';
-import { flowLayer, hutLayer, streamLayers, trailLayers, woodsLayer } from './trails.ts';
+import { TACTICAL_IMAGES, tacticalFlavor, tacticalNames, tacticalStream } from './tactical.ts';
+import {
+  flowLayer,
+  hutLayer,
+  streamLayers,
+  TOPO_STREAM,
+  trailLayers,
+  TREES_IMAGE,
+  woodsLayer,
+} from './trails.ts';
 import {
   raisedBuildings,
   URBAN_BUILDINGS,
@@ -54,7 +63,7 @@ import {
   type BuildingLook,
 } from './cadastre.ts';
 
-export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
+export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical', 'night'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
 
 /** The style's name for the vector base map, in the Protomaps schema. Every style has it. */
@@ -81,11 +90,18 @@ export interface StyleChoice {
   readonly lang: string;
 }
 
+/** The tactical maps, by day and by night (ADR-0141). */
+export function isTactical(base: BaseMap): boolean {
+  return base === 'tactical' || base === 'night';
+}
+
 /**
  * The look of a base map, which what is drawn over it follows (ui/theme.ts): dark for the tactical
- * map, light for the others; labels over photographs are drawn light on dark by the style itself.
+ * map, red on black for it at night, light for the others; labels over photographs are drawn light
+ * on dark by the style itself.
  */
 function mapThemeOf(base: BaseMap): MapTheme {
+  if (base === 'night') return 'night';
   return base === 'tactical' ? 'dark' : 'light';
 }
 
@@ -105,11 +121,13 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
   lookOfMap(theme);
   const { sources, ground, lines, names } = baseMapLayers(choice);
   // The ground raised in 3D is shaded too, whether or not the relief layer is on: without
-  // shadows, raised ground reads as flat (ADR-0106). A town's map has no shading (ADR-0137).
-  const shaded = (choice.relief || choice.threeD) && choice.base !== 'urban';
+  // shadows, raised ground reads as flat (ADR-0106). A town's map has no shading (ADR-0137); the
+  // tactical maps always have it, as a military map shows the ground's shape (ADR-0141).
+  const shaded =
+    (choice.relief || choice.threeD || isTactical(choice.base)) && choice.base !== 'urban';
   const relief = shaded ? reliefShading(theme, choice.threeD) : null;
-  // Labels over photographs read best light on dark.
-  const sprite = choice.base === 'aerial' ? 'dark' : theme;
+  // Labels over photographs read best light on dark; the night map's icons are the dark ones.
+  const sprite = choice.base === 'aerial' || theme === 'night' ? 'dark' : theme;
   return {
     version: 8,
     glyphs: `${assetsUrl}fonts/{fontstack}/{range}.pbf`,
@@ -144,10 +162,29 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     maxzoom: BASEMAP_MAX_ZOOM,
     attribution: OSM_ATTRIBUTION,
   };
-  if (base === 'tactical') {
+  if (isTactical(base)) {
+    const night = base === 'night';
+    const images = TACTICAL_IMAGES[night ? 'night' : 'day'];
+    const { ground, names } = protomapsLayers(tacticalFlavor(night), lang);
     return {
-      sources: { [BASEMAP_SOURCE]: basemap },
-      ...protomapsLayers(tacticalFlavor(), lang),
+      sources: {
+        [BASEMAP_SOURCE]: basemap,
+        [CONTOURS_SOURCE]: contourSource(),
+        [NAMES_SOURCE]: ignSource(),
+      },
+      // Woods dotted as cover; rivers and streams in a colour of their own, dashed where dry.
+      ground: ground.flatMap((layer) => {
+        if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, images.woods)];
+        if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, tacticalStream(night));
+        if (layer.id === 'water_stream') return [];
+        return [layer];
+      }),
+      lines: contourLayers(),
+      // The arrows first among the names: any name has the place before them.
+      names: [
+        flowLayer(NAMES_SOURCE, images.flow),
+        ...tacticalNames([...terrainNameLayers(), ...names]),
+      ],
     };
   }
   if (base === 'urban') {
@@ -170,30 +207,17 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     };
   }
   if (base === 'topo') {
-    const contours: SourceSpecification = {
-      type: 'vector',
-      tiles: [contourTileUrl()],
-      minzoom: CONTOURS_MIN_ZOOM,
-      maxzoom: CONTOURS_MAX_ZOOM,
-      attribution: TERRAIN_ATTRIBUTION,
-    };
     const flavor = topoFlavor();
     const { ground, names } = protomapsLayers(flavor, lang);
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
-        [CONTOURS_SOURCE]: contours,
+        [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
       ground: withCadastre(walkersGround(ground), TOPO_BUILDINGS),
       lines: contourLayers(),
-      // The arrows first among the names: any name has the place before them.
-      names: [
-        flowLayer(NAMES_SOURCE),
-        ...terrainNameLayers(),
-        hutLayer(BASEMAP_SOURCE, lang),
-        ...names,
-      ],
+      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang), ...names],
     };
   }
   const ortho: SourceSpecification = {
@@ -208,6 +232,17 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     ground: [{ id: ORTHO_SOURCE, type: 'raster', source: ORTHO_SOURCE }],
     lines: [],
     names: layers(BASEMAP_SOURCE, namedFlavor('dark'), { lang, labelsOnly: true }),
+  };
+}
+
+/** The contour lines, worked out from the elevation tiles (contours.ts). */
+function contourSource(): SourceSpecification {
+  return {
+    type: 'vector',
+    tiles: [contourTileUrl()],
+    minzoom: CONTOURS_MIN_ZOOM,
+    maxzoom: CONTOURS_MAX_ZOOM,
+    attribution: TERRAIN_ATTRIBUTION,
   };
 }
 
@@ -240,8 +275,8 @@ function withCadastre(
  */
 function walkersGround(ground: readonly LayerSpecification[]): LayerSpecification[] {
   return ground.flatMap((layer) => {
-    if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE)];
-    if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE);
+    if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, TREES_IMAGE)];
+    if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, TOPO_STREAM);
     if (layer.id === 'water_stream') return [];
     if (layer.id === 'roads_other') return trailLayers(BASEMAP_SOURCE, layer, TOPO_PEDESTRIAN);
     return [layer];
@@ -291,8 +326,9 @@ function reliefShading(
       type: 'hillshade',
       source: RELIEF_SOURCE,
       paint: {
-        'hillshade-exaggeration': (theme === 'dark' ? 0.35 : 0.45) + (threeD ? 0.2 : 0),
+        'hillshade-exaggeration': (theme === 'light' ? 0.45 : 0.3) + (threeD ? 0.2 : 0),
         'hillshade-shadow-color': themeColor('map-relief'),
+        'hillshade-highlight-color': themeColor('map-relief-light'),
         'hillshade-illumination-anchor': threeD ? 'map' : 'viewport',
       },
     },

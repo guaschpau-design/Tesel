@@ -12,19 +12,39 @@
 
   let { base }: Props = $props();
 
-  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { topo, urban, aerial, tactical };
+  const DRAWINGS: Readonly<Record<BaseMap, Snippet>> = { topo, urban, aerial, tactical, night };
   const drawing = $derived(DRAWINGS[base]);
 </script>
 
 {#snippet tactical()}
-  <rect width="96" height="64" fill="#141516" />
-  <rect x="56" y="4" width="34" height="22" rx="3" fill="#18201a" />
-  <path d="M0 50 Q48 30 96 46" stroke="#0e1a22" stroke-width="6" fill="none" />
-  <g stroke="#34383d" stroke-width="4" fill="none">
-    <path d="M0 36H96M28 0V64M72 30V64M0 14H48" />
+  <rect width="96" height="64" fill="#101315" />
+  <rect x="54" y="2" width="40" height="26" rx="3" fill="#162019" />
+  <g fill="none" stroke="#3d5246" stroke-width="1">
+    <ellipse cx="24" cy="20" rx="20" ry="13" />
+    <ellipse cx="24" cy="20" rx="12" ry="7" />
   </g>
-  <path d="M-4 62L100 6" stroke="#5a6067" stroke-width="5" />
-  <circle cx="44" cy="26" r="4" fill="#99c938" stroke="#0f1011" stroke-width="2" />
+  <path d="M0 50 Q48 34 96 44" stroke="#2f78b0" stroke-width="3" fill="none" />
+  <g stroke="#4fb8c4" stroke-width="0.8" opacity="0.6">
+    <path d="M0 22H96M0 44H96M32 0V64M64 0V64" />
+  </g>
+  <path d="M-4 62L100 6" stroke="#c9cdd1" stroke-width="4" />
+  <path d="M52 37l-4 4M60 32l4 -4" stroke="#c98a1e" stroke-width="2" />
+  <rect x="68" y="44" width="8" height="8" fill="#f0b43c" />
+{/snippet}
+
+{#snippet night()}
+  <rect width="96" height="64" fill="#050000" />
+  <rect x="54" y="2" width="40" height="26" rx="3" fill="#160404" />
+  <g fill="none" stroke="#4a1111" stroke-width="1">
+    <ellipse cx="24" cy="20" rx="20" ry="13" />
+    <ellipse cx="24" cy="20" rx="12" ry="7" />
+  </g>
+  <path d="M0 50 Q48 34 96 44" stroke="#7a1c1c" stroke-width="3" fill="none" />
+  <g stroke="#8f2626" stroke-width="0.8" opacity="0.7">
+    <path d="M0 22H96M0 44H96M32 0V64M64 0V64" />
+  </g>
+  <path d="M-4 62L100 6" stroke="#c03030" stroke-width="4" />
+  <rect x="68" y="44" width="8" height="8" fill="#ff6b5a" />
 {/snippet}
 
 {#snippet topo()}

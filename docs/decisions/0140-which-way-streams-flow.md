@@ -1,6 +1,6 @@
 # 0140. Which way streams flow, on the topographic map
 
-- Status: Accepted
+- Status: Accepted, amended by [0141](0141-a-military-tactical-map.md) (the arrows are on the tactical map, not the topographic one)
 - Date: 2026-11-18
 
 ## Context

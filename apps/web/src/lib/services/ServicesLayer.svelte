@@ -1,5 +1,6 @@
 <!-- The public services of the base map (health, pharmacies, fire, police, helipads, town halls,
-     fuel stations) as round icons with their names, and taps on them. They come with the base map,
+     fuel stations) as round icons with their names, or on the tactical maps as key points on
+     squares (ADR-0141), and taps on them. They come with the base map,
      so they also work offline in downloaded areas. -->
 <script lang="ts">
   import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
@@ -17,6 +18,7 @@
     serviceIconExpression,
     serviceImageName,
     serviceKindOf,
+    type ServiceLook,
     type TappedService,
   } from './services.ts';
 
@@ -27,10 +29,11 @@
     visible: boolean;
     /** Larger, over the urban map, where they are what a team in a town looks for (ADR-0137). */
     large: boolean;
+    look: ServiceLook;
     onselect: (service: TappedService) => void;
   }
 
-  let { map, taps, locale, visible, large, onselect }: Props = $props();
+  let { map, taps, locale, visible, large, look, onselect }: Props = $props();
 
   const LAYER = 'tesel-services';
   /**
@@ -46,10 +49,10 @@
     visible: () => visible,
     prepare: () => {
       for (const kind of SERVICE_KINDS) {
-        addGlyphImage(map, serviceImageName(kind), {
+        addGlyphImage(map, serviceImageName(kind, look), {
           glyph: GLYPHS[kind.glyph],
-          colour: toneColor(kind.tone),
-          shape: 'circle',
+          colour: look === 'key' ? themeColor('map-key') : toneColor(kind.tone),
+          shape: look === 'key' ? 'square' : 'circle',
         });
       }
     },
@@ -62,7 +65,7 @@
         minzoom: MIN_ZOOM,
         filter: ['in', ['get', 'kind'], ['literal', SERVICE_KINDS.flatMap((k) => k.osmKinds)]],
         layout: {
-          'icon-image': serviceIconExpression(),
+          'icon-image': serviceIconExpression(look),
           'icon-size': large ? 1.25 : 1,
           'icon-allow-overlap': true,
           'text-field': ['coalesce', ['get', `name:${locale}`], ['get', 'name']],

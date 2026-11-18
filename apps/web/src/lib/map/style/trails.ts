@@ -1,10 +1,10 @@
 // What the topographic map draws of the ground as a walker reads it (ADR-0136), in the conventions
 // of the OpenStreetMap map: tracks in brown dashes and footpaths in red dots, steps in short red
 // bars, pedestrian streets as each map wants them (ADR-0138); streams in blue, dashed where they run
-// dry, and in Spain arrows the way they flow (ADR-0140); woods with small trees over their green;
-// huts and shelters with their sign. All from the Protomaps base map (its "roads", "water",
-// "landuse" and "pois" layers) but the arrows, from IGN's map, so it is drawn offline wherever the
-// map was downloaded.
+// dry; woods with small trees over their green; huts and shelters with their sign. All from the
+// Protomaps base map (its "roads", "water", "landuse" and "pois" layers), so it is drawn offline
+// wherever the map was downloaded. The tactical map draws its streams and woods with these layers
+// too, in its own colours, and in Spain arrows the way streams flow (ADR-0140, ADR-0141).
 
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
@@ -13,11 +13,11 @@ import { themeColor } from '../../ui/theme.ts';
 /** The images these layers draw with, made as the map asks for them (terrain-images.ts). */
 export const TREES_IMAGE = 'topo-trees';
 export const HUT_IMAGE = 'topo-hut';
-export const FLOW_IMAGE = 'topo-flow';
 
 const TRACK = '#8a5523';
 const FOOTPATH = '#e0503c';
-const STREAM = '#4a9fd8';
+/** The topographic map's streams. */
+export const TOPO_STREAM = '#4a9fd8';
 /** The light edge that keeps a dashed way readable over woods and contour lines. */
 const HALO = 'rgba(255, 255, 255, 0.6)';
 
@@ -135,7 +135,7 @@ export function trailLayers(
 }
 
 /** Rivers and streams, in place of the base map's thin ones: dashed where they run dry. */
-export function streamLayers(source: string): LayerSpecification[] {
+export function streamLayers(source: string, colour: string): LayerSpecification[] {
   const dry: ExpressionSpecification = ['==', ['get', 'intermittent'], true];
   const common = { type: 'line', source, 'source-layer': 'water' } as const;
   const river: ExpressionSpecification = ['==', ['get', 'kind'], 'river'];
@@ -146,14 +146,14 @@ export function streamLayers(source: string): LayerSpecification[] {
       id: 'streams-river',
       minzoom: 9,
       filter: ['all', river, ['!', dry]],
-      paint: { 'line-color': STREAM, 'line-width': width(1.2, 2.5, 4) },
+      paint: { 'line-color': colour, 'line-width': width(1.2, 2.5, 4) },
     },
     {
       ...common,
       id: 'streams-stream',
       minzoom: 12,
       filter: ['all', stream, ['!', dry]],
-      paint: { 'line-color': STREAM, 'line-width': width(0.8, 1.6, 2.5) },
+      paint: { 'line-color': colour, 'line-width': width(0.8, 1.6, 2.5) },
     },
     {
       ...common,
@@ -161,7 +161,7 @@ export function streamLayers(source: string): LayerSpecification[] {
       minzoom: 12,
       filter: ['all', ['any', river, stream], dry],
       paint: {
-        'line-color': STREAM,
+        'line-color': colour,
         'line-width': width(0.8, 1.4, 2.2),
         'line-dasharray': [3, 2],
       },
@@ -173,7 +173,7 @@ export function streamLayers(source: string): LayerSpecification[] {
  * Arrows the way rivers and streams flow, in Spain: IGN's map (its "hidrografia_lin" layer) draws
  * each watercourse downstream, which the OpenStreetMap map does not keep. From a valley's zoom.
  */
-export function flowLayer(source: string): LayerSpecification {
+export function flowLayer(source: string, image: string): LayerSpecification {
   return {
     id: 'streams-flow',
     type: 'symbol',
@@ -184,7 +184,7 @@ export function flowLayer(source: string): LayerSpecification {
     layout: {
       'symbol-placement': 'line',
       'symbol-spacing': 180,
-      'icon-image': FLOW_IMAGE,
+      'icon-image': image,
       'icon-rotation-alignment': 'map',
       'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.9, 17, 1.25],
       'icon-padding': 4,
@@ -192,8 +192,8 @@ export function flowLayer(source: string): LayerSpecification {
   };
 }
 
-/** Small trees over the woods' green, close enough to read the ground by. */
-export function woodsLayer(source: string): LayerSpecification {
+/** A texture over the woods' green, close enough to read the ground by: small trees, or dots. */
+export function woodsLayer(source: string, image: string): LayerSpecification {
   return {
     id: 'woods-trees',
     type: 'fill',
@@ -202,7 +202,7 @@ export function woodsLayer(source: string): LayerSpecification {
     minzoom: 13,
     filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
     paint: {
-      'fill-pattern': TREES_IMAGE,
+      'fill-pattern': image,
       'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 1],
     },
   };

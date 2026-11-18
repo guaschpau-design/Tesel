@@ -1,6 +1,6 @@
 # 0114. Dark mode, chosen in Settings, and the tactical map
 
-- Status: Accepted, amended by [0120](0120-three-base-maps-and-hazards.md) (the tactical map is a base map of its own; dark mode leaves the map)
+- Status: Accepted, amended by [0120](0120-three-base-maps-and-hazards.md) (the tactical map is a base map of its own; dark mode leaves the map) and [0141](0141-a-military-tactical-map.md) (read as a military map, by day and by night)
 - Date: 2026-11-04
 
 ## Context

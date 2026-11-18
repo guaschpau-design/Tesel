@@ -3,11 +3,14 @@
 
 import type { ExpressionSpecification } from 'maplibre-gl';
 
+/** Light or dark: the app's look (ui/appearance.svelte.ts). */
+export type Look = 'light' | 'dark';
+
 /**
- * Light or dark: the app's look (ui/appearance.svelte.ts), and apart from it the map's, which is
- * its base map's (map/style/style.ts, ADR-0120).
+ * The map's look, apart from the app's: its base map's (map/style/style.ts, ADR-0120), light, dark
+ * or, for the tactical map at night, red on black (ADR-0141).
  */
-export type MapTheme = 'light' | 'dark';
+export type MapTheme = Look | 'night';
 
 /**
  * Sets the map's look on the page as `data-map-theme`, which app.css reads for the colours of

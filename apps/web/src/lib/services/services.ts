@@ -67,14 +67,27 @@ export function serviceKindOf(osmKind: string): ServiceKind | undefined {
   return SERVICE_KINDS.find((kind) => kind.osmKinds.includes(osmKind));
 }
 
-/** Name of the map image drawn for a kind of service. */
-export function serviceImageName(kind: ServiceKind): string {
-  return `tesel-service-${kind.id}`;
+/**
+ * How services are drawn: round icons in each kind's colour, or, on the tactical maps, key points
+ * all in one colour on squares, as a military map marks them (ADR-0141).
+ */
+export type ServiceLook = 'round' | 'key';
+
+/** Name of the map image drawn for a kind of service in a look. */
+export function serviceImageName(kind: ServiceKind, look: ServiceLook): string {
+  return look === 'key' ? `tesel-service-${kind.id}-key` : `tesel-service-${kind.id}`;
 }
 
 /** A map expression that picks each service's image by its base map `kind`. */
-export function serviceIconExpression(): ExpressionSpecification {
+export function serviceIconExpression(look: ServiceLook): ExpressionSpecification {
   const [first, ...rest] = SERVICE_KINDS;
-  const others = rest.flatMap((kind) => [[...kind.osmKinds], serviceImageName(kind)]);
-  return ['match', ['get', 'kind'], [...first.osmKinds], serviceImageName(first), ...others, ''];
+  const others = rest.flatMap((kind) => [[...kind.osmKinds], serviceImageName(kind, look)]);
+  return [
+    'match',
+    ['get', 'kind'],
+    [...first.osmKinds],
+    serviceImageName(first, look),
+    ...others,
+    '',
+  ];
 }

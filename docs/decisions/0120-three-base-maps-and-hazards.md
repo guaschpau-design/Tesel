@@ -1,6 +1,6 @@
 # 0120. Topographic, satellite and tactical maps; fires and flood zones over them
 
-- Status: Accepted, amended by [0121](0121-flood-zones-through-the-server.md) (flood zones from the Ministry's new service, through the server) and [0137](0137-the-urban-map.md) (a fourth base map, for towns)
+- Status: Accepted, amended by [0121](0121-flood-zones-through-the-server.md) (flood zones from the Ministry's new service, through the server), [0137](0137-the-urban-map.md) (a fourth base map, for towns) and [0141](0141-a-military-tactical-map.md) (the tactical map as a military map, and a fifth for the night)
 - Date: 2026-11-08
 
 ## Context
