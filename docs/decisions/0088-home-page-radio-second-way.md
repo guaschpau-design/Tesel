@@ -1,6 +1,6 @@
 # 0088. The home page: situational awareness, and the radio as a second way
 
-- Status: Accepted
+- Status: Accepted, amended by [0142](0142-what-tesel-does-first.md) (what Tesel does comes before the communications, under a new heading)
 - Date: 2026-11-01
 
 ## Context

@@ -93,7 +93,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0085](0085-one-guide.md)                            | One guide: the help and the guide become one page                                           | Superseded by 0086                                      |
 | [0086](0086-no-guide.md)                             | No user guide: the app explains itself                                                      | Accepted                                                |
 | [0087](0087-explained-where-used.md)                 | The app explains itself where it is used                                                    | Accepted                                                |
-| [0088](0088-home-page-radio-second-way.md)           | The home page: situational awareness, and the radio as a second way                         | Accepted                                                |
+| [0088](0088-home-page-radio-second-way.md)           | The home page: situational awareness, and the radio as a second way                         | Accepted, amended by 0142                               |
 | [0089](0089-legal-notice.md)                         | A legal notice and terms of use on the site                                                 | Accepted                                                |
 | [0090](0090-pairing-a-radio-from-the-app.md)         | Pairing a radio from the app, and saying why a connection failed                            | Accepted                                                |
 | [0091](0091-interlocking-tiles-logo.md)              | The logo: two interlocking tiles and a drawn wordmark                                       | Superseded by 0095                                      |
@@ -147,3 +147,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0139](0139-cadastre-buildings-and-addresses.md)     | The cadastre's buildings, official house numbers and addresses, in Spain                    | Accepted                                                |
 | [0140](0140-which-way-streams-flow.md)               | Which way streams flow, on the topographic map                                              | Accepted, amended by 0141                               |
 | [0141](0141-a-military-tactical-map.md)              | The tactical map read as a military map, by day and by night                                | Accepted                                                |
+| [0142](0142-what-tesel-does-first.md)                | The home page says what Tesel does before how it stays connected                            | Accepted                                                |
