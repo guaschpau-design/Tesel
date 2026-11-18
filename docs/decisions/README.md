@@ -147,4 +147,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0139](0139-cadastre-buildings-and-addresses.md)     | The cadastre's buildings, official house numbers and addresses, in Spain                    | Accepted                                                |
 | [0140](0140-which-way-streams-flow.md)               | Which way streams flow, on the topographic map                                              | Accepted, amended by 0141                               |
 | [0141](0141-a-military-tactical-map.md)              | The tactical map read as a military map, by day and by night                                | Accepted                                                |
-| [0142](0142-what-tesel-does-first.md)                | The home page says what Tesel does before how it stays connected                            | Accepted                                                |
+| [0142](0142-what-tesel-does-first.md)                | The home page: what Tesel does first, in professional words                                 | Accepted                                                |
