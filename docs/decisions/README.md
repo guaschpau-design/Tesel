@@ -148,3 +148,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0140](0140-which-way-streams-flow.md)               | Which way streams flow, on the topographic map                                              | Accepted, amended by 0141                               |
 | [0141](0141-a-military-tactical-map.md)              | The tactical map read as a military map, by day and by night                                | Accepted                                                |
 | [0142](0142-what-tesel-does-first.md)                | The home page: what Tesel does first, in professional words                                 | Accepted                                                |
+| [0143](0143-english-screenshots.md)                  | The English home page shows the app in English                                              | Accepted                                                |

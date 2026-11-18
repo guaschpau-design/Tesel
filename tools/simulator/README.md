@@ -4,11 +4,11 @@ Plays a staged operation on a Tesel group: each member of the scenario is a simu
 
 It serves three purposes:
 
-| Use            | How                                                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Demonstrations | `pnpm --filter @tesel/simulator start '<invitation link>'` plays the Turia scenario in real time on that group                |
-| Load tests     | `syntheticOperation()` produces thousands of events of a long operation; `apps/web/e2e/catch-up.e2e.ts` feeds them to the app |
-| Screenshots    | `pnpm --filter @tesel/simulator screenshots --app <url>/app/` takes the images of the app the site shows                      |
+| Use            | How                                                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Demonstrations | `pnpm --filter @tesel/simulator start '<invitation link>'` plays the Turia scenario in real time on that group                   |
+| Load tests     | `syntheticOperation()` produces thousands of events of a long operation; `apps/web/e2e/catch-up.e2e.ts` feeds them to the app    |
+| Screenshots    | `pnpm --filter @tesel/simulator screenshots --app <url>/app/` takes the images of the app the site shows; `--lang en` in English |
 
 ## Playing a scenario
 
@@ -20,7 +20,7 @@ pnpm --filter @tesel/simulator start 'https://tesel.eu/app/join#…' --speed 10
 
 | Option        | Meaning                                                                                              |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
-| `--scenario`  | Which scenario (`turia`, the default)                                                                |
+| `--scenario`  | Which scenario (`turia`, the default; `turia-en` is the same operation written in English)           |
 | `--speed`     | Times faster than real time; `instant` sends everything at once, dated as if it had already happened |
 | `--positions` | Seconds between position reports of each member (10 by default)                                      |
 
