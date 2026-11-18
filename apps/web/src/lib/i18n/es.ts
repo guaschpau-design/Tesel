@@ -320,7 +320,7 @@ export const es: Messages = {
     'Perfil del terreno desde ti hasta el punto, a {distance}: entre {low} m y {high} m',
   baseMap: 'Mapa base',
   baseMapTactical: 'Táctico',
-  baseMapNight: 'Táctico noche',
+  baseMapNight: 'Nocturno',
   baseMapTopo: 'Topográfico',
   baseMapUrban: 'Urbano',
   baseMapAerial: 'Satélite',

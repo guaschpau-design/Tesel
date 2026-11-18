@@ -21,7 +21,7 @@ The tactical map (`map/style/tactical.ts`) draws, from data Tesel already downlo
 - **Names** of places, water and the terrain (IGN's, in Spain) in capitals and spaced; streets keep their names as signed.
 - **The MGRS grid** in cyan, switched on when a tactical map is chosen (it can then be hidden as any layer), its digits at the screen's left and bottom edges, as a map prints them in its margins, following them as the map moves (`coordinates/grid-edges.ts`).
 
-A fifth base map, **"Táctico noche"**, is the same map with every colour turned into a red of the same lightness on black (`inRed`), its grid, contours and key points red too; the map's look is `night` (`data-map-theme`).
+A fifth base map, **"Nocturno"** ("Night"; first named "Táctico noche", renamed the same day at Pau's request so as not to repeat "táctico"), is the same map with every colour turned into a red of the same lightness on black (`inRed`), its grid, contours and key points red too; the map's look is `night` (`data-map-theme`).
 
 The topographic map is as it was before ADR-0140.
 

@@ -74,7 +74,7 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
     'Urbano',
     'Satélite',
     'Táctico',
-    'Táctico noche',
+    'Nocturno',
   ]);
   await expect(base.getByRole('radio', { name: 'Topográfico' })).toHaveAttribute(
     'aria-checked',
@@ -93,7 +93,7 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
   await expect.poll(mapTheme).toBe('dark');
   await expect(grid).toHaveAttribute('aria-checked', 'true');
   // At night, the same map in reds on black.
-  await base.getByRole('radio', { name: 'Táctico noche' }).click();
+  await base.getByRole('radio', { name: 'Nocturno' }).click();
   await expect.poll(mapTheme).toBe('night');
 
   // Both remembered on the next visit.
