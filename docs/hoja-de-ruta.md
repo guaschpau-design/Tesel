@@ -69,7 +69,7 @@ Lo previsto en el briefing más lo aprendido de ATAK. Cada fase se detalla al em
 3. Fotos adjuntas (solo por internet; la radio no da para imágenes).
 4. Exportar el mapa (objetos y recorridos) a KML y GeoJSON para otras herramientas.
 5. Mapa náutico, e imagen de satélite fuera de España.
-6. Simbología OTAN APP-6.
+6. Simbología OTAN APP-6: probada en el mapa táctico y descartada (ADR-0153). Un miembro y un puesto del equipo se confundían; Tesel sigue con sus propios iconos en todos los mapas.
 7. Radios Meshtastic: hecha la primera fase (Tesel usa radios Meshtastic como las MeshCore, ADR-0098); falta mostrar en el mapa a quien lleva una radio Meshtastic sin Tesel.
 8. Compatibilidad con ATAK (CoT).
 9. Apps de Android e iPhone con el mismo código: segundo plano, radio en iPhone y avisos con la app cerrada. Primero Android, gratuita (ADR-0124): preparada la base, con el segundo plano, el Bluetooth propio y los avisos de SOS con la pantalla apagada (ADR-0125); falta probarla en un móvil y publicarla en Google Play. La de iPhone, cuando Tesel dé para pagar la cuenta de Apple.

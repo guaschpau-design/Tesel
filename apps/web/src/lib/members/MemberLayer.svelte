@@ -3,13 +3,12 @@
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { NodeId } from '@tesel/protocol';
-  import type { LayerSpecification, Map as MapLibreMap } from 'maplibre-gl';
+  import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount } from 'svelte';
 
   import { clockEvery } from '../ui/now.svelte.ts';
   import { themeColor, toneExpression } from '../ui/theme.ts';
-  import { addApp6MemberImages, type MilitaryLook } from '../objects/app6-images.ts';
-  import { addArrowheadImage, movementFeatures, movementLayers } from '../objects/app6-movement.ts';
+  import { addArrowheadImage, movementFeatures, movementLayers } from '../map/movement.ts';
   import { memberFeatures, movementsOf } from './member-features.ts';
   import { nameLabel } from '../map/name-label.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
@@ -27,8 +26,8 @@
     sosCancels: GroupState['sosCancels'];
     self: NodeId;
     visible: boolean;
-    /** On the tactical map, each member in their APP-6 symbol (ADR-0146). */
-    military: MilitaryLook | null;
+    /** On the tactical map, the way each moves (ADR-0150). */
+    movement: boolean;
     onselect: (id: NodeId) => void;
   }
 
@@ -43,7 +42,7 @@
     sosCancels,
     self,
     visible,
-    military,
+    movement,
     onselect,
   }: Props = $props();
 
@@ -57,7 +56,7 @@
       { positions, members, memberStates, teams, sos, sosCancels },
       self,
       now.seconds,
-      military,
+      movement,
     ),
   );
   const zoom = useZoom(() => map);
@@ -68,9 +67,7 @@
     data: { [SOURCE]: () => data, [MOVING]: () => moving },
     visible: () => visible,
     prepare: () => {
-      if (military === null) return;
-      addApp6MemberImages(map, military.locale);
-      addArrowheadImage(map);
+      if (movement) addArrowheadImage(map);
     },
     layers: () => {
       const halo = themeColor('map-halo');
@@ -85,38 +82,23 @@
           filter: ['==', ['get', 'sos'], calling],
           overlap: calling,
           opacity: ['case', ['get', 'stale'], 0.6, 1],
-          distance: military === null ? 1.1 : 1.9,
         });
-      // Each member as a dot or, on the tactical map, as their APP-6 symbol (ADR-0146), over the
-      // line of the way they move (ADR-0150).
-      const point: LayerSpecification =
-        military === null
-          ? {
-              id: `${SOURCE}-dot`,
-              type: 'circle',
-              source: SOURCE,
-              paint: {
-                'circle-radius': 8,
-                // Someone resting or off duty is a ring in the member's colour: there, but not
-                // now.
-                'circle-color': ['case', ['get', 'away'], halo, colour],
-                'circle-opacity': ['case', ['get', 'stale'], 0.4, 1],
-                'circle-stroke-width': ['case', ['get', 'away'], 3, 2],
-                'circle-stroke-color': ['case', ['get', 'away'], colour, halo],
-              },
-            }
-          : {
-              id: `${SOURCE}-app6`,
-              type: 'symbol',
-              source: SOURCE,
-              layout: { 'icon-image': ['get', 'icon'], 'icon-allow-overlap': true },
-              paint: {
-                'icon-opacity': ['case', ['get', 'stale'], 0.4, ['get', 'away'], 0.6, 1],
-              },
-            };
       return [
-        ...(military === null ? [] : movementLayers(MOVING)),
-        point,
+        // The way each moves, under their dot.
+        ...(movement ? movementLayers(MOVING) : []),
+        {
+          id: `${SOURCE}-dot`,
+          type: 'circle',
+          source: SOURCE,
+          paint: {
+            'circle-radius': 8,
+            // Someone resting or off duty is a ring in the member's colour: there, but not now.
+            'circle-color': ['case', ['get', 'away'], halo, colour],
+            'circle-opacity': ['case', ['get', 'stale'], 0.4, 1],
+            'circle-stroke-width': ['case', ['get', 'away'], 3, 2],
+            'circle-stroke-color': ['case', ['get', 'away'], colour, halo],
+          },
+        },
         label(false),
         label(true),
       ];
@@ -124,7 +106,7 @@
   });
 
   onMount(() =>
-    taps.onFeature([`${SOURCE}-dot`, `${SOURCE}-app6`], (feature) => {
+    taps.onFeature([`${SOURCE}-dot`], (feature) => {
       const id = textProperty(feature, 'id');
       if (id !== null) onselect(id as NodeId);
     }),

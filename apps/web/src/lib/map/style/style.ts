@@ -198,7 +198,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         flowLayer(NAMES_SOURCE, look.images.flow),
         hutLayer(BASEMAP_SOURCE, lang, look.huts),
         // No points of interest of the base map: shops and museums are no use in an operation;
-        // the services that are come as civil installations (ADR-0148).
+        // the public services that are, the app draws itself (services/, ADR-0153).
         ...tacticalNames([...terrainNameLayers(), ...names.filter((layer) => layer.id !== 'pois')]),
       ],
     };

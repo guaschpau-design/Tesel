@@ -1,22 +1,22 @@
-// APP-6's movement indicator on the tactical map (ADR-0150): a line out of a member's symbol, or
+// The movement indicator on the tactical map (ADR-0150, ADR-0153): a line out of a member's dot, or
 // this device's, the way it moves, ending in an arrowhead where it will be in a minute at its
 // speed, so that who walks and who drives tell apart at a glance. Shorter than that, it would hide
-// under the symbol: it reaches at least a little past it. Without a speed, as from the compass of a
-// device standing still, it only points.
+// under the dot and its name: it reaches at least a little past them. Without a speed, as from the
+// compass of a device standing still, it only points.
 
 import { offsetMeters } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
 import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
 import type { FilterSpecification, LayerSpecification, Map as MapLibreMap } from 'maplibre-gl';
 
-import { metresPerPixel } from '../map/geometry.ts';
+import { metresPerPixel } from './geometry.ts';
 
 /** The tip is where it will be this many seconds from now. */
 export const SECONDS_AHEAD = 60;
-/** The least length on screen, in CSS pixels: past the symbol, whose frames are 24 high. */
+/** The least length on screen, in CSS pixels: well past a dot. */
 export const LEAST_PX = 40;
 
-const ARROWHEAD_IMAGE = 'tesel-app6-arrowhead';
+const ARROWHEAD_IMAGE = 'tesel-arrowhead';
 const PIXEL_RATIO = 2;
 
 /** Something moving: where it is, the way it moves (degrees from north) and how fast (m/s). */
@@ -55,7 +55,7 @@ export function movementFeatures(
   return { type: 'FeatureCollection', features };
 }
 
-/** Black lines on a white edge, as the frames are drawn, for the symbol over their start. */
+/** Black lines on a white edge, which read on any ground, for the dot over their start. */
 export function movementLayers(source: string): LayerSpecification[] {
   const line: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
   return [

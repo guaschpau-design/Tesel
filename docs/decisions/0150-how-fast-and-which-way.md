@@ -1,6 +1,6 @@
 # 0150. How fast and which way: the movement indicator, and the radar with the tactical map
 
-- Status: Accepted
+- Status: Accepted, amended by [0153](0153-back-to-tesels-own-icons.md) (the line out of each dot, not of an APP-6 symbol)
 - Date: 2026-11-19
 
 ## Context

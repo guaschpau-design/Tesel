@@ -1,6 +1,6 @@
 # 0151. Declutter the map
 
-- Status: Accepted
+- Status: Accepted, amended by [0153](0153-back-to-tesels-own-icons.md) (threats by their symbol)
 - Date: 2026-11-19
 
 ## Context

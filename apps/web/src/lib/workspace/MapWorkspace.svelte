@@ -267,11 +267,7 @@
   {credits}
   onmark={tools.markAt}
 />
-<SelfLayer
-  {map}
-  label={t('youOnMap')}
-  military={preferences.baseMap.value === 'tactical' ? { locale } : null}
-/>
+<SelfLayer {map} label={t('youOnMap')} movement={preferences.baseMap.value === 'tactical'} />
 
 {#if group}
   <SosAlarm

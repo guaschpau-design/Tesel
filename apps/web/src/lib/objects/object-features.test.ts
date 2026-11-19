@@ -68,10 +68,7 @@ describe('map object features', () => {
 
   it('draws markers with their symbol, unknown symbols as the generic one, and no deleted ones', () => {
     expect(
-      markerFeatures(state, null, false).features.map((f) => [
-        f.properties.label,
-        f.properties.icon,
-      ]),
+      markerFeatures(state, false).features.map((f) => [f.properties.label, f.properties.icon]),
     ).toEqual([
       ['Fuego', 'tesel-symbol-3'],
       ['Raro', 'tesel-symbol-0'],
@@ -79,9 +76,7 @@ describe('map object features', () => {
   });
 
   it('keeps only threats and danger areas on a decluttered map', () => {
-    expect(markerFeatures(state, null, true).features.map((f) => f.properties.label)).toEqual([
-      'Fuego',
-    ]);
+    expect(markerFeatures(state, true).features.map((f) => f.properties.label)).toEqual(['Fuego']);
     // The polygon is a danger area (style 1); the circle's style is unknown.
     expect(shapeFeatures(state, true).features).toHaveLength(1);
   });

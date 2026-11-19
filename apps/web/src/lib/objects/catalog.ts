@@ -48,6 +48,18 @@ export const SYMBOLS: readonly SymbolInfo[] = [
   { code: SymbolCode.COMMAND_POST, label: 'symbolCommandPost', glyph: 'mast', tone: 'ink' },
 ];
 
+/** The symbols of threats: what a decluttered map keeps of the markers (ADR-0151). */
+const THREATS: ReadonlySet<number> = new Set([
+  SymbolCode.FIRE,
+  SymbolCode.FLOOD,
+  SymbolCode.HAZARD,
+  SymbolCode.BLOCKED_ROAD,
+]);
+
+export function isThreat(code: number): boolean {
+  return THREATS.has(code);
+}
+
 export interface StyleInfo {
   readonly code: number;
   readonly label: MessageKey;

@@ -5,8 +5,7 @@ import { openSosCalls, teamOf, type GroupState } from '@tesel/core';
 import type { NodeId } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 
-import { app6MemberImage, type MilitaryLook } from '../objects/app6-images.ts';
-import type { Movement } from '../objects/app6-movement.ts';
+import type { Movement } from '../map/movement.ts';
 import { TEAM_COLOURS } from '../teams/teams.ts';
 import type { Tone } from '../ui/theme.ts';
 import { aliasOf } from './alias.ts';
@@ -25,11 +24,9 @@ interface MemberProperties {
   readonly away: boolean;
   /** Their team's colour, or `none` for the members' own. */
   readonly tone: Tone | 'none';
-  /** On the tactical map, their symbol in APP-6 (ADR-0146); empty elsewhere. */
-  readonly icon: string;
   /**
    * On the tactical map, the way they were moving, degrees from north, and how fast, in metres a
-   * second, from their GPS: only while they move and their position is fresh (ADR-0148, ADR-0150).
+   * second, from their GPS: only while they move and their position is fresh (ADR-0150).
    */
   readonly heading?: number;
   readonly speed?: number;
@@ -44,7 +41,8 @@ export function memberFeatures(
   >,
   self: NodeId,
   now: number,
-  military: MilitaryLook | null,
+  /** Whether the way they move is drawn: on the tactical map. */
+  movement: boolean,
 ): MemberCollection {
   const calling = new Set([...openSosCalls(state)].map(([, call]) => call.origin));
   const features: Feature<Point, MemberProperties>[] = [];
@@ -61,14 +59,7 @@ export function memberFeatures(
         sos: calling.has(origin),
         away: (state.memberStates.get(origin)?.status ?? 'active') !== 'active',
         tone: teamTone(state.teams, origin),
-        icon:
-          military === null
-            ? ''
-            : app6MemberImage(
-                state.memberStates.get(origin)?.profile ?? 'unspecified',
-                state.members.get(origin)?.role === 'coordinator',
-              ),
-        ...(military !== null && report.heading !== null && !stale
+        ...(movement && report.heading !== null && !stale
           ? { heading: report.heading, ...(report.speed === null ? {} : { speed: report.speed }) }
           : {}),
       },
@@ -82,7 +73,7 @@ function teamTone(teams: GroupState['teams'], member: NodeId): Tone | 'none' {
   return team ? TEAM_COLOURS[team.colour].tone : 'none';
 }
 
-/** The members drawn moving, for their movement indicators (objects/app6-movement.ts). */
+/** The members drawn moving, for their movement lines (map/movement.ts). */
 export function movementsOf(members: MemberCollection): Movement[] {
   return members.features.flatMap(({ geometry, properties: { heading, speed } }) => {
     const [lon = 0, lat = 0] = geometry.coordinates;

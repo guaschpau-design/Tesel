@@ -1,8 +1,8 @@
 import { distanceMeters } from '@tesel/core';
 import { describe, expect, it } from 'vitest';
 
-import { metresPerPixel } from '../map/geometry.ts';
-import { LEAST_PX, movementFeatures, SECONDS_AHEAD } from './app6-movement.ts';
+import { metresPerPixel } from './geometry.ts';
+import { LEAST_PX, movementFeatures, SECONDS_AHEAD } from './movement.ts';
 
 const AT = { lat: 39.47, lon: -0.37 };
 

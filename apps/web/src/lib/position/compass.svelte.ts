@@ -1,5 +1,5 @@
-// Where this device points, from its compass (ADR-0148): degrees clockwise from true north, for
-// this device's own symbol on the tactical map. Only shown here, never sent: it changes without
+// Where this device points, from its compass (ADR-0148, ADR-0150): degrees clockwise from true
+// north, for the line out of this device's dot on the tactical map. Only shown here, never sent: it changes without
 // moving, and is only right with the phone held flat in the hand. Browsers give it as the
 // absolute orientation's alpha (Android) or as `webkitCompassHeading` (iPhone), which asks the
 // user first; either way it is turned by the screen's own rotation.

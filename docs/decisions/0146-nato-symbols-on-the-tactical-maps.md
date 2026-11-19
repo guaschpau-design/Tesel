@@ -1,6 +1,6 @@
 # 0146. NATO symbols on the tactical maps
 
-- Status: Accepted, amended by [0147](0147-no-night-map.md) (no night map, nor its red symbols) and [0148](0148-everything-in-nato-symbols-and-which-way-people-move.md) (services, tasks, reports and this device in APP-6 too)
+- Status: Superseded by [0153](0153-back-to-tesels-own-icons.md) (amended by [0147](0147-no-night-map.md) and [0148](0148-everything-in-nato-symbols-and-which-way-people-move.md) before)
 - Date: 2026-11-19
 
 ## Context

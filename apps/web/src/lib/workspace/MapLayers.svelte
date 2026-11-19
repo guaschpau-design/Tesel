@@ -15,7 +15,6 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import SosLayer from '../incidents/SosLayer.svelte';
   import type { MapLayer } from '../map/layers.ts';
-  import type { MilitaryLook } from '../objects/app6-images.ts';
   import type { MapTaps } from '../map/taps.ts';
   import MemberLayer from '../members/MemberLayer.svelte';
   import TrailLayer from '../members/TrailLayer.svelte';
@@ -49,10 +48,7 @@
 
   let { t, locale, map, taps, group, slices, shown, preferences, weather }: Props = $props();
 
-  /** On the tactical map, markers and members in NATO's symbols (ADR-0146). */
-  const military: MilitaryLook | null = $derived(
-    preferences.baseMap.value === 'tactical' ? { locale } : null,
-  );
+  const tactical = $derived(preferences.baseMap.value === 'tactical');
 
   /** A service of the base map tapped: its point, under its name or its kind. */
   function inspectService(service: TappedService): void {
@@ -90,7 +86,7 @@
   <ViewPictureLayer {map} level="hazards" services={FIRES} minZoom={FIRES_MIN_ZOOM} opacity={1} />
 {/if}
 {#if preferences.grid.value}
-  <MgrsGridLayer {map} edges={preferences.baseMap.value === 'tactical'} />
+  <MgrsGridLayer {map} edges={tactical} />
 {/if}
 {#if preferences.radar.value}
   <RadarLayer
@@ -108,7 +104,6 @@
   {locale}
   visible={shown.services}
   large={preferences.baseMap.value === 'urban'}
-  look={preferences.baseMap.value === 'tactical' ? 'app6' : 'round'}
   onselect={inspectService}
 />
 
@@ -122,7 +117,6 @@
     tasks={slices.tasks}
     teams={slices.teams}
     visible={shown.objects}
-    {military}
     threatsOnly={preferences.declutter.value}
     onselect={select}
   />
@@ -138,7 +132,6 @@
       teams={slices.teams}
       {self}
       visible={shown.tasks}
-      {military}
     />
   {/key}
   <ReportLayer
@@ -148,7 +141,6 @@
     reports={slices.reports}
     objects={slices.objects}
     visible={shown.reports}
-    {military}
   />
   <MemberLayer
     {map}
@@ -161,7 +153,7 @@
     sosCancels={slices.sosCancels}
     {self}
     visible={shown.members}
-    {military}
+    movement={tactical}
     onselect={selectMember}
   />
   <SosLayer
