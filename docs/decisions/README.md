@@ -119,7 +119,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0111](0111-airtime-kept-numbers-per-group.md)       | Keep the radio's airtime, one window on the radio, and numbers per group                    | Accepted                                                |
 | [0112](0112-nodes-and-the-mesh.md)                   | Say "node" and "the mesh", not "radio", to the people who use Tesel                         | Accepted                                                |
 | [0113](0113-graphite-and-device-lime.md)             | Graphite and the lime of the node; the mesh diagrams as a series                            | Accepted                                                |
-| [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted, amended by 0120, 0141                         |
+| [0114](0114-dark-mode-and-tactical-map.md)           | Dark mode chosen in Settings; in dark, the street map is the tactical map                   | Accepted, amended by 0120, 0141, 0144                   |
 | [0115](0115-elevation-profile-of-a-point.md)         | The elevation profile of the way to a point, on asking                                      | Accepted, amended by 0135                               |
 | [0116](0116-rounder-head-wider-joints.md)            | The logo's pin: a rounder head and wider joints                                             | Superseded by 0129                                      |
 | [0117](0117-anonymous-usage-figures.md)              | How much Tesel is used, counted per day and anonymously                                     | Accepted                                                |
@@ -146,6 +146,7 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0138](0138-pedestrian-streets-on-the-urban-map.md)  | Pedestrian streets stand apart on the urban map                                             | Accepted                                                |
 | [0139](0139-cadastre-buildings-and-addresses.md)     | The cadastre's buildings, official house numbers and addresses, in Spain                    | Accepted                                                |
 | [0140](0140-which-way-streams-flow.md)               | Which way streams flow, on the topographic map                                              | Accepted, amended by 0141                               |
-| [0141](0141-a-military-tactical-map.md)              | The tactical map read as a military map, by day and by night                                | Accepted                                                |
+| [0141](0141-a-military-tactical-map.md)              | The tactical map read as a military map, by day and by night                                | Accepted, amended by 0144                               |
 | [0142](0142-what-tesel-does-first.md)                | The home page: what Tesel does first, in professional words                                 | Accepted                                                |
 | [0143](0143-english-screenshots.md)                  | The English home page shows the app in English                                              | Accepted                                                |
+| [0144](0144-the-tactical-map-in-coyote.md)           | The tactical map in coyote                                                                  | Accepted                                                |

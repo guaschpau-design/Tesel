@@ -17,19 +17,19 @@
 </script>
 
 {#snippet tactical()}
-  <rect width="96" height="64" fill="#101315" />
-  <rect x="54" y="2" width="40" height="26" rx="3" fill="#162019" />
-  <g fill="none" stroke="#3d5246" stroke-width="1">
+  <rect width="96" height="64" fill="#d9cdae" />
+  <rect x="54" y="2" width="40" height="26" rx="3" fill="#a9b07f" />
+  <g fill="none" stroke="#8a6a42" stroke-width="1">
     <ellipse cx="24" cy="20" rx="20" ry="13" />
     <ellipse cx="24" cy="20" rx="12" ry="7" />
   </g>
-  <path d="M0 50 Q48 34 96 44" stroke="#2f78b0" stroke-width="3" fill="none" />
-  <g stroke="#4fb8c4" stroke-width="0.8" opacity="0.6">
+  <path d="M0 50 Q48 34 96 44" stroke="#3c7a99" stroke-width="3" fill="none" />
+  <g stroke="#1f1a14" stroke-width="0.8" opacity="0.6">
     <path d="M0 22H96M0 44H96M32 0V64M64 0V64" />
   </g>
-  <path d="M-4 62L100 6" stroke="#c9cdd1" stroke-width="4" />
-  <path d="M52 37l-4 4M60 32l4 -4" stroke="#c98a1e" stroke-width="2" />
-  <rect x="68" y="44" width="8" height="8" fill="#f0b43c" />
+  <path d="M-4 62L100 6" stroke="#f1e8d0" stroke-width="6" />
+  <path d="M-4 62L100 6" stroke="#3a2e22" stroke-width="3.5" />
+  <rect x="68" y="44" width="8" height="8" fill="#9e2a1c" />
 {/snippet}
 
 {#snippet night()}

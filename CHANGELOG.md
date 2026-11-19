@@ -163,6 +163,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Pedestrian streets stand apart on the urban map, in a lilac grey, and are streets like the others on the topographic map ([ADR-0138](docs/decisions/0138-pedestrian-streets-on-the-urban-map.md)).
 - In Spain, every building of the cadastre on the topographic and urban maps, and the official house numbers on the urban map, from IGN's map, offline in areas downloaded from now on; and an address typed where coordinates are, «Calle Mayor 23, Reus», found by CartoCiudad with the network ([ADR-0139](docs/decisions/0139-cadastre-buildings-and-addresses.md)).
 - The tactical map reads as a military map: relief and contour lines, water in blue with, in Spain, arrows the way streams flow, woods dotted as cover, bridges edged in amber, hospitals, fire and police stations, helipads and fuel as key points on amber squares, place and terrain names in capitals, and the MGRS grid, switched on with it, its digits at the screen's edges. A fifth base map, «Nocturno», draws it all in reds on black so as not to dazzle at night ([ADR-0140](docs/decisions/0140-which-way-streams-flow.md), [ADR-0141](docs/decisions/0141-a-military-tactical-map.md)).
+- The tactical map is now in coyote, the sand of military kit: olive woods, dark brown roads, black grid and key points in deep red, light enough to read in full sun; the night stays with «Nocturno» ([ADR-0144](docs/decisions/0144-the-tactical-map-in-coyote.md)).
 
 ### Known limits
 

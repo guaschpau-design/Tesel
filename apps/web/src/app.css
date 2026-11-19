@@ -60,8 +60,8 @@
   --info: #2f6fde;
 
   /* The map: this device, the other members, labels over the base map. The map has a look of its
-     own, its base map's: the --map-* colours below are the light one's, and the dark one's are
-     under [data-map-theme='dark']. */
+     own, its base map's: the --map-* colours below are the light one's; the tactical map's are
+     under [data-map-theme='coyote'], and the night map's under [data-map-theme='night']. */
   --self: var(--signal);
   --self-ring: var(--ink);
   --member: #3e7bfa;
@@ -147,24 +147,23 @@
   --danger: #ff5c5f;
 }
 
-/* The map's own look, its base map's whatever the app's (ui/theme.ts, ADR-0120): what is drawn on
-   the tactical map is drawn for a dark ground. */
-:root[data-map-theme='dark'] {
-  --map-text: var(--pale);
-  --map-halo: #0f1011;
-  --map-relief: #000000;
-  --map-sky: #0a1824;
-  --map-horizon: #22343f;
-  --map-contour: #5f7a68;
-  --map-terrain: #9fb3a6;
-  --map-spring: #6aa6d4;
-  --map-grid: #4fb8c4;
-  --map-relief-light: rgba(170, 185, 195, 0.22);
-  --map-key: #f0b43c;
+/* The map's own look, its base map's whatever the app's (ui/theme.ts, ADR-0120): the tactical map
+   in coyote, the sand of military kit (ADR-0144), with what is drawn on it dark, its key points in
+   a deep red. */
+:root[data-map-theme='coyote'] {
+  --map-text: #1f1a14;
+  --map-halo: #e6dbbd;
+  --map-relief: #3a2e1e;
+  --map-contour: #8a6a42;
+  --map-terrain: #3e3222;
+  --map-spring: #2c6a8a;
+  --map-grid: #1f1a14;
+  --map-relief-light: rgba(255, 248, 228, 0.5);
+  --map-key: #9e2a1c;
 }
 
-/* The tactical map at night (ADR-0141): every colour of the map a red on black, which keeps the
-   eyes used to the dark as a red torch does. */
+/* The night map (ADR-0141): every colour of the map a red on black, which keeps the eyes used to
+   the dark as a red torch does. */
 :root[data-map-theme='night'] {
   --map-text: #d04a4a;
   --map-halo: #050000;

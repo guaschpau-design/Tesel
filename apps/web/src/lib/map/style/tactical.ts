@@ -1,8 +1,8 @@
-// The tactical map (ADR-0114, ADR-0120, ADR-0141): the OpenStreetMap map in greys on a dark ground,
-// read as a military map is. The ground has its shape (relief and contour lines), water its blue,
-// woods a texture of cover; bridges, where a way crosses water, stand out in amber; place names are
-// in capitals. Its night version is the same map in reds on black. Each is a base map of its own,
-// whatever the app's look.
+// The tactical map (ADR-0114, ADR-0120, ADR-0141, ADR-0144): the OpenStreetMap map in coyote, the
+// sand of military kit, read as a military map is. The ground has its shape (relief and contour
+// lines), water its blue, woods a texture of cover; roads are dark on the sand, bridges edged in
+// black; place names are in capitals. The night map is the same map on graphite, turned into reds
+// on black. Each is a base map of its own, whatever the app's look.
 
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { LayerSpecification } from 'maplibre-gl';
@@ -15,21 +15,86 @@ export const TACTICAL_IMAGES = {
 
 /** The colours those images are drawn in. */
 export const TACTICAL_INKS = {
-  day: { woods: 'rgba(120, 160, 128, 0.35)', flow: '#5aaee8', edge: 'rgba(0, 0, 0, 0.75)' },
+  day: { woods: 'rgba(70, 82, 40, 0.4)', flow: '#2c6a8a', edge: 'rgba(255, 248, 230, 0.85)' },
   night: { woods: 'rgba(150, 30, 30, 0.45)', flow: '#c0392b', edge: 'rgba(0, 0, 0, 0.8)' },
 } as const;
 
 /** Bridges' edges: where a way crosses water or a valley, a point every crossing depends on. */
-const BRIDGE = '#c98a1e';
+const BRIDGE = '#1f1a14';
+/** On the graphite the night map starts from, bridges' edges are light, to turn into a bright red. */
+const NIGHT_BRIDGE = '#c98a1e';
+
+/** The same colour for the four edges of a road's rank. */
+function casings(colour: string): Partial<Flavor> {
+  return {
+    highway_casing_early: colour,
+    highway_casing_late: colour,
+    major_casing_early: colour,
+    major_casing_late: colour,
+    link_casing: colour,
+  };
+}
 
 /**
- * Graphite land, like the app's own dark surfaces, and every line in greys that grow lighter with
- * the road's rank, no colour of their own; water and green areas barely tinted. What the team
- * marks is all that has colour on it. The roads stand well clear of the land and the buildings:
- * against the land, a contrast of 3:1 for a street, 6.5:1 for a main road and 10:1 for a
- * motorway (ADR-0114).
+ * Coyote land, the sand of military kit, with woods in olive and water in a grey blue; roads dark
+ * brown on light edges, the more important the darker, streets light on brown edges; buildings
+ * dark; names black on a sand halo (ADR-0144).
  */
-const TACTICAL_PALETTE: Partial<Flavor> = {
+const COYOTE_PALETTE: Partial<Flavor> = {
+  background: '#d9cdae',
+  earth: '#d9cdae',
+  park_a: '#bfc195',
+  park_b: '#bfc195',
+  wood_a: '#a9b07f',
+  wood_b: '#a9b07f',
+  scrub_a: '#c9c49c',
+  scrub_b: '#c9c49c',
+  pedestrian: '#e3d9bf',
+  landcover: {
+    grassland: 'rgba(205, 197, 160, 1)',
+    barren: 'rgba(222, 210, 180, 1)',
+    urban_area: 'rgba(201, 186, 160, 1)',
+    farmland: 'rgba(214, 203, 170, 1)',
+    glacier: 'rgba(240, 240, 240, 1)',
+    scrub: 'rgba(201, 196, 156, 1)',
+    forest: 'rgba(169, 176, 127, 1)',
+  },
+  water: '#7fa7b8',
+  buildings: '#5a4e3c',
+  highway: '#3a2e22',
+  major: '#5a4632',
+  link: '#5a4632',
+  ...casings('#f1e8d0'),
+  minor_a: '#f4ecd6',
+  minor_b: '#f4ecd6',
+  minor_casing: '#7a6a52',
+  minor_service: '#efe6cc',
+  minor_service_casing: '#8a7a60',
+  other: '#6b5a42',
+  railway: '#222222',
+  bridges_other_casing: BRIDGE,
+  bridges_minor_casing: BRIDGE,
+  bridges_link_casing: BRIDGE,
+  bridges_major_casing: BRIDGE,
+  bridges_highway_casing: BRIDGE,
+  city_label: '#1f1a14',
+  city_label_halo: '#e6dbbd',
+  subplace_label: '#3e3222',
+  subplace_label_halo: '#e6dbbd',
+  roads_label_minor: '#2b2218',
+  roads_label_minor_halo: '#f1e8d0',
+  roads_label_major: '#1f1a14',
+  roads_label_major_halo: '#f1e8d0',
+  ocean_label: '#2c6a8a',
+};
+
+/**
+ * The night map's ground before it is turned into reds (ADR-0114, ADR-0141): graphite land, and
+ * every line in greys that grow lighter with the road's rank; water and green areas barely tinted.
+ * The roads stand well clear of the land and the buildings: against the land, a contrast of 3:1
+ * for a street, 6.5:1 for a main road and 10:1 for a motorway.
+ */
+const GRAPHITE_PALETTE: Partial<Flavor> = {
   background: '#0e161c',
   earth: '#141516',
   park_a: '#161d18',
@@ -87,11 +152,11 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
   highway_casing_late: '#0f1011',
   railway: '#6d7278',
   boundaries: '#4b5158',
-  bridges_other_casing: BRIDGE,
-  bridges_minor_casing: BRIDGE,
-  bridges_link_casing: BRIDGE,
-  bridges_major_casing: BRIDGE,
-  bridges_highway_casing: BRIDGE,
+  bridges_other_casing: NIGHT_BRIDGE,
+  bridges_minor_casing: NIGHT_BRIDGE,
+  bridges_link_casing: NIGHT_BRIDGE,
+  bridges_major_casing: NIGHT_BRIDGE,
+  bridges_highway_casing: NIGHT_BRIDGE,
   bridges_other: '#464b51',
   bridges_minor: '#5c6269',
   bridges_link: '#80868d',
@@ -114,13 +179,14 @@ const TACTICAL_PALETTE: Partial<Flavor> = {
 };
 
 export function tacticalFlavor(night: boolean): Flavor {
-  const flavor = { ...namedFlavor('dark'), ...TACTICAL_PALETTE };
-  return night ? inRed(flavor) : flavor;
+  return night
+    ? inRed({ ...namedFlavor('dark'), ...GRAPHITE_PALETTE })
+    : { ...namedFlavor('light'), ...COYOTE_PALETTE };
 }
 
 /** The streams' blue by day; by night, a red. */
 export function tacticalStream(night: boolean): string {
-  return night ? '#7a1c1c' : '#2f78b0';
+  return night ? '#7a1c1c' : '#3c7a99';
 }
 
 /**

@@ -1,6 +1,6 @@
 # 0141. The tactical map read as a military map, by day and by night
 
-- Status: Accepted
+- Status: Accepted, amended by [0144](0144-the-tactical-map-in-coyote.md) (the tactical map in coyote rather than graphite)
 - Date: 2026-11-18
 
 ## Context

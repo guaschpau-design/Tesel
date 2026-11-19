@@ -85,12 +85,12 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
   await base.getByRole('radio', { name: 'Urbano' }).click();
   await expect(base.getByRole('radio', { name: 'Urbano' })).toHaveAttribute('aria-checked', 'true');
   expect(await mapTheme()).toBe('light');
-  // The tactical map is chosen there, draws what is over it for a dark ground, and comes with the
-  // MGRS grid.
+  // The tactical map is chosen there, draws what is over it for its coyote ground, and comes with
+  // the MGRS grid.
   const grid = page.getByRole('switch', { name: 'Cuadrícula MGRS' });
   await expect(grid).toHaveAttribute('aria-checked', 'false');
   await base.getByRole('radio', { name: 'Táctico', exact: true }).click();
-  await expect.poll(mapTheme).toBe('dark');
+  await expect.poll(mapTheme).toBe('coyote');
   await expect(grid).toHaveAttribute('aria-checked', 'true');
   // At night, the same map in reds on black.
   await base.getByRole('radio', { name: 'Nocturno' }).click();

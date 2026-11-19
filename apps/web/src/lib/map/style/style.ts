@@ -96,13 +96,13 @@ export function isTactical(base: BaseMap): boolean {
 }
 
 /**
- * The look of a base map, which what is drawn over it follows (ui/theme.ts): dark for the tactical
- * map, red on black for it at night, light for the others; labels over photographs are drawn light
- * on dark by the style itself.
+ * The look of a base map, which what is drawn over it follows (ui/theme.ts): coyote for the
+ * tactical map, red on black for the night map, light for the others; labels over photographs are
+ * drawn light on dark by the style itself.
  */
 function mapThemeOf(base: BaseMap): MapTheme {
   if (base === 'night') return 'night';
-  return base === 'tactical' ? 'dark' : 'light';
+  return base === 'tactical' ? 'coyote' : 'light';
 }
 
 /** A base map in three bands, so that the relief shading can go between the first two. */
@@ -127,7 +127,7 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
     (choice.relief || choice.threeD || isTactical(choice.base)) && choice.base !== 'urban';
   const relief = shaded ? reliefShading(theme, choice.threeD) : null;
   // Labels over photographs read best light on dark; the night map's icons are the dark ones.
-  const sprite = choice.base === 'aerial' || theme === 'night' ? 'dark' : theme;
+  const sprite = choice.base === 'aerial' || theme === 'night' ? 'dark' : 'light';
   return {
     version: 8,
     glyphs: `${assetsUrl}fonts/{fontstack}/{range}.pbf`,
@@ -307,6 +307,13 @@ function groundSky(): SkySpecification {
   };
 }
 
+/** How deep the relief is shaded on each look: less on sand than on the light map, least at night. */
+const RELIEF_STRENGTH: Readonly<Record<MapTheme, number>> = {
+  light: 0.45,
+  coyote: 0.35,
+  night: 0.3,
+};
+
 /**
  * Shading of the terrain from the elevation tiles (tiles/sources.ts). Over raised ground it is
  * deeper, and lit from the north-west of the land rather than of the screen, so shadows stay on
@@ -326,7 +333,7 @@ function reliefShading(
       type: 'hillshade',
       source: RELIEF_SOURCE,
       paint: {
-        'hillshade-exaggeration': (theme === 'light' ? 0.45 : 0.3) + (threeD ? 0.2 : 0),
+        'hillshade-exaggeration': RELIEF_STRENGTH[theme] + (threeD ? 0.2 : 0),
         'hillshade-shadow-color': themeColor('map-relief'),
         'hillshade-highlight-color': themeColor('map-relief-light'),
         'hillshade-illumination-anchor': threeD ? 'map' : 'viewport',
