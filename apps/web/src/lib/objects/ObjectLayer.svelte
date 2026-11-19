@@ -1,6 +1,7 @@
 <!-- Draws the group's markers, shapes and strips of sweeps, and reports taps on them. -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
+  import type { FeatureCollection } from 'geojson';
   import type { Map as MapLibreMap } from 'maplibre-gl';
   import { onMount } from 'svelte';
 
@@ -23,21 +24,25 @@
     visible: boolean;
     /** On the tactical map, markers in NATO's symbols (ADR-0146). */
     military: MilitaryLook | null;
+    /** On a decluttered map, only threats and danger areas, and no sweeps (ADR-0151). */
+    threatsOnly: boolean;
     onselect: (key: string) => void;
   }
 
-  let { map, taps, objects, tasks, teams, visible, military, onselect }: Props = $props();
+  let { map, taps, objects, tasks, teams, visible, military, threatsOnly, onselect }: Props =
+    $props();
 
   const MARKERS = 'tesel-markers';
   const SHAPES = 'tesel-shapes';
   const STRIPS = 'tesel-strips';
+  const NOTHING: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
   useOverlay(() => map, {
     level: 'objects',
     data: {
-      [SHAPES]: () => shapeFeatures({ objects }),
-      [STRIPS]: () => stripFeatures({ objects, tasks, teams }),
-      [MARKERS]: () => markerFeatures({ objects }, military),
+      [SHAPES]: () => shapeFeatures({ objects }, threatsOnly),
+      [STRIPS]: () => (threatsOnly ? NOTHING : stripFeatures({ objects, tasks, teams })),
+      [MARKERS]: () => markerFeatures({ objects }, military, threatsOnly),
     },
     visible: () => visible,
     prepare: () => {

@@ -44,7 +44,7 @@ const TOPO_PALETTE: Partial<Flavor> = {
 
 /**
  * The cadastre's buildings (cadastre.ts) as the base map draws its own over this land: its grey at
- * half strength, opaque so that where both are drawn they do not darken each other.
+ * half strength, which they replace in Spain (one-layer-of-buildings.ts).
  */
 export const TOPO_BUILDINGS: BuildingLook = { fill: '#dddbd7', edge: null };
 

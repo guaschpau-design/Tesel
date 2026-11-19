@@ -42,41 +42,37 @@
       const ink = themeColor('map-text');
       const halo = themeColor('map-halo');
       const signal = themeColor('signal');
-      // In APP-6 the objective is drawn over the dot, which stays, unseen, to be tapped.
-      const objectives: LayerSpecification[] =
+      // Each task's place as a dot, filled once started, or, on the tactical map, as an objective
+      // (ADR-0148).
+      const point: LayerSpecification =
         military === null
-          ? []
-          : [
-              {
-                id: `${SOURCE}-app6`,
-                type: 'symbol',
-                source: SOURCE,
-                layout: {
-                  'icon-image': [
-                    'case',
-                    ['get', 'started'],
-                    app6ObjectiveImage(true),
-                    app6ObjectiveImage(false),
-                  ],
-                  'icon-allow-overlap': true,
-                },
+          ? {
+              id: `${SOURCE}-dot`,
+              type: 'circle',
+              source: SOURCE,
+              paint: {
+                'circle-radius': 7,
+                'circle-color': ['case', ['get', 'started'], signal, halo],
+                'circle-stroke-width': 3,
+                'circle-stroke-color': ink,
               },
-            ];
+            }
+          : {
+              id: `${SOURCE}-app6`,
+              type: 'symbol',
+              source: SOURCE,
+              layout: {
+                'icon-image': [
+                  'case',
+                  ['get', 'started'],
+                  app6ObjectiveImage(true),
+                  app6ObjectiveImage(false),
+                ],
+                'icon-allow-overlap': true,
+              },
+            };
       return [
-        {
-          id: `${SOURCE}-dot`,
-          type: 'circle',
-          source: SOURCE,
-          paint: {
-            'circle-radius': military === null ? 7 : 14,
-            'circle-color': ['case', ['get', 'started'], signal, halo],
-            'circle-stroke-width': 3,
-            'circle-stroke-color': ink,
-            'circle-opacity': military === null ? 1 : 0,
-            'circle-stroke-opacity': military === null ? 1 : 0,
-          },
-        },
-        ...objectives,
+        point,
         {
           id: `${SOURCE}-label`,
           type: 'symbol',
@@ -96,7 +92,7 @@
   });
 
   onMount(() =>
-    taps.onFeature([`${SOURCE}-dot`], (feature) => {
+    taps.onFeature([`${SOURCE}-dot`, `${SOURCE}-app6`], (feature) => {
       const key = textProperty(feature, 'key');
       if (key !== null) onselect(key);
     }),

@@ -108,6 +108,15 @@ export function app6Marker(code: number): App6Symbol {
   return MARKERS[code] ?? { kind: 'framed', frame: 'neutral', inside: NONE };
 }
 
+/**
+ * Whether a marker symbol marks a threat: what APP-6 draws as hostile, and a way blocked. A
+ * decluttered map shows only these markers (ADR-0151).
+ */
+export function isThreat(code: number): boolean {
+  const symbol = app6Marker(code);
+  return symbol.kind === 'block' || (symbol.kind === 'framed' && symbol.frame === 'hostile');
+}
+
 /** What each profile's members are drawn with inside their frame. */
 const PROFILES: Readonly<Record<Profile, App6Inside>> = {
   police: { kind: 'text', text: same('LE') },

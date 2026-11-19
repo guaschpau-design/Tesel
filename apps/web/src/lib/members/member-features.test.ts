@@ -2,7 +2,7 @@ import { stateOf } from '@tesel/core';
 import type { NodeId } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
-import { memberFeatures } from './member-features.ts';
+import { memberFeatures, movementsOf } from './member-features.ts';
 
 const ANA = 'a1b2c3d4' as NodeId;
 const BERTA = '0f1e2d3c' as NodeId;
@@ -56,6 +56,9 @@ describe('member features', () => {
       memberFeatures(state, ANA, T0, military).features.map((f) => f.properties.heading);
     expect(headings({ locale: 'es' })).toEqual([90, undefined]);
     expect(headings(null)).toEqual([undefined, undefined]);
+    expect(movementsOf(memberFeatures(state, ANA, T0, { locale: 'es' }))).toEqual([
+      { at: { lat: 39.47, lon: -0.37 }, heading: 90, speed: 1.4 },
+    ]);
   });
 
   it('marks the members resting or off duty', () => {

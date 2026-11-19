@@ -44,6 +44,11 @@ const PREFERENCES = {
   relief: flag('relief', false),
   /** The MGRS grid over the map: off, for those who coordinate in it. */
   grid: flag('grid', false),
+  /**
+   * The map decluttered (ADR-0151): only the team, threats and calls for help, and the names of
+   * places. Off: everything the layers panel shows.
+   */
+  declutter: flag('declutter', false),
   /** The radar around this device: off, as it keeps the GPS on. */
   radar: flag('radar', false),
   /** The cadastre's parcels: off, as it asks a public service for a picture of every view. */

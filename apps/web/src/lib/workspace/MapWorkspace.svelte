@@ -22,12 +22,13 @@
   import { hasOwnSos } from '../incidents/incidents.ts';
   import SosAlarm from '../incidents/SosAlarm.svelte';
   import SosCall from '../incidents/SosCall.svelte';
-  import { MAP_LAYERS, type MapLayer } from '../map/layers.ts';
+  import { shownLayers } from '../map/layers.ts';
   import { showPoint } from '../map/geometry.ts';
   import { useStyleCredits } from '../map/style/style-credits.svelte.ts';
   import { groupPoints, StartFraming } from '../map/start-framing.ts';
   import { MapTaps } from '../map/taps.ts';
   import CompassButton from '../map/CompassButton.svelte';
+  import DeclutterButton from '../map/DeclutterButton.svelte';
   import GroundButton from '../map/GroundButton.svelte';
   import MapControl from '../map/MapControl.svelte';
   import MapCredits from '../map/MapCredits.svelte';
@@ -119,11 +120,7 @@
   /** The group's state slice by slice: each layer redraws only when its own slices change. */
   const slices = stateSlices(() => group?.feed.state ?? EMPTY_STATE);
   /** Which map layers are shown, by layer. */
-  const shown = $derived(
-    Object.fromEntries(
-      MAP_LAYERS.map((layer) => [layer, !preferences.hiddenLayers.value.includes(layer)]),
-    ) as Record<MapLayer, boolean>,
-  );
+  const shown = $derived(shownLayers(preferences.hiddenLayers.value, preferences.declutter.value));
   /** What the map's data asks to be credited for, with the services over it that are shown. */
   const styleCredits = useStyleCredits(() => map);
   const credits = $derived([
@@ -312,6 +309,7 @@
   <CompassButton {t} {map} />
   <LocateButton {t} {map} />
   <GroundButton {t} {map} />
+  <DeclutterButton {t} declutter={preferences.declutter} />
   <button
     aria-label={t('layers')}
     title={t('layers')}

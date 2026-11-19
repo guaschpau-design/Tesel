@@ -68,15 +68,26 @@ describe('map object features', () => {
 
   it('draws markers with their symbol, unknown symbols as the generic one, and no deleted ones', () => {
     expect(
-      markerFeatures(state, null).features.map((f) => [f.properties.label, f.properties.icon]),
+      markerFeatures(state, null, false).features.map((f) => [
+        f.properties.label,
+        f.properties.icon,
+      ]),
     ).toEqual([
       ['Fuego', 'tesel-symbol-3'],
       ['Raro', 'tesel-symbol-0'],
     ]);
   });
 
+  it('keeps only threats and danger areas on a decluttered map', () => {
+    expect(markerFeatures(state, null, true).features.map((f) => f.properties.label)).toEqual([
+      'Fuego',
+    ]);
+    // The polygon is a danger area (style 1); the circle's style is unknown.
+    expect(shapeFeatures(state, true).features).toHaveLength(1);
+  });
+
   it('closes polygons and draws circles as rings, unknown styles as neutral', () => {
-    const [polygon, circle] = shapeFeatures(state).features;
+    const [polygon, circle] = shapeFeatures(state, false).features;
     expect(polygon?.geometry.type).toBe('Polygon');
     const ring = polygon?.geometry.type === 'Polygon' ? polygon.geometry.coordinates[0] : [];
     expect(ring?.at(0)).toEqual(ring?.at(-1));
@@ -97,7 +108,7 @@ describe('map object features', () => {
         geometry: { kind: 'circle', center: { lat: 85, lon: 0 }, radius: 1_000_000 },
       },
     ]);
-    const [circle] = shapeFeatures(polar).features;
+    const [circle] = shapeFeatures(polar, false).features;
     const ring = circle?.geometry.type === 'Polygon' ? circle.geometry.coordinates[0] : [];
     const lats = (ring ?? []).map(([, lat]) => lat ?? Number.NaN);
     expect(lats.length).toBeGreaterThan(0);

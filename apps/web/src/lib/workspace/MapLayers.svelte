@@ -123,6 +123,7 @@
     teams={slices.teams}
     visible={shown.objects}
     {military}
+    threatsOnly={preferences.declutter.value}
     onselect={select}
   />
   <!-- What a group held when it opened is not news: the tasks' notices start again with each. -->

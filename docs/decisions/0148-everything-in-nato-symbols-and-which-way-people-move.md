@@ -1,6 +1,6 @@
 # 0148. Everything on the tactical map in NATO symbols, and which way people move
 
-- Status: Accepted
+- Status: Accepted, amended by [0150](0150-how-fast-and-which-way.md) (the arrow tells the speed; this device follows the GPS while it moves)
 - Date: 2026-11-19
 
 ## Context

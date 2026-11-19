@@ -49,6 +49,8 @@ import {
   trailLayers,
   TREES_IMAGE,
   woodsLayer,
+  type PedestrianLook,
+  type TrailLook,
 } from './trails.ts';
 import {
   raisedBuildings,
@@ -89,6 +91,8 @@ export interface StyleChoice {
   readonly relief: boolean;
   /** The ground raised in 3D (ADR-0102). */
   readonly threeD: boolean;
+  /** Decluttered, only the names of places (ADR-0151). */
+  readonly declutter: boolean;
   readonly lang: string;
 }
 
@@ -133,9 +137,19 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
       ...(relief ? { [RELIEF_SOURCE]: relief.source } : {}),
       ...(choice.threeD ? { [GROUND_SOURCE]: elevationSource() } : {}),
     },
-    layers: [...ground, ...(relief ? [relief.layer] : []), ...lines, ...names],
+    layers: [
+      ...ground,
+      ...(relief ? [relief.layer] : []),
+      ...lines,
+      ...(choice.declutter ? names.filter(isPlaceName) : names),
+    ],
     ...(choice.threeD ? { terrain: { source: GROUND_SOURCE }, sky: groundSky() } : {}),
   };
+}
+
+/** The names of towns, districts, regions and countries: what a decluttered map keeps (ADR-0151). */
+function isPlaceName(layer: LayerSpecification): boolean {
+  return layer.id.startsWith('places_');
 }
 
 /** The elevation tiles (tiles/sources.ts), as MapLibre reads them. */
@@ -167,18 +181,14 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
-      // Woods dotted as cover; rivers and streams in a colour of their own, dashed where dry; the
-      // ways off the streets, for moving over the ground; in Spain, every building of the cadastre.
+      // Woods dotted as cover, water and the ways off the streets as on the topographic map in
+      // the tactical map's inks; in Spain, every building of the cadastre.
       ground: withCadastre(
-        ground.flatMap((layer) => {
-          if (layer.id === 'landuse_park')
-            return [layer, woodsLayer(BASEMAP_SOURCE, look.images.woods)];
-          if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, look.stream);
-          if (layer.id === 'water_stream') return [];
-          if (layer.id === 'roads_other') {
-            return trailLayers(BASEMAP_SOURCE, layer, look.pedestrian, look.trails);
-          }
-          return [layer];
+        walkersGround(ground, {
+          woods: look.images.woods,
+          stream: look.stream,
+          pedestrian: look.pedestrian,
+          trails: look.trails,
         }),
         look.buildings,
       ),
@@ -223,7 +233,15 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
-      ground: withCadastre(walkersGround(ground), TOPO_BUILDINGS),
+      ground: withCadastre(
+        walkersGround(ground, {
+          woods: TREES_IMAGE,
+          stream: TOPO_STREAM,
+          pedestrian: TOPO_PEDESTRIAN,
+          trails: TOPO_TRAILS,
+        }),
+        TOPO_BUILDINGS,
+      ),
       lines: contourLayers(),
       names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang, TOPO_HUTS), ...names],
     };
@@ -277,17 +295,30 @@ function withCadastre(
   );
 }
 
+/** How a map draws the ground off the streets (trails.ts): its inks for each thing. */
+interface WalkersLook {
+  /** The image over the woods. */
+  readonly woods: string;
+  readonly stream: string;
+  readonly pedestrian: PedestrianLook;
+  readonly trails: TrailLook;
+}
+
 /**
- * The topographic map's ground as a walker reads it (trails.ts, ADR-0136): trees over the woods,
- * streams and tracks and footpaths each in their own look, in place of the base map's.
+ * The ground as a walker reads it (trails.ts, ADR-0136), on the topographic and tactical maps:
+ * a pattern over the woods, streams and tracks and footpaths each in their own look, in place of
+ * the base map's.
  */
-function walkersGround(ground: readonly LayerSpecification[]): LayerSpecification[] {
+function walkersGround(
+  ground: readonly LayerSpecification[],
+  look: WalkersLook,
+): LayerSpecification[] {
   return ground.flatMap((layer) => {
-    if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, TREES_IMAGE)];
-    if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, TOPO_STREAM);
+    if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, look.woods)];
+    if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, look.stream);
     if (layer.id === 'water_stream') return [];
     if (layer.id === 'roads_other') {
-      return trailLayers(BASEMAP_SOURCE, layer, TOPO_PEDESTRIAN, TOPO_TRAILS);
+      return trailLayers(BASEMAP_SOURCE, layer, look.pedestrian, look.trails);
     }
     return [layer];
   });

@@ -38,8 +38,8 @@ function groupOnMap(): { map: FakeMap; apply: (event: TeselEvent) => void; stop:
     };
     layer('members', () => memberFeatures(slices, ANA, T0, null));
     layer('trails', () => trailFeatures(slices, ANA));
-    layer('markers', () => markerFeatures(slices, null));
-    layer('shapes', () => shapeFeatures(slices));
+    layer('markers', () => markerFeatures(slices, null, false));
+    layer('shapes', () => shapeFeatures(slices, false));
     layer('tasks', () => taskFeatures(slices));
   });
   flushSync();

@@ -6,6 +6,7 @@ import type { NodeId } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 
 import { app6MemberImage, type MilitaryLook } from '../objects/app6-images.ts';
+import type { Movement } from '../objects/app6-movement.ts';
 import { TEAM_COLOURS } from '../teams/teams.ts';
 import type { Tone } from '../ui/theme.ts';
 import { aliasOf } from './alias.ts';
@@ -27,10 +28,11 @@ interface MemberProperties {
   /** On the tactical map, their symbol in APP-6 (ADR-0146); empty elsewhere. */
   readonly icon: string;
   /**
-   * On the tactical map, the way they were moving, degrees from north, from their GPS: only while
-   * they move and their position is fresh (ADR-0148).
+   * On the tactical map, the way they were moving, degrees from north, and how fast, in metres a
+   * second, from their GPS: only while they move and their position is fresh (ADR-0148, ADR-0150).
    */
   readonly heading?: number;
+  readonly speed?: number;
 }
 
 export type MemberCollection = FeatureCollection<Point, MemberProperties>;
@@ -67,7 +69,7 @@ export function memberFeatures(
                 state.members.get(origin)?.role === 'coordinator',
               ),
         ...(military !== null && report.heading !== null && !stale
-          ? { heading: report.heading }
+          ? { heading: report.heading, ...(report.speed === null ? {} : { speed: report.speed }) }
           : {}),
       },
     });
@@ -78,4 +80,12 @@ export function memberFeatures(
 function teamTone(teams: GroupState['teams'], member: NodeId): Tone | 'none' {
   const team = teamOf(teams, member);
   return team ? TEAM_COLOURS[team.colour].tone : 'none';
+}
+
+/** The members drawn moving, for their movement indicators (objects/app6-movement.ts). */
+export function movementsOf(members: MemberCollection): Movement[] {
+  return members.features.flatMap(({ geometry, properties: { heading, speed } }) => {
+    const [lon = 0, lat = 0] = geometry.coordinates;
+    return heading === undefined ? [] : [{ at: { lat, lon }, heading, speed: speed ?? null }];
+  });
 }

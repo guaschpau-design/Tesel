@@ -54,6 +54,7 @@ export type SettingKey =
   /** The grid's switch before it was renamed `grid`; moved by settings/preferences.ts. */
   | 'mgrsGrid'
   | 'radar'
+  | 'declutter'
   | 'cadastre'
   | 'fires'
   | 'floods'

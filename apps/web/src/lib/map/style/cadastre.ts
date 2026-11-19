@@ -1,7 +1,8 @@
 // What IGN's vector map of Spain adds to the topographic and urban maps (ADR-0139): every building
 // of the cadastre, where OpenStreetMap often misses whole streets of them, and the official house
-// numbers (CartoCiudad's), from zoom 16. Drawn over OpenStreetMap's buildings, which stay for the
-// rest of Europe and for their heights; outside Spain IGN's tiles are empty.
+// numbers (CartoCiudad's), from zoom 16. In Spain they take the place of OpenStreetMap's on the flat
+// map (one-layer-of-buildings.ts, ADR-0149), which stay for the rest of Europe and, raised in 3D,
+// for their heights; outside Spain IGN's tiles are empty.
 
 import type { LayerSpecification } from 'maplibre-gl';
 
@@ -10,6 +11,9 @@ import { themeColor } from '../../ui/theme.ts';
 /** The layers of IGN's tiles read here. */
 const BUILDINGS = 'edificio_pol';
 const HOUSE_NUMBERS = 'portal_pto';
+
+/** From this zoom the cadastre's buildings are drawn. */
+export const CADASTRE_MIN_ZOOM = 15;
 
 /** Buildings of the cadastre without a height are raised to two floors, below OpenStreetMap's. */
 const RAISED_METRES = 7;
@@ -21,7 +25,7 @@ export interface BuildingLook {
 }
 
 export function cadastreBuildingLayers(source: string, look: BuildingLook): LayerSpecification[] {
-  const common = { source, 'source-layer': BUILDINGS, minzoom: 15 } as const;
+  const common = { source, 'source-layer': BUILDINGS, minzoom: CADASTRE_MIN_ZOOM } as const;
   return [
     { ...common, id: 'cadastre-buildings', type: 'fill', paint: { 'fill-color': look.fill } },
     ...(look.edge === null
@@ -44,7 +48,7 @@ export function raisedCadastreBuildings(source: string, colour: string): LayerSp
     type: 'fill-extrusion',
     source,
     'source-layer': BUILDINGS,
-    minzoom: 15,
+    minzoom: CADASTRE_MIN_ZOOM,
     paint: {
       'fill-extrusion-color': colour,
       'fill-extrusion-height': RAISED_METRES,

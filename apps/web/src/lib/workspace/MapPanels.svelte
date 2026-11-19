@@ -13,6 +13,9 @@
   import MePanel from '../me/MePanel.svelte';
   import type { Preferences } from '../settings/preferences.ts';
   import { newTask } from '../tasks/task-editor.ts';
+  import { terrain } from '../terrain/terrain.svelte.ts';
+  import type { ViewshedState } from '../terrain/viewshed.ts';
+  import ViewshedLayer from '../terrain/ViewshedLayer.svelte';
   import { closePanel, isOpen, panels } from '../ui/panels.svelte.ts';
   import WarningList from '../weather/WarningList.svelte';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
@@ -36,9 +39,18 @@
 
   let { t, locale, map, group, selfName, preferences, weather, credits, onmark }: Props = $props();
 
+  /** The point whose view is shown (ADR-0152): only while its panel is open. */
+  let viewFrom: LatLon | null = $state.raw(null);
+  let viewState: Exclude<ViewshedState, 'off'> = $state('working');
+  const pointAt = $derived(panels.open?.name === 'point' ? panels.open.at : null);
+  const viewshed: ViewshedState = $derived(
+    viewFrom !== null && viewFrom === pointAt ? viewState : 'off',
+  );
+
   /**
    * The tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid on,
-   * coordinates in MGRS, bearings in mils from magnetic north. Each can then be changed again.
+   * coordinates in MGRS, bearings in mils from magnetic north, and the radar's rings round this
+   * device (ADR-0150). Each can then be changed again.
    */
   async function withTacticalMap(): Promise<void> {
     // Asked first, within the tap, as the iPhone wants: the compass turns this device's arrow.
@@ -47,6 +59,7 @@
     await preferences.coordinateFormat.set('mgrs');
     await preferences.bearingUnit.set('mils');
     await preferences.north.set('magnetic');
+    await preferences.radar.set(true);
     await asked;
   }
 </script>
@@ -55,6 +68,16 @@
   {@const { at, title: name } = panels.open}
   {@const here = weather ? warningsAt(weather.regions, at) : null}
   <PointLayer {map} point={at} />
+  {#if viewshed !== 'off' && terrain.onDemand}
+    <ViewshedLayer
+      {map}
+      from={at}
+      heights={terrain.onDemand}
+      onstate={(state: Exclude<ViewshedState, 'off'>) => {
+        viewState = state;
+      }}
+    />
+  {/if}
   <PointPanel
     {t}
     {locale}
@@ -72,6 +95,12 @@
     ontask={group
       ? () => {
           newTask({ kind: 'point', at });
+        }
+      : null}
+    {viewshed}
+    onviewshed={terrain.onDemand
+      ? () => {
+          viewFrom = viewshed === 'off' ? at : null;
         }
       : null}
     onclose={closePanel}
@@ -104,6 +133,7 @@
       radar: preferences.radar,
     }}
     hidden={preferences.hiddenLayers}
+    declutter={preferences.declutter}
     {credits}
     ontactical={withTacticalMap}
     onclose={closePanel}

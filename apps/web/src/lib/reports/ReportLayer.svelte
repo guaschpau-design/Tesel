@@ -39,33 +39,28 @@
     },
     layers: () => {
       const halo = themeColor('map-halo');
-      // In APP-6 the symbol is drawn over the dot, which stays, unseen, to be tapped.
-      const symbols: LayerSpecification[] =
+      // Each report as a dot or, on the tactical map, as the APP-6 marker of its incident.
+      const point: LayerSpecification =
         military === null
-          ? []
-          : [
-              {
-                id: `${SOURCE}-app6`,
-                type: 'symbol',
-                source: SOURCE,
-                layout: { 'icon-image': ['get', 'icon'], 'icon-allow-overlap': true },
+          ? {
+              id: `${SOURCE}-dot`,
+              type: 'circle',
+              source: SOURCE,
+              paint: {
+                'circle-radius': 8,
+                'circle-color': themeColor('warning'),
+                'circle-stroke-width': 3,
+                'circle-stroke-color': themeColor('map-text'),
               },
-            ];
+            }
+          : {
+              id: `${SOURCE}-app6`,
+              type: 'symbol',
+              source: SOURCE,
+              layout: { 'icon-image': ['get', 'icon'], 'icon-allow-overlap': true },
+            };
       return [
-        {
-          id: `${SOURCE}-dot`,
-          type: 'circle',
-          source: SOURCE,
-          paint: {
-            'circle-radius': military === null ? 8 : 16,
-            'circle-color': themeColor('warning'),
-            'circle-stroke-width': 3,
-            'circle-stroke-color': themeColor('map-text'),
-            'circle-opacity': military === null ? 1 : 0,
-            'circle-stroke-opacity': military === null ? 1 : 0,
-          },
-        },
-        ...symbols,
+        point,
         {
           id: `${SOURCE}-label`,
           type: 'symbol',
@@ -89,7 +84,7 @@
   });
 
   onMount(() =>
-    taps.onFeature([`${SOURCE}-dot`], () => {
+    taps.onFeature([`${SOURCE}-dot`, `${SOURCE}-app6`], () => {
       openPanel(REPORTS);
     }),
   );

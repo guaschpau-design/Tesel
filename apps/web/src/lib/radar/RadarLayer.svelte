@@ -6,10 +6,10 @@
   import type { NodeId } from '@tesel/protocol';
   import type { FeatureCollection } from 'geojson';
   import type { Map as MapLibreMap } from 'maplibre-gl';
-  import { onMount } from 'svelte';
 
   import type { Locale } from '../i18n/index.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
+  import { useZoom } from '../map/zoom.svelte.ts';
   import { bearings } from '../navigation/bearings.svelte.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import { themeColor } from '../ui/theme.ts';
@@ -29,11 +29,12 @@
   const VECTORS = 'tesel-radar-vectors';
   const NOTHING: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-  /** The map's zoom, read when it mounts and after each zoom. */
-  let zoom = $state(0);
+  const zoom = useZoom(() => map);
   const now = clockEvery(30_000);
   const here = $derived(deviceLocation.fix?.at ?? null);
-  const rings = $derived(here ? ringFeatures(here, ringStep(zoom, here.lat), locale) : NOTHING);
+  const rings = $derived(
+    here ? ringFeatures(here, ringStep(zoom.value, here.lat), locale) : NOTHING,
+  );
   const vectors = $derived(
     here && group
       ? vectorFeatures(
@@ -46,17 +47,6 @@
   );
 
   $effect(() => deviceLocation.use());
-
-  onMount(() => {
-    const zoomed = () => {
-      zoom = map.getZoom();
-    };
-    zoomed();
-    map.on('zoomend', zoomed);
-    return () => {
-      map.off('zoomend', zoomed);
-    };
-  });
 
   useOverlay(() => map, {
     level: 'radar',

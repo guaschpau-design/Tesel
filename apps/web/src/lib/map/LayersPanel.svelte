@@ -2,7 +2,8 @@
      as a tile, those of the group apart from those of the map; a tile is lit and ticked while it
      is shown, so what is on is seen at a glance. Last, the credits of the
      map's data and the licences of the third-party code the app ships, in one line of small print.
-     This device and SOS calls are always shown. -->
+     This device and SOS calls are always shown. A decluttered map is said so above the layers, which
+     it overrides, with the way back to all of them (ADR-0151). -->
 <script lang="ts">
   import { thirdPartyNoticesUrl } from '../config.ts';
   import type { MessageKey, Translate } from '../i18n/index.ts';
@@ -19,6 +20,7 @@
     /** The layers that are off unless turned on, each a preference. */
     flags: Readonly<Record<MapFlag, Preference<boolean>>>;
     hidden: Preference<readonly MapLayer[]>;
+    declutter: Preference<boolean>;
     /** What the map's data asks to be credited for, as HTML of our own. */
     credits: readonly string[];
     /** Called when the tactical map is chosen, for what comes with it. */
@@ -26,7 +28,7 @@
     onclose: () => void;
   }
 
-  let { t, base, flags, hidden, credits, ontactical, onclose }: Props = $props();
+  let { t, base, flags, hidden, declutter, credits, ontactical, onclose }: Props = $props();
 
   const BASE_NAMES: Readonly<Record<BaseMap, MessageKey>> = {
     topo: 'baseMapTopo',
@@ -69,6 +71,12 @@
       </button>
     {/each}
   </div>
+  {#if declutter.value}
+    <p class="decluttered section">
+      <span>{t('declutteredMap')}</span>
+      <button onclick={() => void declutter.set(false)}>{t('showEverything')}</button>
+    </p>
+  {/if}
   {#each LAYER_GROUPS as group (group.label)}
     <section class="section" aria-label={t(group.label)}>
       <h3>{t(group.label)}</h3>
@@ -166,6 +174,16 @@
 
   .layer[aria-checked='false'] :global(svg) {
     opacity: 0.45;
+  }
+
+  .decluttered {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0;
+    font-size: var(--text-secondary);
   }
 
   /* The credits are small print. */

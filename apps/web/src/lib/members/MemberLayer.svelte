@@ -8,16 +8,13 @@
 
   import { clockEvery } from '../ui/now.svelte.ts';
   import { themeColor, toneExpression } from '../ui/theme.ts';
-  import {
-    addApp6DirectionImage,
-    addApp6MemberImages,
-    APP6_DIRECTION_IMAGE,
-    type MilitaryLook,
-  } from '../objects/app6-images.ts';
-  import { memberFeatures } from './member-features.ts';
+  import { addApp6MemberImages, type MilitaryLook } from '../objects/app6-images.ts';
+  import { addArrowheadImage, movementFeatures, movementLayers } from '../objects/app6-movement.ts';
+  import { memberFeatures, movementsOf } from './member-features.ts';
   import { nameLabel } from '../map/name-label.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
   import { textProperty, type MapTaps } from '../map/taps.ts';
+  import { useZoom } from '../map/zoom.svelte.ts';
 
   interface Props {
     map: MapLibreMap;
@@ -51,6 +48,7 @@
   }: Props = $props();
 
   const SOURCE = 'tesel-members';
+  const MOVING = 'tesel-members-moving';
   /** Stale markers are re-evaluated this often even when no event arrives. */
   const REFRESH_MS = 30_000;
   const now = clockEvery(REFRESH_MS);
@@ -62,15 +60,17 @@
       military,
     ),
   );
+  const zoom = useZoom(() => map);
+  const moving = $derived(movementFeatures(movementsOf(data), zoom.value));
 
   useOverlay(() => map, {
     level: 'members',
-    data: { [SOURCE]: () => data },
+    data: { [SOURCE]: () => data, [MOVING]: () => moving },
     visible: () => visible,
     prepare: () => {
       if (military === null) return;
       addApp6MemberImages(map, military.locale);
-      addApp6DirectionImage(map);
+      addArrowheadImage(map);
     },
     layers: () => {
       const halo = themeColor('map-halo');
@@ -87,51 +87,36 @@
           opacity: ['case', ['get', 'stale'], 0.6, 1],
           distance: military === null ? 1.1 : 1.9,
         });
-      // In APP-6 the symbol is drawn over the dot, which stays, unseen, to be tapped.
-      const symbols: LayerSpecification[] =
+      // Each member as a dot or, on the tactical map, as their APP-6 symbol (ADR-0146), over the
+      // line of the way they move (ADR-0150).
+      const point: LayerSpecification =
         military === null
-          ? []
-          : [
-              // The way each is moving, under their symbol, turned with the map.
-              {
-                id: `${SOURCE}-direction`,
-                type: 'symbol',
-                source: SOURCE,
-                filter: ['has', 'heading'],
-                layout: {
-                  'icon-image': APP6_DIRECTION_IMAGE,
-                  'icon-rotate': ['get', 'heading'],
-                  'icon-rotation-alignment': 'map',
-                  'icon-allow-overlap': true,
-                  'icon-ignore-placement': true,
-                },
+          ? {
+              id: `${SOURCE}-dot`,
+              type: 'circle',
+              source: SOURCE,
+              paint: {
+                'circle-radius': 8,
+                // Someone resting or off duty is a ring in the member's colour: there, but not
+                // now.
+                'circle-color': ['case', ['get', 'away'], halo, colour],
+                'circle-opacity': ['case', ['get', 'stale'], 0.4, 1],
+                'circle-stroke-width': ['case', ['get', 'away'], 3, 2],
+                'circle-stroke-color': ['case', ['get', 'away'], colour, halo],
               },
-              {
-                id: `${SOURCE}-app6`,
-                type: 'symbol',
-                source: SOURCE,
-                layout: { 'icon-image': ['get', 'icon'], 'icon-allow-overlap': true },
-                paint: {
-                  'icon-opacity': ['case', ['get', 'stale'], 0.4, ['get', 'away'], 0.6, 1],
-                },
+            }
+          : {
+              id: `${SOURCE}-app6`,
+              type: 'symbol',
+              source: SOURCE,
+              layout: { 'icon-image': ['get', 'icon'], 'icon-allow-overlap': true },
+              paint: {
+                'icon-opacity': ['case', ['get', 'stale'], 0.4, ['get', 'away'], 0.6, 1],
               },
-            ];
+            };
       return [
-        {
-          id: `${SOURCE}-dot`,
-          type: 'circle',
-          source: SOURCE,
-          paint: {
-            'circle-radius': military === null ? 8 : 16,
-            // Someone resting or off duty is a ring in the member's colour: there, but not now.
-            'circle-color': ['case', ['get', 'away'], halo, colour],
-            'circle-opacity': military === null ? ['case', ['get', 'stale'], 0.4, 1] : 0,
-            'circle-stroke-width': ['case', ['get', 'away'], 3, 2],
-            'circle-stroke-color': ['case', ['get', 'away'], colour, halo],
-            'circle-stroke-opacity': military === null ? 1 : 0,
-          },
-        },
-        ...symbols,
+        ...(military === null ? [] : movementLayers(MOVING)),
+        point,
         label(false),
         label(true),
       ];
@@ -139,7 +124,7 @@
   });
 
   onMount(() =>
-    taps.onFeature([`${SOURCE}-dot`], (feature) => {
+    taps.onFeature([`${SOURCE}-dot`, `${SOURCE}-app6`], (feature) => {
       const id = textProperty(feature, 'id');
       if (id !== null) onselect(id as NodeId);
     }),

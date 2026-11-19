@@ -1,12 +1,13 @@
 // Map objects as GeoJSON for the map layers: markers, the shapes drawn and the strips of sweeps.
 
 import type { GroupState } from '@tesel/core';
-import type { LatLon, ShapeEvent } from '@tesel/protocol';
+import { ShapeStyleCode, type LatLon, type ShapeEvent } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Geometry, LineString, Point } from 'geojson';
 
 import { circleRing, toPosition } from '../map/geometry.ts';
 import { shownText } from '../text.ts';
 import type { Tone } from '../ui/theme.ts';
+import { isThreat } from './app6.ts';
 import { app6MarkerImage, type MilitaryLook } from './app6-images.ts';
 import { styleInfo, symbolImageName, symbolInfo } from './catalog.ts';
 import { stripOf, stripPath, stripWalker, walkerTone } from './sweeps.ts';
@@ -26,14 +27,19 @@ export interface ShapeProperties extends ObjectProperties {
   readonly tone: Tone;
 }
 
-/** Markers with the app's icons, or, on the tactical map, APP-6's (`military`, ADR-0146). */
+/**
+ * Markers with the app's icons, or, on the tactical map, APP-6's (`military`, ADR-0146); on a
+ * decluttered map, only threats (ADR-0151).
+ */
 export function markerFeatures(
   state: Pick<GroupState, 'objects'>,
   military: MilitaryLook | null,
+  threatsOnly: boolean,
 ): FeatureCollection<Point, MarkerProperties> {
   const features: Feature<Point, MarkerProperties>[] = [];
   for (const [key, record] of state.objects) {
     if (record.type !== 'marker') continue;
+    if (threatsOnly && !isThreat(symbolInfo(record.symbol).code)) continue;
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: toPosition(record) },
@@ -50,12 +56,15 @@ export function markerFeatures(
   return { type: 'FeatureCollection', features };
 }
 
+/** The shapes drawn; on a decluttered map, only the danger areas (ADR-0151). */
 export function shapeFeatures(
   state: Pick<GroupState, 'objects'>,
+  threatsOnly: boolean,
 ): FeatureCollection<Geometry, ShapeProperties> {
   const features: Feature<Geometry, ShapeProperties>[] = [];
   for (const [key, record] of state.objects) {
     if (record.type !== 'shape') continue;
+    if (threatsOnly && record.style !== ShapeStyleCode.DANGER) continue;
     features.push({
       type: 'Feature',
       geometry: shapeGeometry(record),

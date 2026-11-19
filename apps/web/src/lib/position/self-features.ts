@@ -1,5 +1,5 @@
 // This device on the map, where the GPS says it is now: a dot named `label`, and the circle within
-// which the browser thinks it is; on the tactical map, the way it points (ADR-0148).
+// which the browser thinks it is.
 
 import { distanceMeters } from '@tesel/core';
 import type { FeatureCollection } from 'geojson';
@@ -7,17 +7,12 @@ import type { FeatureCollection } from 'geojson';
 import { circleRing, toPosition } from '../map/geometry.ts';
 import type { DeviceFix } from './device-location.svelte.ts';
 
-/** `heading`: degrees from north the device points or moves, or null if not to be shown. */
-export function selfFeatures(
-  fix: DeviceFix | null,
-  label: string,
-  heading: number | null,
-): FeatureCollection {
+export function selfFeatures(fix: DeviceFix | null, label: string): FeatureCollection {
   if (fix === null) return { type: 'FeatureCollection', features: [] };
   const dot = {
     type: 'Feature' as const,
     geometry: { type: 'Point' as const, coordinates: toPosition(fix.at) },
-    properties: heading === null ? { label } : { label, heading },
+    properties: { label },
   };
   if (fix.accuracy === null) return { type: 'FeatureCollection', features: [dot] };
   const area = {

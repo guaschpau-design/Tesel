@@ -16,6 +16,25 @@ export const MAP_LAYERS = [
 ] as const;
 export type MapLayer = (typeof MAP_LAYERS)[number];
 
+/**
+ * What stays on a decluttered map (ADR-0151): the team and the group's markers, which then show
+ * only threats. This device and SOS calls are always shown.
+ */
+const ESSENTIAL: readonly MapLayer[] = ['members', 'objects'];
+
+/** Which layers are shown, by layer: those not hidden, and only the essential ones decluttered. */
+export function shownLayers(
+  hidden: readonly MapLayer[],
+  declutter: boolean,
+): Record<MapLayer, boolean> {
+  return Object.fromEntries(
+    MAP_LAYERS.map((layer) => [
+      layer,
+      !hidden.includes(layer) && (!declutter || ESSENTIAL.includes(layer)),
+    ]),
+  ) as Record<MapLayer, boolean>;
+}
+
 /** Layers off unless the user turns them on, each a preference of its own. */
 export const MAP_FLAGS = ['relief', 'cadastre', 'fires', 'floods', 'grid', 'radar'] as const;
 export type MapFlag = (typeof MAP_FLAGS)[number];

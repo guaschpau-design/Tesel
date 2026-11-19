@@ -81,9 +81,6 @@ export function app6SelfImage(locale: Locale): string {
   return `tesel-app6-self-${locale}`;
 }
 
-/** An arrow from a symbol's middle the way it moves, rotated by the map (APP-6's direction). */
-export const APP6_DIRECTION_IMAGE = 'tesel-app6-direction';
-
 /** Adds every marker symbol's image the map's style does not have yet. */
 export function addApp6MarkerImages(map: MapLibreMap, locale: Locale): void {
   for (const { code } of SYMBOLS) {
@@ -344,48 +341,7 @@ export function addApp6ObjectiveImages(map: MapLibreMap, locale: Locale): void {
   }
 }
 
-/** Adds the image of this device and the arrow of the way things move. */
+/** Adds the image of this device. */
 export function addApp6SelfImages(map: MapLibreMap, locale: Locale): void {
   addImage(map, app6SelfImage(locale), APP6_SELF, INKS, locale);
-  addDirectionImage(map);
-}
-
-/** Adds the arrow of the way a member moves. */
-export function addApp6DirectionImage(map: MapLibreMap): void {
-  addDirectionImage(map);
-}
-
-/**
- * The arrow, in an image twice as tall as the symbols so that its middle is theirs: from just
- * outside a frame, up, as the map turns it to the way of travel.
- */
-function addDirectionImage(map: MapLibreMap): void {
-  if (map.hasImage(APP6_DIRECTION_IMAGE)) return;
-  const size = 96;
-  const canvas = document.createElement('canvas');
-  canvas.width = size * PIXEL_RATIO;
-  canvas.height = size * PIXEL_RATIO;
-  const c = canvas.getContext('2d');
-  if (c === null) return;
-  c.scale(PIXEL_RATIO, PIXEL_RATIO);
-  const middle = size / 2;
-  c.lineCap = 'round';
-  c.lineJoin = 'round';
-  for (const [colour, width] of [
-    ['#ffffff', 5],
-    ['#000000', 2.5],
-  ] as const) {
-    c.strokeStyle = colour;
-    c.lineWidth = width;
-    c.beginPath();
-    c.moveTo(middle, middle - 20);
-    c.lineTo(middle, 4);
-    c.moveTo(middle - 6, 11);
-    c.lineTo(middle, 4);
-    c.lineTo(middle + 6, 11);
-    c.stroke();
-  }
-  map.addImage(APP6_DIRECTION_IMAGE, c.getImageData(0, 0, canvas.width, canvas.height), {
-    pixelRatio: PIXEL_RATIO,
-  });
 }

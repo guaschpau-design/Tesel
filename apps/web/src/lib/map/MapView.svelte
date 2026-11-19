@@ -15,6 +15,7 @@
   import { mapAssetsUrl } from '../config.ts';
   import type { MapLibreLocale } from './style/maplibre-locale.ts';
   import { buildStyle, type StyleChoice } from './style/style.ts';
+  import { keepOneLayerOfBuildings } from './style/one-layer-of-buildings.ts';
   import { addTerrainImages } from './style/terrain-images.ts';
 
   interface Props {
@@ -80,9 +81,12 @@
       }
     };
     window.addEventListener('online', reload);
+    // In Spain, the cadastre's buildings alone where it has them (ADR-0149).
+    const stopBuildings = keepOneLayerOfBuildings(instance);
     map = instance;
     onready(instance, openedWide);
     return () => {
+      stopBuildings();
       window.removeEventListener('online', reload);
       instance.remove();
     };

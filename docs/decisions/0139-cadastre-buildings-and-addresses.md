@@ -1,6 +1,6 @@
 # 0139. The cadastre's buildings, official house numbers and addresses, in Spain
 
-- Status: Accepted
+- Status: Accepted, amended by [0149](0149-one-layer-of-buildings-and-tidier-layers.md) (in Spain, the cadastre's buildings alone on the flat map)
 - Date: 2026-11-15
 
 ## Context
