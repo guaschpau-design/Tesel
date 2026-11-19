@@ -1,6 +1,6 @@
 <!-- The MGRS grid over the map, worked out again for the view each time the map stops moving:
      thin lines with their digits, the 100 km squares named, and the edges of UTM zones. On the
-     tactical maps the digits are at the screen's edges instead, as a military map prints them in
+     tactical map the digits are at the screen's edges instead, as a military map prints them in
      its margins, and follow them as the map moves (ADR-0141). -->
 <script lang="ts">
   import type { FeatureCollection } from 'geojson';

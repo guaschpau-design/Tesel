@@ -60,8 +60,8 @@
   --info: #2f6fde;
 
   /* The map: this device, the other members, labels over the base map. The map has a look of its
-     own, its base map's: the --map-* colours below are the light one's; the tactical map's are
-     under [data-map-theme='coyote'], and the night map's under [data-map-theme='night']. */
+     own, its base map's: the --map-* colours below are the light one's, and the tactical map's are
+     under [data-map-theme='coyote']. */
   --self: var(--signal);
   --self-ring: var(--ink);
   --member: #3e7bfa;
@@ -160,22 +160,6 @@
   --map-grid: #1f1a14;
   --map-relief-light: rgba(255, 248, 228, 0.5);
   --map-key: #9e2a1c;
-}
-
-/* The night map (ADR-0141): every colour of the map a red on black, which keeps the eyes used to
-   the dark as a red torch does. */
-:root[data-map-theme='night'] {
-  --map-text: #d04a4a;
-  --map-halo: #050000;
-  --map-relief: #000000;
-  --map-sky: #120202;
-  --map-horizon: #2a0606;
-  --map-contour: #7a1d1d;
-  --map-terrain: #a33a3a;
-  --map-spring: #a33a3a;
-  --map-grid: #8f2626;
-  --map-relief-light: rgba(120, 25, 20, 0.22);
-  --map-key: #ff6b5a;
 }
 
 html,

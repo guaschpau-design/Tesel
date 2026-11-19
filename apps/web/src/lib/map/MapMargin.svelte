@@ -1,4 +1,4 @@
-<!-- What a military map prints in its margin, on the tactical maps (ADR-0145): the MGRS zone and
+<!-- What a military map prints in its margin, on the tactical map (ADR-0145): the MGRS zone and
      100 km square of the map's centre, "31T DG", and the magnetic declination there, "Decl. 1,4° E",
      under the scale with the map's other instruments. They follow the map as it moves. -->
 <script lang="ts">

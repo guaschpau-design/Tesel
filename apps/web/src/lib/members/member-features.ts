@@ -24,7 +24,7 @@ interface MemberProperties {
   readonly away: boolean;
   /** Their team's colour, or `none` for the members' own. */
   readonly tone: Tone | 'none';
-  /** On the tactical maps, their symbol in APP-6 (ADR-0146); empty elsewhere. */
+  /** On the tactical map, their symbol in APP-6 (ADR-0146); empty elsewhere. */
   readonly icon: string;
 }
 
@@ -59,7 +59,6 @@ export function memberFeatures(
             : app6MemberImage(
                 state.memberStates.get(origin)?.profile ?? 'unspecified',
                 state.members.get(origin)?.role === 'coordinator',
-                military.time,
               ),
       },
     });

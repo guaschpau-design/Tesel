@@ -15,7 +15,6 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import SosLayer from '../incidents/SosLayer.svelte';
   import type { MapLayer } from '../map/layers.ts';
-  import { isTactical } from '../map/style/style.ts';
   import type { MilitaryLook } from '../objects/app6-images.ts';
   import type { MapTaps } from '../map/taps.ts';
   import MemberLayer from '../members/MemberLayer.svelte';
@@ -50,12 +49,10 @@
 
   let { t, locale, map, taps, group, slices, shown, preferences, weather }: Props = $props();
 
-  /** On the tactical maps, markers and members in NATO's symbols (ADR-0146). */
-  const military: MilitaryLook | null = $derived.by(() => {
-    const base = preferences.baseMap.value;
-    if (!isTactical(base)) return null;
-    return { time: base === 'night' ? 'night' : 'day', locale };
-  });
+  /** On the tactical map, markers and members in NATO's symbols (ADR-0146). */
+  const military: MilitaryLook | null = $derived(
+    preferences.baseMap.value === 'tactical' ? { locale } : null,
+  );
 
   /** A service of the base map tapped: its point, under its name or its kind. */
   function inspectService(service: TappedService): void {
@@ -93,7 +90,7 @@
   <ViewPictureLayer {map} level="hazards" services={FIRES} minZoom={FIRES_MIN_ZOOM} opacity={1} />
 {/if}
 {#if preferences.grid.value}
-  <MgrsGridLayer {map} edges={isTactical(preferences.baseMap.value)} />
+  <MgrsGridLayer {map} edges={preferences.baseMap.value === 'tactical'} />
 {/if}
 {#if preferences.radar.value}
   <RadarLayer
@@ -111,7 +108,7 @@
   {locale}
   visible={shown.services}
   large={preferences.baseMap.value === 'urban'}
-  look={isTactical(preferences.baseMap.value) ? 'key' : 'round'}
+  look={preferences.baseMap.value === 'tactical' ? 'key' : 'round'}
   onselect={inspectService}
 />
 

@@ -7,10 +7,10 @@ import type { ExpressionSpecification } from 'maplibre-gl';
 export type Look = 'light' | 'dark';
 
 /**
- * The map's look, apart from the app's: its base map's (map/style/style.ts, ADR-0120): light, the
- * tactical map's coyote (ADR-0144), or the night map's red on black (ADR-0141).
+ * The map's look, apart from the app's: its base map's (map/style/style.ts, ADR-0120): light, or
+ * the tactical map's coyote (ADR-0144).
  */
-export type MapTheme = 'light' | 'coyote' | 'night';
+export type MapTheme = 'light' | 'coyote';
 
 /**
  * Sets the map's look on the page as `data-map-theme`, which app.css reads for the colours of

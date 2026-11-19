@@ -25,7 +25,7 @@
     sosCancels: GroupState['sosCancels'];
     self: NodeId;
     visible: boolean;
-    /** On the tactical maps, each member in their APP-6 symbol (ADR-0146). */
+    /** On the tactical map, each member in their APP-6 symbol (ADR-0146). */
     military: MilitaryLook | null;
     onselect: (id: NodeId) => void;
   }
@@ -63,7 +63,7 @@
     data: { [SOURCE]: () => data },
     visible: () => visible,
     prepare: () => {
-      if (military !== null) addApp6MemberImages(map, military.time, military.locale);
+      if (military !== null) addApp6MemberImages(map, military.locale);
     },
     layers: () => {
       const halo = themeColor('map-halo');

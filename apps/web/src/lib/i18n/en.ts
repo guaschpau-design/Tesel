@@ -326,7 +326,6 @@ export const en = {
     'Terrain profile from you to the point, {distance} away: between {low} m and {high} m',
   baseMap: 'Base map',
   baseMapTactical: 'Tactical',
-  baseMapNight: 'Night',
   baseMapTopo: 'Topographic',
   baseMapUrban: 'Urban',
   baseMapAerial: 'Satellite',

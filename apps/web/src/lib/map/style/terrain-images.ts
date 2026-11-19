@@ -1,14 +1,14 @@
 // The images the topographic and tactical maps' own layers draw with (trails.ts, ADR-0136,
 // ADR-0141): the small trees over woods, the sign of huts and shelters, in the app's own pictograms;
-// on the tactical maps, a texture of dots over woods, the arrow of a stream's flow and, at night, the
-// huts' sign in red. Added together as each style loads, before its tiles are laid out: an image
-// added while tiles are being laid out leaves some of them without it.
+// on the tactical map, a texture of dots over woods and the arrow of a stream's flow. Added together
+// as each style loads, before its tiles are laid out: an image added while tiles are being laid out
+// leaves some of them without it.
 
 import type { Map as MapLibreMap } from 'maplibre-gl';
 
 import { GLYPHS } from '../../ui/glyphs.ts';
 import { addGlyphImage } from './glyph-images.ts';
-import { TACTICAL_LOOKS } from './tactical.ts';
+import { TACTICAL_LOOK } from './tactical.ts';
 import { HUT_IMAGE, TREES_IMAGE } from './trails.ts';
 
 const PIXEL_RATIO = 2;
@@ -27,14 +27,9 @@ const DOTS_TILE = 12;
 export function addTerrainImages(map: MapLibreMap): void {
   addGlyphImage(map, HUT_IMAGE, { glyph: GLYPHS.house, colour: HUT_COLOUR, shape: 'square' });
   if (!map.hasImage(TREES_IMAGE)) addTrees(map);
-  for (const time of ['day', 'night'] as const) {
-    const { images, inks, huts } = TACTICAL_LOOKS[time];
-    if (huts.image !== HUT_IMAGE) {
-      addGlyphImage(map, huts.image, { glyph: GLYPHS.house, colour: huts.name, shape: 'square' });
-    }
-    if (!map.hasImage(images.woods)) addDots(map, images.woods, inks.woods);
-    if (!map.hasImage(images.flow)) addFlow(map, images.flow, inks.flow, inks.edge);
-  }
+  const { images, inks } = TACTICAL_LOOK;
+  if (!map.hasImage(images.woods)) addDots(map, images.woods, inks.woods);
+  if (!map.hasImage(images.flow)) addFlow(map, images.flow, inks.flow, inks.edge);
 }
 
 /** Draws an image on a canvas of this many points a side and adds it to the map's style. */

@@ -33,7 +33,6 @@
   import MapCredits from '../map/MapCredits.svelte';
   import MapMargin from '../map/MapMargin.svelte';
   import MapScale from '../map/MapScale.svelte';
-  import { isTactical } from '../map/style/style.ts';
   import { followMapCentre } from '../navigation/bearings.svelte.ts';
   import { navigation } from '../navigation/navigation.svelte.ts';
   import { DRAFT_NAMES, draftGeometry } from '../objects/draft.ts';
@@ -325,7 +324,7 @@
   {/if}
 </MapControl>
 <MapScale {map} />
-{#if isTactical(preferences.baseMap.value)}
+{#if preferences.baseMap.value === 'tactical'}
   <MapMargin {t} {locale} {map} />
 {/if}
 <!-- Shown again with each base map, which brings its own sources. -->

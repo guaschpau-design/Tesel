@@ -11,7 +11,7 @@
   import Pictogram from '../ui/Pictogram.svelte';
   import BaseMapPreview from './BaseMapPreview.svelte';
   import { isFlag, LAYER_GROUPS, type LayerSwitch, type MapFlag, type MapLayer } from './layers.ts';
-  import { BASE_MAPS, isTactical, type BaseMap } from './style/style.ts';
+  import { BASE_MAPS, type BaseMap } from './style/style.ts';
 
   interface Props {
     t: Translate;
@@ -21,7 +21,7 @@
     hidden: Preference<readonly MapLayer[]>;
     /** What the map's data asks to be credited for, as HTML of our own. */
     credits: readonly string[];
-    /** Called when a tactical map is chosen, for what comes with it. */
+    /** Called when the tactical map is chosen, for what comes with it. */
     ontactical: () => Promise<void>;
     onclose: () => void;
   }
@@ -33,13 +33,12 @@
     urban: 'baseMapUrban',
     aerial: 'baseMapAerial',
     tactical: 'baseMapTactical',
-    night: 'baseMapNight',
   };
 
-  /** A tactical map comes with what a military reading of it asks for (ontactical). */
+  /** The tactical map comes with what a military reading of it asks for (ontactical). */
   async function choose(option: BaseMap): Promise<void> {
     await base.set(option);
-    if (isTactical(option)) await ontactical();
+    if (option === 'tactical') await ontactical();
   }
 
   function isOn(name: LayerSwitch): boolean {

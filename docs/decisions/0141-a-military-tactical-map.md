@@ -1,6 +1,6 @@
 # 0141. The tactical map read as a military map, by day and by night
 
-- Status: Accepted, amended by [0144](0144-the-tactical-map-in-coyote.md) (the tactical map in coyote rather than graphite) and [0145](0145-reading-the-tactical-map-as-soldiers-do.md) (MGRS, mils, magnetic north, its margin and ways over the ground)
+- Status: Accepted, amended by [0144](0144-the-tactical-map-in-coyote.md) (the tactical map in coyote rather than graphite) [0145](0145-reading-the-tactical-map-as-soldiers-do.md) (MGRS, mils, magnetic north, its margin and ways over the ground) and [0147](0147-no-night-map.md) (no night map)
 - Date: 2026-11-18
 
 ## Context

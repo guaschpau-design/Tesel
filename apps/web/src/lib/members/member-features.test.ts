@@ -34,19 +34,16 @@ describe('member features', () => {
     expect(features[0]?.geometry.coordinates).toEqual([-0.37, 39.47]);
   });
 
-  it('gives each member their APP-6 symbol on the tactical maps: their profile, their role', () => {
+  it('gives each member their APP-6 symbol on the tactical map: their profile, their role', () => {
     const told = { status: 'active', battery: null, equipment: [] } as const;
     const state = stateOf([
       { type: 'position', origin: BERTA, seq: 1, time: T0, ...fix },
       { type: 'member-state', origin: BERTA, seq: 2, time: T0, ...told, profile: 'firefighters' },
       { type: 'position', origin: CARLA, seq: 1, time: T0, ...fix },
     ]);
-    const night = { time: 'night', locale: 'es' } as const;
-    const icons = memberFeatures(state, ANA, T0, night).features.map((f) => f.properties.icon);
-    expect(icons).toEqual([
-      'tesel-app6-member-firefighters-night',
-      'tesel-app6-member-unspecified-night',
-    ]);
+    const military = { locale: 'es' } as const;
+    const icons = memberFeatures(state, ANA, T0, military).features.map((f) => f.properties.icon);
+    expect(icons).toEqual(['tesel-app6-member-firefighters', 'tesel-app6-member-unspecified']);
   });
 
   it('marks the members resting or off duty', () => {

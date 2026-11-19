@@ -1,11 +1,10 @@
-// The map images of NATO's symbols (APP-6) for the tactical maps (objects/app6.ts, ADR-0146): by
-// day in APP-6's own colours, light fills in black frames; by night in reds on black, as the
-// whole night map is. Drawn here, so they weigh nothing and work offline.
+// The map images of NATO's symbols (APP-6) for the tactical map (objects/app6.ts, ADR-0146), in
+// APP-6's own colours: light fills in black frames. Drawn here, so they weigh nothing and work
+// offline.
 
 import type { Map as MapLibreMap } from 'maplibre-gl';
 
 import type { Locale } from '../i18n/index.ts';
-import type { TacticalTime } from '../map/style/tactical.ts';
 import { GLYPH_GRID, GLYPH_STROKE, GLYPHS } from '../ui/glyphs.ts';
 import {
   app6Marker,
@@ -35,53 +34,48 @@ interface Inks {
   readonly ground: string;
 }
 
-const INKS: Readonly<Record<TacticalTime, Inks>> = {
-  // APP-6's light fills: crystal blue for one's own, salmon for threats, light green, light yellow.
-  day: {
-    fills: { friend: '#80e0ff', hostile: '#ff8080', neutral: '#aaffaa', unknown: '#ffff80' },
-    line: '#000000',
-    mark: '#000000',
-    red: '#d81e1e',
-    ground: '#ffffff',
-  },
-  night: {
-    fills: { friend: '#160404', hostile: '#3a0808', neutral: '#160404', unknown: '#2a0a04' },
-    line: '#d04a4a',
-    mark: '#d04a4a',
-    red: '#ff6b5a',
-    ground: '#050000',
-  },
+/** APP-6's light fills: crystal blue for one's own, salmon for threats, light green, light yellow. */
+const INKS: Inks = {
+  fills: { friend: '#80e0ff', hostile: '#ff8080', neutral: '#aaffaa', unknown: '#ffff80' },
+  line: '#000000',
+  mark: '#000000',
+  red: '#d81e1e',
+  ground: '#ffffff',
 };
 
-/** How the tactical maps draw in APP-6: by day or by night, and in which language's letters. */
+/** How the tactical map draws in APP-6: in which language's letters. */
 export interface MilitaryLook {
-  readonly time: TacticalTime;
   readonly locale: Locale;
 }
 
 /** The image of a marker symbol in a look and a language. */
-export function app6MarkerImage(code: number, time: TacticalTime, locale: Locale): string {
-  return `tesel-app6-${String(code)}-${time}-${locale}`;
+export function app6MarkerImage(code: number, locale: Locale): string {
+  return `tesel-app6-${String(code)}-${locale}`;
 }
 
 /** The image of a member's symbol: their profile, and whether they coordinate. */
-export function app6MemberImage(profile: string, coordinator: boolean, time: TacticalTime): string {
-  return `tesel-app6-member-${profile}${coordinator ? '-hq' : ''}-${time}`;
+export function app6MemberImage(profile: string, coordinator: boolean): string {
+  return `tesel-app6-member-${profile}${coordinator ? '-hq' : ''}`;
 }
 
 /** Adds every marker symbol's image the map's style does not have yet. */
-export function addApp6MarkerImages(map: MapLibreMap, time: TacticalTime, locale: Locale): void {
+export function addApp6MarkerImages(map: MapLibreMap, locale: Locale): void {
   for (const { code } of SYMBOLS) {
-    addImage(map, app6MarkerImage(code, time, locale), app6Marker(code), INKS[time], locale);
+    addImage(map, app6MarkerImage(code, locale), app6Marker(code), INKS, locale);
   }
 }
 
 /** Adds every member's symbol image the map's style does not have yet. */
-export function addApp6MemberImages(map: MapLibreMap, time: TacticalTime, locale: Locale): void {
+export function addApp6MemberImages(map: MapLibreMap, locale: Locale): void {
   for (const { value } of PROFILES) {
     for (const coordinator of [false, true]) {
-      const name = app6MemberImage(value, coordinator, time);
-      addImage(map, name, app6Member(value, coordinator), INKS[time], locale);
+      addImage(
+        map,
+        app6MemberImage(value, coordinator),
+        app6Member(value, coordinator),
+        INKS,
+        locale,
+      );
     }
   }
 }

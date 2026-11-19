@@ -1,6 +1,6 @@
 # 0146. NATO symbols on the tactical maps
 
-- Status: Accepted
+- Status: Accepted, amended by [0147](0147-no-night-map.md) (no night map, nor its red symbols)
 - Date: 2026-11-19
 
 ## Context

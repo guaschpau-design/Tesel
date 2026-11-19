@@ -21,7 +21,7 @@
     teams: GroupState['teams'];
     /** Whether markers and shapes are shown. */
     visible: boolean;
-    /** On the tactical maps, markers in NATO's symbols (ADR-0146). */
+    /** On the tactical map, markers in NATO's symbols (ADR-0146). */
     military: MilitaryLook | null;
     onselect: (key: string) => void;
   }
@@ -42,7 +42,7 @@
     visible: () => visible,
     prepare: () => {
       addSymbolImages(map);
-      if (military !== null) addApp6MarkerImages(map, military.time, military.locale);
+      if (military !== null) addApp6MarkerImages(map, military.locale);
     },
     layers: () => {
       const tone = toneExpression();

@@ -26,7 +26,7 @@ export interface ShapeProperties extends ObjectProperties {
   readonly tone: Tone;
 }
 
-/** Markers with the app's icons, or, on the tactical maps, APP-6's (`military`, ADR-0146). */
+/** Markers with the app's icons, or, on the tactical map, APP-6's (`military`, ADR-0146). */
 export function markerFeatures(
   state: Pick<GroupState, 'objects'>,
   military: MilitaryLook | null,
@@ -43,7 +43,7 @@ export function markerFeatures(
         icon:
           military === null
             ? symbolImageName(record.symbol)
-            : app6MarkerImage(symbolInfo(record.symbol).code, military.time, military.locale),
+            : app6MarkerImage(symbolInfo(record.symbol).code, military.locale),
       },
     });
   }

@@ -68,7 +68,7 @@ export function serviceKindOf(osmKind: string): ServiceKind | undefined {
 }
 
 /**
- * How services are drawn: round icons in each kind's colour, or, on the tactical maps, key points
+ * How services are drawn: round icons in each kind's colour, or, on the tactical map, key points
  * all in one colour on squares, as a military map marks them (ADR-0141).
  */
 export type ServiceLook = 'round' | 'key';

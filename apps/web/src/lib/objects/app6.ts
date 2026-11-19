@@ -1,4 +1,4 @@
-// What NATO's symbology (APP-6) draws for each marker and each member on the tactical maps
+// What NATO's symbology (APP-6) draws for each marker and each member on the tactical map
 // (ADR-0146). Only the drawing changes: what is marked and sent is the same, so members on other
 // maps see the app's own icons for the same markers. A frame says what something is to the team:
 // its own (a rectangle), a threat (a diamond), unknown (a quatrefoil) or neutral (a square); a bar

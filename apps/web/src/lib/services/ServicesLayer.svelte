@@ -1,5 +1,5 @@
 <!-- The public services of the base map (health, pharmacies, fire, police, helipads, town halls,
-     fuel stations) as round icons with their names, or on the tactical maps as key points on
+     fuel stations) as round icons with their names, or on the tactical map as key points on
      squares (ADR-0141), and taps on them. They come with the base map,
      so they also work offline in downloaded areas. -->
 <script lang="ts">

@@ -2,8 +2,8 @@
 // map, with contour lines and names of the terrain (topo.ts); as an urban map, for a town's streets,
 // house numbers and buildings (urban.ts, ADR-0137); the national orthophotos
 // (tiles/ortho.ts) with our labels over them; or the same OpenStreetMap map as the tactical map, read
-// as a military map in greys on a dark ground, and at night in reds on black (tactical.ts,
-// ADR-0141). Each base map has its own look, whatever the app's. All are
+// as a military map in coyote, the sand of military kit (tactical.ts, ADR-0141, ADR-0144). Each
+// base map has its own look, whatever the app's. All are
 // served through our tile protocol (tiles/protocol.ts), so downloaded areas work offline whichever
 // is shown.
 
@@ -38,7 +38,7 @@ import {
   topoFlavor,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
-import { TACTICAL_LOOKS, tacticalFlavor, tacticalNames } from './tactical.ts';
+import { TACTICAL_LOOK, tacticalFlavor, tacticalNames } from './tactical.ts';
 import {
   flowLayer,
   hutLayer,
@@ -65,7 +65,7 @@ import {
   type BuildingLook,
 } from './cadastre.ts';
 
-export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical', 'night'] as const;
+export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
 
 /** The style's name for the vector base map, in the Protomaps schema. Every style has it. */
@@ -92,18 +92,12 @@ export interface StyleChoice {
   readonly lang: string;
 }
 
-/** The tactical maps, by day and by night (ADR-0141). */
-export function isTactical(base: BaseMap): boolean {
-  return base === 'tactical' || base === 'night';
-}
-
 /**
  * The look of a base map, which what is drawn over it follows (ui/theme.ts): coyote for the
- * tactical map, red on black for the night map, light for the others; labels over photographs are
- * drawn light on dark by the style itself.
+ * tactical map, light for the others; labels over photographs are drawn light on dark by the style
+ * itself.
  */
 function mapThemeOf(base: BaseMap): MapTheme {
-  if (base === 'night') return 'night';
   return base === 'tactical' ? 'coyote' : 'light';
 }
 
@@ -124,12 +118,12 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
   const { sources, ground, lines, names } = baseMapLayers(choice);
   // The ground raised in 3D is shaded too, whether or not the relief layer is on: without
   // shadows, raised ground reads as flat (ADR-0106). A town's map has no shading (ADR-0137); the
-  // tactical maps always have it, as a military map shows the ground's shape (ADR-0141).
+  // tactical map always has it, as a military map shows the ground's shape (ADR-0141).
   const shaded =
-    (choice.relief || choice.threeD || isTactical(choice.base)) && choice.base !== 'urban';
+    (choice.relief || choice.threeD || choice.base === 'tactical') && choice.base !== 'urban';
   const relief = shaded ? reliefShading(theme, choice.threeD) : null;
-  // Labels over photographs read best light on dark; the night map's icons are the dark ones.
-  const sprite = choice.base === 'aerial' || theme === 'night' ? 'dark' : 'light';
+  // Labels over photographs read best light on dark.
+  const sprite = choice.base === 'aerial' ? 'dark' : 'light';
   return {
     version: 8,
     glyphs: `${assetsUrl}fonts/{fontstack}/{range}.pbf`,
@@ -164,10 +158,9 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     maxzoom: BASEMAP_MAX_ZOOM,
     attribution: OSM_ATTRIBUTION,
   };
-  if (isTactical(base)) {
-    const night = base === 'night';
-    const look = TACTICAL_LOOKS[night ? 'night' : 'day'];
-    const { ground, names } = protomapsLayers(tacticalFlavor(night), lang);
+  if (base === 'tactical') {
+    const look = TACTICAL_LOOK;
+    const { ground, names } = protomapsLayers(tacticalFlavor(), lang);
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
@@ -322,12 +315,8 @@ function groundSky(): SkySpecification {
   };
 }
 
-/** How deep the relief is shaded on each look: less on sand than on the light map, least at night. */
-const RELIEF_STRENGTH: Readonly<Record<MapTheme, number>> = {
-  light: 0.45,
-  coyote: 0.35,
-  night: 0.3,
-};
+/** How deep the relief is shaded on each look: less on sand than on the light map. */
+const RELIEF_STRENGTH: Readonly<Record<MapTheme, number>> = { light: 0.45, coyote: 0.35 };
 
 /**
  * Shading of the terrain from the elevation tiles (tiles/sources.ts). Over raised ground it is

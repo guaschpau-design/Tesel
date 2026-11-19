@@ -36,7 +36,7 @@
   let { t, locale, map, group, selfName, preferences, weather, credits, onmark }: Props = $props();
 
   /**
-   * A tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid on,
+   * The tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid on,
    * coordinates in MGRS, bearings in mils from magnetic north. Each can then be changed again.
    */
   async function withTacticalMap(): Promise<void> {
