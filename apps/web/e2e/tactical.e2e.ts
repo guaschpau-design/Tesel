@@ -3,11 +3,14 @@
 // the declination.
 
 import { device, expect, mapIdle, test } from './helpers.ts';
+import { serveTopographicData } from './terrain-ramp.ts';
 
 test('the tactical map reads as a military map: MGRS, mils from magnetic north, its margin', async ({
   browser,
 }) => {
   const page = await device(browser, 'Ana');
+  // The tactical map always draws the relief and IGN's map: stood in for, as for the topographic.
+  await serveTopographicData(page);
   await page
     .getByRole('region', { name: 'Grupos' })
     .getByRole('button', { name: 'Cerrar' })
