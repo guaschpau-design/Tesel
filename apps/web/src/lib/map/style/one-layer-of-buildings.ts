@@ -53,8 +53,27 @@ function outlines(): Promise<Outlines> {
 /** Keeps one layer of buildings on `map` as it moves and restyles, until the returned call. */
 export function keepOneLayerOfBuildings(map: MapLibreMap): () => void {
   let latest = 0;
+  /** What was last decided: a new style starts from it, not from both layers. */
+  let hidden = false;
   /** The opacity of each layer hidden, as its style gave it, to give it back. */
   const hiddenFrom = new Map<string, Opacity | undefined>();
+  /**
+   * Hides or shows them as decided, from what each layer has now: a new style, whether loaded
+   * whole or changed in place, gives them back their own opacity, which is then the one kept.
+   */
+  const apply = () => {
+    for (const { id, opacity } of OSM_FLAT_BUILDINGS) {
+      if (map.getLayer(id) === undefined) continue;
+      const now = map.getPaintProperty(id, opacity);
+      if (hidden && now !== 0) {
+        hiddenFrom.set(id, now);
+        map.setPaintProperty(id, opacity, 0);
+      } else if (!hidden && now === 0 && hiddenFrom.has(id)) {
+        map.setPaintProperty(id, opacity, hiddenFrom.get(id));
+        hiddenFrom.delete(id);
+      }
+    }
+  };
   const update = async () => {
     if (map.getLayer(CADASTRE_LAYER) === undefined) return;
     const ask = ++latest;
@@ -70,33 +89,22 @@ export function keepOneLayerOfBuildings(map: MapLibreMap): () => void {
     const cadastre =
       map.getZoom() >= CADASTRE_MIN_ZOOM &&
       map.queryRenderedFeatures({ layers: [CADASTRE_LAYER] }).length > 0;
-    const hidden = cadastre && osmBuildingsHidden(view, await outlines());
+    const decided = cadastre && osmBuildingsHidden(view, await outlines());
     // A later move, or a new style, decides instead.
     if (ask !== latest) return;
-    for (const { id, opacity } of OSM_FLAT_BUILDINGS) {
-      if (map.getLayer(id) === undefined || hidden === hiddenFrom.has(id)) continue;
-      if (hidden) {
-        // What the style set for an opacity, which it gives back as it was.
-        hiddenFrom.set(id, map.getPaintProperty(id, opacity));
-        map.setPaintProperty(id, opacity, 0);
-      } else {
-        map.setPaintProperty(id, opacity, hiddenFrom.get(id));
-        hiddenFrom.delete(id);
-      }
-    }
-  };
-  // A new style comes with its own buildings shown.
-  const restyled = () => {
-    hiddenFrom.clear();
+    hidden = decided;
+    apply();
   };
   const run = () => {
     void update();
   };
-  // After a move, new tiles or a new style, which draws OpenStreetMap's buildings again.
-  map.on('style.load', restyled);
+  // A new style comes with OpenStreetMap's buildings shown: as it comes, before the map settles,
+  // they take what was last decided, so that switching maps does not show both layers a moment.
+  map.on('styledata', apply);
+  // After a move, new tiles or a new style, it is decided again.
   map.on('idle', run);
   return () => {
-    map.off('style.load', restyled);
+    map.off('styledata', apply);
     map.off('idle', run);
   };
 }
