@@ -1,11 +1,17 @@
-<!-- Draws the pending tasks that have a place, and opens the one tapped. -->
+<!-- Draws the pending tasks that have a place, and opens the one tapped. On the tactical map each
+     is an objective, APP-6's "OBJ" (ADR-0148). -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
-  import type { Map as MapLibreMap } from 'maplibre-gl';
+  import type { LayerSpecification, Map as MapLibreMap } from 'maplibre-gl';
   import { onMount } from 'svelte';
 
   import { useOverlay } from '../map/overlay.svelte.ts';
   import { textProperty, type MapTaps } from '../map/taps.ts';
+  import {
+    addApp6ObjectiveImages,
+    app6ObjectiveImage,
+    type MilitaryLook,
+  } from '../objects/app6-images.ts';
   import { themeColor } from '../ui/theme.ts';
   import { taskFeatures } from './task-features.ts';
 
@@ -16,10 +22,12 @@
     /** Tasks at an object are drawn where it is. */
     objects: GroupState['objects'];
     visible: boolean;
+    /** On the tactical map, each task's place as an objective (ADR-0148). */
+    military: MilitaryLook | null;
     onselect: (key: string) => void;
   }
 
-  let { map, taps, tasks, objects, visible, onselect }: Props = $props();
+  let { map, taps, tasks, objects, visible, military, onselect }: Props = $props();
 
   const SOURCE = 'tesel-tasks';
 
@@ -27,22 +35,48 @@
     level: 'tasks',
     data: { [SOURCE]: () => taskFeatures({ tasks, objects }) },
     visible: () => visible,
+    prepare: () => {
+      if (military !== null) addApp6ObjectiveImages(map, military.locale);
+    },
     layers: () => {
       const ink = themeColor('map-text');
       const halo = themeColor('map-halo');
       const signal = themeColor('signal');
+      // In APP-6 the objective is drawn over the dot, which stays, unseen, to be tapped.
+      const objectives: LayerSpecification[] =
+        military === null
+          ? []
+          : [
+              {
+                id: `${SOURCE}-app6`,
+                type: 'symbol',
+                source: SOURCE,
+                layout: {
+                  'icon-image': [
+                    'case',
+                    ['get', 'started'],
+                    app6ObjectiveImage(true),
+                    app6ObjectiveImage(false),
+                  ],
+                  'icon-allow-overlap': true,
+                },
+              },
+            ];
       return [
         {
           id: `${SOURCE}-dot`,
           type: 'circle',
           source: SOURCE,
           paint: {
-            'circle-radius': 7,
+            'circle-radius': military === null ? 7 : 14,
             'circle-color': ['case', ['get', 'started'], signal, halo],
             'circle-stroke-width': 3,
             'circle-stroke-color': ink,
+            'circle-opacity': military === null ? 1 : 0,
+            'circle-stroke-opacity': military === null ? 1 : 0,
           },
         },
+        ...objectives,
         {
           id: `${SOURCE}-label`,
           type: 'symbol',
@@ -51,7 +85,7 @@
             'text-field': ['get', 'label'],
             'text-font': ['Noto Sans Medium'],
             'text-size': 12,
-            'text-offset': [0, 1.1],
+            'text-offset': [0, military === null ? 1.1 : 0.6],
             'text-anchor': 'top',
             'text-optional': true,
           },

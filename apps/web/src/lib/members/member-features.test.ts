@@ -46,6 +46,18 @@ describe('member features', () => {
     expect(icons).toEqual(['tesel-app6-member-firefighters', 'tesel-app6-member-unspecified']);
   });
 
+  it('gives the way a member moves on the tactical map, while their position is fresh', () => {
+    const moving = { ...fix, heading: 90, speed: 1.4 };
+    const state = stateOf([
+      { type: 'position', origin: BERTA, seq: 1, time: T0, ...moving },
+      { type: 'position', origin: CARLA, seq: 1, time: T0 - 3600, ...moving },
+    ]);
+    const headings = (military: { locale: 'es' } | null) =>
+      memberFeatures(state, ANA, T0, military).features.map((f) => f.properties.heading);
+    expect(headings({ locale: 'es' })).toEqual([90, undefined]);
+    expect(headings(null)).toEqual([undefined, undefined]);
+  });
+
   it('marks the members resting or off duty', () => {
     const told = { profile: 'rescue', battery: null, equipment: [] } as const;
     const state = stateOf([

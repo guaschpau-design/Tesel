@@ -108,7 +108,7 @@
   {locale}
   visible={shown.services}
   large={preferences.baseMap.value === 'urban'}
-  look={preferences.baseMap.value === 'tactical' ? 'key' : 'round'}
+  look={preferences.baseMap.value === 'tactical' ? 'app6' : 'round'}
   onselect={inspectService}
 />
 
@@ -137,6 +137,7 @@
       teams={slices.teams}
       {self}
       visible={shown.tasks}
+      {military}
     />
   {/key}
   <ReportLayer
@@ -146,6 +147,7 @@
     reports={slices.reports}
     objects={slices.objects}
     visible={shown.reports}
+    {military}
   />
   <MemberLayer
     {map}

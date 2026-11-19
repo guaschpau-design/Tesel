@@ -1,6 +1,6 @@
 <!-- The public services of the base map (health, pharmacies, fire, police, helipads, town halls,
-     fuel stations) as round icons with their names, or on the tactical map as key points on
-     squares (ADR-0141), and taps on them. They come with the base map,
+     fuel stations) as round icons with their names, or on the tactical map as APP-6's civil
+     installations (ADR-0148), and taps on them. They come with the base map,
      so they also work offline in downloaded areas. -->
 <script lang="ts">
   import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
@@ -11,6 +11,7 @@
   import { useOverlay } from '../map/overlay.svelte.ts';
   import { BASEMAP_SOURCE } from '../map/style/style.ts';
   import type { MapTaps } from '../map/taps.ts';
+  import { addApp6ServiceImages } from '../objects/app6-images.ts';
   import { GLYPHS } from '../ui/glyphs.ts';
   import { themeColor, toneColor } from '../ui/theme.ts';
   import {
@@ -48,11 +49,15 @@
     baseSource: BASEMAP_SOURCE,
     visible: () => visible,
     prepare: () => {
+      if (look === 'app6') {
+        addApp6ServiceImages(map, SERVICE_KINDS, locale);
+        return;
+      }
       for (const kind of SERVICE_KINDS) {
         addGlyphImage(map, serviceImageName(kind, look), {
           glyph: GLYPHS[kind.glyph],
-          colour: look === 'key' ? themeColor('map-key') : toneColor(kind.tone),
-          shape: look === 'key' ? 'square' : 'circle',
+          colour: toneColor(kind.tone),
+          shape: 'circle',
         });
       }
     },
@@ -71,7 +76,7 @@
           'text-field': ['coalesce', ['get', `name:${locale}`], ['get', 'name']],
           'text-font': ['Noto Sans Medium'],
           'text-size': large ? 12.5 : 11,
-          'text-offset': [0, large ? 1.6 : 1.4],
+          'text-offset': [0, look === 'app6' ? 2.2 : large ? 1.6 : 1.4],
           'text-anchor': 'top',
           'text-optional': true,
         },

@@ -6,6 +6,7 @@ import type { LatLon } from '@tesel/protocol';
 import type { ExpressionSpecification } from 'maplibre-gl';
 
 import type { MessageKey } from '../i18n/index.ts';
+import { app6ServiceImage } from '../objects/app6-images.ts';
 import type { GlyphName } from '../ui/glyphs.ts';
 import type { Tone } from '../ui/theme.ts';
 
@@ -68,14 +69,14 @@ export function serviceKindOf(osmKind: string): ServiceKind | undefined {
 }
 
 /**
- * How services are drawn: round icons in each kind's colour, or, on the tactical map, key points
- * all in one colour on squares, as a military map marks them (ADR-0141).
+ * How services are drawn: round icons in each kind's colour, or, on the tactical map, APP-6's
+ * civil installations (ADR-0148).
  */
-export type ServiceLook = 'round' | 'key';
+export type ServiceLook = 'round' | 'app6';
 
 /** Name of the map image drawn for a kind of service in a look. */
 export function serviceImageName(kind: ServiceKind, look: ServiceLook): string {
-  return look === 'key' ? `tesel-service-${kind.id}-key` : `tesel-service-${kind.id}`;
+  return look === 'app6' ? app6ServiceImage(kind.id) : `tesel-service-${kind.id}`;
 }
 
 /** A map expression that picks each service's image by its base map `kind`. */

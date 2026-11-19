@@ -5,10 +5,13 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 
 import type { Locale } from '../i18n/index.ts';
-import { GLYPH_GRID, GLYPH_STROKE, GLYPHS } from '../ui/glyphs.ts';
+import { GLYPH_GRID, GLYPH_STROKE, GLYPHS, type GlyphName } from '../ui/glyphs.ts';
 import {
+  APP6_SELF,
   app6Marker,
   app6Member,
+  app6Objective,
+  app6Service,
   type App6Frame,
   type App6Framed,
   type App6Inside,
@@ -43,6 +46,11 @@ const INKS: Inks = {
   ground: '#ffffff',
 };
 
+/** An objective being worked on: a light green, as the app marks what is under way. */
+const STARTED = '#c8e6a0';
+/** The yellow that edges this device's frame. */
+const SELF_EDGE = '#f5c400';
+
 /** How the tactical map draws in APP-6: in which language's letters. */
 export interface MilitaryLook {
   readonly locale: Locale;
@@ -57,6 +65,24 @@ export function app6MarkerImage(code: number, locale: Locale): string {
 export function app6MemberImage(profile: string, coordinator: boolean): string {
   return `tesel-app6-member-${profile}${coordinator ? '-hq' : ''}`;
 }
+
+/** The image of a base map service's kind (services/services.ts). */
+export function app6ServiceImage(kind: string): string {
+  return `tesel-app6-service-${kind}`;
+}
+
+/** The images of a task's objective, before and once it is under way. */
+export function app6ObjectiveImage(started: boolean): string {
+  return started ? 'tesel-app6-objective-started' : 'tesel-app6-objective';
+}
+
+/** The image of this device, in a language. */
+export function app6SelfImage(locale: Locale): string {
+  return `tesel-app6-self-${locale}`;
+}
+
+/** An arrow from a symbol's middle the way it moves, rotated by the map (APP-6's direction). */
+export const APP6_DIRECTION_IMAGE = 'tesel-app6-direction';
 
 /** Adds every marker symbol's image the map's style does not have yet. */
 export function addApp6MarkerImages(map: MapLibreMap, locale: Locale): void {
@@ -133,6 +159,18 @@ function draw(c: CanvasRenderingContext2D, symbol: App6Symbol, inks: Inks, local
     drawFramed(c, symbol, inks, locale);
     return;
   }
+  if (symbol.kind === 'objective') {
+    // A label box pointing down to the place, with OBJ in it.
+    const path = new Path2D(`M${String(CX - 17)} ${String(CY - 22)}h34v17h-12l-5 7l-5 -7h-12z`);
+    c.fillStyle = symbol.started === true ? STARTED : inks.ground;
+    c.fill(path);
+    c.stroke(path);
+    c.save();
+    c.translate(0, -13.5);
+    letters(c, symbol.text[locale], 9.5, inks.mark);
+    c.restore();
+    return;
+  }
   // A block across a way: a bar with its ends, and a cross where it is cut.
   c.lineWidth = 3;
   c.strokeStyle = inks.mark;
@@ -160,6 +198,18 @@ function drawFramed(
   locale: Locale,
 ): void {
   const outline = frame(symbol.frame);
+  if (symbol.highlight === true) {
+    c.save();
+    c.strokeStyle = SELF_EDGE;
+    c.lineWidth = 5;
+    c.strokeRect(
+      outline.left - 3,
+      outline.top - 3,
+      outline.right - outline.left + 6,
+      outline.bottom - outline.top + 6,
+    );
+    c.restore();
+  }
   c.fillStyle = inks.fills[symbol.frame];
   c.fill(outline.path);
   c.stroke(outline.path);
@@ -274,4 +324,68 @@ function letters(c: CanvasRenderingContext2D, text: string, size: number, colour
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillText(text, CX, CY + 0.5);
+}
+
+/** Adds the images of the base map's services, as civil installations. */
+export function addApp6ServiceImages(
+  map: MapLibreMap,
+  kinds: readonly { readonly id: string; readonly glyph: GlyphName }[],
+  locale: Locale,
+): void {
+  for (const { id, glyph } of kinds) {
+    addImage(map, app6ServiceImage(id), app6Service(id, glyph), INKS, locale);
+  }
+}
+
+/** Adds the images of tasks' objectives. */
+export function addApp6ObjectiveImages(map: MapLibreMap, locale: Locale): void {
+  for (const started of [false, true]) {
+    addImage(map, app6ObjectiveImage(started), app6Objective(started), INKS, locale);
+  }
+}
+
+/** Adds the image of this device and the arrow of the way things move. */
+export function addApp6SelfImages(map: MapLibreMap, locale: Locale): void {
+  addImage(map, app6SelfImage(locale), APP6_SELF, INKS, locale);
+  addDirectionImage(map);
+}
+
+/** Adds the arrow of the way a member moves. */
+export function addApp6DirectionImage(map: MapLibreMap): void {
+  addDirectionImage(map);
+}
+
+/**
+ * The arrow, in an image twice as tall as the symbols so that its middle is theirs: from just
+ * outside a frame, up, as the map turns it to the way of travel.
+ */
+function addDirectionImage(map: MapLibreMap): void {
+  if (map.hasImage(APP6_DIRECTION_IMAGE)) return;
+  const size = 96;
+  const canvas = document.createElement('canvas');
+  canvas.width = size * PIXEL_RATIO;
+  canvas.height = size * PIXEL_RATIO;
+  const c = canvas.getContext('2d');
+  if (c === null) return;
+  c.scale(PIXEL_RATIO, PIXEL_RATIO);
+  const middle = size / 2;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  for (const [colour, width] of [
+    ['#ffffff', 5],
+    ['#000000', 2.5],
+  ] as const) {
+    c.strokeStyle = colour;
+    c.lineWidth = width;
+    c.beginPath();
+    c.moveTo(middle, middle - 20);
+    c.lineTo(middle, 4);
+    c.moveTo(middle - 6, 11);
+    c.lineTo(middle, 4);
+    c.lineTo(middle + 6, 11);
+    c.stroke();
+  }
+  map.addImage(APP6_DIRECTION_IMAGE, c.getImageData(0, 0, canvas.width, canvas.height), {
+    pixelRatio: PIXEL_RATIO,
+  });
 }

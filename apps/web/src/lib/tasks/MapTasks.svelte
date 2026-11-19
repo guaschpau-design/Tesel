@@ -11,6 +11,7 @@
   import { callAttention } from '../power/attention.ts';
   import { notices } from '../ui/notices.svelte.ts';
   import { editTask } from './task-editor.ts';
+  import type { MilitaryLook } from '../objects/app6-images.ts';
   import TaskLayer from './TaskLayer.svelte';
   import { assignedTo, newlyAssigned } from './tasks.ts';
 
@@ -24,9 +25,11 @@
     teams: GroupState['teams'];
     self: NodeId;
     visible: boolean;
+    /** On the tactical map, tasks as APP-6 objectives (ADR-0148). */
+    military: MilitaryLook | null;
   }
 
-  let { t, map, taps, tasks, objects, members, teams, self, visible }: Props = $props();
+  let { t, map, taps, tasks, objects, members, teams, self, visible, military }: Props = $props();
 
   const mine = $derived(assignedTo({ tasks, teams }, self));
   // What was already assigned when the group opened is not news.
@@ -57,4 +60,4 @@
   });
 </script>
 
-<TaskLayer {map} {taps} {tasks} {objects} {visible} onselect={editTask} />
+<TaskLayer {map} {taps} {tasks} {objects} {visible} {military} onselect={editTask} />

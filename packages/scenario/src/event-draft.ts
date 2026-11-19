@@ -73,8 +73,8 @@ function eventDraft(action: PlannedAction, actor: Actor, named: Named, cast: Cas
         type: 'position',
         ...action.where,
         accuracy: ACCURACY_M,
-        heading: null,
-        speed: null,
+        heading: action.heading,
+        speed: action.speed,
       });
     case 'chat':
       return (header) => ({ ...header, type: 'chat', text: action.text });

@@ -1,7 +1,7 @@
 // A staged operation as data, and the plan of events it produces. Planning is pure: the same
 // scenario always gives the same plan, which a runner then sends: the simulator, over the relay.
 
-import { distanceMeters, pathMeters } from '@tesel/core';
+import { bearingDegrees, distanceMeters, pathMeters } from '@tesel/core';
 import type {
   Casualties,
   DutyStatus,
@@ -138,7 +138,13 @@ type PlacedAction = Extract<ScenarioAction, { readonly type: 'sos' | 'report' }>
  */
 export type PlannedAction =
   | { readonly type: 'announce'; readonly role: Role }
-  | { readonly type: 'position'; readonly where: LatLon }
+  | {
+      readonly type: 'position';
+      readonly where: LatLon;
+      /** Which way and how fast the member walks, as a phone's GPS gives them; null standing. */
+      readonly heading: number | null;
+      readonly speed: number | null;
+    }
   | Exclude<ScenarioAction, PlacedAction>
   | (PlacedAction & { readonly where: LatLon });
 
@@ -181,7 +187,7 @@ export function plan(scenario: Scenario, options: PlanOptions): PlannedEvent[] {
       planned.push({
         at,
         by: member.alias,
-        action: { type: 'position', where: whereAt(member, at) },
+        action: { type: 'position', where: whereAt(member, at), ...motionAt(member, at) },
       });
     }
   }
@@ -199,6 +205,23 @@ export function whereAt(member: ScenarioMember, seconds: number): LatLon {
   // Out and back: the walk repeats every two lengths of the route.
   const travelled = (seconds * (member.speed ?? WALKING_SPEED)) % (2 * total);
   return pointAlong(route, travelled <= total ? travelled : 2 * total - travelled);
+}
+
+/**
+ * Which way a member walks after `seconds`, in whole degrees from true north, and how fast; both
+ * null for one standing still, as a phone's GPS knows them only while moving.
+ */
+export function motionAt(
+  member: ScenarioMember,
+  seconds: number,
+): { heading: number | null; speed: number | null } {
+  const here = whereAt(member, seconds);
+  const next = whereAt(member, seconds + 1);
+  if (distanceMeters(here, next) === 0) return { heading: null, speed: null };
+  return {
+    heading: Math.round(bearingDegrees(here, next)) % 360,
+    speed: member.speed ?? WALKING_SPEED,
+  };
 }
 
 /** The point `meters` along a route from its start; its end, past it. */

@@ -26,6 +26,11 @@ interface MemberProperties {
   readonly tone: Tone | 'none';
   /** On the tactical map, their symbol in APP-6 (ADR-0146); empty elsewhere. */
   readonly icon: string;
+  /**
+   * On the tactical map, the way they were moving, degrees from north, from their GPS: only while
+   * they move and their position is fresh (ADR-0148).
+   */
+  readonly heading?: number;
 }
 
 export type MemberCollection = FeatureCollection<Point, MemberProperties>;
@@ -43,13 +48,14 @@ export function memberFeatures(
   const features: Feature<Point, MemberProperties>[] = [];
   for (const [origin, report] of state.positions) {
     if (report.type !== 'position' || origin === self) continue;
+    const stale = now - report.time > STALE_AFTER_S;
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [report.lon, report.lat] },
       properties: {
         id: origin,
         label: aliasOf(state, origin),
-        stale: now - report.time > STALE_AFTER_S,
+        stale,
         sos: calling.has(origin),
         away: (state.memberStates.get(origin)?.status ?? 'active') !== 'active',
         tone: teamTone(state.teams, origin),
@@ -60,6 +66,9 @@ export function memberFeatures(
                 state.memberStates.get(origin)?.profile ?? 'unspecified',
                 state.members.get(origin)?.role === 'coordinator',
               ),
+        ...(military !== null && report.heading !== null && !stale
+          ? { heading: report.heading }
+          : {}),
       },
     });
   }

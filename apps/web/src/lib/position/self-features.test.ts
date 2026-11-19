@@ -2,7 +2,7 @@ import { offsetMeters } from '@tesel/core';
 import { describe, expect, it } from 'vitest';
 
 import type { DeviceFix } from './device-location.svelte.ts';
-import { drawnAlike } from './self-features.ts';
+import { drawnAlike, selfFeatures } from './self-features.ts';
 
 const VALENCIA = { lat: 39.4699, lon: -0.3763 };
 
@@ -22,5 +22,13 @@ describe('the dot of this device', () => {
     expect(drawnAlike(null, null, 2)).toBe(true);
     expect(drawnAlike(null, fix(0, 5), 2)).toBe(false);
     expect(drawnAlike(fix(0, 5), null, 2)).toBe(false);
+  });
+});
+
+describe('this device on the tactical map', () => {
+  it('carries the way it points, only when there is one', () => {
+    const dot = (heading: number | null) => selfFeatures(fix(0, null), 'Tú', heading).features[0];
+    expect(dot(45)?.properties).toEqual({ label: 'Tú', heading: 45 });
+    expect(dot(null)?.properties).toEqual({ label: 'Tú' });
   });
 });

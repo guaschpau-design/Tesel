@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { plan, whereAt, type Scenario } from './scenario.ts';
+import { motionAt, plan, whereAt, type Scenario } from './scenario.ts';
 
 const PATROL: Scenario = {
   name: 'patrol',
@@ -47,6 +47,15 @@ describe('scenario plan', () => {
       ['Walker', 40],
       ['Walker', 60],
     ]);
+  });
+
+  it('gives the way a member walks and how fast, out east and back west; none standing', () => {
+    const [walker, hidden] = PATROL.members;
+    if (walker === undefined || hidden === undefined) throw new Error('no members');
+    expect(motionAt(walker, 10)).toEqual({ heading: 90, speed: 2 });
+    // The route is some 86 m long: at 2 m/s the walker is on the way back after 43 s.
+    expect(motionAt(walker, 50)).toEqual({ heading: 270, speed: 2 });
+    expect(motionAt(hidden, 10)).toEqual({ heading: null, speed: null });
   });
 
   it('places an SOS where its sender is at that moment', () => {

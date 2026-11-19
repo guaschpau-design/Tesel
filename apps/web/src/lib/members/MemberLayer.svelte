@@ -8,7 +8,12 @@
 
   import { clockEvery } from '../ui/now.svelte.ts';
   import { themeColor, toneExpression } from '../ui/theme.ts';
-  import { addApp6MemberImages, type MilitaryLook } from '../objects/app6-images.ts';
+  import {
+    addApp6DirectionImage,
+    addApp6MemberImages,
+    APP6_DIRECTION_IMAGE,
+    type MilitaryLook,
+  } from '../objects/app6-images.ts';
   import { memberFeatures } from './member-features.ts';
   import { nameLabel } from '../map/name-label.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
@@ -63,7 +68,9 @@
     data: { [SOURCE]: () => data },
     visible: () => visible,
     prepare: () => {
-      if (military !== null) addApp6MemberImages(map, military.locale);
+      if (military === null) return;
+      addApp6MemberImages(map, military.locale);
+      addApp6DirectionImage(map);
     },
     layers: () => {
       const halo = themeColor('map-halo');
@@ -85,6 +92,20 @@
         military === null
           ? []
           : [
+              // The way each is moving, under their symbol, turned with the map.
+              {
+                id: `${SOURCE}-direction`,
+                type: 'symbol',
+                source: SOURCE,
+                filter: ['has', 'heading'],
+                layout: {
+                  'icon-image': APP6_DIRECTION_IMAGE,
+                  'icon-rotate': ['get', 'heading'],
+                  'icon-rotation-alignment': 'map',
+                  'icon-allow-overlap': true,
+                  'icon-ignore-placement': true,
+                },
+              },
               {
                 id: `${SOURCE}-app6`,
                 type: 'symbol',

@@ -75,10 +75,9 @@
   --map-contour: #a8754c;
   --map-terrain: #6e5038;
   --map-spring: #2a7fb0;
-  /* The MGRS grid, the light side of the relief, and the key points of the tactical maps. */
+  /* The MGRS grid, and the light side of the relief. */
   --map-grid: var(--map-text);
   --map-relief-light: #ffffff;
-  --map-key: #f0b43c;
 
   /* Families of map symbols and shapes (objects/catalog.ts). */
   --tone-slate: #56656f;
@@ -148,8 +147,7 @@
 }
 
 /* The map's own look, its base map's whatever the app's (ui/theme.ts, ADR-0120): the tactical map
-   in coyote, the sand of military kit (ADR-0144), with what is drawn on it dark, its key points in
-   a deep red. */
+   in coyote, the sand of military kit (ADR-0144), with what is drawn on it dark. */
 :root[data-map-theme='coyote'] {
   --map-text: #1f1a14;
   --map-halo: #e6dbbd;
@@ -159,7 +157,6 @@
   --map-spring: #2c6a8a;
   --map-grid: #1f1a14;
   --map-relief-light: rgba(255, 248, 228, 0.5);
-  --map-key: #9e2a1c;
 }
 
 html,

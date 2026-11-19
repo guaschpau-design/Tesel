@@ -9,6 +9,7 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import LayersPanel from '../map/LayersPanel.svelte';
   import { navigateTo } from '../navigation/navigation.svelte.ts';
+  import { compass } from '../position/compass.svelte.ts';
   import MePanel from '../me/MePanel.svelte';
   import type { Preferences } from '../settings/preferences.ts';
   import { newTask } from '../tasks/task-editor.ts';
@@ -40,10 +41,13 @@
    * coordinates in MGRS, bearings in mils from magnetic north. Each can then be changed again.
    */
   async function withTacticalMap(): Promise<void> {
+    // Asked first, within the tap, as the iPhone wants: the compass turns this device's arrow.
+    const asked = compass.ask();
     await preferences.grid.set(true);
     await preferences.coordinateFormat.set('mgrs');
     await preferences.bearingUnit.set('mils');
     await preferences.north.set('magnetic');
+    await asked;
   }
 </script>
 

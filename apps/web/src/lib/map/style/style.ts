@@ -187,7 +187,9 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
       names: [
         flowLayer(NAMES_SOURCE, look.images.flow),
         hutLayer(BASEMAP_SOURCE, lang, look.huts),
-        ...tacticalNames([...terrainNameLayers(), ...names]),
+        // No points of interest of the base map: shops and museums are no use in an operation;
+        // the services that are come as civil installations (ADR-0148).
+        ...tacticalNames([...terrainNameLayers(), ...names.filter((layer) => layer.id !== 'pois')]),
       ],
     };
   }
