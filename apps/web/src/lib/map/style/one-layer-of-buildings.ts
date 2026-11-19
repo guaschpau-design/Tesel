@@ -5,17 +5,24 @@
 // cadastre's buildings, OpenStreetMap's flat buildings are hidden. Elsewhere they are the only
 // ones, and so they stay; where the cadastre cannot be had, offline in an area downloaded without
 // it or with IGN's service down, they stay too; and raised in 3D they stay everywhere, for their
-// heights. It is decided each time the map settles, once its tiles are drawn.
+// heights. It is decided each time the map settles, once its tiles are drawn. They are hidden by
+// their opacity: hiding a layer, or filtering it, has MapLibre lay out again every tile of its
+// source, the whole base map, where an opacity is only painted.
 
-import type { Map as MapLibreMap } from 'maplibre-gl';
+import type { DataDrivenPropertyValueSpecification, Map as MapLibreMap } from 'maplibre-gl';
 
 import { outlineCoverage } from '../geometry.ts';
 import type { Outline } from '../tiles/borders-data.ts';
 import type { Bounds } from '../tiles/math.ts';
 import { CADASTRE_MIN_ZOOM } from './cadastre.ts';
 
-/** OpenStreetMap's flat buildings, and the urban map's edge round them (urban.ts). */
-const OSM_FLAT_BUILDINGS = ['buildings', 'buildings-edge'];
+type Opacity = DataDrivenPropertyValueSpecification<number>;
+
+/** OpenStreetMap's flat buildings, and the urban map's edge round them (urban.ts): their opacity. */
+const OSM_FLAT_BUILDINGS = [
+  { id: 'buildings', opacity: 'fill-opacity' },
+  { id: 'buildings-edge', opacity: 'line-opacity' },
+] as const;
 /** A layer of the cadastre's: present only on the maps that draw it. */
 const CADASTRE_LAYER = 'cadastre-buildings';
 
@@ -46,6 +53,8 @@ function outlines(): Promise<Outlines> {
 /** Keeps one layer of buildings on `map` as it moves and restyles, until the returned call. */
 export function keepOneLayerOfBuildings(map: MapLibreMap): () => void {
   let latest = 0;
+  /** The opacity of each layer hidden, as its style gave it, to give it back. */
+  const hiddenFrom = new Map<string, Opacity | undefined>();
   const update = async () => {
     if (map.getLayer(CADASTRE_LAYER) === undefined) return;
     const ask = ++latest;
@@ -64,22 +73,30 @@ export function keepOneLayerOfBuildings(map: MapLibreMap): () => void {
     const hidden = cadastre && osmBuildingsHidden(view, await outlines());
     // A later move, or a new style, decides instead.
     if (ask !== latest) return;
-    const visibility = hidden ? 'none' : 'visible';
-    for (const id of OSM_FLAT_BUILDINGS) {
-      if (
-        map.getLayer(id) !== undefined &&
-        map.getLayoutProperty(id, 'visibility') !== visibility
-      ) {
-        map.setLayoutProperty(id, 'visibility', visibility);
+    for (const { id, opacity } of OSM_FLAT_BUILDINGS) {
+      if (map.getLayer(id) === undefined || hidden === hiddenFrom.has(id)) continue;
+      if (hidden) {
+        // What the style set for an opacity, which it gives back as it was.
+        hiddenFrom.set(id, map.getPaintProperty(id, opacity));
+        map.setPaintProperty(id, opacity, 0);
+      } else {
+        map.setPaintProperty(id, opacity, hiddenFrom.get(id));
+        hiddenFrom.delete(id);
       }
     }
+  };
+  // A new style comes with its own buildings shown.
+  const restyled = () => {
+    hiddenFrom.clear();
   };
   const run = () => {
     void update();
   };
   // After a move, new tiles or a new style, which draws OpenStreetMap's buildings again.
+  map.on('style.load', restyled);
   map.on('idle', run);
   return () => {
+    map.off('style.load', restyled);
     map.off('idle', run);
   };
 }
