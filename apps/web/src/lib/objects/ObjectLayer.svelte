@@ -9,6 +9,7 @@
   import { themeColor, toneExpression } from '../ui/theme.ts';
   import { markerFeatures, shapeFeatures, stripFeatures } from './object-features.ts';
   import { stripLayers } from './strip-layers.ts';
+  import { addApp6MarkerImages, type MilitaryLook } from './app6-images.ts';
   import { addSymbolImages } from './symbol-images.ts';
 
   interface Props {
@@ -20,10 +21,12 @@
     teams: GroupState['teams'];
     /** Whether markers and shapes are shown. */
     visible: boolean;
+    /** On the tactical maps, markers in NATO's symbols (ADR-0146). */
+    military: MilitaryLook | null;
     onselect: (key: string) => void;
   }
 
-  let { map, taps, objects, tasks, teams, visible, onselect }: Props = $props();
+  let { map, taps, objects, tasks, teams, visible, military, onselect }: Props = $props();
 
   const MARKERS = 'tesel-markers';
   const SHAPES = 'tesel-shapes';
@@ -34,11 +37,12 @@
     data: {
       [SHAPES]: () => shapeFeatures({ objects }),
       [STRIPS]: () => stripFeatures({ objects, tasks, teams }),
-      [MARKERS]: () => markerFeatures({ objects }),
+      [MARKERS]: () => markerFeatures({ objects }, military),
     },
     visible: () => visible,
     prepare: () => {
       addSymbolImages(map);
+      if (military !== null) addApp6MarkerImages(map, military.time, military.locale);
     },
     layers: () => {
       const tone = toneExpression();
@@ -81,7 +85,8 @@
             'text-field': ['get', 'label'],
             'text-font': ['Noto Sans Medium'],
             'text-size': 12,
-            'text-offset': [0, 1.5],
+            // APP-6's frames take more room than the app's icons.
+            'text-offset': [0, military === null ? 1.5 : 2.2],
             'text-anchor': 'top',
             'text-optional': true,
           },

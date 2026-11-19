@@ -17,6 +17,8 @@ export interface NameLabel {
   /** Whether the name shows even where it would cover another. */
   readonly overlap: boolean;
   readonly opacity?: DataDrivenPropertyValueSpecification<number>;
+  /** How far from the point the name stands, in ems: further from a larger symbol. */
+  readonly distance?: number;
 }
 
 /**
@@ -30,6 +32,7 @@ export function nameLabel({
   filter,
   overlap,
   opacity = 1,
+  distance = 1.1,
 }: NameLabel): SymbolLayerSpecification {
   return {
     id,
@@ -41,7 +44,7 @@ export function nameLabel({
       'text-font': ['Noto Sans Medium'],
       'text-size': 13,
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-      'text-radial-offset': 1.1,
+      'text-radial-offset': distance,
       'text-allow-overlap': overlap,
     },
     paint: {

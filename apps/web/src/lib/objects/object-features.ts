@@ -7,7 +7,8 @@ import type { Feature, FeatureCollection, Geometry, LineString, Point } from 'ge
 import { circleRing, toPosition } from '../map/geometry.ts';
 import { shownText } from '../text.ts';
 import type { Tone } from '../ui/theme.ts';
-import { styleInfo, symbolImageName } from './catalog.ts';
+import { app6MarkerImage, type MilitaryLook } from './app6-images.ts';
+import { styleInfo, symbolImageName, symbolInfo } from './catalog.ts';
 import { stripOf, stripPath, stripWalker, walkerTone } from './sweeps.ts';
 
 interface ObjectProperties {
@@ -25,8 +26,10 @@ export interface ShapeProperties extends ObjectProperties {
   readonly tone: Tone;
 }
 
+/** Markers with the app's icons, or, on the tactical maps, APP-6's (`military`, ADR-0146). */
 export function markerFeatures(
   state: Pick<GroupState, 'objects'>,
+  military: MilitaryLook | null,
 ): FeatureCollection<Point, MarkerProperties> {
   const features: Feature<Point, MarkerProperties>[] = [];
   for (const [key, record] of state.objects) {
@@ -34,7 +37,14 @@ export function markerFeatures(
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: toPosition(record) },
-      properties: { key, label: shownText(record.label), icon: symbolImageName(record.symbol) },
+      properties: {
+        key,
+        label: shownText(record.label),
+        icon:
+          military === null
+            ? symbolImageName(record.symbol)
+            : app6MarkerImage(symbolInfo(record.symbol).code, military.time, military.locale),
+      },
     });
   }
   return { type: 'FeatureCollection', features };

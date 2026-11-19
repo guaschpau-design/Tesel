@@ -68,7 +68,7 @@ describe('map object features', () => {
 
   it('draws markers with their symbol, unknown symbols as the generic one, and no deleted ones', () => {
     expect(
-      markerFeatures(state).features.map((f) => [f.properties.label, f.properties.icon]),
+      markerFeatures(state, null).features.map((f) => [f.properties.label, f.properties.icon]),
     ).toEqual([
       ['Fuego', 'tesel-symbol-3'],
       ['Raro', 'tesel-symbol-0'],

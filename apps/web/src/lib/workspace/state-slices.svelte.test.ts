@@ -36,9 +36,9 @@ function groupOnMap(): { map: FakeMap; apply: (event: TeselEvent) => void; stop:
         layers: () => [{ id: `${source}-layer`, type: 'circle', source }],
       });
     };
-    layer('members', () => memberFeatures(slices, ANA, T0));
+    layer('members', () => memberFeatures(slices, ANA, T0, null));
     layer('trails', () => trailFeatures(slices, ANA));
-    layer('markers', () => markerFeatures(slices));
+    layer('markers', () => markerFeatures(slices, null));
     layer('shapes', () => shapeFeatures(slices));
     layer('tasks', () => taskFeatures(slices));
   });

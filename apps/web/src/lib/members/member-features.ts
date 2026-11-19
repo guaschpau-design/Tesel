@@ -5,6 +5,7 @@ import { openSosCalls, teamOf, type GroupState } from '@tesel/core';
 import type { NodeId } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 
+import { app6MemberImage, type MilitaryLook } from '../objects/app6-images.ts';
 import { TEAM_COLOURS } from '../teams/teams.ts';
 import type { Tone } from '../ui/theme.ts';
 import { aliasOf } from './alias.ts';
@@ -23,6 +24,8 @@ interface MemberProperties {
   readonly away: boolean;
   /** Their team's colour, or `none` for the members' own. */
   readonly tone: Tone | 'none';
+  /** On the tactical maps, their symbol in APP-6 (ADR-0146); empty elsewhere. */
+  readonly icon: string;
 }
 
 export type MemberCollection = FeatureCollection<Point, MemberProperties>;
@@ -34,6 +37,7 @@ export function memberFeatures(
   >,
   self: NodeId,
   now: number,
+  military: MilitaryLook | null,
 ): MemberCollection {
   const calling = new Set([...openSosCalls(state)].map(([, call]) => call.origin));
   const features: Feature<Point, MemberProperties>[] = [];
@@ -49,6 +53,14 @@ export function memberFeatures(
         sos: calling.has(origin),
         away: (state.memberStates.get(origin)?.status ?? 'active') !== 'active',
         tone: teamTone(state.teams, origin),
+        icon:
+          military === null
+            ? ''
+            : app6MemberImage(
+                state.memberStates.get(origin)?.profile ?? 'unspecified',
+                state.members.get(origin)?.role === 'coordinator',
+                military.time,
+              ),
       },
     });
   }

@@ -151,3 +151,4 @@ Template: copy [`template.md`](template.md), use the next number, keep it under 
 | [0143](0143-english-screenshots.md)                     | The English home page shows the app in English                                              | Accepted                                                |
 | [0144](0144-the-tactical-map-in-coyote.md)              | The tactical map in coyote                                                                  | Accepted                                                |
 | [0145](0145-reading-the-tactical-map-as-soldiers-do.md) | Reading the tactical map as soldiers do                                                     | Accepted                                                |
+| [0146](0146-nato-symbols-on-the-tactical-maps.md)       | NATO symbols on the tactical maps                                                           | Accepted                                                |
