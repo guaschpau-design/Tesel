@@ -4,6 +4,7 @@
      where it was. The app keeps working meanwhile. -->
 <script lang="ts">
   import { formatBearing, formatDistance, formatTime } from '../format.ts';
+  import { bearings } from '../navigation/bearings.svelte.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { linkOf, linkWord, type LinkInput } from '../links/links.ts';
   import { navigation } from '../navigation/navigation.svelte.ts';
@@ -57,7 +58,7 @@
         ><Pictogram name="heading" size={96} /></span
       >
       <strong>{formatDistance(leg.metres, locale)}</strong>
-      <span>{formatBearing(leg.bearing, locale)}</span>
+      <span>{formatBearing(leg.bearing, locale, bearings.style)}</span>
     </span>
   {/if}
   <span class="link">{t(linkWord(link))}</span>

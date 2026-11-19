@@ -34,6 +34,17 @@
   }
 
   let { t, locale, map, group, selfName, preferences, weather, credits, onmark }: Props = $props();
+
+  /**
+   * A tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid on,
+   * coordinates in MGRS, bearings in mils from magnetic north. Each can then be changed again.
+   */
+  async function withTacticalMap(): Promise<void> {
+    await preferences.grid.set(true);
+    await preferences.coordinateFormat.set('mgrs');
+    await preferences.bearingUnit.set('mils');
+    await preferences.north.set('magnetic');
+  }
 </script>
 
 {#if panels.open?.name === 'point'}
@@ -90,6 +101,7 @@
     }}
     hidden={preferences.hiddenLayers}
     {credits}
+    ontactical={withTacticalMap}
     onclose={closePanel}
   />
 {/if}

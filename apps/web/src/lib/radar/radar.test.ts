@@ -3,6 +3,7 @@ import type { NodeId, PositionEvent } from '@tesel/protocol';
 import type { LineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 
+import { TRUE_DEGREES } from '../format.ts';
 import { nearestMembers, ringFeatures, ringStep, RING_COUNT, vectorFeatures } from './radar.ts';
 
 const SELF = 'aaaa0001' as NodeId;
@@ -63,7 +64,7 @@ describe('radar', () => {
 
   it('labels each line with distance and bearing', () => {
     const state = stateOf([position('bbbb0002', 200)]);
-    const lines = vectorFeatures(HERE, nearestMembers(state, SELF, HERE, NOW), 'es');
+    const lines = vectorFeatures(HERE, nearestMembers(state, SELF, HERE, NOW), 'es', TRUE_DEGREES);
     expect(lines.features[0]?.properties?.['label']).toBe('200 m · 000° N');
   });
 });

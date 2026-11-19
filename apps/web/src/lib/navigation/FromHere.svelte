@@ -9,6 +9,7 @@
   import { onMount } from 'svelte';
 
   import { formatBearing, formatDistance } from '../format.ts';
+  import { bearings } from './bearings.svelte.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import Fold from '../ui/Fold.svelte';
@@ -66,7 +67,7 @@
   <p class="from-here">
     {t('fromHere', {
       distance: formatDistance(leg.metres, locale),
-      bearing: formatBearing(leg.bearing, locale),
+      bearing: formatBearing(leg.bearing, locale, bearings.style),
     })}
   </p>
   {#if profile && terrain.onDemand}

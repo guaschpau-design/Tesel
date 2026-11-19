@@ -15,6 +15,7 @@
   import { ground } from './lib/map/ground.svelte.ts';
   import { mapLibreLocale } from './lib/map/style/maplibre-locale.ts';
   import MapView from './lib/map/MapView.svelte';
+  import { bearings } from './lib/navigation/bearings.svelte.ts';
   import { IN_ANDROID_APP } from './lib/platform.ts';
   import { activity } from './lib/power/activity.svelte.ts';
   import PocketScreen from './lib/power/PocketScreen.svelte';
@@ -48,6 +49,11 @@
   const startup = new Startup();
   // The look, light or dark, from the first frame: this device's until the preferences are read.
   const stopFollowingLook = appearance.follow(() => startup.preferences?.theme.value ?? 'auto');
+  // Bearings as chosen in Settings, or in degrees from true north until the preferences are read.
+  const stopFollowingBearings = bearings.follow(
+    () => startup.preferences?.bearingUnit.value ?? 'degrees',
+    () => startup.preferences?.north.value ?? 'true',
+  );
   $effect(() => {
     terrain.reader = startup.preferences?.relief.value ? startup.elevations : null;
     terrain.onDemand = startup.elevations;
@@ -86,6 +92,7 @@
       stopWatching();
       stopStarting();
       stopFollowingLook();
+      stopFollowingBearings();
     };
   });
 

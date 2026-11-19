@@ -10,6 +10,7 @@
 
   import type { Locale } from '../i18n/index.ts';
   import { useOverlay } from '../map/overlay.svelte.ts';
+  import { bearings } from '../navigation/bearings.svelte.ts';
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import { themeColor } from '../ui/theme.ts';
   import { clockEvery } from '../ui/now.svelte.ts';
@@ -35,7 +36,12 @@
   const rings = $derived(here ? ringFeatures(here, ringStep(zoom, here.lat), locale) : NOTHING);
   const vectors = $derived(
     here && group
-      ? vectorFeatures(here, nearestMembers(group, group.self, here, now.seconds), locale)
+      ? vectorFeatures(
+          here,
+          nearestMembers(group, group.self, here, now.seconds),
+          locale,
+          bearings.style,
+        )
       : NOTHING,
   );
 

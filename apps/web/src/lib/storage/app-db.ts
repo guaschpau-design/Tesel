@@ -46,6 +46,8 @@ export type SettingKey =
   | 'dutyStatus'
   | 'equipment'
   | 'coordinateFormat'
+  | 'bearingUnit'
+  | 'north'
   | 'baseMap'
   | 'relief'
   | 'grid'

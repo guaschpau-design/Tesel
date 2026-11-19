@@ -203,6 +203,13 @@ export const es: Messages = {
   formatDms: 'GMS',
   formatUtm: 'UTM',
   formatMgrs: 'MGRS',
+  bearingUnit: 'Rumbos en',
+  bearingDegrees: 'Grados',
+  bearingMils: 'Milésimas (6400)',
+  bearingNorth: 'Norte de los rumbos',
+  northTrue: 'Geográfico',
+  northMagnetic: 'Magnético (brújula)',
+  declination: 'Decl. {value}',
   formatOutOfRange: 'Demasiado cerca del polo para este formato',
   copy: 'Copiar',
   coordinateUnreadable:

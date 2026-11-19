@@ -21,10 +21,12 @@
     hidden: Preference<readonly MapLayer[]>;
     /** What the map's data asks to be credited for, as HTML of our own. */
     credits: readonly string[];
+    /** Called when a tactical map is chosen, for what comes with it. */
+    ontactical: () => Promise<void>;
     onclose: () => void;
   }
 
-  let { t, base, flags, hidden, credits, onclose }: Props = $props();
+  let { t, base, flags, hidden, credits, ontactical, onclose }: Props = $props();
 
   const BASE_NAMES: Readonly<Record<BaseMap, MessageKey>> = {
     topo: 'baseMapTopo',
@@ -34,10 +36,10 @@
     night: 'baseMapNight',
   };
 
-  /** A tactical map comes with its MGRS grid, which can then be hidden as any layer (ADR-0141). */
+  /** A tactical map comes with what a military reading of it asks for (ontactical). */
   async function choose(option: BaseMap): Promise<void> {
     await base.set(option);
-    if (isTactical(option) && !flags.grid.value) await flags.grid.set(true);
+    if (isTactical(option)) await ontactical();
   }
 
   function isOn(name: LayerSwitch): boolean {

@@ -6,6 +6,7 @@
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
   import { formatBearing, formatDistance } from '../format.ts';
+  import { bearings } from './bearings.svelte.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import type { DeviceFix } from '../position/device-location.svelte.ts';
   import { attempt } from '../ui/submission.svelte.ts';
@@ -38,7 +39,7 @@
   const leg = $derived(progress && progress.stage !== 'arrived' ? progress.leg : null);
 
   function way(of: Leg): string {
-    return `${formatDistance(of.metres, locale)} · ${formatBearing(of.bearing, locale)}`;
+    return `${formatDistance(of.metres, locale)} · ${formatBearing(of.bearing, locale, bearings.style)}`;
   }
 </script>
 

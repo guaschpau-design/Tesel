@@ -6,7 +6,7 @@ import { bearingDegrees, distanceMeters, type GroupState } from '@tesel/core';
 import type { LatLon, NodeId } from '@tesel/protocol';
 import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
 
-import { formatBearing, formatDistance } from '../format.ts';
+import { formatBearing, formatDistance, type BearingStyle } from '../format.ts';
 import type { Locale } from '../i18n/index.ts';
 import { circleRing, metresPerPixel, toPosition } from '../map/geometry.ts';
 import { STALE_AFTER_S } from '../members/member-features.ts';
@@ -77,6 +77,7 @@ export function vectorFeatures(
   from: LatLon,
   members: readonly Nearby[],
   locale: Locale,
+  style: BearingStyle,
 ): FeatureCollection {
   return {
     type: 'FeatureCollection',
@@ -84,7 +85,7 @@ export function vectorFeatures(
       feature<LineString>(
         { type: 'LineString', coordinates: [toPosition(from), toPosition(member.at)] },
         {
-          label: `${formatDistance(member.distance, locale)} · ${formatBearing(member.bearing, locale)}`,
+          label: `${formatDistance(member.distance, locale)} · ${formatBearing(member.bearing, locale, style)}`,
         },
       ),
     ),

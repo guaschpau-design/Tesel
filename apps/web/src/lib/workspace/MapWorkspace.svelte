@@ -31,7 +31,10 @@
   import GroundButton from '../map/GroundButton.svelte';
   import MapControl from '../map/MapControl.svelte';
   import MapCredits from '../map/MapCredits.svelte';
+  import MapMargin from '../map/MapMargin.svelte';
   import MapScale from '../map/MapScale.svelte';
+  import { isTactical } from '../map/style/style.ts';
+  import { followMapCentre } from '../navigation/bearings.svelte.ts';
   import { navigation } from '../navigation/navigation.svelte.ts';
   import { DRAFT_NAMES, draftGeometry } from '../objects/draft.ts';
   import ObjectForm from '../objects/ObjectForm.svelte';
@@ -169,6 +172,8 @@
   }
 
   onMount(() => taps.listen(map));
+  // Magnetic bearings use the declination where the map is.
+  onMount(() => followMapCentre(map));
 
   // Until the user chooses a view, the map follows who appears: this device, the members.
   $effect(() => {
@@ -320,6 +325,9 @@
   {/if}
 </MapControl>
 <MapScale {map} />
+{#if isTactical(preferences.baseMap.value)}
+  <MapMargin {t} {locale} {map} />
+{/if}
 <!-- Shown again with each base map, which brings its own sources. -->
 {#key preferences.baseMap.value}
   <MapCredits {map} {credits} />

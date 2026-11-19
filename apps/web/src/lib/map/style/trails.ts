@@ -21,6 +21,27 @@ export const TOPO_STREAM = '#4a9fd8';
 /** The light edge that keeps a dashed way readable over woods and contour lines. */
 const HALO = 'rgba(255, 255, 255, 0.6)';
 
+/**
+ * How ways off the streets are drawn: tracks in dashes, footpaths and steps in dots and bars, each
+ * in a colour, over a halo that keeps them readable over woods and contour lines.
+ */
+export interface TrailLook {
+  readonly track: string;
+  readonly footpath: string;
+  readonly halo: string;
+}
+
+/** The topographic map's, as OpenStreetMap's own map draws them: brown tracks, red footpaths. */
+export const TOPO_TRAILS: TrailLook = { track: TRACK, footpath: FOOTPATH, halo: HALO };
+
+/** Mountain huts and shelters: the image of their sign, and the colour of their name. */
+export interface HutLook {
+  readonly image: string;
+  readonly name: string;
+}
+
+export const TOPO_HUTS: HutLook = { image: HUT_IMAGE, name: TRACK };
+
 const detail: ExpressionSpecification = ['get', 'kind_detail'];
 const isTrack: ExpressionSpecification = ['==', detail, 'track'];
 const isSteps: ExpressionSpecification = ['==', detail, 'steps'];
@@ -65,6 +86,7 @@ export function trailLayers(
   source: string,
   other: LayerSpecification,
   pedestrian: PedestrianLook,
+  look: TrailLook,
 ): LayerSpecification[] {
   const common = { type: 'line', source, 'source-layer': 'roads', minzoom: 13 } as const;
   const trails: ExpressionSpecification = ['any', isTrack, isSteps, isFootpath, isPedestrian];
@@ -99,14 +121,14 @@ export function trailLayers(
       ...common,
       id: 'trails-halo',
       filter: ['all', onGround, ['any', isTrack, isSteps, isFootpath]],
-      paint: { 'line-color': HALO, 'line-width': width(2.5, 4, 7) },
+      paint: { 'line-color': look.halo, 'line-width': width(2.5, 4, 7) },
     },
     {
       ...common,
       id: 'trails-track',
       filter: ['all', onGround, isTrack],
       paint: {
-        'line-color': TRACK,
+        'line-color': look.track,
         'line-width': width(1, 1.8, 3),
         'line-dasharray': [3.5, 1.5],
       },
@@ -116,7 +138,7 @@ export function trailLayers(
       id: 'trails-footpath',
       filter: ['all', onGround, isFootpath],
       paint: {
-        'line-color': FOOTPATH,
+        'line-color': look.footpath,
         'line-width': width(1, 1.5, 2.5),
         'line-dasharray': [1, 1.5],
       },
@@ -126,7 +148,7 @@ export function trailLayers(
       id: 'trails-steps',
       filter: ['all', onGround, isSteps],
       paint: {
-        'line-color': FOOTPATH,
+        'line-color': look.footpath,
         'line-width': width(2.5, 4, 7),
         'line-dasharray': [0.35, 0.45],
       },
@@ -209,7 +231,7 @@ export function woodsLayer(source: string, image: string): LayerSpecification {
 }
 
 /** Mountain huts and shelters: their sign, and their name beside it. */
-export function hutLayer(source: string, lang: string): LayerSpecification {
+export function hutLayer(source: string, lang: string, look: HutLook): LayerSpecification {
   return {
     id: 'huts',
     type: 'symbol',
@@ -218,7 +240,7 @@ export function hutLayer(source: string, lang: string): LayerSpecification {
     minzoom: 13,
     filter: ['in', ['get', 'kind'], ['literal', ['alpine_hut', 'shelter', 'wilderness_hut']]],
     layout: {
-      'icon-image': HUT_IMAGE,
+      'icon-image': look.image,
       'icon-size': 0.8,
       'text-field': ['coalesce', ['get', `name:${lang}`], ['get', 'name']],
       'text-font': ['Noto Sans Medium'],
@@ -228,7 +250,7 @@ export function hutLayer(source: string, lang: string): LayerSpecification {
       'text-optional': true,
     },
     paint: {
-      'text-color': TRACK,
+      'text-color': look.name,
       'text-halo-color': themeColor('map-halo'),
       'text-halo-width': 1.5,
     },

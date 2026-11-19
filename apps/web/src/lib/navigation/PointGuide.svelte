@@ -4,6 +4,7 @@
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
   import { formatBearing, formatDistance } from '../format.ts';
+  import { bearings } from './bearings.svelte.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import type { DeviceFix } from '../position/device-location.svelte.ts';
   import ClimbLine from '../terrain/ClimbLine.svelte';
@@ -44,7 +45,11 @@
     {:else if leg.arrived}
       {t('navigationArrived')}
     {:else}
-      <strong>{formatDistance(leg.metres, locale)}</strong> · {formatBearing(leg.bearing, locale)}
+      <strong>{formatDistance(leg.metres, locale)}</strong> · {formatBearing(
+        leg.bearing,
+        locale,
+        bearings.style,
+      )}
     {/if}
   </p>
   {#if terrain.reader && fix && to && leg && !leg.arrived}

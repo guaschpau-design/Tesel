@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatAgo, formatArea, formatBearing, formatDistance } from './format.ts';
+import { formatAgo, formatArea, formatBearing, formatDistance, TRUE_DEGREES } from './format.ts';
 
 describe('formatting measures', () => {
   it('writes distances in metres, then kilometres', () => {
@@ -16,10 +16,25 @@ describe('formatting measures', () => {
   });
 
   it('writes bearings with three digits and the compass point in each language', () => {
-    expect(formatBearing(47.2, 'es')).toBe('047° NE');
-    expect(formatBearing(247, 'es')).toBe('247° SO');
-    expect(formatBearing(247, 'en')).toBe('247° SW');
-    expect(formatBearing(359.6, 'en')).toBe('000° N');
+    expect(formatBearing(47.2, 'es', TRUE_DEGREES)).toBe('047° NE');
+    expect(formatBearing(247, 'es', TRUE_DEGREES)).toBe('247° SO');
+    expect(formatBearing(247, 'en', TRUE_DEGREES)).toBe('247° SW');
+    expect(formatBearing(359.6, 'en', TRUE_DEGREES)).toBe('000° N');
+  });
+
+  it('writes bearings in mils, 6400 to the turn', () => {
+    const mils = { unit: 'mils', declination: null } as const;
+    expect(formatBearing(47, 'es', mils)).toBe('0836‰ NE');
+    expect(formatBearing(180, 'en', mils)).toBe('3200‰ S');
+    expect(formatBearing(359.99, 'en', mils)).toBe('0000‰ N');
+  });
+
+  it('writes magnetic bearings for a compass, with an M', () => {
+    // Where a compass points 2° east of true north, a true 47° reads 45° on it.
+    expect(formatBearing(47, 'es', { unit: 'degrees', declination: 2 })).toBe('045°M NE');
+    // West of true north, it reads more; and round the turn.
+    expect(formatBearing(359, 'en', { unit: 'degrees', declination: -3 })).toBe('002°M N');
+    expect(formatBearing(1, 'en', { unit: 'mils', declination: 2 })).toBe('6382‰M N');
   });
 
   it('says how long ago something was, in the largest whole unit', () => {

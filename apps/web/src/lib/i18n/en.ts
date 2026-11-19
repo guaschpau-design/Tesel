@@ -202,6 +202,13 @@ export const en = {
   formatDms: 'DMS',
   formatUtm: 'UTM',
   formatMgrs: 'MGRS',
+  bearingUnit: 'Bearings in',
+  bearingDegrees: 'Degrees',
+  bearingMils: 'Mils (6400)',
+  bearingNorth: 'Bearings from',
+  northTrue: 'True north',
+  northMagnetic: 'Magnetic north (compass)',
+  declination: 'Decl. {value}',
   formatOutOfRange: 'Too close to the pole for this format',
   copy: 'Copy',
   coordinateUnreadable:

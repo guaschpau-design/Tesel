@@ -3,9 +3,21 @@
      Each is remembered. Under them, which version of the app this is (ADR-0126). -->
 <script lang="ts">
   import { appVersion } from '../config.ts';
-  import CoordinateFormatSelect from '../coordinates/CoordinateFormatSelect.svelte';
+  import { COORDINATE_FORMATS, type CoordinateFormat } from '../coordinates/coordinates.ts';
   import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
-  import { LOCALE_NAMES, nextLocale, type Locale, type Translate } from '../i18n/index.ts';
+  import {
+    LOCALE_NAMES,
+    nextLocale,
+    type Locale,
+    type MessageKey,
+    type Translate,
+  } from '../i18n/index.ts';
+  import {
+    BEARING_UNITS,
+    NORTHS,
+    type BearingUnit,
+    type North,
+  } from '../navigation/bearings.svelte.ts';
   import {
     enterFullscreen,
     exitFullscreen,
@@ -13,6 +25,7 @@
     fullscreenView,
   } from '../ui/fullscreen.svelte.ts';
   import { appearance } from '../ui/appearance.svelte.ts';
+  import ChoiceRow from '../ui/ChoiceRow.svelte';
   import { notices } from '../ui/notices.svelte.ts';
   import Panel from '../ui/Panel.svelte';
   import Pictogram from '../ui/Pictogram.svelte';
@@ -30,6 +43,21 @@
   }
 
   let { t, preferences, locale, onclose }: Props = $props();
+
+  const FORMAT_NAMES: Readonly<Record<CoordinateFormat, MessageKey>> = {
+    decimal: 'formatDecimal',
+    dms: 'formatDms',
+    utm: 'formatUtm',
+    mgrs: 'formatMgrs',
+  };
+  const UNIT_NAMES: Readonly<Record<BearingUnit, MessageKey>> = {
+    degrees: 'bearingDegrees',
+    mils: 'bearingMils',
+  };
+  const NORTH_NAMES: Readonly<Record<North, MessageKey>> = {
+    true: 'northTrue',
+    magnetic: 'northMagnetic',
+  };
 
   /** Now and on every later visit, until switched off again. */
   function toggleFullscreen(): void {
@@ -106,7 +134,25 @@
       <span>{t('language')}</span>
       <span class="value">{LOCALE_NAMES[locale]}</span>
     </button>
-    <CoordinateFormatSelect {t} format={preferences.coordinateFormat} />
+    <ChoiceRow
+      icon="grid"
+      label={t('coordinateFormat')}
+      preference={preferences.coordinateFormat}
+      options={COORDINATE_FORMATS.map((value) => ({ value, label: t(FORMAT_NAMES[value]) }))}
+    />
+    <!-- Bearings as a compass reads them, for whoever navigates with one (ADR-0145). -->
+    <ChoiceRow
+      icon="compass"
+      label={t('bearingUnit')}
+      preference={preferences.bearingUnit}
+      options={BEARING_UNITS.map((value) => ({ value, label: t(UNIT_NAMES[value]) }))}
+    />
+    <ChoiceRow
+      icon="heading"
+      label={t('bearingNorth')}
+      preference={preferences.north}
+      options={NORTHS.map((value) => ({ value, label: t(NORTH_NAMES[value]) }))}
+    />
   </div>
   <!-- Which version this is, for whoever reports a problem or checks an update arrived. -->
   <p class="version">{t('appVersion', { version: appVersion() })}</p>

@@ -5,6 +5,7 @@ import { LANGUAGE_CHOICES } from '../i18n/index.ts';
 import { MAP_LAYERS } from '../map/layers.ts';
 import { BASE_MAPS } from '../map/style/style.ts';
 import { DUTY_STATUSES, EQUIPMENT, PROFILES } from '../members/member-catalog.ts';
+import { BEARING_UNITS, NORTHS } from '../navigation/bearings.svelte.ts';
 import { POSITION_MODES } from '../position/position-mode.ts';
 import { HANDHELD } from '../platform.ts';
 import type { AppDb } from '../storage/app-db.ts';
@@ -34,6 +35,9 @@ const PREFERENCES = {
   ),
   /** How coordinates are written: decimal degrees, as phones and 112 apps share them. */
   coordinateFormat: choice('coordinateFormat', COORDINATE_FORMATS, 'decimal'),
+  /** Bearings in degrees from true north, as maps draw them (ADR-0145). */
+  bearingUnit: choice('bearingUnit', BEARING_UNITS, 'degrees'),
+  north: choice('north', NORTHS, 'true'),
   /** The map under everything: the topographic map, Tesel's base map (ADR-0120). */
   baseMap: choice('baseMap', BASE_MAPS, 'topo'),
   /** Shading of the terrain: off at first, as it downloads elevation data. */

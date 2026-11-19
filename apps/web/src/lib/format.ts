@@ -50,11 +50,35 @@ const COMPASS: Readonly<Record<Locale, readonly string[]>> = {
   en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
 };
 
-/** A bearing as three digits and its compass point: "047° NE". */
-export function formatBearing(degrees: number, locale: Locale): string {
-  const whole = Math.round(degrees) % 360;
-  const point = COMPASS[locale][Math.round(whole / 45) % 8] ?? '';
-  return `${String(whole).padStart(3, '0')}° ${point}`;
+/**
+ * How a bearing is written (ADR-0145): in degrees or in NATO mils, 6400 to the turn; from true
+ * north, or from magnetic north for a compass, given the declination where it is taken (degrees
+ * east of true north).
+ */
+export interface BearingStyle {
+  readonly unit: 'degrees' | 'mils';
+  readonly declination: number | null;
+}
+
+/** Degrees from true north: how bearings are written unless chosen otherwise. */
+export const TRUE_DEGREES: BearingStyle = { unit: 'degrees', declination: null };
+
+const MILS_PER_TURN = 6400;
+
+/**
+ * A bearing as three digits and its compass point, "047° NE", or as four digits of mils, "0836‰
+ * NE"; an M after the unit when it is magnetic, "046°M NE".
+ */
+export function formatBearing(degrees: number, locale: Locale, style: BearingStyle): string {
+  const bearing = (((degrees - (style.declination ?? 0)) % 360) + 360) % 360;
+  const magnetic = style.declination === null ? '' : 'M';
+  const point = COMPASS[locale][Math.round(bearing / 45) % 8] ?? '';
+  if (style.unit === 'mils') {
+    const mils = Math.round((bearing / 360) * MILS_PER_TURN) % MILS_PER_TURN;
+    return `${String(mils).padStart(4, '0')}‰${magnetic} ${point}`;
+  }
+  const whole = Math.round(bearing) % 360;
+  return `${String(whole).padStart(3, '0')}°${magnetic} ${point}`;
 }
 
 /** How long ago a moment was, in words: "hace 3 min", "2 h ago". Times in seconds. */

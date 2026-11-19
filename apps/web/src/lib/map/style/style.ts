@@ -38,12 +38,14 @@ import {
   topoFlavor,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
-import { TACTICAL_IMAGES, tacticalFlavor, tacticalNames, tacticalStream } from './tactical.ts';
+import { TACTICAL_LOOKS, tacticalFlavor, tacticalNames } from './tactical.ts';
 import {
   flowLayer,
   hutLayer,
   streamLayers,
+  TOPO_HUTS,
   TOPO_STREAM,
+  TOPO_TRAILS,
   trailLayers,
   TREES_IMAGE,
   woodsLayer,
@@ -164,7 +166,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
   };
   if (isTactical(base)) {
     const night = base === 'night';
-    const images = TACTICAL_IMAGES[night ? 'night' : 'day'];
+    const look = TACTICAL_LOOKS[night ? 'night' : 'day'];
     const { ground, names } = protomapsLayers(tacticalFlavor(night), lang);
     return {
       sources: {
@@ -172,17 +174,26 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
-      // Woods dotted as cover; rivers and streams in a colour of their own, dashed where dry.
-      ground: ground.flatMap((layer) => {
-        if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, images.woods)];
-        if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, tacticalStream(night));
-        if (layer.id === 'water_stream') return [];
-        return [layer];
-      }),
+      // Woods dotted as cover; rivers and streams in a colour of their own, dashed where dry; the
+      // ways off the streets, for moving over the ground; in Spain, every building of the cadastre.
+      ground: withCadastre(
+        ground.flatMap((layer) => {
+          if (layer.id === 'landuse_park')
+            return [layer, woodsLayer(BASEMAP_SOURCE, look.images.woods)];
+          if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, look.stream);
+          if (layer.id === 'water_stream') return [];
+          if (layer.id === 'roads_other') {
+            return trailLayers(BASEMAP_SOURCE, layer, look.pedestrian, look.trails);
+          }
+          return [layer];
+        }),
+        look.buildings,
+      ),
       lines: contourLayers(),
       // The arrows first among the names: any name has the place before them.
       names: [
-        flowLayer(NAMES_SOURCE, images.flow),
+        flowLayer(NAMES_SOURCE, look.images.flow),
+        hutLayer(BASEMAP_SOURCE, lang, look.huts),
         ...tacticalNames([...terrainNameLayers(), ...names]),
       ],
     };
@@ -192,7 +203,9 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     const { ground, names } = urbanLayers(BASEMAP_SOURCE, all.ground, all.names);
     // Footpaths and steps as on the topographic map: the ways on foot between streets.
     const walked = ground.flatMap((layer) =>
-      layer.id === 'roads_other' ? trailLayers(BASEMAP_SOURCE, layer, URBAN_PEDESTRIAN) : [layer],
+      layer.id === 'roads_other'
+        ? trailLayers(BASEMAP_SOURCE, layer, URBAN_PEDESTRIAN, TOPO_TRAILS)
+        : [layer],
     );
     return {
       sources: { [BASEMAP_SOURCE]: basemap, [NAMES_SOURCE]: ignSource() },
@@ -217,7 +230,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
       },
       ground: withCadastre(walkersGround(ground), TOPO_BUILDINGS),
       lines: contourLayers(),
-      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang), ...names],
+      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang, TOPO_HUTS), ...names],
     };
   }
   const ortho: SourceSpecification = {
@@ -278,7 +291,9 @@ function walkersGround(ground: readonly LayerSpecification[]): LayerSpecificatio
     if (layer.id === 'landuse_park') return [layer, woodsLayer(BASEMAP_SOURCE, TREES_IMAGE)];
     if (layer.id === 'water_river') return streamLayers(BASEMAP_SOURCE, TOPO_STREAM);
     if (layer.id === 'water_stream') return [];
-    if (layer.id === 'roads_other') return trailLayers(BASEMAP_SOURCE, layer, TOPO_PEDESTRIAN);
+    if (layer.id === 'roads_other') {
+      return trailLayers(BASEMAP_SOURCE, layer, TOPO_PEDESTRIAN, TOPO_TRAILS);
+    }
     return [layer];
   });
 }

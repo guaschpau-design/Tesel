@@ -7,17 +7,49 @@
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { LayerSpecification } from 'maplibre-gl';
 
-/** The images of the woods' texture and of a stream's flow, by day and by night (terrain-images.ts). */
-export const TACTICAL_IMAGES = {
-  day: { woods: 'tactical-woods', flow: 'tactical-flow' },
-  night: { woods: 'night-woods', flow: 'night-flow' },
-} as const;
+import type { BuildingLook } from './cadastre.ts';
+import { HUT_IMAGE, type HutLook, type PedestrianLook, type TrailLook } from './trails.ts';
 
-/** The colours those images are drawn in. */
-export const TACTICAL_INKS = {
-  day: { woods: 'rgba(70, 82, 40, 0.4)', flow: '#2c6a8a', edge: 'rgba(255, 248, 230, 0.85)' },
-  night: { woods: 'rgba(150, 30, 30, 0.45)', flow: '#c0392b', edge: 'rgba(0, 0, 0, 0.8)' },
-} as const;
+/** Day, the tactical map in coyote; night, the night map in reds. */
+export type TacticalTime = 'day' | 'night';
+
+/**
+ * What the tactical maps draw apart from the base map's palette, by day and by night: the woods'
+ * texture and a stream's flow (images made by terrain-images.ts, in their inks), the streams, the
+ * ways off the streets, pedestrian streets, huts and the cadastre's buildings (ADR-0145).
+ */
+export interface TacticalLook {
+  readonly images: { readonly woods: string; readonly flow: string };
+  readonly inks: { readonly woods: string; readonly flow: string; readonly edge: string };
+  readonly stream: string;
+  readonly trails: TrailLook;
+  readonly pedestrian: PedestrianLook;
+  readonly huts: HutLook;
+  readonly buildings: BuildingLook;
+}
+
+export const TACTICAL_LOOKS: Readonly<Record<TacticalTime, TacticalLook>> = {
+  day: {
+    images: { woods: 'tactical-woods', flow: 'tactical-flow' },
+    inks: { woods: 'rgba(70, 82, 40, 0.4)', flow: '#2c6a8a', edge: 'rgba(255, 248, 230, 0.85)' },
+    stream: '#3c7a99',
+    // Tracks in dark brown dashes, footpaths and steps in black dots and bars, as on a military map.
+    trails: { track: '#3a2e22', footpath: '#1f1a14', halo: 'rgba(241, 232, 208, 0.7)' },
+    // Pedestrian streets as the other streets: light on brown edges.
+    pedestrian: { line: '#f4ecd6', casing: '#7a6a52' },
+    huts: { image: HUT_IMAGE, name: '#3a2e22' },
+    buildings: { fill: '#5a4e3c', edge: null },
+  },
+  night: {
+    images: { woods: 'night-woods', flow: 'night-flow' },
+    inks: { woods: 'rgba(150, 30, 30, 0.45)', flow: '#c0392b', edge: 'rgba(0, 0, 0, 0.8)' },
+    stream: '#7a1c1c',
+    trails: { track: '#8f2626', footpath: '#a33a3a', halo: 'rgba(0, 0, 0, 0.6)' },
+    pedestrian: { line: inRed('#5c6269'), casing: inRed('#0f1011') },
+    huts: { image: 'night-hut', name: '#a33a3a' },
+    buildings: { fill: inRed('#232529'), edge: null },
+  },
+};
 
 /** Bridges' edges: where a way crosses water or a valley, a point every crossing depends on. */
 const BRIDGE = '#1f1a14';
@@ -182,11 +214,6 @@ export function tacticalFlavor(night: boolean): Flavor {
   return night
     ? inRed({ ...namedFlavor('dark'), ...GRAPHITE_PALETTE })
     : { ...namedFlavor('light'), ...COYOTE_PALETTE };
-}
-
-/** The streams' blue by day; by night, a red. */
-export function tacticalStream(night: boolean): string {
-  return night ? '#7a1c1c' : '#3c7a99';
 }
 
 /**
