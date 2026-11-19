@@ -2,7 +2,7 @@
 // coordinates, bearings in mils from magnetic north, and in its margin the zone, the square and
 // the declination.
 
-import { device, expect, mapIdle, test } from './helpers.ts';
+import { device, expect, test } from './helpers.ts';
 import { serveTopographicData } from './terrain-ramp.ts';
 
 test('the tactical map reads as a military map: MGRS, mils from magnetic north, its margin', async ({
@@ -24,7 +24,8 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   // of north.
   await page.getByRole('button', { name: 'Mostrar mi ubicación' }).click();
   await expect(page.getByRole('button', { name: 'Dejar de mostrar mi ubicación' })).toBeVisible();
-  await mapIdle(page);
+  // Not waited for at rest: the relief, always drawn here, keeps a software-drawn map busy long.
+  await expect(page).toHaveURL(/#map=[\d.]+\/39\.4699\/-0\.3763$/);
   const margin = page.locator('.maplibregl-ctrl-top-right');
   await expect(margin).toContainText('30S YJ');
   await expect(margin).toContainText(/Decl\. \d,\d° E/);
