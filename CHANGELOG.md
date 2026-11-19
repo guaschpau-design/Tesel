@@ -170,6 +170,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - On the tactical map, each moving member's line ends where they will be in a minute, so who walks and who drives tell apart; this device's follows its GPS while it moves, its compass standing; and the radar comes on with the tactical map ([ADR-0150](docs/decisions/0150-how-fast-and-which-way.md)).
 - «Despejar el mapa»: one button leaves only the team, threats, danger areas, SOS calls and the names of places ([ADR-0151](docs/decisions/0151-declutter-the-map.md)).
 - «Qué se ve desde aquí» on a point of the map: the ground in sight within 2 km, shaded green, worked out on the device from the relief, offline too ([ADR-0152](docs/decisions/0152-what-is-seen-from-a-point.md)).
+- Raising the ground in 3D close up no longer hangs the map: the public services, put back after the new style, were drawn before the map had worked out their look, and drawing failed every frame after.
 
 ### Known limits
 

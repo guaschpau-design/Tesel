@@ -84,8 +84,21 @@ export class Overlay<Source extends string> {
    * `#install` again before the first call is done.
    */
   #installing = false;
+  #queued = false;
+  #removed = false;
+  /**
+   * After a new style, put back once the map has drawn its frame. MapLibre announces a style
+   * change from inside its drawing, once it has worked out the look of the layers it has: a layer
+   * added there would be drawn that very frame without it, and drawing it fails, every frame after
+   * too (seen raising the ground in 3D).
+   */
   readonly #install = () => {
-    this.#installNow();
+    if (this.#queued) return;
+    this.#queued = true;
+    queueMicrotask(() => {
+      this.#queued = false;
+      if (!this.#removed) this.#installNow();
+    });
   };
 
   constructor(map: MapLibreMap, spec: OverlaySpec<Source>) {
@@ -111,6 +124,7 @@ export class Overlay<Source extends string> {
   }
 
   remove(): void {
+    this.#removed = true;
     this.#map.off('styledata', this.#install);
     this.#map.off('idle', this.#install);
     for (const id of [...this.#layerIds].reverse()) {

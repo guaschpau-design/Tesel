@@ -6,6 +6,9 @@ import { Overlay } from './overlay.svelte.ts';
 
 const NOTHING: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
+/** Lets an install the map called for, just after its frame, happen. */
+const afterFrame = () => Promise.resolve();
+
 const spec = (map: FakeMap) => ({
   level: 'members' as const,
   data: { a: NOTHING, b: NOTHING },
@@ -24,13 +27,16 @@ describe('map overlays', () => {
     expect([...map.layers.keys()]).toEqual(['a-dots']);
   });
 
-  it('comes back after a new style removes it, hidden if it was hidden', () => {
+  it('comes back after a new style removes it, hidden if it was hidden', async () => {
     const map = new FakeMap();
     const overlay = new Overlay(map.map, spec(map));
     overlay.setVisible(false);
     map.sources.clear();
     map.layers.clear();
     map.fire('styledata');
+    // Not within the map's own announcement, which comes from inside its drawing.
+    expect(map.layers.size).toBe(0);
+    await afterFrame();
     expect(map.layers.get('a-dots')?.layout).toEqual({ visibility: 'none' });
   });
 
@@ -47,7 +53,7 @@ describe('map overlays', () => {
     expect([...map.layers.keys()]).toEqual(['trails-line', 'me-line']);
   });
 
-  it('waits for the base map source its layers read, and comes back after a new style', () => {
+  it('waits for the base map source its layers read, and comes back after a new style', async () => {
     const map = new FakeMap();
     new Overlay(map.map, {
       level: 'services',
@@ -58,17 +64,21 @@ describe('map overlays', () => {
     expect(map.layers.size).toBe(0);
     map.sources.set('protomaps', {});
     map.fire('idle');
+    await afterFrame();
     expect([...map.layers.keys()]).toEqual(['services-icons']);
     map.layers.clear();
     map.fire('styledata');
+    await afterFrame();
     expect([...map.layers.keys()]).toEqual(['services-icons']);
   });
 
-  it('takes everything away when removed', () => {
+  it('takes everything away when removed', async () => {
     const map = new FakeMap();
+    // Removed while the map has just called for it again: it does not come back.
     new Overlay(map.map, spec(map)).remove();
     expect(map.sources.size + map.layers.size).toBe(0);
     map.fire('idle');
+    await afterFrame();
     expect(map.sources.size).toBe(0);
   });
 
