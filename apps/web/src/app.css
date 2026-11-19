@@ -120,6 +120,8 @@
   --control-size: 2.75rem;
   /* A chip is lower: many sit together, and each is a short word wide. */
   --chip-size: 2.4rem;
+  /* The map's controls: one column of them, or two on a very low screen (map/MapControl.svelte). */
+  --controls-width: var(--control-size);
 }
 
 /* The dark look, chosen in Settings or this device's own (ui/appearance.svelte.ts, ADR-0114). */
@@ -127,6 +129,13 @@
 @media (orientation: landscape) and (max-height: 32rem) {
   :root {
     --dock-clearance: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Too low for the map's controls in one column of buttons a gloved finger can hit: two. */
+@media (orientation: landscape) and (max-height: 22rem) {
+  :root {
+    --controls-width: calc(2 * var(--control-size) + 1px);
   }
 }
 

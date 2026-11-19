@@ -132,10 +132,10 @@
     .panel,
     .panel.fill {
       top: 0.5rem;
-      right: calc(var(--control-size) + 1.25rem + env(safe-area-inset-right));
+      right: calc(var(--controls-width) + 1.25rem + env(safe-area-inset-right));
       bottom: var(--dock-clearance);
       left: auto;
-      width: min(24rem, calc(100% - var(--side-clearance) - var(--control-size) - 2rem));
+      width: min(24rem, calc(100% - var(--side-clearance) - var(--controls-width) - 2rem));
       max-height: none;
     }
   }

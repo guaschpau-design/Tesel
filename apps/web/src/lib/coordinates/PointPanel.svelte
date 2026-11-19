@@ -11,6 +11,7 @@
   import type { Preference } from '../settings/preference.svelte.ts';
   import type { Action } from '../ui/action.ts';
   import Actions from '../ui/Actions.svelte';
+  import Pictogram from '../ui/Pictogram.svelte';
   import Panel from '../ui/Panel.svelte';
   import { formatDistance } from '../format.ts';
   import { VIEW_RADIUS_M } from '../terrain/viewshed.ts';
@@ -58,9 +59,6 @@
     { icon: 'heading', label: t('guideMe'), run: onnavigate },
     ...(onmark ? [{ icon: 'pin', label: t('markHere'), run: onmark } as const] : []),
     ...(ontask ? [{ icon: 'task', label: t('taskHere'), run: ontask } as const] : []),
-    ...(onviewshed && viewshed === 'off'
-      ? [{ icon: 'eye', label: t('seenFromHere'), run: onviewshed } as const]
-      : []),
   ]);
 </script>
 
@@ -68,6 +66,13 @@
   <div class="stack section">
     <FromHere {t} {locale} {at} />
     <Actions {actions} moreLabel={t('moreActions')} />
+    <!-- Seldom wanted, so not among the actions, whose room goes to marking and tasks. -->
+    {#if onviewshed && viewshed === 'off'}
+      <button class="view" onclick={onviewshed}>
+        <Pictogram name="eye" size={18} />
+        {t('seenFromHere')}
+      </button>
+    {/if}
     {#if viewshed !== 'off'}
       <p class="viewshed">
         <span>
@@ -90,6 +95,13 @@
 </Panel>
 
 <style>
+  .view {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-self: start;
+  }
+
   .viewshed {
     display: flex;
     gap: 0.5rem;

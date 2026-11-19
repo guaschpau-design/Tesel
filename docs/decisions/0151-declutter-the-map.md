@@ -17,3 +17,4 @@ In an operation the map fills: services, tasks, reports, trails, names of street
 
 - One tap from a busy map to the one an operation is run on, and back.
 - Injured and missing people's markers are not threats and go too; they can be added if the field asks.
+- With the button, the map's controls are five; on a screen held sideways too low for them in one column of buttons a gloved finger can hit (under 22rem), they stand in two (`--controls-width`, `MapControl`).

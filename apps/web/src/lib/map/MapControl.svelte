@@ -57,4 +57,23 @@
   div :global(button:hover) {
     background: var(--chrome-pressed);
   }
+
+  /* Too low a screen for one column (app.css): two, filled top to bottom, split by a line. */
+  @media (orientation: landscape) and (max-height: 22rem) {
+    div {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(3, var(--control-size));
+      gap: 1px;
+      background: var(--chrome-line);
+    }
+
+    div :global(button) {
+      background: var(--chrome-bg);
+    }
+
+    div :global(button + button) {
+      border-top: 0;
+    }
+  }
 </style>

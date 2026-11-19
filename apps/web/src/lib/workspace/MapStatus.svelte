@@ -228,13 +228,13 @@
 </div>
 
 <style>
-  /* Clear of the map's controls on the right: one control wide, with MapLibre's 10 px margin; and
+  /* Clear of the map's controls on the right, as wide as they are, with MapLibre's 10 px margin; and
      of a notch on either side when the phone is held sideways. */
   .top {
     position: absolute;
     z-index: var(--layer-status);
     top: 0.75rem;
-    right: calc(var(--control-size) + 1.25rem + env(safe-area-inset-right));
+    right: calc(var(--controls-width) + 1.25rem + env(safe-area-inset-right));
     left: max(0.75rem, env(safe-area-inset-left));
     display: grid;
     grid-template-columns: minmax(0, 1fr);
