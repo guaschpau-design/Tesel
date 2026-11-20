@@ -46,9 +46,12 @@
   };
 
   /** Each base map comes with what reading it asks for (onchoose). */
+  /**
+   * Chooses a base map and what comes with it at once, both before anything is stored: a second
+   * choice made while the first is being stored then always wins.
+   */
   async function choose(option: BaseMap): Promise<void> {
-    await base.set(option);
-    await onchoose(option);
+    await Promise.all([base.set(option), onchoose(option)]);
   }
 
   function isOn(name: LayerSwitch): boolean {
