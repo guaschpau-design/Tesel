@@ -28,6 +28,8 @@ export const ground = new Ground();
 
 /** Raises the ground and leans the map back to show it, or lays both flat again. */
 export function setGround(map: MapLibreMap, raised: boolean): void {
+  // Already so: the map is left where the user has it.
+  if (ground.raised === raised) return;
   ground.raised = raised;
   if (raised) map.setMaxPitch(GROUND_MAX_PITCH);
   map.easeTo({ pitch: raised ? GROUND_PITCH : 0 });

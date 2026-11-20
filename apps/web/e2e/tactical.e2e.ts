@@ -87,10 +87,10 @@ test('the map is decluttered and shown in full again', async ({ browser }) => {
   await expect(layers).not.toContainText('Mapa despejado');
 });
 
-test('the urban map, chosen after the tactical one, shows its layers and degrees', async ({
+test('each map, chosen after the tactical one, shows its own layers, in degrees', async ({
   browser,
 }) => {
-  // The relief, then the buildings raised in 3D, keep a software-drawn map busy long.
+  // The relief keeps a software-drawn map busy long.
   test.setTimeout(120_000);
   const page = await device(browser, 'Ana');
   await serveTopographicData(page);
@@ -100,33 +100,43 @@ test('the urban map, chosen after the tactical one, shows its layers and degrees
     .click();
   await page.getByRole('button', { name: 'Capas del mapa' }).click();
   const layers = page.getByRole('region', { name: 'Capas del mapa' });
+  const expectShown = async (shown: Record<string, boolean>) => {
+    for (const [name, checked] of Object.entries(shown)) {
+      await expect(layers.getByRole('switch', { name })).toHaveAttribute(
+        'aria-checked',
+        String(checked),
+      );
+    }
+  };
+  // What each is chosen for (ADR-0160), whatever the tactical map had turned on.
   await layers.getByRole('radio', { name: 'Táctico', exact: true }).click();
   await layers.getByRole('radio', { name: 'Urbano', exact: true }).click();
-  // What it is chosen for (ADR-0160), whatever the tactical map had turned on.
-  const shown = {
+  await expectShown({
     Servicios: true,
     Radar: true,
     'Zonas inundables': true,
     Relieve: false,
     Pendientes: false,
     'Cuadrícula MGRS': false,
-  };
-  for (const [name, checked] of Object.entries(shown)) {
-    await expect(layers.getByRole('switch', { name })).toHaveAttribute(
-      'aria-checked',
-      String(checked),
-    );
-  }
+  });
+  await layers.getByRole('radio', { name: 'Topográfico', exact: true }).click();
+  await expectShown({
+    Servicios: true,
+    Relieve: true,
+    Incendios: true,
+    Radar: false,
+    'Zonas inundables': false,
+    'Cuadrícula MGRS': false,
+  });
   await layers.getByRole('button', { name: 'Cerrar' }).click();
 
   // Bearings in degrees from true north again.
   await page.getByRole('button', { name: 'Mostrar mi ubicación' }).click();
+  await expect(page.getByRole('button', { name: 'Dejar de mostrar mi ubicación' })).toBeVisible();
   const canvas = page.locator('.maplibregl-canvas');
   const box = await canvas.boundingBox();
   if (box === null) throw new Error('no map');
-  // Raised in 3D, a software-drawn map is slow to draw each frame: tapped where it is, without
-  // waiting for it to hold still.
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2 - 150);
+  await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - 150 } });
   const panel = page.getByRole('region', { name: 'Punto del mapa' });
   await expect(panel.getByText(/^\d+ m · \d{3}° [NSEO]{1,2} desde ti$/)).toBeVisible();
 });

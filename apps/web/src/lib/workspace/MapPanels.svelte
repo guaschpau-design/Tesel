@@ -58,12 +58,13 @@
    * Each base map comes with what reading it asks for (ADR-0155, ADR-0160); each can then be
    * changed again: its own layers on or off (map/map-defaults.ts), bearings and coordinates read
    * as on a military map on the tactical map (ADR-0141, ADR-0145) and as on any map elsewhere, and
-   * the urban map's buildings at their height, in 3D.
+   * the urban map raised in 3D, the others flat.
    */
   async function withMap(base: BaseMap): Promise<void> {
     // Asked first, within the tap, as the iPhone wants: the compass turns this device's arrow.
     const asked = base === 'tactical' ? compass.ask() : Promise.resolve();
-    if (base === 'urban') setGround(map, true);
+    // The urban map's buildings stand at their height; the other maps are read flat.
+    setGround(map, base === 'urban');
     const defaults = mapDefaults(base);
     // All at once: each takes effect as it is set, and storing them waits on a busy map.
     await Promise.all([

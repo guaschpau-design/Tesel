@@ -27,7 +27,7 @@ The aerial photographs, which Pau left out, take what every map shares: the serv
 
 Bearings are read in mils from magnetic north on the tactical map and in degrees from true north on the others. Coordinates are in MGRS on the tactical map; off it, in the format the user chose, or in degrees if that was MGRS.
 
-The layers of the group (members, markers, tasks, reports, trails) are left as the user has them. The urban map still raises its buildings in 3D.
+The urban map is raised in 3D, its buildings at their height; the other maps are laid flat. The layers of the group (members, markers, tasks, reports, trails) are left as the user has them.
 
 This replaces the per-map choices of [ADR-0155](0155-three-maps-three-questions.md).
 
