@@ -17,15 +17,16 @@ export const NAMES_SOURCE = 'ign-names';
 
 /**
  * Changes to Protomaps' light palette: woods and scrub greener than parks, which are only lines on
- * a plan, and tracks and paths brown, as topographic maps draw them.
+ * a plan, the woods as green as a paper map's (ADR-0155), and tracks and paths brown, as
+ * topographic maps draw them.
  */
 const TOPO_PALETTE: Partial<Flavor> = {
   background: '#efebe2',
   earth: '#efebe2',
   park_a: '#e6ebdb',
   park_b: '#dde7d0',
-  wood_a: '#dde8d2',
-  wood_b: '#c8dfb6',
+  wood_a: '#d3e4c4',
+  wood_b: '#bcd9a4',
   scrub_a: '#e6eadb',
   scrub_b: '#dce5cc',
   other: '#a8754c',
@@ -37,7 +38,7 @@ const TOPO_PALETTE: Partial<Flavor> = {
     farmland: 'rgba(236, 238, 222, 1)',
     glacier: 'rgba(255, 255, 255, 1)',
     scrub: 'rgba(229, 234, 212, 1)',
-    forest: 'rgba(207, 226, 193, 1)',
+    forest: 'rgba(196, 221, 178, 1)',
   },
 };
 
@@ -147,4 +148,26 @@ export function terrainNameLayers(): LayerSpecification[] {
       paint: text(themeColor('map-spring')),
     },
   ];
+}
+
+/** Small streets' names: smaller, greyer and only close up, so that the ground reads first. */
+const MINOR_STREET_NAMES = { minzoom: 16, size: 10, colour: '#8a8478' };
+
+/**
+ * The OpenStreetMap map's names, for someone on foot in the country (ADR-0155): no house numbers,
+ * and the names of small streets discreet.
+ */
+export function topoNames(names: readonly LayerSpecification[]): LayerSpecification[] {
+  return names.flatMap((layer) => {
+    if (layer.id === 'address_label') return [];
+    if (layer.id !== 'roads_labels_minor' || layer.type !== 'symbol') return [layer];
+    return [
+      {
+        ...layer,
+        minzoom: MINOR_STREET_NAMES.minzoom,
+        layout: { ...layer.layout, 'text-size': MINOR_STREET_NAMES.size },
+        paint: { ...layer.paint, 'text-color': MINOR_STREET_NAMES.colour },
+      },
+    ];
+  });
 }

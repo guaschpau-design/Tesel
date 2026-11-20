@@ -1,7 +1,7 @@
 // The tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid, MGRS
-// coordinates, bearings in mils from magnetic north, the radar (ADR-0150), and in its margin the
-// zone, the square and the declination. What a point sees (ADR-0152), and the map decluttered
-// (ADR-0151).
+// coordinates, bearings in mils from magnetic north, the radar (ADR-0150) and the slopes
+// (ADR-0155), and in its margin the zone, the square and the declination. What a point sees
+// (ADR-0152), and the map decluttered (ADR-0151).
 
 import { device, expect, test } from './helpers.ts';
 import { serveTopographicData } from './terrain-ramp.ts';
@@ -19,10 +19,11 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   await page.getByRole('button', { name: 'Capas del mapa' }).click();
   const layers = page.getByRole('region', { name: 'Capas del mapa' });
   await layers.getByRole('radio', { name: 'Táctico', exact: true }).click();
-  await expect(layers.getByRole('switch', { name: 'Radar' })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
+  // It turns on what it is chosen for, and says so under the maps (ADR-0155).
+  for (const name of ['Radar', 'Pendientes']) {
+    await expect(layers.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'true');
+  }
+  await expect(layers).toContainText('cubierta, observación y movilidad');
   await layers.getByRole('button', { name: 'Cerrar' }).click();
 
   // Centred on this device in Valencia: zone 30S, square YJ, where a compass points a little east

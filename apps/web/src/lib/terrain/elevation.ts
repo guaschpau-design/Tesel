@@ -14,6 +14,11 @@ export interface Pixels {
   readonly data: Uint8ClampedArray;
 }
 
+/** Where elevations come from: an ElevationReader, or in tests a made-up ground. */
+export interface Heights {
+  elevations(points: readonly LatLon[]): Promise<(number | null)[]>;
+}
+
 /** Tile bytes from wherever they are (downloaded, or the network); undefined if not to be had. */
 export type ElevationTiles = (tile: TileCoord) => Promise<ArrayBuffer | undefined>;
 
@@ -25,7 +30,7 @@ export function terrariumMetres(red: number, green: number, blue: number): numbe
   return red * 256 + green + blue / 256 - 32_768;
 }
 
-export class ElevationReader {
+export class ElevationReader implements Heights {
   readonly #tiles: ElevationTiles;
   readonly #decode: (bytes: ArrayBuffer) => Promise<Pixels>;
   /**

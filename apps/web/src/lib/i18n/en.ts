@@ -339,6 +339,13 @@ export const en = {
   baseMapTopo: 'Topographic',
   baseMapUrban: 'Urban',
   baseMapAerial: 'Satellite',
+  baseMapTopoAbout:
+    'For moving across country: relief, contour lines, tracks, springs and huts. Choosing it turns the relief on.',
+  baseMapUrbanAbout:
+    'For working in a town: streets, house numbers, buildings at their height and critical places. Choosing it shows it in 3D.',
+  baseMapTacticalAbout:
+    'For reading the ground: cover, observation and mobility. Choosing it turns on MGRS, mils, the radar and slopes.',
+  baseMapAerialAbout: 'The latest aerial photographs, with the names over them.',
   layersOfGroup: 'From the group',
   layersOfMap: 'Map information',
   downloadAlso: 'Also download',
@@ -783,8 +790,10 @@ export const en = {
   layerWeather: 'Weather warnings',
   layerGrid: 'MGRS grid',
   layerRadar: 'Radar',
+  layerSlope: 'Slopes',
   serviceHealth: 'Health',
   servicePharmacy: 'Pharmacy',
+  serviceSchool: 'School',
   serviceFuel: 'Fuel station',
   serviceFire: 'Fire station',
   servicePolice: 'Police',

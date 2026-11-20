@@ -36,7 +36,15 @@ export function shownLayers(
 }
 
 /** Layers off unless the user turns them on, each a preference of its own. */
-export const MAP_FLAGS = ['relief', 'cadastre', 'fires', 'floods', 'grid', 'radar'] as const;
+export const MAP_FLAGS = [
+  'relief',
+  'slope',
+  'cadastre',
+  'fires',
+  'floods',
+  'grid',
+  'radar',
+] as const;
 export type MapFlag = (typeof MAP_FLAGS)[number];
 
 export type LayerSwitch = MapLayer | MapFlag;
@@ -71,6 +79,7 @@ export const LAYER_GROUPS: readonly {
       { name: 'services', label: 'layerServices', icon: 'cross' },
       { name: 'weather', label: 'layerWeather', icon: 'cloud' },
       { name: 'relief', label: 'layerRelief', icon: 'relief' },
+      { name: 'slope', label: 'layerSlope', icon: 'slope' },
       { name: 'cadastre', label: 'layerCadastre', icon: 'parcel' },
       { name: 'fires', label: 'layerFires', icon: 'flame' },
       { name: 'floods', label: 'layerFloods', icon: 'waves' },

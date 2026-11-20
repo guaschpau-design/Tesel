@@ -51,6 +51,7 @@ export type SettingKey =
   | 'baseMap'
   | 'relief'
   | 'grid'
+  | 'slope'
   /** The grid's switch before it was renamed `grid`; moved by settings/preferences.ts. */
   | 'mgrsGrid'
   | 'radar'

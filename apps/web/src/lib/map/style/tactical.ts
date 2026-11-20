@@ -24,7 +24,8 @@ export interface TacticalLook {
 
 export const TACTICAL_LOOK: TacticalLook = {
   images: { woods: 'tactical-woods', flow: 'tactical-flow' },
-  inks: { woods: 'rgba(70, 82, 40, 0.4)', flow: '#2c6a8a', edge: 'rgba(255, 248, 230, 0.85)' },
+  // Woods as cover: their dots dark enough to read at a glance (ADR-0155).
+  inks: { woods: 'rgba(60, 72, 32, 0.6)', flow: '#2c6a8a', edge: 'rgba(255, 248, 230, 0.85)' },
   stream: '#3c7a99',
   // Tracks in dark brown dashes, footpaths and steps in black dots and bars, as on a military map.
   trails: { track: '#3a2e22', footpath: '#1f1a14', halo: 'rgba(241, 232, 208, 0.7)' },
@@ -104,22 +105,57 @@ export function tacticalFlavor(): Flavor {
   return { ...namedFlavor('light'), ...COYOTE_PALETTE };
 }
 
+/**
+ * The ground as a military map draws it (ADR-0155): buildings solid, as cover, rather than the
+ * base map's half; railways a solid black line, an obstacle to cross, rather than its faint dashes.
+ */
+export function tacticalGround(layer: LayerSpecification): LayerSpecification {
+  if (layer.id === 'buildings' && layer.type === 'fill') {
+    return { ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } };
+  }
+  if (layer.id === 'roads_rail' && layer.type === 'line') {
+    return {
+      ...layer,
+      paint: {
+        ...layer.paint,
+        // Solid: a dash as long as the line is wide, with no gap.
+        'line-dasharray': [1, 0],
+        'line-opacity': 1,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 16, 2.6],
+      },
+    };
+  }
+  return layer;
+}
+
 /** The names a military map writes in capitals: places, water and the terrain. */
 function inCapitals(id: string): boolean {
   return id.startsWith('places_') || id.startsWith('water') || id === 'terrain-names';
 }
 
+/** Small streets' names: smaller, and only close up, so that the ground reads first (ADR-0155). */
+const MINOR_STREET_NAMES = { minzoom: 16, size: 10.5 };
+
 /**
  * Names of places, water and the terrain in capitals and spaced, as military maps write them;
- * streets keep their names as they are signed.
+ * streets keep their names as they are signed, the small ones only close up.
  */
 export function tacticalNames(names: readonly LayerSpecification[]): LayerSpecification[] {
-  return names.map((layer) =>
-    layer.type === 'symbol' && inCapitals(layer.id)
-      ? {
-          ...layer,
-          layout: { ...layer.layout, 'text-transform': 'uppercase', 'text-letter-spacing': 0.12 },
-        }
-      : layer,
-  );
+  return names.map((layer) => {
+    if (layer.type !== 'symbol') return layer;
+    if (inCapitals(layer.id)) {
+      return {
+        ...layer,
+        layout: { ...layer.layout, 'text-transform': 'uppercase', 'text-letter-spacing': 0.12 },
+      };
+    }
+    if (layer.id === 'roads_labels_minor') {
+      return {
+        ...layer,
+        minzoom: MINOR_STREET_NAMES.minzoom,
+        layout: { ...layer.layout, 'text-size': MINOR_STREET_NAMES.size },
+      };
+    }
+    return layer;
+  });
 }

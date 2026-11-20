@@ -1,7 +1,8 @@
 <!--
-  The layers of the map: the cadastre, fires and flood zones, the MGRS grid, the radar, weather
-  warnings and public services, then the active group's trails, objects, tasks, reports, members
-  and SOS calls. A tap on a service, an object or a member opens its panel.
+  The layers of the map: the cadastre, fires and flood zones, the heights of summits on the
+  topographic map, the MGRS grid, the radar, weather warnings and public services, then the active
+  group's trails, objects, tasks, reports, members and SOS calls. A tap on a service, an object or
+  a member opens its panel.
 -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
@@ -25,6 +26,8 @@
   import type { TappedService } from '../services/services.ts';
   import ServicesLayer from '../services/ServicesLayer.svelte';
   import type { Preferences } from '../settings/preferences.ts';
+  import SummitLayer from '../terrain/SummitLayer.svelte';
+  import { terrain } from '../terrain/terrain.svelte.ts';
   import MapTasks from '../tasks/MapTasks.svelte';
   import { openPanel } from '../ui/panels.svelte.ts';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
@@ -85,6 +88,9 @@
 {#if preferences.fires.value}
   <ViewPictureLayer {map} level="hazards" services={FIRES} minZoom={FIRES_MIN_ZOOM} opacity={1} />
 {/if}
+{#if preferences.baseMap.value === 'topo' && terrain.onDemand}
+  <SummitLayer {map} heights={terrain.onDemand} />
+{/if}
 {#if preferences.grid.value}
   <MgrsGridLayer {map} edges={tactical} />
 {/if}
@@ -103,7 +109,7 @@
   {taps}
   {locale}
   visible={shown.services}
-  large={preferences.baseMap.value === 'urban'}
+  urban={preferences.baseMap.value === 'urban'}
   onselect={inspectService}
 />
 

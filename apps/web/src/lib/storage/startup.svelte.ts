@@ -10,6 +10,8 @@ import { SvelteSet } from 'svelte/reactivity';
 import { basemapUrl, defaultServerUrl } from '../config.ts';
 import { alarmedSos } from '../incidents/alarmed-sos.ts';
 import { registerContourProtocol } from '../map/style/contours.ts';
+import { elevationTiles } from '../map/style/dem.ts';
+import { registerSlopeProtocol } from '../map/style/slope.ts';
 import { findTile, registerTileProtocol, tileArchives } from '../map/tiles/protocol.ts';
 import { openTileStore } from '../map/tiles/store.ts';
 import type { OfflineMaps } from '../offline/offline-maps.ts';
@@ -92,7 +94,9 @@ export class Startup {
     openTileStore(undefined, versionChange('tiles')).then((store) => {
       opened('tiles');
       registerTileProtocol(store, archives);
-      registerContourProtocol(store, archives);
+      const dem = elevationTiles(store, archives);
+      registerContourProtocol(dem);
+      registerSlopeProtocol(dem);
       this.elevations = new ElevationReader((tile) => findTile('terrain', tile, store, archives));
       this.offline = { store, archives };
       makeRoomWith(() => store.forgetViewed());

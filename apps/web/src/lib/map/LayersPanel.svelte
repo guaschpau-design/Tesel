@@ -23,12 +23,12 @@
     declutter: Preference<boolean>;
     /** What the map's data asks to be credited for, as HTML of our own. */
     credits: readonly string[];
-    /** Called when the tactical map is chosen, for what comes with it. */
-    ontactical: () => Promise<void>;
+    /** Called when a base map is chosen, for what comes with it (ADR-0155). */
+    onchoose: (base: BaseMap) => Promise<void>;
     onclose: () => void;
   }
 
-  let { t, base, flags, hidden, declutter, credits, ontactical, onclose }: Props = $props();
+  let { t, base, flags, hidden, declutter, credits, onchoose, onclose }: Props = $props();
 
   const BASE_NAMES: Readonly<Record<BaseMap, MessageKey>> = {
     topo: 'baseMapTopo',
@@ -37,10 +37,18 @@
     tactical: 'baseMapTactical',
   };
 
-  /** The tactical map comes with what a military reading of it asks for (ontactical). */
+  /** What each base map is for, said under them (ADR-0155). */
+  const BASE_ABOUT: Readonly<Record<BaseMap, MessageKey>> = {
+    topo: 'baseMapTopoAbout',
+    urban: 'baseMapUrbanAbout',
+    aerial: 'baseMapAerialAbout',
+    tactical: 'baseMapTacticalAbout',
+  };
+
+  /** Each base map comes with what reading it asks for (onchoose). */
   async function choose(option: BaseMap): Promise<void> {
     await base.set(option);
-    if (option === 'tactical') await ontactical();
+    await onchoose(option);
   }
 
   function isOn(name: LayerSwitch): boolean {
@@ -71,6 +79,7 @@
       </button>
     {/each}
   </div>
+  <p class="about">{t(BASE_ABOUT[base.value])}</p>
   {#if declutter.value}
     <p class="decluttered section">
       <span>{t('declutteredMap')}</span>
@@ -174,6 +183,13 @@
 
   .layer[aria-checked='false'] :global(svg) {
     opacity: 0.45;
+  }
+
+  /* What the chosen map is for, under the pictures. */
+  .about {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: var(--text-secondary);
   }
 
   .decluttered {

@@ -208,6 +208,7 @@
           relief: startup.preferences.relief.value,
           threeD: ground.raised,
           declutter: startup.preferences.declutter.value,
+          slope: startup.preferences.slope.value,
           lang: locale,
         }}
         locale={mapLibreLocale(t)}

@@ -9,6 +9,7 @@ import type { LatLon } from '@tesel/protocol';
 import type { Feature, FeatureCollection, Polygon, Position } from 'geojson';
 
 import { circleRing, toPosition } from '../map/geometry.ts';
+import type { Heights } from './elevation.ts';
 
 /** How far the view is worked out, in metres. */
 export const VIEW_RADIUS_M = 2000;
@@ -22,11 +23,6 @@ const SIGHT_RADIUS_M = 6_371_000 / (1 - 0.13);
 
 /** What can be seen from a point, in a panel: not asked for, being worked out, or how it went. */
 export type ViewshedState = 'off' | 'working' | 'shown' | 'unknown';
-
-/** Where elevations come from (terrain/elevation.ts). */
-export interface Heights {
-  elevations(points: readonly LatLon[]): Promise<(number | null)[]>;
-}
 
 /**
  * Which stretches of one ray are in sight from an eye at `eye` metres above sea level, given the

@@ -10,7 +10,8 @@ import type { GlyphName } from '../ui/glyphs.ts';
 import type { Tone } from '../ui/theme.ts';
 
 export interface ServiceKind {
-  readonly id: 'health' | 'pharmacy' | 'fire' | 'police' | 'helipad' | 'townhall' | 'fuel';
+  readonly id:
+    'health' | 'pharmacy' | 'fire' | 'police' | 'helipad' | 'townhall' | 'fuel' | 'school';
   readonly label: MessageKey;
   readonly glyph: GlyphName;
   readonly tone: Tone;
@@ -55,6 +56,24 @@ export const SERVICE_KINDS: readonly [ServiceKind, ...ServiceKind[]] = [
   { id: 'fuel', label: 'serviceFuel', glyph: 'fuel', tone: 'teal', osmKinds: ['fuel'] },
 ];
 
+/**
+ * The critical places of a town, drawn on the urban map only, and close up: a town has many
+ * (ADR-0155). Where many children or young people are, and a shelter a town often opens.
+ */
+export const CRITICAL_PLACES: readonly [ServiceKind, ...ServiceKind[]] = [
+  {
+    id: 'school',
+    label: 'serviceSchool',
+    glyph: 'school',
+    tone: 'amber',
+    osmKinds: ['school', 'university'],
+  },
+];
+export const CRITICAL_PLACES_MIN_ZOOM = 16;
+
+/** Every kind drawn on some map. */
+export const ALL_KINDS: readonly ServiceKind[] = [...SERVICE_KINDS, ...CRITICAL_PLACES];
+
 /** A service tapped on the map: where it is, its name if the map has one, and its kind. */
 export interface TappedService {
   readonly at: LatLon;
@@ -64,7 +83,7 @@ export interface TappedService {
 
 /** The kind a base map `kind` value belongs to, or undefined if it is not a service. */
 export function serviceKindOf(osmKind: string): ServiceKind | undefined {
-  return SERVICE_KINDS.find((kind) => kind.osmKinds.includes(osmKind));
+  return ALL_KINDS.find((kind) => kind.osmKinds.includes(osmKind));
 }
 
 /** Name of the map image drawn for a kind of service. */
@@ -73,8 +92,10 @@ export function serviceImageName(kind: ServiceKind): string {
 }
 
 /** A map expression that picks each service's image by its base map `kind`. */
-export function serviceIconExpression(): ExpressionSpecification {
-  const [first, ...rest] = SERVICE_KINDS;
+export function serviceIconExpression(
+  kinds: readonly [ServiceKind, ...ServiceKind[]],
+): ExpressionSpecification {
+  const [first, ...rest] = kinds;
   const others = rest.flatMap((kind) => [[...kind.osmKinds], serviceImageName(kind)]);
   return ['match', ['get', 'kind'], [...first.osmKinds], serviceImageName(first), ...others, ''];
 }

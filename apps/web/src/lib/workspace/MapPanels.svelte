@@ -8,6 +8,8 @@
   import PointPanel from '../coordinates/PointPanel.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import LayersPanel from '../map/LayersPanel.svelte';
+  import { setGround } from '../map/ground.svelte.ts';
+  import type { BaseMap } from '../map/style/style.ts';
   import { navigateTo } from '../navigation/navigation.svelte.ts';
   import { compass } from '../position/compass.svelte.ts';
   import MePanel from '../me/MePanel.svelte';
@@ -48,11 +50,16 @@
   );
 
   /**
-   * The tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid on,
-   * coordinates in MGRS, bearings in mils from magnetic north, and the radar's rings round this
-   * device (ADR-0150). Each can then be changed again.
+   * Each base map comes with what reading it asks for (ADR-0155); each can then be changed again.
+   * The topographic map, its relief. The urban map, its buildings at their height, in 3D. The
+   * tactical map, read as a military map is (ADR-0141, ADR-0145): the MGRS grid on, coordinates in
+   * MGRS, bearings in mils from magnetic north, the radar's rings round this device (ADR-0150) and
+   * the slopes a vehicle can or cannot climb.
    */
-  async function withTacticalMap(): Promise<void> {
+  async function withMap(base: BaseMap): Promise<void> {
+    if (base === 'topo') await preferences.relief.set(true);
+    if (base === 'urban') setGround(map, true);
+    if (base !== 'tactical') return;
     // Asked first, within the tap, as the iPhone wants: the compass turns this device's arrow.
     const asked = compass.ask();
     await preferences.grid.set(true);
@@ -60,6 +67,7 @@
     await preferences.bearingUnit.set('mils');
     await preferences.north.set('magnetic');
     await preferences.radar.set(true);
+    await preferences.slope.set(true);
     await asked;
   }
 </script>
@@ -131,11 +139,12 @@
       floods: preferences.floods,
       grid: preferences.grid,
       radar: preferences.radar,
+      slope: preferences.slope,
     }}
     hidden={preferences.hiddenLayers}
     declutter={preferences.declutter}
     {credits}
-    ontactical={withTacticalMap}
+    onchoose={withMap}
     onclose={closePanel}
   />
 {/if}

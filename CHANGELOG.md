@@ -171,6 +171,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - «Despejar el mapa»: one button leaves only the team, threats, danger areas, SOS calls and the names of places ([ADR-0151](docs/decisions/0151-declutter-the-map.md)).
 - «Qué se ve desde aquí» on a point of the map: the ground in sight within 2 km, shaded green, worked out on the device from the relief, offline too ([ADR-0152](docs/decisions/0152-what-is-seen-from-a-point.md)).
 - Raising the ground in 3D close up no longer hangs the map: the public services, put back after the new style, were drawn before the map had worked out their look, and drawing failed every frame after.
+- Three maps, three questions: a line under the base maps says what each is for, and choosing one turns on what it needs. The topographic map reads as a paper map, with greener woods, no house numbers, discreet street names and the heights of summits and passes; the urban map raises its buildings in 3D and shows schools close up; the tactical map adds «Pendientes» (amber from 30 %, red from 60 %), stronger woods and solid railways, and fewer street names ([ADR-0155](docs/decisions/0155-three-maps-three-questions.md)).
 
 ### Known limits
 

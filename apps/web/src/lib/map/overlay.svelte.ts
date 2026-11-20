@@ -37,6 +37,7 @@ const OVERLAY_LEVELS = [
   'cadastre',
   'hazards',
   'weather',
+  'summits',
   'grid',
   'services',
   'radar',

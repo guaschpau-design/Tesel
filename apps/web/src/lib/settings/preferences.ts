@@ -42,6 +42,11 @@ const PREFERENCES = {
   baseMap: choice('baseMap', BASE_MAPS, 'topo'),
   /** Shading of the terrain: off at first, as it downloads elevation data. */
   relief: flag('relief', false),
+  /**
+   * The slopes a vehicle can or cannot climb (ADR-0155): off, as it reads the elevation tiles;
+   * on with the tactical map.
+   */
+  slope: flag('slope', false),
   /** The MGRS grid over the map: off, for those who coordinate in it. */
   grid: flag('grid', false),
   /**

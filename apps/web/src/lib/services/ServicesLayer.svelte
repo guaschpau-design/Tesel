@@ -1,8 +1,9 @@
 <!-- The public services of the base map (health, pharmacies, fire, police, helipads, town halls,
-     fuel stations) as round icons with their names, and taps on them. They come with the base map,
-     so they also work offline in downloaded areas. -->
+     fuel stations) as round icons with their names, and taps on them; on the urban map, close up,
+     its critical places too (ADR-0155). They come with the base map, so they also work offline in
+     downloaded areas. -->
 <script lang="ts">
-  import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
+  import type { LayerSpecification, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
   import { onMount } from 'svelte';
 
   import type { Locale } from '../i18n/index.ts';
@@ -13,10 +14,14 @@
   import { GLYPHS } from '../ui/glyphs.ts';
   import { themeColor, toneColor } from '../ui/theme.ts';
   import {
+    ALL_KINDS,
+    CRITICAL_PLACES,
+    CRITICAL_PLACES_MIN_ZOOM,
     SERVICE_KINDS,
     serviceIconExpression,
     serviceImageName,
     serviceKindOf,
+    type ServiceKind,
     type TappedService,
   } from './services.ts';
 
@@ -25,14 +30,18 @@
     taps: MapTaps;
     locale: Locale;
     visible: boolean;
-    /** Larger, over the urban map, where they are what a team in a town looks for (ADR-0137). */
-    large: boolean;
+    /**
+     * Over the urban map: larger, as what a team in a town looks for (ADR-0137), and with its
+     * critical places from zoom 16 (ADR-0155).
+     */
+    urban: boolean;
     onselect: (service: TappedService) => void;
   }
 
-  let { map, taps, locale, visible, large, onselect }: Props = $props();
+  let { map, taps, locale, visible, urban, onselect }: Props = $props();
 
   const LAYER = 'tesel-services';
+  const CRITICAL = 'tesel-critical-places';
   /**
    * Services appear from this zoom. Which ones is the base map's choice: hospitals, fire stations
    * and town halls are in its levels from about here, the rest only in its last level (map/style/style.ts).
@@ -45,7 +54,7 @@
     baseSource: BASEMAP_SOURCE,
     visible: () => visible,
     prepare: () => {
-      for (const kind of SERVICE_KINDS) {
+      for (const kind of ALL_KINDS) {
         addGlyphImage(map, serviceImageName(kind), {
           glyph: GLYPHS[kind.glyph],
           colour: toneColor(kind.tone),
@@ -54,32 +63,42 @@
       }
     },
     layers: () => [
-      {
-        id: LAYER,
-        type: 'symbol',
-        source: BASEMAP_SOURCE,
-        'source-layer': 'pois',
-        minzoom: MIN_ZOOM,
-        filter: ['in', ['get', 'kind'], ['literal', SERVICE_KINDS.flatMap((k) => k.osmKinds)]],
-        layout: {
-          'icon-image': serviceIconExpression(),
-          'icon-size': large ? 1.25 : 1,
-          'icon-allow-overlap': true,
-          'text-field': ['coalesce', ['get', `name:${locale}`], ['get', 'name']],
-          'text-font': ['Noto Sans Medium'],
-          'text-size': large ? 12.5 : 11,
-          'text-offset': [0, large ? 1.6 : 1.4],
-          'text-anchor': 'top',
-          'text-optional': true,
-        },
-        paint: {
-          'text-color': themeColor('map-text'),
-          'text-halo-color': themeColor('map-halo'),
-          'text-halo-width': 1.5,
-        },
-      },
+      icons(LAYER, SERVICE_KINDS, MIN_ZOOM),
+      ...(urban ? [icons(CRITICAL, CRITICAL_PLACES, CRITICAL_PLACES_MIN_ZOOM)] : []),
     ],
   });
+
+  /** The icons and names of some kinds, from a zoom. */
+  function icons(
+    id: string,
+    kinds: readonly [ServiceKind, ...ServiceKind[]],
+    minzoom: number,
+  ): LayerSpecification {
+    return {
+      id,
+      type: 'symbol',
+      source: BASEMAP_SOURCE,
+      'source-layer': 'pois',
+      minzoom,
+      filter: ['in', ['get', 'kind'], ['literal', kinds.flatMap((k) => k.osmKinds)]],
+      layout: {
+        'icon-image': serviceIconExpression(kinds),
+        'icon-size': urban ? 1.25 : 1,
+        'icon-allow-overlap': true,
+        'text-field': ['coalesce', ['get', `name:${locale}`], ['get', 'name']],
+        'text-font': ['Noto Sans Medium'],
+        'text-size': urban ? 12.5 : 11,
+        'text-offset': [0, urban ? 1.6 : 1.4],
+        'text-anchor': 'top',
+        'text-optional': true,
+      },
+      paint: {
+        'text-color': themeColor('map-text'),
+        'text-halo-color': themeColor('map-halo'),
+        'text-halo-width': 1.5,
+      },
+    };
+  }
 
   function tapped(feature: MapGeoJSONFeature): TappedService | null {
     const properties = feature.properties as Record<string, unknown>;
@@ -91,7 +110,7 @@
   }
 
   onMount(() =>
-    taps.onFeature([LAYER], (feature) => {
+    taps.onFeature([LAYER, CRITICAL], (feature) => {
       const service = tapped(feature);
       if (service !== null) onselect(service);
     }),

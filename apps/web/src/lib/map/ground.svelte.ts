@@ -2,10 +2,12 @@
 // costs the phone more battery and warmth, and turned off again when the screen rests
 // (power/activity). How it is seen: leaning far back, and raised more from afar than up close.
 
+import type { Map as MapLibreMap } from 'maplibre-gl';
+
 /** How far the view leans back to show the raised ground, in degrees from straight down. */
-export const GROUND_PITCH = 75;
+const GROUND_PITCH = 75;
 /** How far two fingers may lean it while raised: nearly eye level. Flat, MapLibre's own 60°. */
-export const GROUND_MAX_PITCH = 80;
+const GROUND_MAX_PITCH = 80;
 
 /** Raised twice its height across a district, so gentle hills show; nearer its own up close. */
 const FAR = { zoom: 9, exaggeration: 2 };
@@ -23,3 +25,16 @@ class Ground {
 }
 
 export const ground = new Ground();
+
+/** Raises the ground and leans the map back to show it, or lays both flat again. */
+export function setGround(map: MapLibreMap, raised: boolean): void {
+  ground.raised = raised;
+  if (raised) map.setMaxPitch(GROUND_MAX_PITCH);
+  map.easeTo({ pitch: raised ? GROUND_PITCH : 0 });
+  // Back to MapLibre's own limit once the map lies flat, so that it does not cut the ease short.
+  if (!raised) {
+    map.once('moveend', () => {
+      if (!ground.raised) map.setMaxPitch(null);
+    });
+  }
+}

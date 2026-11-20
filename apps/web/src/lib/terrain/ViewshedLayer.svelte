@@ -8,7 +8,8 @@
 
   import { useOverlay } from '../map/overlay.svelte.ts';
   import { themeColor } from '../ui/theme.ts';
-  import { viewshed, type Heights, type ViewshedState } from './viewshed.ts';
+  import type { Heights } from './elevation.ts';
+  import { viewshed, type ViewshedState } from './viewshed.ts';
 
   interface Props {
     map: MapLibreMap;

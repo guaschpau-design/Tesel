@@ -18,6 +18,7 @@ import type {
 
 import { lookOfMap, themeColor, type MapTheme } from '../../ui/theme.ts';
 import { CONTOURS_MAX_ZOOM, CONTOURS_MIN_ZOOM, contourTileUrl } from './contours.ts';
+import { SLOPE_MAX_ZOOM, SLOPE_MIN_ZOOM, slopeTileUrl } from './slope.ts';
 import { tileUrlTemplate } from '../tiles/protocol.ts';
 import {
   NAMES_ATTRIBUTION,
@@ -35,9 +36,10 @@ import {
   NAMES_SOURCE,
   terrainNameLayers,
   topoFlavor,
+  topoNames,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
-import { TACTICAL_LOOK, tacticalFlavor, tacticalNames } from './tactical.ts';
+import { TACTICAL_LOOK, tacticalFlavor, tacticalGround, tacticalNames } from './tactical.ts';
 import {
   flowLayer,
   hutLayer,
@@ -77,6 +79,7 @@ const RELIEF_SOURCE = 'terrain';
  * raised goes with the zoom (map/ground.svelte.ts), so the style leaves it to the map.
  */
 const GROUND_SOURCE = 'terrain-3d';
+const SLOPE_SOURCE = 'slope';
 
 export interface StyleChoice {
   readonly base: BaseMap;
@@ -86,6 +89,8 @@ export interface StyleChoice {
   readonly threeD: boolean;
   /** Decluttered, only the names of places (ADR-0151). */
   readonly declutter: boolean;
+  /** The slopes a vehicle can or cannot climb, over the ground (slope.ts, ADR-0155). */
+  readonly slope: boolean;
   readonly lang: string;
 }
 
@@ -129,10 +134,12 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
       ...sources,
       ...(relief ? { [RELIEF_SOURCE]: relief.source } : {}),
       ...(choice.threeD ? { [GROUND_SOURCE]: elevationSource() } : {}),
+      ...(choice.slope ? { [SLOPE_SOURCE]: slopeSource() } : {}),
     },
     layers: [
       ...ground,
       ...(relief ? [relief.layer] : []),
+      ...(choice.slope ? [slopeLayer()] : []),
       ...lines,
       ...(choice.declutter ? names.filter(isPlaceName) : names),
     ],
@@ -143,6 +150,23 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
 /** The names of towns, districts, regions and countries: what a decluttered map keeps (ADR-0151). */
 function isPlaceName(layer: LayerSpecification): boolean {
   return layer.id.startsWith('places_');
+}
+
+/** The slopes, worked out from the elevation tiles (slope.ts). */
+function slopeSource(): SourceSpecification {
+  return {
+    type: 'raster',
+    tiles: [slopeTileUrl()],
+    tileSize: TERRAIN_TILE_SIZE,
+    minzoom: SLOPE_MIN_ZOOM,
+    maxzoom: SLOPE_MAX_ZOOM,
+    attribution: TERRAIN_ATTRIBUTION,
+  };
+}
+
+/** Over the ground and its shading, under the lines and names; from a district's zoom. */
+function slopeLayer(): LayerSpecification {
+  return { id: 'slope', type: 'raster', source: SLOPE_SOURCE, minzoom: SLOPE_MIN_ZOOM };
 }
 
 /** The elevation tiles (tiles/sources.ts), as MapLibre reads them. */
@@ -175,13 +199,13 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [NAMES_SOURCE]: ignSource(),
       },
       // Woods dotted as cover, water and the ways off the streets as on the topographic map in
-      // the tactical map's inks; buildings solid, as cover.
+      // the tactical map's inks; buildings and railways as a military map draws them.
       ground: walkersGround(ground, {
         woods: look.images.woods,
         stream: look.stream,
         pedestrian: look.pedestrian,
         trails: look.trails,
-      }).map(solidBuildings),
+      }).map(tacticalGround),
       lines: contourLayers(),
       // The arrows first among the names: any name has the place before them.
       names: [
@@ -225,7 +249,11 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         trails: TOPO_TRAILS,
       }),
       lines: contourLayers(),
-      names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang, TOPO_HUTS), ...names],
+      names: [
+        ...terrainNameLayers(),
+        hutLayer(BASEMAP_SOURCE, lang, TOPO_HUTS),
+        ...topoNames(names),
+      ],
     };
   }
   const ortho: SourceSpecification = {
@@ -265,13 +293,6 @@ function ignSource(): SourceSpecification {
     maxzoom: IGN_MAX_ZOOM,
     attribution: NAMES_ATTRIBUTION,
   };
-}
-
-/** The base map's buildings at full strength, rather than its half: on the tactical map, cover. */
-function solidBuildings(layer: LayerSpecification): LayerSpecification {
-  return layer.id === 'buildings' && layer.type === 'fill'
-    ? { ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } }
-    : layer;
 }
 
 /** How a map draws the ground off the streets (trails.ts): its inks for each thing. */

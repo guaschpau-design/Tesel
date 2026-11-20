@@ -6,7 +6,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { activity } from '../power/activity.svelte.ts';
-  import { ground, GROUND_MAX_PITCH, GROUND_PITCH, groundExaggeration } from './ground.svelte.ts';
+  import { ground, groundExaggeration, setGround } from './ground.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -16,15 +16,7 @@
   let { t, map }: Props = $props();
 
   function set(raised: boolean): void {
-    ground.raised = raised;
-    if (raised) map.setMaxPitch(GROUND_MAX_PITCH);
-    map.easeTo({ pitch: raised ? GROUND_PITCH : 0 });
-    // Back to MapLibre's own limit once the map lies flat, so that it does not cut the ease short.
-    if (!raised) {
-      map.once('moveend', () => {
-        if (!ground.raised) map.setMaxPitch(null);
-      });
-    }
+    setGround(map, raised);
   }
 
   $effect(() => {

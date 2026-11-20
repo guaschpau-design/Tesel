@@ -340,6 +340,13 @@ export const es: Messages = {
   baseMapTopo: 'Topográfico',
   baseMapUrban: 'Urbano',
   baseMapAerial: 'Satélite',
+  baseMapTopoAbout:
+    'Para moverse por el campo: relieve, curvas de nivel, caminos, fuentes y refugios. Al elegirlo, se activa el relieve.',
+  baseMapUrbanAbout:
+    'Para operar en una ciudad: calles, portales, edificios con su altura y lugares críticos. Al elegirlo, se ve en 3D.',
+  baseMapTacticalAbout:
+    'Para leer el terreno: cubierta, observación y movilidad. Al elegirlo, se activan MGRS, milésimas, radar y pendientes.',
+  baseMapAerialAbout: 'La fotografía aérea más reciente, con los nombres encima.',
   layersOfGroup: 'Lo del grupo',
   layersOfMap: 'Información del mapa',
   downloadAlso: 'Descargar también',
@@ -786,8 +793,10 @@ export const es: Messages = {
   layerWeather: 'Avisos meteo',
   layerGrid: 'Cuadrícula MGRS',
   layerRadar: 'Radar',
+  layerSlope: 'Pendientes',
   serviceHealth: 'Salud',
   servicePharmacy: 'Farmacia',
+  serviceSchool: 'Centro educativo',
   serviceFuel: 'Gasolinera',
   serviceFire: 'Bomberos',
   servicePolice: 'Policía',
