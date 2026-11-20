@@ -1,7 +1,8 @@
 <!-- A point of the map, picked by a long press, found by its coordinates or tapped as a public
      service: how far it is from here, what else is known of it and what can be done there first,
      then its coordinates, small, to copy. What can be seen from it is shown on the map while asked
-     for, with a line on how it was worked out (ADR-0152). -->
+     for, with a line on how it was worked out (ADR-0152); the panel then shrinks to that line, so
+     the map shows it, and opens again on asking (ADR-0164). -->
 <script lang="ts">
   import type { LatLon } from '@tesel/protocol';
   import type { Snippet } from 'svelte';
@@ -59,6 +60,13 @@
     about,
   }: Props = $props();
 
+  /** Asked for again while what is seen is shown; shrunk again each time it is shown anew. */
+  let unfolded = $state(false);
+  $effect(() => {
+    if (viewshed === 'off') unfolded = false;
+  });
+  const shrunk = $derived(viewshed !== 'off' && !unfolded);
+
   const actions: Action[] = $derived([
     { icon: 'heading', label: t('guideMe'), run: onnavigate },
     ...(onmark ? [{ icon: 'pin', label: t('markHere'), run: onmark } as const] : []),
@@ -66,36 +74,50 @@
   ]);
 </script>
 
-<Panel {title} closeLabel={t('close')} {onclose}>
-  <div class="stack section">
-    <FromHere {t} {locale} {at} {base} />
-    {@render about?.()}
-    <Actions {actions} moreLabel={t('moreActions')} />
-    <!-- Seldom wanted, so not among the actions, whose room goes to marking and tasks. -->
-    {#if onviewshed && viewshed === 'off'}
-      <button class="view" onclick={onviewshed}>
-        <Pictogram name="eye" size={18} />
-        {t('seenFromHere')}
-      </button>
+{#snippet seen()}
+  <p class="viewshed">
+    {#if viewshed === 'working'}
+      {t('viewshedWorking')}
+    {:else if viewshed === 'shown'}
+      {t('viewshedShown', { distance: formatDistance(VIEW_RADIUS_M, locale) })}
+    {:else}
+      {t('viewshedUnknown')}
     {/if}
-    {#if viewshed !== 'off'}
-      <p class="viewshed">
-        <span>
-          {#if viewshed === 'working'}
-            {t('viewshedWorking')}
-          {:else if viewshed === 'shown'}
-            {t('viewshedShown', { distance: formatDistance(VIEW_RADIUS_M, locale) })}
-          {:else}
-            {t('viewshedUnknown')}
-          {/if}
-        </span>
+  </p>
+{/snippet}
+
+<Panel {title} closeLabel={t('close')} {onclose}>
+  {#if shrunk}
+    <div class="stack section">
+      {@render seen()}
+      <div class="row">
         {#if onviewshed}
           <button onclick={onviewshed}>{t('hideViewshed')}</button>
         {/if}
-      </p>
-    {/if}
-    <CoordinateLine {t} {at} {format} />
-  </div>
+        <button onclick={() => (unfolded = true)}>{t('pointDetails')}</button>
+      </div>
+    </div>
+  {:else}
+    <div class="stack section">
+      <FromHere {t} {locale} {at} {base} />
+      {@render about?.()}
+      <Actions {actions} moreLabel={t('moreActions')} />
+      <!-- Seldom wanted, so not among the actions, whose room goes to marking and tasks. -->
+      {#if onviewshed && viewshed === 'off'}
+        <button class="view" onclick={onviewshed}>
+          <Pictogram name="eye" size={18} />
+          {t('seenFromHere')}
+        </button>
+      {/if}
+      {#if viewshed !== 'off'}
+        {@render seen()}
+        {#if onviewshed}
+          <button class="hide" onclick={onviewshed}>{t('hideViewshed')}</button>
+        {/if}
+      {/if}
+      <CoordinateLine {t} {at} {format} />
+    </div>
+  {/if}
 </Panel>
 
 <style>
@@ -107,11 +129,17 @@
   }
 
   .viewshed {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: space-between;
     margin: 0;
     font-size: var(--text-secondary);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .hide {
+    justify-self: start;
   }
 </style>

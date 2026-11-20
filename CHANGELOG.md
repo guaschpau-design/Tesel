@@ -186,6 +186,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - Two errors found going through the app: leaving the chat's messages could raise an error as the list went away, and editing a marker or a shape did not say it was sent.
 
+- «Qué se ve desde aquí» leaves the map in sight: the point's panel shrinks to its line, with «Quitar» and «Ver el punto», and the map frames the 2 km above it ([ADR-0164](docs/decisions/0164-view-from-a-point-in-sight.md)).
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.

@@ -3,6 +3,7 @@
 <script lang="ts">
   import type { LatLon } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
+  import { tick } from 'svelte';
 
   import BuildingCard from '../buildings/BuildingCard.svelte';
   import BuildingOutline from '../buildings/BuildingOutline.svelte';
@@ -11,6 +12,7 @@
   import LightPanel from '../daylight/LightPanel.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import LayersPanel from '../map/LayersPanel.svelte';
+  import { showAround } from '../map/geometry.ts';
   import { setGround } from '../map/ground.svelte.ts';
   import { MAP_FLAGS } from '../map/layers.ts';
   import { mapDefaults } from '../map/map-defaults.ts';
@@ -21,7 +23,7 @@
   import type { Preferences } from '../settings/preferences.ts';
   import { newTask } from '../tasks/task-editor.ts';
   import { terrain } from '../terrain/terrain.svelte.ts';
-  import type { ViewshedState } from '../terrain/viewshed.ts';
+  import { VIEW_RADIUS_M, type ViewshedState } from '../terrain/viewshed.ts';
   import ViewshedLayer from '../terrain/ViewshedLayer.svelte';
   import { closePanel, isOpen, panels } from '../ui/panels.svelte.ts';
   import WarningList from '../weather/WarningList.svelte';
@@ -120,6 +122,12 @@
     onviewshed={terrain.onDemand
       ? () => {
           viewFrom = viewshed === 'off' ? at : null;
+          // Once the panel has shrunk, the map shows all that is worked out, above it.
+          if (viewFrom !== null) {
+            void tick().then(() => {
+              showAround(map, at, VIEW_RADIUS_M);
+            });
+          }
         }
       : null}
     onclose={closePanel}

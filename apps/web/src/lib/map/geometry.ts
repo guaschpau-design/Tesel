@@ -74,6 +74,36 @@ export function fitPoints(
   );
 }
 
+/** Room left around what is framed, in pixels: the map's controls stand at its sides. */
+const AROUND_PX = 56;
+/** A panel at least this share of the map's width lies along its bottom, as on phones. */
+const SHEET_SHARE = 0.6;
+
+/**
+ * Frames the circle of `radius` metres around `center` in the part of the map the open panel
+ * (ui/Panel.svelte) leaves uncovered: above it on a phone, beside it on a wide screen.
+ */
+export function showAround(map: MapLibreMap, center: LatLon, radius: number): void {
+  const corners = [offsetMeters(center, -radius, -radius), offsetMeters(center, radius, radius)];
+  const padding = { top: AROUND_PX, right: AROUND_PX, bottom: AROUND_PX, left: AROUND_PX };
+  const panel = map.getContainer().ownerDocument.querySelector('[data-panel]');
+  if (panel !== null) {
+    const area = map.getContainer().getBoundingClientRect();
+    const covered = panel.getBoundingClientRect();
+    if (covered.width >= area.width * SHEET_SHARE) {
+      padding.bottom = Math.max(AROUND_PX, area.bottom - covered.top + AROUND_PX / 2);
+    } else {
+      padding.right = Math.max(AROUND_PX, area.right - covered.left + AROUND_PX / 2);
+    }
+  }
+  // Too little room left to frame anything: the map stays as it is.
+  const { clientWidth, clientHeight } = map.getContainer();
+  if (padding.left + padding.right >= clientWidth || padding.top + padding.bottom >= clientHeight) {
+    return;
+  }
+  fitPoints(map, corners, { padding });
+}
+
 /** What the map's view shows, edge to edge. */
 export function mapBounds(map: MapLibreMap): Bounds {
   const bounds = map.getBounds();

@@ -306,6 +306,7 @@ export const es: Messages = {
   viewshedUnknown:
     'No se conoce la altura de este punto: hace falta conexión o tener la zona descargada.',
   hideViewshed: 'Quitar',
+  pointDetails: 'Ver el punto',
   followRoute: 'Seguir ruta',
   followStrip: 'Seguir franja',
   measure: 'Medir distancias',

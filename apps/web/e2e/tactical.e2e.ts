@@ -48,9 +48,13 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   await expect(panel.getByText(/^\d+ m · (63\d\d|00\d\d)‰M N desde ti$/)).toBeVisible();
   await expect(panel).toContainText(/30S YJ \d{5} \d{5}/);
 
-  // What is seen from there, worked out from the elevations, until hidden again.
+  // What is seen from there, worked out from the elevations, the panel shrunk to that line so the
+  // map shows it, and the point's details again on asking, until hidden (ADR-0164).
   await panel.getByRole('button', { name: 'Qué se ve desde aquí' }).click();
   await expect(panel).toContainText('En verde, lo que se ve desde aquí hasta 2 km');
+  await expect(panel.getByText(/‰M N desde ti$/)).toBeHidden();
+  await panel.getByRole('button', { name: 'Ver el punto' }).click();
+  await expect(panel.getByText(/‰M N desde ti$/)).toBeVisible();
   await panel.getByRole('button', { name: 'Quitar' }).click();
   await expect(panel.getByRole('button', { name: 'Qué se ve desde aquí' })).toBeVisible();
 

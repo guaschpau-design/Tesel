@@ -305,6 +305,7 @@ export const en = {
   viewshedUnknown:
     'The height of this point is not known: it needs a connection or the area downloaded.',
   hideViewshed: 'Hide',
+  pointDetails: 'Show the point',
   followRoute: 'Follow route',
   followStrip: 'Follow strip',
   measure: 'Measure distances',
