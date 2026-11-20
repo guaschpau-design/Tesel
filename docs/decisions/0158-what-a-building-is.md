@@ -12,7 +12,7 @@ A team called to an address in a town wants to know what it will find: how high 
 - **A tap on a building on the urban map** opens the panel of its point, titled «Edificio», with the building outlined in the app's colour (`buildings/`). With a panel already open, the tap closes it, as a tap on empty ground does: in a town, buildings are most of the map.
 - **What it tells**, from what the map has (`buildings/building.ts`):
   - its height and about how many floors, from OpenStreetMap's height, as the base map reckons it (3 m a floor and 2 m for the roof); where OpenStreetMap does not know the height, it says so;
-  - the ground it covers, when the map has the building in one piece: the map cuts buildings at the edges of its tiles, and the pieces cannot be added up exactly;
+  - the ground it covers, when the map's tile holds the whole building: the map cuts buildings at the edges of its tiles, a little past them, and the pieces cannot be added up exactly; nor for a part of a building that OpenStreetMap draws apart, such as a tower or a wing, which tells its own height;
   - its house numbers: OpenStreetMap's on the building and, in Spain, IGN's official ones standing in it or within 8 m of its outline (ADR-0139).
 - The rest of the point's panel stays: how far, the way there, a marker or a task.
 

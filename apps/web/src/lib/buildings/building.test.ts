@@ -28,18 +28,20 @@ describe('what is known of a building', () => {
   });
 
   it('tells its height, floors and the ground it covers', () => {
-    const facts = buildingFacts([piece(square(20))], []);
+    const facts = buildingFacts([piece(square(20))], true, []);
     expect(facts.height).toBe(23);
     expect(facts.floors).toBe(7);
     expect(facts.footprint).toBeCloseTo(400, -1);
   });
 
-  it('leaves out the ground covered when the map has it in pieces', () => {
-    expect(buildingFacts([piece(square(20)), piece(square(20, 20))], []).footprint).toBeNull();
+  it('adds up the ground its polygons cover, and tells none when the tile cuts it', () => {
+    const pieces = [piece(square(20)), piece(square(20, 40))];
+    expect(buildingFacts(pieces, true, []).footprint).toBeCloseTo(800, -1);
+    expect(buildingFacts(pieces, false, []).footprint).toBeNull();
   });
 
   it('tells nothing of a height it does not know', () => {
-    const facts = buildingFacts([piece(square(20), null)], []);
+    const facts = buildingFacts([piece(square(20), null)], true, []);
     expect(facts.height).toBeNull();
     expect(facts.floors).toBeNull();
   });
@@ -50,7 +52,7 @@ describe('what is known of a building', () => {
       { ref: '12', at: offsetMeters(CORNER, 10, 10) },
       { ref: '15', at: offsetMeters(CORNER, -25, 10) },
     ];
-    const facts = buildingFacts([{ ...piece(square(20)), number: '2' }], numbers);
+    const facts = buildingFacts([{ ...piece(square(20)), number: '2' }], true, numbers);
     expect(facts.numbers).toEqual(['2', '12', '14']);
   });
 });

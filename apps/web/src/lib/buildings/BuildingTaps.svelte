@@ -39,6 +39,19 @@
     }));
   }
 
+  /**
+   * Whether the map's tile holds the whole building. A tile keeps a building cut at its edge, a
+   * little past it: its points, in the tile's own units, then reach outside the tile. They are read
+   * from the feature as the tile has it, which MapLibre keeps with each feature it hands out.
+   */
+  function wholeInTile(feature: MapGeoJSONFeature): boolean {
+    const tile = feature._vectorTileFeature;
+    const { extent } = tile;
+    return tile
+      .loadGeometry()
+      .every((ring) => ring.every(({ x, y }) => x >= 0 && x <= extent && y >= 0 && y <= extent));
+  }
+
   /** IGN's house numbers loaded on the map, where its map is drawn. */
   function houseNumbers(): HouseNumber[] {
     if (map.getSource(NAMES_SOURCE) === undefined) return [];
@@ -59,17 +72,11 @@
       closePanel();
       return;
     }
-    // The same building in each tile the map cuts it into.
-    const pieces =
-      feature.id === undefined
-        ? piecesOf(feature)
-        : map
-            .queryRenderedFeatures({
-              layers: [feature.layer.id],
-              filter: ['==', ['id'], feature.id],
-            })
-            .flatMap(piecesOf);
-    const building = buildingFacts(pieces, houseNumbers());
+    const pieces = piecesOf(feature);
+    // A part of a building, as OpenStreetMap draws a tower or a wing apart, has its own height,
+    // but the ground it covers is not the building's.
+    const part = textProperty(feature, 'kind') === 'building_part';
+    const building = buildingFacts(pieces, !part && wholeInTile(feature), houseNumbers());
     const outer = pieces[0]?.rings[0] ?? [];
     if (outer.length === 0) return;
     // Its middle, roughly: where the way there and the panel's point go.

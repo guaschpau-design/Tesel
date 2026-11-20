@@ -21,13 +21,13 @@ export interface BuildingFacts {
   readonly height: number | null;
   /** About how many floors that height makes. */
   readonly floors: number | null;
-  /** Square metres of ground it covers, when the map has it whole. */
+  /** Square metres of ground it covers, when the map's tile holds all of it. */
   readonly footprint: number | null;
   /** Its house numbers, in order. */
   readonly numbers: readonly string[];
 }
 
-/** One piece of a building as the map's tiles cut it, with its properties. */
+/** One polygon of a building, with its properties. */
 export interface BuildingPiece {
   readonly rings: Polygon['coordinates'];
   readonly height: number | null;
@@ -72,16 +72,16 @@ function areaOf([outer, ...holes]: Polygon['coordinates']): number {
 }
 
 /**
- * What is known of a building from its pieces: the map cuts a building at the edges of its tiles,
- * so the ground it covers is told only when it comes whole, in one piece.
+ * What is known of a building from its polygons, `whole` when the map's tile holds all of it: the
+ * map cuts a building at the edges of its tiles, so the ground it covers is told only then.
  */
 export function buildingFacts(
   pieces: readonly BuildingPiece[],
+  whole: boolean,
   houseNumbers: readonly HouseNumber[],
 ): BuildingFacts {
   const heights = pieces.flatMap((piece) => (piece.height === null ? [] : [piece.height]));
   const height = heights.length === 0 ? null : Math.max(...heights);
-  const [only] = pieces;
   const numbers = new Set(pieces.flatMap((piece) => (piece.number === null ? [] : [piece.number])));
   for (const { ref, at } of houseNumbers) {
     if (pieces.some((piece) => standsOn(piece.rings, at))) numbers.add(ref);
@@ -90,7 +90,9 @@ export function buildingFacts(
     outline: pieces.map((piece) => piece.rings),
     height: height === null ? null : Math.round(height),
     floors: height === null ? null : floorsOf(height),
-    footprint: pieces.length === 1 && only !== undefined ? Math.round(areaOf(only.rings)) : null,
+    footprint: whole
+      ? Math.round(pieces.reduce((sum, piece) => sum + areaOf(piece.rings), 0))
+      : null,
     numbers: [...numbers].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })),
   };
 }
