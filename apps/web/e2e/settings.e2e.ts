@@ -3,7 +3,7 @@
 
 import type { Page } from '@playwright/test';
 
-import { device, expect, openMore, test } from './helpers.ts';
+import { device, expect, openMore, stored, test } from './helpers.ts';
 
 const isFullscreen = (page: Page) => page.evaluate(() => document.fullscreenElement !== null);
 
@@ -92,7 +92,9 @@ test('dark mode darkens the app and leaves the map, whose looks are chosen in th
   await expect.poll(mapTheme).toBe('coyote');
   await expect(grid).toHaveAttribute('aria-checked', 'true');
 
-  // Both remembered on the next visit.
+  // Both remembered on the next visit, once stored: a reload drops what is still being written.
+  await expect.poll(() => stored(page, 'settings', 'baseMap')).toBe('tactical');
+  await expect.poll(() => stored(page, 'settings', 'grid')).toBe(true);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Más', exact: true })).toBeVisible();
   await expect.poll(theme).toBe('dark');
