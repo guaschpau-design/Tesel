@@ -1,4 +1,5 @@
-// Where the map's tiles come from. The base vector map is our own PMTiles archive. The satellite
+// Where the map's tiles come from. The base vector map is our own PMTiles archive, and so are the
+// buildings, Overture Maps' (ADR-0161). The satellite
 // map is a Sentinel-2 mosaic from afar and the national orthophotos of Spain, Portugal and France
 // close up (ortho.ts, ADR-0023, ADR-0041). The topographic map's names of the terrain come from
 // IGN's vector map of Spain (ADR-0034). Elevation, for the relief, the contour lines and every
@@ -16,7 +17,7 @@ export interface TileArchive {
   getTile(z: number, x: number, y: number, signal: AbortSignal): Promise<ArrayBuffer | undefined>;
 }
 
-export const TILE_SOURCES = ['basemap', 'ign-names', 'ortho', 'terrain'] as const;
+export const TILE_SOURCES = ['basemap', 'buildings', 'ign-names', 'ortho', 'terrain'] as const;
 export type TileSourceId = (typeof TILE_SOURCES)[number];
 
 /** CC BY 4.0, as the services of Spain's national mapping system (SCNE) ask to be credited. */
@@ -29,6 +30,17 @@ const SCNE = '<a href="https://www.scne.es" target="_blank">CC BY 4.0 scne.es</a
  * limits follow from it, so an area downloaded holds each to the same detail.
  */
 export const BASEMAP_MAX_ZOOM = 15;
+
+/**
+ * The zooms of the buildings archive (apps/server/src/maps/buildings-area.ts): from a
+ * neighbourhood's, where buildings begin to show, to Overture's deepest, which MapLibre enlarges.
+ */
+export const BUILDINGS_MIN_ZOOM = 13;
+export const BUILDINGS_MAX_ZOOM = 14;
+
+/** Overture Maps' buildings are OpenStreetMap's and others', under the ODbL. */
+export const BUILDINGS_ATTRIBUTION =
+  '<a href="https://docs.overturemaps.org/attribution" target="_blank">© Overture Maps Foundation</a>';
 
 /**
  * Photographs need three zooms more than the vector map for the same detail: their tiles cannot be

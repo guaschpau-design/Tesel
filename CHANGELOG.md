@@ -178,6 +178,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - On the tactical map, «Enlace de radio desde ti» tells whether a LoRa radio reaches a point, an object or a member over the ground, with its profile, the Fresnel zone and the antennas' height to choose ([ADR-0159](docs/decisions/0159-radio-link-over-the-ground.md)).
 - Each base map shows the same layers each time it is chosen, as Pau set them: services on every map; relief on the topographic and tactical maps; fires on the topographic, flood zones on the urban; the radar on the urban and tactical; slopes and the MGRS grid on the tactical. Off the tactical map, bearings are read in degrees from true north again ([ADR-0160](docs/decisions/0160-what-each-map-shows-at-first.md)).
 
+- Many more buildings on every map, in Spain nearly all: Overture Maps' (OpenStreetMap's, IGN's and those found in aerial imagery), built each month on the server and downloaded with the map for offline use. A building's card tells its floors, its use and where its outline comes from; the next sunset in the margin shows its time alone ([ADR-0161](docs/decisions/0161-overture-buildings.md)).
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.

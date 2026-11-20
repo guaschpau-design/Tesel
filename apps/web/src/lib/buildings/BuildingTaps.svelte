@@ -1,6 +1,6 @@
-<!-- On the urban map, a tap on a building opens what is known of it (building.ts, ADR-0158) in the
-     panel of its point; with a panel already open, the tap closes it, as a tap on the map's empty
-     ground does. Draws nothing itself. -->
+<!-- On the urban map, a tap on a building opens what is known of it (building.ts, ADR-0158,
+     ADR-0161) in the panel of its point; with a panel already open, the tap closes it, as a tap
+     on the map's empty ground does. Draws nothing itself. -->
 <script lang="ts">
   import type { MapGeoJSONFeature, Map as MapLibreMap } from 'maplibre-gl';
   import { onMount } from 'svelte';
@@ -9,7 +9,7 @@
   import { NAMES_SOURCE } from '../map/style/topo.ts';
   import { textProperty, type MapTaps } from '../map/taps.ts';
   import { closePanel, openPanel, panels } from '../ui/panels.svelte.ts';
-  import { buildingFacts, type BuildingPiece, type HouseNumber } from './building.ts';
+  import { buildingFacts, type ArchivedBuilding, type HouseNumber } from './building.ts';
 
   interface Props {
     t: Translate;
@@ -19,24 +19,28 @@
 
   let { t, map, taps }: Props = $props();
 
-  /** The base map's layers of buildings: flat, and raised in 3D. */
+  /** The layers of buildings (map/style/buildings.ts): flat, and raised in 3D. */
   const LAYERS = ['buildings', 'buildings-3d'];
 
-  /** The pieces of a feature: a building in several parts comes as several polygons. */
-  function piecesOf(feature: MapGeoJSONFeature): BuildingPiece[] {
+  /** A building tapped, as the archive keeps it: one in several parts as several polygons. */
+  function archived(feature: MapGeoJSONFeature): ArchivedBuilding {
     const { geometry } = feature;
-    const polygons =
-      geometry.type === 'Polygon'
-        ? [geometry.coordinates]
-        : geometry.type === 'MultiPolygon'
-          ? geometry.coordinates
-          : [];
-    const height: unknown = feature.properties['height'];
-    return polygons.map((rings) => ({
-      rings,
-      height: typeof height === 'number' ? height : null,
-      number: textProperty(feature, 'addr_housenumber'),
-    }));
+    const number = (name: string) => {
+      const value: unknown = feature.properties[name];
+      return typeof value === 'number' ? value : null;
+    };
+    return {
+      polygons:
+        geometry.type === 'Polygon'
+          ? [geometry.coordinates]
+          : geometry.type === 'MultiPolygon'
+            ? geometry.coordinates
+            : [],
+      height: number('height'),
+      floors: number('num_floors'),
+      class: textProperty(feature, 'class'),
+      source: textProperty(feature, '@geometry_source'),
+    };
   }
 
   /**
@@ -72,17 +76,14 @@
       closePanel();
       return;
     }
-    const pieces = piecesOf(feature);
-    // A part of a building, as OpenStreetMap draws a tower or a wing apart, has its own height,
-    // but the ground it covers is not the building's.
-    const part = textProperty(feature, 'kind') === 'building_part';
-    const building = buildingFacts(pieces, !part && wholeInTile(feature), houseNumbers());
-    const outer = pieces[0]?.rings[0] ?? [];
+    const building = archived(feature);
+    const facts = buildingFacts(building, wholeInTile(feature), houseNumbers());
+    const outer = building.polygons[0]?.[0] ?? [];
     if (outer.length === 0) return;
     // Its middle, roughly: where the way there and the panel's point go.
     const lon = outer.reduce((sum, [x = 0]) => sum + x, 0) / outer.length;
     const lat = outer.reduce((sum, [, y = 0]) => sum + y, 0) / outer.length;
-    openPanel({ name: 'point', at: { lat, lon }, title: t('building'), building });
+    openPanel({ name: 'point', at: { lat, lon }, title: t('building'), building: facts });
   }
 
   onMount(() => taps.onFeature(LAYERS, tapped));

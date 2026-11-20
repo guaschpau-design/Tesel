@@ -69,6 +69,12 @@ importers:
       '@fastify/websocket':
         specifier: 11.3.4
         version: 11.3.4
+      '@mapbox/vector-tile':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@maplibre/vt-pbf':
+        specifier: ^4.3.3
+        version: 4.3.3
       '@tesel/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -78,10 +84,19 @@ importers:
       fastify:
         specifier: ^5.12.7
         version: 5.12.7
+      pbf:
+        specifier: ^5.1.2
+        version: 5.1.2
+      pmtiles:
+        specifier: ^4.5.0
+        version: 4.5.0
       ws:
         specifier: ^8.22.0
         version: 8.22.0
     devDependencies:
+      '@mapbox/point-geometry':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2

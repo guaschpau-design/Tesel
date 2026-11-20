@@ -1,6 +1,7 @@
-// What the map knows of a building tapped on the urban map (ADR-0158): how high it is and about how
-// many floors that makes, the ground it covers, and its house numbers, from OpenStreetMap's
-// buildings and, in Spain, the official house numbers of IGN's map.
+// What the map knows of a building tapped on the urban map (ADR-0158, ADR-0161): how high it is and
+// how many floors it has, or about how many its height makes, what it is used for, the ground it
+// covers, where its outline comes from, and its house numbers. All from the buildings archive,
+// Overture Maps' (map/style/buildings.ts), and, in Spain, the official house numbers of IGN's map.
 
 import { areaSquareMeters, nearestOnSegment } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
@@ -10,28 +11,85 @@ import { insideRing } from '../map/geometry.ts';
 
 /** A house number this close to a building's outline, in metres, is its own: portals stand on it. */
 const NUMBER_REACH_M = 8;
-/** OpenStreetMap's base map reckons a floor 3 m high, and 2 m more for the roof. */
+/** A floor's height, to reckon floors from a height when they are not known. */
 const FLOOR_M = 3;
-const ROOF_M = 2;
+
+/** What a building is used for, in a few kinds that matter to a team. */
+const BUILDING_KINDS = [
+  'homes',
+  'industry',
+  'commerce',
+  'education',
+  'health',
+  'worship',
+  'garage',
+  'farm',
+  'public',
+] as const;
+export type BuildingKind = (typeof BUILDING_KINDS)[number];
+
+/** Overture's classes of buildings (OpenStreetMap's "building" values), by kind. */
+const CLASSES: Readonly<Record<BuildingKind, readonly string[]>> = {
+  homes: [
+    'apartments',
+    'residential',
+    'house',
+    'detached',
+    'semidetached_house',
+    'terrace',
+    'bungalow',
+    'dormitory',
+    'farmhouse',
+  ],
+  industry: ['industrial', 'warehouse', 'manufacture', 'factory', 'storage_tank'],
+  commerce: ['commercial', 'retail', 'office', 'supermarket', 'hotel', 'kiosk'],
+  education: ['school', 'university', 'college', 'kindergarten'],
+  health: ['hospital'],
+  worship: ['church', 'chapel', 'cathedral', 'mosque', 'synagogue', 'temple', 'religious'],
+  garage: ['garage', 'garages', 'parking', 'carport'],
+  farm: ['agricultural', 'farm_auxiliary', 'barn', 'cowshed', 'greenhouse', 'stable', 'sty'],
+  public: [
+    'public',
+    'civic',
+    'government',
+    'fire_station',
+    'police',
+    'train_station',
+    'transportation',
+  ],
+};
+
+/** Where a building's outline comes from: whose map, or found in aerial imagery, roughly. */
+export type OutlineSource =
+  | { readonly kind: 'osm' }
+  | { readonly kind: 'national' }
+  | { readonly kind: 'imagery' }
+  | { readonly kind: 'other'; readonly name: string };
 
 export interface BuildingFacts {
-  /** The outlines of its pieces, as the map has them, to show it. */
+  /** Its polygons, as the map has them, to show it. */
   readonly outline: readonly Polygon['coordinates'][];
-  /** Metres from the ground to the top, where OpenStreetMap knows. */
+  /** Metres from the ground to the top, where they are known. */
   readonly height: number | null;
-  /** About how many floors that height makes. */
-  readonly floors: number | null;
+  /** Its floors above ground: known, or reckoned from its height. */
+  readonly floors: { readonly count: number; readonly known: boolean } | null;
+  readonly kind: BuildingKind | null;
+  readonly source: OutlineSource | null;
   /** Square metres of ground it covers, when the map's tile holds all of it. */
   readonly footprint: number | null;
   /** Its house numbers, in order. */
   readonly numbers: readonly string[];
 }
 
-/** One polygon of a building, with its properties. */
-export interface BuildingPiece {
-  readonly rings: Polygon['coordinates'];
+/** A building as the buildings archive keeps it (apps/server/src/maps/slim-buildings.ts). */
+export interface ArchivedBuilding {
+  readonly polygons: readonly Polygon['coordinates'][];
   readonly height: number | null;
-  readonly number: string | null;
+  readonly floors: number | null;
+  /** Overture's class. */
+  readonly class: string | null;
+  /** Overture's name of the dataset its outline comes from. */
+  readonly source: string | null;
 }
 
 /** A house number of IGN's map, and where it stands. */
@@ -40,9 +98,17 @@ export interface HouseNumber {
   readonly at: LatLon;
 }
 
-/** About how many floors a building `height` metres high has. */
-export function floorsOf(height: number): number {
-  return Math.max(1, Math.round((height - ROOF_M) / FLOOR_M));
+export function kindOf(buildingClass: string): BuildingKind | null {
+  return BUILDING_KINDS.find((kind) => CLASSES[kind].includes(buildingClass)) ?? null;
+}
+
+/** Where an outline comes from, by the name Overture gives its dataset. */
+export function sourceOf(dataset: string): OutlineSource {
+  if (dataset === 'OpenStreetMap') return { kind: 'osm' };
+  if (dataset.startsWith('Instituto Geográfico Nacional')) return { kind: 'national' };
+  // Microsoft's and Google's buildings, found by machine learning in aerial imagery.
+  if (/\bML\b|Open Buildings|Microsoft|Google/.test(dataset)) return { kind: 'imagery' };
+  return { kind: 'other', name: dataset };
 }
 
 function toLatLon([lon = 0, lat = 0]: Position): LatLon {
@@ -72,27 +138,30 @@ function areaOf([outer, ...holes]: Polygon['coordinates']): number {
 }
 
 /**
- * What is known of a building from its polygons, `whole` when the map's tile holds all of it: the
- * map cuts a building at the edges of its tiles, so the ground it covers is told only then.
+ * What is known of a building, `whole` when the map's tile holds all of it: the map cuts a building
+ * at the edges of its tiles, so the ground it covers is told only then.
  */
 export function buildingFacts(
-  pieces: readonly BuildingPiece[],
+  building: ArchivedBuilding,
   whole: boolean,
   houseNumbers: readonly HouseNumber[],
 ): BuildingFacts {
-  const heights = pieces.flatMap((piece) => (piece.height === null ? [] : [piece.height]));
-  const height = heights.length === 0 ? null : Math.max(...heights);
-  const numbers = new Set(pieces.flatMap((piece) => (piece.number === null ? [] : [piece.number])));
-  for (const { ref, at } of houseNumbers) {
-    if (pieces.some((piece) => standsOn(piece.rings, at))) numbers.add(ref);
-  }
+  const { polygons, height, floors } = building;
+  const numbers = houseNumbers
+    .filter(({ at }) => polygons.some((rings) => standsOn(rings, at)))
+    .map(({ ref }) => ref);
   return {
-    outline: pieces.map((piece) => piece.rings),
+    outline: polygons,
     height: height === null ? null : Math.round(height),
-    floors: height === null ? null : floorsOf(height),
-    footprint: whole
-      ? Math.round(pieces.reduce((sum, piece) => sum + areaOf(piece.rings), 0))
-      : null,
-    numbers: [...numbers].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })),
+    floors:
+      floors !== null
+        ? { count: floors, known: true }
+        : height !== null
+          ? { count: Math.max(1, Math.round(height / FLOOR_M)), known: false }
+          : null,
+    kind: building.class === null ? null : kindOf(building.class),
+    source: building.source === null ? null : sourceOf(building.source),
+    footprint: whole ? Math.round(polygons.reduce((sum, rings) => sum + areaOf(rings), 0)) : null,
+    numbers: [...new Set(numbers)].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })),
   };
 }

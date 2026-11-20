@@ -195,8 +195,8 @@ fetch() { curl -fsSL "$REPO_RAW/$REF/deploy/$1" -o "$INSTALL_DIR/$(basename "$1"
 for file in vps/compose.yaml vps/Caddyfile vps/headers.caddy; do
   fetch "$file"
 done
-for script in vps/maps.sh vps/backup.sh vps/database.sh vps/notify.sh vps/update.sh \
-  vps/install-cosign.sh; do
+for script in vps/maps.sh vps/buildings.sh vps/backup.sh vps/database.sh vps/notify.sh \
+  vps/update.sh vps/install-cosign.sh; do
   fetch "$script"
   chmod 0755 "$INSTALL_DIR/$(basename "$script")"
 done
@@ -290,6 +290,11 @@ write_job tesel-maps "Rebuild the Tesel base map from the latest OpenStreetMap d
   "$INSTALL_DIR/maps.sh $INSTALL_DIR/maps" \
   $'OnCalendar=monthly\nRandomizedDelaySec=1d\nPersistent=true' \
   "Rebuild the Tesel base map every month" 6h
+# After the base map, whose month it shares; it runs in the server's image, so not before it runs.
+write_job tesel-buildings "Rebuild the Tesel buildings from the latest Overture Maps data" \
+  "$INSTALL_DIR/buildings.sh $INSTALL_DIR/maps" \
+  $'OnCalendar=*-*-02 05:00\nRandomizedDelaySec=1d\nPersistent=true' \
+  "Rebuild the Tesel buildings every month" 6h
 # Before the automatic reboots at 04:00.
 write_job tesel-backup "Back up the Tesel server" \
   "$INSTALL_DIR/backup.sh $INSTALL_DIR" \
@@ -313,6 +318,14 @@ if ! "$INSTALL_DIR/update.sh" "$INSTALL_DIR"; then
 on GitHub (github.com/guaschpau-design → Packages → tesel-server → Package settings) and signed
 by the repository's CI."
 fi
+# The buildings run in the server's image: built the first time once it runs, in the background,
+# as they take about an hour; the timer rebuilds them every month after.
+systemctl enable tesel-buildings.timer >/dev/null
+if [[ ! -f "$INSTALL_DIR/maps/buildings.pmtiles" ]]; then
+  step "Building the buildings in the background (about an hour; see journalctl -u tesel-buildings)"
+  systemctl start --no-block tesel-buildings.service
+fi
+systemctl start tesel-buildings.timer >/dev/null
 # Caddy reads its configuration only when it starts: apply what was installed above.
 docker compose exec --no-TTY caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 # The containers' network was "internal" until 2026-11 (ADR-0107); nothing uses it any more. Once

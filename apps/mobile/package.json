@@ -6,7 +6,7 @@
   "license": "EUPL-1.2",
   "type": "module",
   "scripts": {
-    "web": "VITE_TARGET=android VITE_SERVER_URL=https://tesel.eu/ VITE_BASEMAP_URL=https://tesel.eu/maps/basemap.pmtiles VITE_PUBLIC_APP_URL=https://tesel.eu/app/ pnpm --dir ../web run build --outDir ../mobile/www --emptyOutDir",
+    "web": "VITE_TARGET=android VITE_SERVER_URL=https://tesel.eu/ VITE_BASEMAP_URL=https://tesel.eu/maps/basemap.pmtiles VITE_BUILDINGS_URL=https://tesel.eu/maps/buildings.pmtiles VITE_PUBLIC_APP_URL=https://tesel.eu/app/ pnpm --dir ../web run build --outDir ../mobile/www --emptyOutDir",
     "sync": "pnpm web && cap sync android"
   },
   "dependencies": {

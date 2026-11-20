@@ -3,7 +3,7 @@ import type { LatLon } from '@tesel/protocol';
 import type { Polygon } from 'geojson';
 import { describe, expect, it } from 'vitest';
 
-import { buildingFacts, floorsOf, type BuildingPiece } from './building.ts';
+import { buildingFacts, kindOf, sourceOf, type ArchivedBuilding } from './building.ts';
 
 const CORNER: LatLon = { lat: 39.47, lon: -0.37 };
 
@@ -16,43 +16,56 @@ function square(side: number, east = 0): Polygon['coordinates'] {
   return [[at(0, 0), at(0, side), at(side, side), at(side, 0), at(0, 0)]];
 }
 
-function piece(rings: Polygon['coordinates'], height: number | null = 23): BuildingPiece {
-  return { rings, height, number: null };
+function building(overrides: Partial<ArchivedBuilding> = {}): ArchivedBuilding {
+  return {
+    polygons: [square(20)],
+    height: 23,
+    floors: 7,
+    class: 'apartments',
+    source: 'OpenStreetMap',
+    ...overrides,
+  };
 }
 
 describe('what is known of a building', () => {
-  it('reckons its floors from its height as the base map does', () => {
-    expect(floorsOf(23)).toBe(7);
-    expect(floorsOf(5)).toBe(1);
-    expect(floorsOf(2)).toBe(1);
-  });
-
-  it('tells its height, floors and the ground it covers', () => {
-    const facts = buildingFacts([piece(square(20))], true, []);
+  it('tells its floors and height, its use, its outline and the ground it covers', () => {
+    const facts = buildingFacts(building(), true, []);
+    expect(facts.floors).toEqual({ count: 7, known: true });
     expect(facts.height).toBe(23);
-    expect(facts.floors).toBe(7);
+    expect(facts.kind).toBe('homes');
+    expect(facts.source).toEqual({ kind: 'osm' });
     expect(facts.footprint).toBeCloseTo(400, -1);
   });
 
-  it('adds up the ground its polygons cover, and tells none when the tile cuts it', () => {
-    const pieces = [piece(square(20)), piece(square(20, 40))];
-    expect(buildingFacts(pieces, true, []).footprint).toBeCloseTo(800, -1);
-    expect(buildingFacts(pieces, false, []).footprint).toBeNull();
+  it('reckons its floors from its height where they are not known', () => {
+    expect(buildingFacts(building({ floors: null, height: 12 }), true, []).floors).toEqual({
+      count: 4,
+      known: false,
+    });
+    expect(buildingFacts(building({ floors: null, height: null }), true, []).floors).toBeNull();
   });
 
-  it('tells nothing of a height it does not know', () => {
-    const facts = buildingFacts([piece(square(20), null)], true, []);
-    expect(facts.height).toBeNull();
-    expect(facts.floors).toBeNull();
+  it('adds up the ground of its polygons, and tells none when the tile cuts it', () => {
+    const parts = building({ polygons: [square(20), square(20, 40)] });
+    expect(buildingFacts(parts, true, []).footprint).toBeCloseTo(800, -1);
+    expect(buildingFacts(parts, false, []).footprint).toBeNull();
   });
 
   it('takes the house numbers on its outline, in order, and not those across the street', () => {
     const numbers = [
       { ref: '14', at: offsetMeters(CORNER, -3, 10) },
-      { ref: '12', at: offsetMeters(CORNER, 10, 10) },
+      { ref: '2', at: offsetMeters(CORNER, 10, 10) },
       { ref: '15', at: offsetMeters(CORNER, -25, 10) },
     ];
-    const facts = buildingFacts([{ ...piece(square(20)), number: '2' }], true, numbers);
-    expect(facts.numbers).toEqual(['2', '12', '14']);
+    expect(buildingFacts(building(), true, numbers).numbers).toEqual(['2', '14']);
+  });
+
+  it('knows a few uses, and where outlines come from', () => {
+    expect(kindOf('warehouse')).toBe('industry');
+    expect(kindOf('yes')).toBeNull();
+    expect(sourceOf('Instituto Geográfico Nacional (España)')).toEqual({ kind: 'national' });
+    expect(sourceOf('Microsoft ML Buildings')).toEqual({ kind: 'imagery' });
+    expect(sourceOf('Google Open Buildings')).toEqual({ kind: 'imagery' });
+    expect(sourceOf('Esri Community Maps')).toEqual({ kind: 'other', name: 'Esri Community Maps' });
   });
 });

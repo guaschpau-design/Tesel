@@ -15,9 +15,12 @@ export default defineConfig({
   },
   webServer: [
     {
-      // Production build pointed at the synthetic basemap and the test relay server.
+      // Production build pointed at the synthetic basemap and the test relay server. The basemap
+      // stands in for the buildings archive too: it has no buildings layer, so none are drawn,
+      // and a download finds its tiles.
       command:
         `VITE_BASEMAP_URL=http://localhost:${APP_PORT}/test-basemap.pmtiles ` +
+        `VITE_BUILDINGS_URL=http://localhost:${APP_PORT}/test-basemap.pmtiles ` +
         `VITE_SERVER_URL=${SERVER_URL} vite build && ` +
         `node -e "require('fs').copyFileSync('e2e/fixtures/test-basemap.pmtiles','dist/test-basemap.pmtiles')" && ` +
         `vite preview --port ${APP_PORT} --strictPort`,

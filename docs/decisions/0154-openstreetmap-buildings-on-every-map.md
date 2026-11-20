@@ -1,6 +1,6 @@
 # 0154. OpenStreetMap's buildings on every map
 
-- Status: Accepted
+- Status: Superseded by [0161](0161-overture-buildings.md) (Overture Maps' buildings, which hold OpenStreetMap's and add IGN's and those found in aerial imagery)
 - Date: 2026-11-20
 
 ## Context

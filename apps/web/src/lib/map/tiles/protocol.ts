@@ -26,8 +26,8 @@ export function tileUrlTemplate(source: TileSourceId): string {
 
 const TILE_URL_PATTERN = new RegExp(`^${PROTOCOL}://([a-z-]+)/(\\d+)/(\\d+)/(\\d+)$`);
 
-/** Our base map: one PMTiles archive, which also says what part of the world it covers. */
-interface BasemapArchive extends TileArchive {
+/** One of our PMTiles archives, which also says what part of the world it covers. */
+interface PmtilesArchive extends TileArchive {
   bounds(): Promise<Bounds>;
 }
 
@@ -37,7 +37,7 @@ interface BasemapArchive extends TileArchive {
  * not a cancellation, reading starts again with a fresh reader: the map comes back with the
  * connection.
  */
-function pmtilesArchive(url: string): BasemapArchive {
+function pmtilesArchive(url: string): PmtilesArchive {
   let archive = new PMTiles(url);
   async function read<T>(use: (reader: PMTiles) => Promise<T>, signal?: AbortSignal): Promise<T> {
     const reader = archive;
@@ -65,19 +65,21 @@ export type TileReader = Pick<TileStore, 'getTile' | 'keepViewed'>;
 /** What each source shows where it has no tile (empty-tiles.ts). */
 const NOTHING: Readonly<Record<TileSourceId, ArrayBuffer>> = {
   basemap: EMPTY_VECTOR_TILE,
+  buildings: EMPTY_VECTOR_TILE,
   'ign-names': EMPTY_VECTOR_TILE,
   ortho: EMPTY_RASTER_TILE,
   terrain: FLAT_TERRAIN_TILE,
 };
 
 export interface TileArchives extends Readonly<Record<TileSourceId, TileArchive>> {
-  readonly basemap: BasemapArchive;
+  readonly basemap: PmtilesArchive;
 }
 
 /** Where each source's tiles come from when they are not downloaded. */
-export function tileArchives(basemapUrl: string): TileArchives {
+export function tileArchives(urls: { basemap: string; buildings: string }): TileArchives {
   return {
-    basemap: pmtilesArchive(basemapUrl),
+    basemap: pmtilesArchive(urls.basemap),
+    buildings: pmtilesArchive(urls.buildings),
     'ign-names': webArchive(namesTileUrl),
     // The satellite map and its country outlines, a quarter of a megabyte, load with its first tile.
     ortho: lazyArchive(async () => (await import('./ortho.ts')).orthoArchive()),

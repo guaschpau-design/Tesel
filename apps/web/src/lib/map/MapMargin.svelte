@@ -12,7 +12,7 @@
   import { toUtm } from '../coordinates/utm.ts';
   import { nextLight } from '../daylight/arrival.ts';
   import { moonLight } from '../daylight/sky.ts';
-  import { formatTime } from '../format.ts';
+  import { formatClock } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import { bearings } from '../navigation/bearings.svelte.ts';
   import { clockEvery } from '../ui/now.svelte.ts';
@@ -51,7 +51,7 @@
     const next = nextLight(centre, now);
     if (next.kind === 'none') return null;
     const sets = next.kind === 'sets';
-    const time = formatTime(sets ? next.sunset : next.sunrise, locale, now);
+    const time = formatClock(sets ? next.sunset : next.sunrise, locale);
     const percent = Math.round(moonLight(now).lit * 100);
     return {
       sets,

@@ -19,6 +19,11 @@ export function formatDateTime(time: number, locale: string): string {
   return new Date(time).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
 }
 
+/** The time of day alone: for what comes within a day, such as the next sunset. */
+export function formatClock(time: number, locale: string): string {
+  return new Date(time).toLocaleTimeString(locale, { timeStyle: 'short' });
+}
+
 /** Time of day for today's moments, date and time for older ones. */
 export function formatTime(time: number, locale: string, now: number = Date.now()): string {
   const date = new Date(time);

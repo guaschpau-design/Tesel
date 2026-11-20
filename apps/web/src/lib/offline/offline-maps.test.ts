@@ -12,6 +12,7 @@ const archives: TileArchives = {
     ...archive,
     bounds: () => Promise.resolve({ west: -10, south: 36, east: 4, north: 44 }),
   },
+  buildings: archive,
   'ign-names': archive,
   ortho: archive,
   terrain: archive,
@@ -19,20 +20,25 @@ const archives: TileArchives = {
 
 describe('offline maps', () => {
   it('downloads the topographic map, and each extra from its sources, to the zoom it needs', () => {
-    const layers = downloadLayers(archives, 14, ['aerial']);
+    const layers = downloadLayers(archives, 15, ['aerial']);
     expect(layers.map(({ source, maxZoom }) => [source, maxZoom])).toEqual([
-      ['basemap', 14],
-      ['ign-names', 15],
+      ['basemap', 15],
+      // The buildings' deepest tiles are a zoom short of the base map's, and enlarged.
+      ['buildings', 14],
+      ['ign-names', 16],
       ['terrain', TERRAIN_MAX_ZOOM],
-      ['ortho', 17],
+      ['ortho', 18],
     ]);
   });
 
-  it('asks the public services for fewer tiles at a time than our own map', () => {
+  it('asks the public services for fewer tiles at a time than our own archives', () => {
     const layers = downloadLayers(archives, 14, ['aerial']);
-    const [own, ...others] = layers;
-    expect(own?.source).toBe('basemap');
-    for (const layer of others) expect(layer.concurrency).toBeLessThan(own?.concurrency ?? 0);
+    const ours = (source: string) => source === 'basemap' || source === 'buildings';
+    const own = layers.find((layer) => layer.source === 'basemap')?.concurrency ?? 0;
+    for (const layer of layers) {
+      if (ours(layer.source)) expect(layer.concurrency).toBe(own);
+      else expect(layer.concurrency).toBeLessThan(own);
+    }
   });
 
   it('names what an area holds once, whatever the sources behind it', () => {

@@ -11,6 +11,20 @@ export function basemapUrl(): string {
     .href;
 }
 
+/**
+ * Buildings in PMTiles format (ADR-0161), absolute or relative to the app. The server image uses
+ * the archive its server builds from Overture Maps (deploy/vps/buildings.sh); without one,
+ * development reads Overture's own archive of a release, heavier, meant for looking at.
+ */
+export function buildingsUrl(): string {
+  const configured = import.meta.env['VITE_BUILDINGS_URL'] as string | undefined;
+  return new URL(
+    configured ||
+      'https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/2026-11-18.0/buildings.pmtiles',
+    window.location.href,
+  ).href;
+}
+
 /** Absolute URL of the vendored glyphs and sprites (public/map-assets). */
 export function mapAssetsUrl(): string {
   return new URL(`${import.meta.env.BASE_URL}map-assets/`, window.location.href).href;

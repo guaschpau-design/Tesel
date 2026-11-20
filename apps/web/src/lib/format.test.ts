@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatAgo, formatArea, formatBearing, formatDistance, TRUE_DEGREES } from './format.ts';
+import {
+  formatAgo,
+  formatArea,
+  formatBearing,
+  formatClock,
+  formatDistance,
+  TRUE_DEGREES,
+} from './format.ts';
 
 describe('formatting measures', () => {
   it('writes distances in metres, then kilometres', () => {
@@ -42,5 +49,13 @@ describe('formatting measures', () => {
     expect(formatAgo(now - 20, 'es', now)).toBe('hace 20 s');
     expect(formatAgo(now - 185, 'es', now)).toBe('hace 3 min');
     expect(formatAgo(now - 7300, 'en', now)).toBe('2 hr. ago');
+  });
+});
+
+describe('formatClock', () => {
+  it('tells the time of day alone, never the date', () => {
+    const at = new Date(2026, 10, 21, 6, 51).getTime();
+    expect(formatClock(at, 'es-ES')).toBe('6:51');
+    expect(formatClock(at, 'en-GB')).toBe('06:51');
   });
 });

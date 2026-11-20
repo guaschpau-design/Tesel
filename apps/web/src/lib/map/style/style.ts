@@ -54,12 +54,13 @@ import {
   type TrailLook,
 } from './trails.ts';
 import {
-  raisedBuildings,
+  urbanRaisedBuildings,
   URBAN_HOUSE_NUMBER,
   URBAN_PEDESTRIAN,
   urbanFlavor,
   urbanLayers,
 } from './urban.ts';
+import { BUILDINGS_SOURCE, buildingsSource, withBuildings } from './buildings.ts';
 import { houseNumberLayer } from './house-numbers.ts';
 
 export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
@@ -195,6 +196,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
+        [BUILDINGS_SOURCE]: buildingsSource(),
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
@@ -219,7 +221,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
   }
   if (base === 'urban') {
     const all = protomapsLayers(urbanFlavor(), lang);
-    const { ground, names } = urbanLayers(BASEMAP_SOURCE, all.ground, all.names);
+    const { ground, names } = urbanLayers(all.ground, all.names);
     // Footpaths and steps as on the topographic map: the ways on foot between streets.
     const walked = ground.flatMap((layer) =>
       layer.id === 'roads_other'
@@ -227,9 +229,13 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         : [layer],
     );
     return {
-      sources: { [BASEMAP_SOURCE]: basemap, [NAMES_SOURCE]: ignSource() },
+      sources: {
+        [BASEMAP_SOURCE]: basemap,
+        [BUILDINGS_SOURCE]: buildingsSource(),
+        [NAMES_SOURCE]: ignSource(),
+      },
       ground: walked,
-      lines: threeD ? [raisedBuildings(BASEMAP_SOURCE)] : [],
+      lines: threeD ? [urbanRaisedBuildings()] : [],
       names: [houseNumberLayer(NAMES_SOURCE, URBAN_HOUSE_NUMBER), ...names],
     };
   }
@@ -239,6 +245,7 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     return {
       sources: {
         [BASEMAP_SOURCE]: basemap,
+        [BUILDINGS_SOURCE]: buildingsSource(),
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
@@ -324,12 +331,15 @@ function walkersGround(
   });
 }
 
-/** The Protomaps map in a palette, split where its names begin. */
+/**
+ * The Protomaps map in a palette, split where its names begin, its buildings read from the
+ * buildings archive (buildings.ts).
+ */
 function protomapsLayers(flavor: Flavor, lang: string): Omit<BaseMapLayers, 'sources'> {
   const all = layers(BASEMAP_SOURCE, flavor, { lang });
   const firstName = all.findIndex((layer) => layer.type === 'symbol');
   const at = firstName === -1 ? all.length : firstName;
-  return { ground: all.slice(0, at), lines: [], names: all.slice(at) };
+  return { ground: withBuildings(all.slice(0, at)), lines: [], names: all.slice(at) };
 }
 
 /**

@@ -4,7 +4,7 @@
 <script lang="ts">
   import type { LatLon } from '@tesel/protocol';
 
-  import { formatTime } from '../format.ts';
+  import { formatClock } from '../format.ts';
   import type { Locale, Translate } from '../i18n/index.ts';
   import type { Climb } from '../terrain/climb.ts';
   import { roundedMinutes, walkDuration, walkingMinutes } from '../terrain/walking.ts';
@@ -34,8 +34,9 @@
   const next = $derived(light ? nextLight(at, now) : null);
   const onArrival = $derived(light && arrival !== null ? arrivalLight(at, now, arrival) : null);
 
+  /** Within the next day: the time of day says it. */
   function time(at: number): string {
-    return formatTime(at, locale, now);
+    return formatClock(at, locale);
   }
 </script>
 

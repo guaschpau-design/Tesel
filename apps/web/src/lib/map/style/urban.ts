@@ -8,6 +8,7 @@ import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { themeColor } from '../../ui/theme.ts';
+import { buildingEdges, raisedBuildings } from './buildings.ts';
 import type { PedestrianLook } from './trails.ts';
 
 const BUILDING = '#d4d0c8';
@@ -63,7 +64,6 @@ const STREET_NAME_SIZE: ExpressionSpecification = [
  * from a neighbourhood's zoom, house numbers from zoom 17 rather than 18.
  */
 export function urbanLayers(
-  source: string,
   ground: readonly LayerSpecification[],
   names: readonly LayerSpecification[],
 ): { ground: LayerSpecification[]; names: LayerSpecification[] } {
@@ -71,7 +71,10 @@ export function urbanLayers(
     // Buildings at full strength, and edged.
     ground: ground.flatMap((layer) =>
       layer.id === 'buildings' && layer.type === 'fill'
-        ? [{ ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } }, buildingEdges(source)]
+        ? [
+            { ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } },
+            buildingEdges({ 'line-color': BUILDING_EDGE, 'line-width': 0.6 }),
+          ]
         : [layer],
     ),
     names: names.map((layer) => {
@@ -111,35 +114,7 @@ export function urbanLayers(
   };
 }
 
-function buildingEdges(source: string): LayerSpecification {
-  return {
-    id: 'buildings-edge',
-    type: 'line',
-    source,
-    'source-layer': 'buildings',
-    minzoom: 15,
-    filter: ['in', ['get', 'kind'], ['literal', ['building', 'building_part']]],
-    paint: { 'line-color': BUILDING_EDGE, 'line-width': 0.6 },
-  };
-}
-
-/**
- * Each building raised to its height, where the map knows it, or to three floors where it does
- * not: over the streets, under the names.
- */
-export function raisedBuildings(source: string): LayerSpecification {
-  return {
-    id: 'buildings-3d',
-    type: 'fill-extrusion',
-    source,
-    'source-layer': 'buildings',
-    minzoom: 15,
-    filter: ['in', ['get', 'kind'], ['literal', ['building', 'building_part']]],
-    paint: {
-      'fill-extrusion-color': BUILDING,
-      'fill-extrusion-height': ['coalesce', ['get', 'height'], 9],
-      'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0],
-      'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0, 16, 0.85],
-    },
-  };
+/** Each building raised to its height, in the urban map's colour (buildings.ts). */
+export function urbanRaisedBuildings(): LayerSpecification {
+  return raisedBuildings(BUILDING);
 }

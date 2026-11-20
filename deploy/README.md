@@ -2,7 +2,7 @@
 
 ## What the server publishes
 
-Caddy serves the base map at `/maps/basemap.pmtiles` ([ADR-0007](../docs/decisions/0007-self-hosted-vector-maps.md)): Spain, Portugal and the islands by default; set `TESEL_MAP_BBOX` (west,south,east,north) in the environment of `maps.sh` for another area. It is OpenStreetMap data, © OpenStreetMap contributors, under the [Open Database License](https://www.openstreetmap.org/copyright); `/maps/README.txt`, written with every build, says so and where the extract came from.
+Caddy serves the base map at `/maps/basemap.pmtiles` ([ADR-0007](../docs/decisions/0007-self-hosted-vector-maps.md)): Spain, Portugal and the islands by default; set `TESEL_MAP_BBOX` (west,south,east,north) in the environment of `maps.sh` for another area. It is OpenStreetMap data, © OpenStreetMap contributors, under the [Open Database License](https://www.openstreetmap.org/copyright); `/maps/README.txt`, written with every build, says so and where the extract came from. The buildings of the same area are served at `/maps/buildings.pmtiles` ([ADR-0161](../docs/decisions/0161-overture-buildings.md)): Overture Maps' (OpenStreetMap's, national mapping agencies' and those found in aerial imagery), under the same licence; `/maps/buildings.txt` says so.
 
 The server image carries the landing page ([`apps/site`](../apps/site)) at `/`, its English version at `/en/`, the web app at `/app/` and the relay at `/v1/ws` ([ADR-0017](../docs/decisions/0017-server-serves-site-and-app.md)). The app built into the image proposes its own server for new groups and uses the base map its server publishes. Whoever controls the image controls the app, so servers run only images signed by this repository's CI ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md)).
 
@@ -46,6 +46,7 @@ What [`vps/install.sh`](vps/install.sh) sets up:
 | Old names  | With `--redirect-from`, domains the server used to have answer with a permanent redirect to the same address on the new one                                                                                       |
 | Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                                                       |
 | Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                                                               |
+| Buildings  | [`vps/buildings.sh`](vps/buildings.sh) keeps the area's buildings from the latest Overture Maps release, served at `/maps/buildings.pmtiles`; rebuilt monthly, the first time by the installer (about an hour)    |
 | Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`, or off the host (below)                                                |
 | Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy, which the backups and the updates use; it also lists the largest groups and purges one                        |
 
