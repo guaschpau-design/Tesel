@@ -393,11 +393,11 @@ export const es: Messages = {
   baseMapUrban: 'Urbano',
   baseMapAerial: 'Satélite',
   baseMapTopoAbout:
-    'Para moverse por el campo: relieve, curvas de nivel, caminos, fuentes y refugios. Al elegirlo, se activa el relieve.',
+    'Para moverse por el campo: relieve, curvas de nivel, caminos, fuentes y refugios. Al elegirlo, se activan el relieve y los incendios.',
   baseMapUrbanAbout:
-    'Para operar en una ciudad: calles, portales, edificios con su altura y lugares críticos. Al elegirlo, se ve en 3D.',
+    'Para operar en una ciudad: calles, portales, edificios con su altura y lugares críticos. Al elegirlo, se ve en 3D, con las zonas inundables y el radar.',
   baseMapTacticalAbout:
-    'Para leer el terreno: cubierta, observación y movilidad. Al elegirlo, se activan MGRS, milésimas, radar y pendientes.',
+    'Para leer el terreno: cubierta, observación y movilidad. Al elegirlo, se activan MGRS, milésimas, radar, relieve y pendientes.',
   baseMapAerialAbout: 'La fotografía aérea más reciente, con los nombres encima.',
   layersOfGroup: 'Lo del grupo',
   layersOfMap: 'Información del mapa',

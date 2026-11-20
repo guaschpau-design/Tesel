@@ -66,6 +66,21 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   const light = page.getByRole('region', { name: 'Luz de hoy' });
   await expect(light).toContainText('Alba');
   await expect(light).toContainText(/\d+ % · (creciente|menguante)/);
+  await light.getByRole('button', { name: 'Cerrar' }).click();
+
+  // Back on the urban map, it shows what it is chosen for, and bearings in degrees (ADR-0160).
+  await page.getByRole('button', { name: 'Capas del mapa' }).click();
+  await layers.getByRole('radio', { name: 'Urbano', exact: true }).click();
+  const on = { Servicios: true, Radar: true, 'Zonas inundables': true, Relieve: false };
+  for (const [name, checked] of Object.entries({ ...on, 'Cuadrícula MGRS': false })) {
+    await expect(layers.getByRole('switch', { name })).toHaveAttribute(
+      'aria-checked',
+      String(checked),
+    );
+  }
+  await layers.getByRole('button', { name: 'Cerrar' }).click();
+  await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - 150 } });
+  await expect(panel.getByText(/^\d+ m · \d{3}° [NSEO]{1,2} desde ti$/)).toBeVisible();
 });
 
 test('the map is decluttered and shown in full again', async ({ browser }) => {

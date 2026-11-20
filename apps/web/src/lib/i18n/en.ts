@@ -392,11 +392,11 @@ export const en = {
   baseMapUrban: 'Urban',
   baseMapAerial: 'Satellite',
   baseMapTopoAbout:
-    'For moving across country: relief, contour lines, tracks, springs and huts. Choosing it turns the relief on.',
+    'For moving across country: relief, contour lines, tracks, springs and huts. Choosing it turns on the relief and fires.',
   baseMapUrbanAbout:
-    'For working in a town: streets, house numbers, buildings at their height and critical places. Choosing it shows it in 3D.',
+    'For working in a town: streets, house numbers, buildings at their height and critical places. Choosing it shows it in 3D, with flood zones and the radar.',
   baseMapTacticalAbout:
-    'For reading the ground: cover, observation and mobility. Choosing it turns on MGRS, mils, the radar and slopes.',
+    'For reading the ground: cover, observation and mobility. Choosing it turns on MGRS, mils, the radar, relief and slopes.',
   baseMapAerialAbout: 'The latest aerial photographs, with the names over them.',
   layersOfGroup: 'From the group',
   layersOfMap: 'Map information',

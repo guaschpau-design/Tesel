@@ -176,6 +176,7 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - Daylight: on the topographic and tactical maps a point tells when the sun sets or rises there, and warns when you would arrive with little light or in the dark; the tactical map's margin shows the next sunset and the moon, and opens «Luz de hoy» with first and last light and the moon's rise and set, offline ([ADR-0157](docs/decisions/0157-daylight-and-moon.md)).
 - On the urban map, a tap on a building tells about how many floors and how high it is, the ground it covers and its house numbers ([ADR-0158](docs/decisions/0158-what-a-building-is.md)).
 - On the tactical map, «Enlace de radio desde ti» tells whether a LoRa radio reaches a point, an object or a member over the ground, with its profile, the Fresnel zone and the antennas' height to choose ([ADR-0159](docs/decisions/0159-radio-link-over-the-ground.md)).
+- Each base map shows the same layers each time it is chosen, as Pau set them: services on every map; relief on the topographic and tactical maps; fires on the topographic, flood zones on the urban; the radar on the urban and tactical; slopes and the MGRS grid on the tactical. Off the tactical map, bearings are read in degrees from true north again ([ADR-0160](docs/decisions/0160-what-each-map-shows-at-first.md)).
 
 ### Known limits
 

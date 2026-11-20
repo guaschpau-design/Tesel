@@ -1,6 +1,6 @@
 # 0155. Three maps, three questions
 
-- Status: Accepted
+- Status: Accepted; its per-map defaults superseded by [0160](0160-what-each-map-shows-at-first.md)
 - Date: 2026-11-20
 
 ## Context

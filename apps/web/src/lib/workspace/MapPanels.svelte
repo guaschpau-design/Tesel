@@ -12,6 +12,8 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import LayersPanel from '../map/LayersPanel.svelte';
   import { setGround } from '../map/ground.svelte.ts';
+  import { MAP_FLAGS } from '../map/layers.ts';
+  import { mapDefaults } from '../map/map-defaults.ts';
   import type { BaseMap } from '../map/style/style.ts';
   import { navigateTo } from '../navigation/navigation.svelte.ts';
   import { compass } from '../position/compass.svelte.ts';
@@ -53,24 +55,24 @@
   );
 
   /**
-   * Each base map comes with what reading it asks for (ADR-0155); each can then be changed again.
-   * The topographic map, its relief. The urban map, its buildings at their height, in 3D. The
-   * tactical map, read as a military map is (ADR-0141, ADR-0145): the MGRS grid on, coordinates in
-   * MGRS, bearings in mils from magnetic north, the radar's rings round this device (ADR-0150) and
-   * the slopes a vehicle can or cannot climb.
+   * Each base map comes with what reading it asks for (ADR-0155, ADR-0160); each can then be
+   * changed again: its own layers on or off (map/map-defaults.ts), bearings and coordinates read
+   * as on a military map on the tactical map (ADR-0141, ADR-0145) and as on any map elsewhere, and
+   * the urban map's buildings at their height, in 3D.
    */
   async function withMap(base: BaseMap): Promise<void> {
-    if (base === 'topo') await preferences.relief.set(true);
-    if (base === 'urban') setGround(map, true);
-    if (base !== 'tactical') return;
     // Asked first, within the tap, as the iPhone wants: the compass turns this device's arrow.
-    const asked = compass.ask();
-    await preferences.grid.set(true);
-    await preferences.coordinateFormat.set('mgrs');
-    await preferences.bearingUnit.set('mils');
-    await preferences.north.set('magnetic');
-    await preferences.radar.set(true);
-    await preferences.slope.set(true);
+    const asked = base === 'tactical' ? compass.ask() : Promise.resolve();
+    if (base === 'urban') setGround(map, true);
+    const defaults = mapDefaults(base);
+    // All at once: each takes effect as it is set, and storing them waits on a busy map.
+    await Promise.all([
+      ...MAP_FLAGS.map((flag) => preferences[flag].set(defaults.flags[flag])),
+      preferences.hiddenLayers.set(defaults.hidden(preferences.hiddenLayers.value)),
+      preferences.bearingUnit.set(defaults.bearingUnit),
+      preferences.north.set(defaults.north),
+      preferences.coordinateFormat.set(defaults.coordinates(preferences.coordinateFormat.value)),
+    ]);
     await asked;
   }
 </script>

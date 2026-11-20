@@ -1,6 +1,6 @@
 # 0042. Remove the radio line of sight
 
-- Status: Accepted
+- Status: Superseded by [0159](0159-radio-link-over-the-ground.md)
 - Date: 2026-10-27
 
 ## Context

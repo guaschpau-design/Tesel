@@ -5,7 +5,7 @@
 
 ## Context
 
-Tesel's mesh radios (MeshCore, on LoRa) carry the team's messages where there is no network. LoRa needs the way between two radios clear: a hill between them cuts the signal. A team placing itself, or a repeater, needs to know beforehand whether a radio there will reach. Pau chose it for the tactical map.
+Tesel's mesh radios (MeshCore, on LoRa) carry the team's messages where there is no network. LoRa needs the way between two radios clear: a hill between them cuts the signal. A team placing itself, or a repeater, needs to know beforehand whether a radio there will reach. Pau chose it for the tactical map. An earlier check of the kind, «Visión radio» (ADR-0032), offered from any point of any map, had been taken out (ADR-0042); this one lives on the tactical map only, where reading the ground is the point, and takes in the Fresnel zone and the antennas' height. It supersedes ADR-0042.
 
 ## Decision
 
