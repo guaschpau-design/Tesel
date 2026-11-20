@@ -72,8 +72,8 @@ export const ORTHO_ATTRIBUTION =
   '<a href="https://www.ign.fr" target="_blank">IGN – BD ORTHO</a>';
 
 /**
- * IGN's vector map of Spain (Mapa Base): the topographic map reads its names of the terrain, and
- * both it and the urban map the cadastre's buildings and the official house numbers (ADR-0139).
+ * IGN's vector map of Spain (Mapa Base): the topographic and tactical maps read its names of the
+ * terrain and the way streams flow, the urban map the official house numbers (ADR-0139, ADR-0154).
  */
 export const NAMES_ATTRIBUTION = `${SCNE} · Mapa Base`;
 

@@ -1,6 +1,6 @@
 # 0149. One layer of buildings, and tidier layers
 
-- Status: Accepted
+- Status: Accepted; its buildings superseded by [0154](0154-openstreetmap-buildings-on-every-map.md), its tidier layers stand
 - Date: 2026-11-19
 
 ## Context

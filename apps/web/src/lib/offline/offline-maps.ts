@@ -42,8 +42,8 @@ export interface OfflineMaps {
 
 /**
  * What every download holds: the topographic map, Tesel's base map (ADR-0120), which the urban and
- * tactical maps share — the OpenStreetMap map, IGN's map of Spain (its names of the terrain, the
- * cadastre's buildings and the house numbers, ADR-0139), and the elevation its contour lines, the
+ * tactical maps share — the OpenStreetMap map, IGN's map of Spain (its names of the terrain, the way
+ * streams flow and the house numbers, ADR-0139), and the elevation its contour lines, the
  * relief and the climbs are worked out from.
  */
 const BASE_SOURCES: readonly TileSourceId[] = ['basemap', 'ign-names', 'terrain'];

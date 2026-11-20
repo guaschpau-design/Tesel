@@ -6,13 +6,12 @@
 import { namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type { LayerSpecification } from 'maplibre-gl';
 
-import type { BuildingLook } from './cadastre.ts';
 import { HUT_IMAGE, type HutLook, type PedestrianLook, type TrailLook } from './trails.ts';
 
 /**
  * What the tactical map draws apart from the base map's palette: the woods'
  * texture and a stream's flow (images made by terrain-images.ts, in their inks), the streams, the
- * ways off the streets, pedestrian streets, huts and the cadastre's buildings (ADR-0145).
+ * ways off the streets, pedestrian streets and huts (ADR-0145).
  */
 export interface TacticalLook {
   readonly images: { readonly woods: string; readonly flow: string };
@@ -21,7 +20,6 @@ export interface TacticalLook {
   readonly trails: TrailLook;
   readonly pedestrian: PedestrianLook;
   readonly huts: HutLook;
-  readonly buildings: BuildingLook;
 }
 
 export const TACTICAL_LOOK: TacticalLook = {
@@ -33,7 +31,6 @@ export const TACTICAL_LOOK: TacticalLook = {
   // Pedestrian streets as the other streets: light on brown edges.
   pedestrian: { line: '#f4ecd6', casing: '#7a6a52' },
   huts: { image: HUT_IMAGE, name: '#3a2e22' },
-  buildings: { fill: '#5a4e3c', edge: null },
 };
 
 /** Bridges' edges: where a way crosses water or a valley, a point every crossing depends on. */

@@ -1,6 +1,6 @@
 # 0145. Reading the tactical map as soldiers do
 
-- Status: Accepted
+- Status: Accepted; its cadastre buildings superseded by [0154](0154-openstreetmap-buildings-on-every-map.md)
 - Date: 2026-11-19
 
 ## Context

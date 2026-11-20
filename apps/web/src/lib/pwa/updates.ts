@@ -41,7 +41,6 @@ export async function loadLazyParts(): Promise<void> {
   const parts = await Promise.allSettled([
     import('jsqr'),
     import('../map/tiles/ortho.ts'),
-    import('../map/tiles/borders-data.ts'),
     import('@tesel/meshcore'),
     import('@tesel/meshtastic'),
   ]);

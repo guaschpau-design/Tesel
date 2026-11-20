@@ -9,7 +9,6 @@ import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { themeColor } from '../../ui/theme.ts';
 import { CONTOUR_LAYER, HEIGHT_KEY, RANK_KEY } from './contours.ts';
-import type { BuildingLook } from './cadastre.ts';
 import type { PedestrianLook } from './trails.ts';
 
 /** The style's names for the contour lines and for IGN's vector map. */
@@ -41,12 +40,6 @@ const TOPO_PALETTE: Partial<Flavor> = {
     forest: 'rgba(207, 226, 193, 1)',
   },
 };
-
-/**
- * The cadastre's buildings (cadastre.ts) as the base map draws its own over this land: its grey at
- * half strength, which they replace in Spain (one-layer-of-buildings.ts).
- */
-export const TOPO_BUILDINGS: BuildingLook = { fill: '#dddbd7', edge: null };
 
 /** Pedestrian streets are streets like the others here: the urban map is where they stand apart. */
 export const TOPO_PEDESTRIAN: PedestrianLook = { line: '#ffffff', casing: '#d6d0c4' };

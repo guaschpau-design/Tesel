@@ -34,7 +34,6 @@ import {
   contourLayers,
   NAMES_SOURCE,
   terrainNameLayers,
-  TOPO_BUILDINGS,
   topoFlavor,
   TOPO_PEDESTRIAN,
 } from './topo.ts';
@@ -54,18 +53,12 @@ import {
 } from './trails.ts';
 import {
   raisedBuildings,
-  URBAN_BUILDINGS,
   URBAN_HOUSE_NUMBER,
   URBAN_PEDESTRIAN,
   urbanFlavor,
   urbanLayers,
 } from './urban.ts';
-import {
-  cadastreBuildingLayers,
-  houseNumberLayer,
-  raisedCadastreBuildings,
-  type BuildingLook,
-} from './cadastre.ts';
+import { houseNumberLayer } from './house-numbers.ts';
 
 export const BASE_MAPS = ['topo', 'urban', 'aerial', 'tactical'] as const;
 export type BaseMap = (typeof BASE_MAPS)[number];
@@ -182,16 +175,13 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [NAMES_SOURCE]: ignSource(),
       },
       // Woods dotted as cover, water and the ways off the streets as on the topographic map in
-      // the tactical map's inks; in Spain, every building of the cadastre.
-      ground: withCadastre(
-        walkersGround(ground, {
-          woods: look.images.woods,
-          stream: look.stream,
-          pedestrian: look.pedestrian,
-          trails: look.trails,
-        }),
-        look.buildings,
-      ),
+      // the tactical map's inks; buildings solid, as cover.
+      ground: walkersGround(ground, {
+        woods: look.images.woods,
+        stream: look.stream,
+        pedestrian: look.pedestrian,
+        trails: look.trails,
+      }).map(solidBuildings),
       lines: contourLayers(),
       // The arrows first among the names: any name has the place before them.
       names: [
@@ -214,13 +204,8 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
     );
     return {
       sources: { [BASEMAP_SOURCE]: basemap, [NAMES_SOURCE]: ignSource() },
-      ground: withCadastre(walked, URBAN_BUILDINGS),
-      lines: threeD
-        ? [
-            raisedCadastreBuildings(NAMES_SOURCE, URBAN_BUILDINGS.fill),
-            raisedBuildings(BASEMAP_SOURCE),
-          ]
-        : [],
+      ground: walked,
+      lines: threeD ? [raisedBuildings(BASEMAP_SOURCE)] : [],
       names: [houseNumberLayer(NAMES_SOURCE, URBAN_HOUSE_NUMBER), ...names],
     };
   }
@@ -233,15 +218,12 @@ function baseMapLayers({ base, lang, threeD }: StyleChoice): BaseMapLayers {
         [CONTOURS_SOURCE]: contourSource(),
         [NAMES_SOURCE]: ignSource(),
       },
-      ground: withCadastre(
-        walkersGround(ground, {
-          woods: TREES_IMAGE,
-          stream: TOPO_STREAM,
-          pedestrian: TOPO_PEDESTRIAN,
-          trails: TOPO_TRAILS,
-        }),
-        TOPO_BUILDINGS,
-      ),
+      ground: walkersGround(ground, {
+        woods: TREES_IMAGE,
+        stream: TOPO_STREAM,
+        pedestrian: TOPO_PEDESTRIAN,
+        trails: TOPO_TRAILS,
+      }),
       lines: contourLayers(),
       names: [...terrainNameLayers(), hutLayer(BASEMAP_SOURCE, lang, TOPO_HUTS), ...names],
     };
@@ -273,8 +255,8 @@ function contourSource(): SourceSpecification {
 }
 
 /**
- * IGN's vector map of Spain: the names of the terrain, the cadastre's buildings and the official
- * house numbers, read a zoom deeper than the OpenStreetMap map (ADR-0139).
+ * IGN's vector map of Spain: the names of the terrain, the way streams flow and the official house
+ * numbers, read a zoom deeper than the OpenStreetMap map (ADR-0139, ADR-0140).
  */
 function ignSource(): SourceSpecification {
   return {
@@ -285,14 +267,11 @@ function ignSource(): SourceSpecification {
   };
 }
 
-/** The cadastre's buildings over OpenStreetMap's, in the map's own look (cadastre.ts). */
-function withCadastre(
-  ground: readonly LayerSpecification[],
-  look: BuildingLook,
-): LayerSpecification[] {
-  return ground.flatMap((layer) =>
-    layer.id === 'buildings' ? [layer, ...cadastreBuildingLayers(NAMES_SOURCE, look)] : [layer],
-  );
+/** The base map's buildings at full strength, rather than its half: on the tactical map, cover. */
+function solidBuildings(layer: LayerSpecification): LayerSpecification {
+  return layer.id === 'buildings' && layer.type === 'fill'
+    ? { ...layer, paint: { ...layer.paint, 'fill-opacity': 1 } }
+    : layer;
 }
 
 /** How a map draws the ground off the streets (trails.ts): its inks for each thing. */
