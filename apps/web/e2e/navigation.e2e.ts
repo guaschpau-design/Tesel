@@ -67,9 +67,10 @@ test('a measured path shows, on asking, its profile and how much it climbs', asy
     await canvas.click({ position });
   }
   await card.getByRole('button', { name: 'Desnivel' }).click();
+  // Worked out from the elevation tiles once loaded, which a busy CI machine can take long to do.
   await expect(
     card.getByRole('img', { name: /^Perfil del terreno a lo largo de lo medido/ }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 20_000 });
   await expect(card.getByText(/^↑ \d+ m · ↓ 0 m · pendiente máx\. \d+ %$/)).toBeVisible();
   await expect(card.getByText('Inicio')).toBeVisible();
   // Hidden again, the climb stays on the line of the length.
