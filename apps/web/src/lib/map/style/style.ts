@@ -125,6 +125,10 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
   const shaded =
     (choice.relief || choice.threeD || choice.base === 'tactical') && choice.base !== 'urban';
   const relief = shaded ? reliefShading(theme, choice.threeD) : null;
+  // In 3D the urban map raises its buildings and leaves the ground flat: raised ground took a
+  // phone more memory than it had, with the buildings on it, and a town's streets read as well
+  // without it (ADR-0163).
+  const raisedGround = choice.threeD && choice.base !== 'urban';
   // Labels over photographs read best light on dark.
   const sprite = choice.base === 'aerial' ? 'dark' : 'light';
   return {
@@ -134,7 +138,7 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
     sources: {
       ...sources,
       ...(relief ? { [RELIEF_SOURCE]: relief.source } : {}),
-      ...(choice.threeD ? { [GROUND_SOURCE]: elevationSource() } : {}),
+      ...(raisedGround ? { [GROUND_SOURCE]: elevationSource() } : {}),
       ...(choice.slope ? { [SLOPE_SOURCE]: slopeSource() } : {}),
     },
     layers: [
@@ -144,7 +148,7 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
       ...lines,
       ...(choice.declutter ? names.filter(isPlaceName) : names),
     ],
-    ...(choice.threeD ? { terrain: { source: GROUND_SOURCE }, sky: groundSky() } : {}),
+    ...(raisedGround ? { terrain: { source: GROUND_SOURCE }, sky: groundSky() } : {}),
   };
 }
 

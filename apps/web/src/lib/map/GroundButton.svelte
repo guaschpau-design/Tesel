@@ -6,7 +6,7 @@
 
   import type { Translate } from '../i18n/index.ts';
   import { activity } from '../power/activity.svelte.ts';
-  import { ground, groundExaggeration, setGround } from './ground.svelte.ts';
+  import { ground, groundExaggeration, keepDrapedTogether, setGround } from './ground.svelte.ts';
 
   interface Props {
     t: Translate;
@@ -22,6 +22,8 @@
   $effect(() => {
     if (activity.rest !== 'awake' && ground.raised) set(false);
   });
+
+  $effect(() => keepDrapedTogether(map));
 
   // Raised as the zoom asks, and again once a new style (theme, base map) has brought the
   // ground back at its own height. Only a change worth seeing is applied, so this settles.

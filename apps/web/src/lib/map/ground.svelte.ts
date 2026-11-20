@@ -40,3 +40,44 @@ export function setGround(map: MapLibreMap, raised: boolean): void {
     });
   }
 }
+
+/**
+ * The layers MapLibre drapes over raised ground, drawn onto it as pictures, one per tile: flat
+ * ones such as fills, lines and the relief. Each run of them between other layers (names, dots,
+ * buildings) takes pictures of its own, so a map that mixes them took several times the memory
+ * and a phone could close the page (ADR-0163).
+ */
+const DRAPED = new Set(['background', 'fill', 'line', 'raster', 'hillshade', 'color-relief']);
+
+/**
+ * With the ground raised, keeps every draped layer under all the others, each group in its order,
+ * so the ground takes one picture per tile. The flat map, a style of its own, keeps its order.
+ * Our overlays come back after every new style, so this is done again whenever the style
+ * changes, just after the frame, as overlays are (overlay.svelte.ts).
+ */
+export function keepDrapedTogether(map: MapLibreMap): () => void {
+  let queued = false;
+  const arrange = () => {
+    queued = false;
+    if (map.getTerrain() === null) return;
+    const order = map.getLayersOrder();
+    const draped = (id: string) => DRAPED.has(map.getLayer(id)?.type ?? '');
+    const lastDraped = order.findLastIndex(draped);
+    const firstOther = order.findIndex((id) => !draped(id));
+    if (firstOther === -1 || firstOther > lastDraped) return;
+    // Every other layer to the top, in its order: the draped ones are left together below.
+    for (const id of order.filter((layer) => !draped(layer))) map.moveLayer(id);
+  };
+  const queue = () => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(arrange);
+  };
+  map.on('styledata', queue);
+  map.on('idle', queue);
+  queue();
+  return () => {
+    map.off('styledata', queue);
+    map.off('idle', queue);
+  };
+}

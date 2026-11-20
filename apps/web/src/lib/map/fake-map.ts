@@ -1,11 +1,12 @@
 // For tests: just enough of a MapLibre map for our overlays, taps and framing. Sources, layers in
-// drawing order, events fired at once as MapLibre does, the data each GeoJSON source was given, the
+// drawing order, the raised ground, events fired at once as MapLibre does, the data each GeoJSON source was given, the
 // features a test says are drawn where the map is tapped, and a view that moves at once.
 
 import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
 
 export interface FakeLayer {
   readonly id: string;
+  readonly type?: string;
   layout?: Record<string, unknown>;
   readonly metadata?: unknown;
 }
@@ -22,6 +23,8 @@ export class FakeMap {
   readonly drawn = new Map<string, Record<string, unknown>>();
   /** Every `fitBounds`, in order: the bounds asked for. */
   readonly fitted: unknown[] = [];
+  /** The raised ground, when the style has it. */
+  terrain: object | null = null;
   #view = { lat: 40.2, lon: -3.7, zoom: 5, bearing: 0 };
   readonly #handlers = new Map<string, Set<Handler>>();
 
@@ -125,6 +128,22 @@ export class FakeMap {
 
   getStyle(): { layers: FakeLayer[] } {
     return { layers: [...this.layers.values()] };
+  }
+
+  getLayersOrder(): string[] {
+    return [...this.layers.keys()];
+  }
+
+  /** Moves a layer below `before`, or to the top. */
+  moveLayer(id: string, before?: string): void {
+    const layer = this.layers.get(id);
+    if (layer === undefined) return;
+    this.layers.delete(id);
+    this.addLayer(layer, before);
+  }
+
+  getTerrain(): object | null {
+    return this.terrain;
   }
 
   removeLayer(id: string): void {

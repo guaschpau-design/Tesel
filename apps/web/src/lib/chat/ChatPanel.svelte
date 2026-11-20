@@ -60,7 +60,8 @@
   const draft = new ChatDraft(speechRecognizer());
   onDestroy(() => draft.dictation?.cancel());
 
-  let list: HTMLOListElement | undefined = $state();
+  /** The list of messages while it is shown; Svelte sets it back to null once it is not. */
+  let list = $state<HTMLOListElement | null>(null);
   const entries = $derived(timeline(groupState));
 
   /** How near the end, in pixels, the reader still counts as at the end. */
@@ -70,20 +71,20 @@
   /** Whether the reader is at the newest entry, not reading older ones. */
   let atEnd = true;
   /** The list last scrolled: one shown again, after another tab, opens at the newest entry. */
-  let scrolled: HTMLOListElement | undefined;
+  let scrolled: HTMLOListElement | null = null;
 
   // A new entry is shown if the reader was at the end or wrote it; anything else that changes in
   // the group leaves the reader where they are.
   $effect(() => {
     const element = list;
-    if (element === undefined || newestKey === undefined) return;
+    if (element === null || newestKey === undefined) return;
     if (element === scrolled && !atEnd && !newestOwn) return;
     scrolled = element;
     void tick().then(() => element.lastElementChild?.scrollIntoView({ block: 'end' }));
   });
 
   function onscroll(): void {
-    if (list === undefined) return;
+    if (list === null) return;
     atEnd = list.scrollHeight - list.scrollTop - list.clientHeight < END_SLACK_PX;
   }
 </script>

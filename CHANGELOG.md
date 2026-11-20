@@ -182,6 +182,10 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - The usage page shows from which countries the site is visited and the app connects, from DB-IP's free table, without keeping any address; the legal notice says so ([ADR-0162](docs/decisions/0162-usage-by-country.md)).
 
+- 3D takes far less of a phone's memory, which closed the page on an iPhone: the layers draped over the raised ground are drawn together, and the urban map raises its buildings on flat ground ([ADR-0163](docs/decisions/0163-lighter-3d.md)).
+
+- Two errors found going through the app: leaving the chat's messages could raise an error as the list went away, and editing a marker or a shape did not say it was sent.
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.

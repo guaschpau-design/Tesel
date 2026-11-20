@@ -88,9 +88,11 @@
       title={t('editObject', { name: objectTitle(record, feed.state.objects, t) })}
       coordinator={role === 'coordinator'}
       onsave={async (code: number, label: string) => {
+        // Named now: once the form closes, `record` and `kind` no longer have a value.
+        const name = t(DRAFT_NAMES[kind]);
         await feed.editObject(record, code, label);
         changing = null;
-        noticeSent(t, feed, t(DRAFT_NAMES[kind]));
+        noticeSent(t, feed, name);
       }}
       oncancel={() => (changing = null)}
     />
