@@ -13,16 +13,16 @@
     "buildings": "node src/maps/build-buildings.ts"
   },
   "dependencies": {
-    "@fastify/static": "10.1.7",
-    "@fastify/websocket": "11.3.4",
+    "@fastify/static": "10.1.11",
+    "@fastify/websocket": "11.3.7",
     "@mapbox/vector-tile": "^3.0.0",
     "@maplibre/vt-pbf": "^4.3.3",
     "@tesel/core": "workspace:*",
     "@tesel/protocol": "workspace:*",
-    "fastify": "^5.12.7",
+    "fastify": "^5.12.8",
     "pbf": "^5.1.2",
     "pmtiles": "^4.5.0",
-    "ws": "^8.22.0"
+    "ws": "^8.23.0"
   },
   "devDependencies": {
     "@mapbox/point-geometry": "^1.1.0",
