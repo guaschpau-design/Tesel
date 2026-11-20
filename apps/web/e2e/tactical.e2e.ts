@@ -10,6 +10,8 @@ import { serveTopographicData } from './terrain-ramp.ts';
 test('the tactical map reads as a military map: MGRS, mils from magnetic north, its margin', async ({
   browser,
 }) => {
+  // Its relief, always drawn, keeps a software-drawn map busy long.
+  test.setTimeout(120_000);
   const page = await device(browser, 'Ana');
   // The tactical map always draws the relief and IGN's map: stood in for, as for the topographic.
   await serveTopographicData(page);
@@ -66,21 +68,6 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   const light = page.getByRole('region', { name: 'Luz de hoy' });
   await expect(light).toContainText('Alba');
   await expect(light).toContainText(/\d+ % · (creciente|menguante)/);
-  await light.getByRole('button', { name: 'Cerrar' }).click();
-
-  // Back on the urban map, it shows what it is chosen for, and bearings in degrees (ADR-0160).
-  await page.getByRole('button', { name: 'Capas del mapa' }).click();
-  await layers.getByRole('radio', { name: 'Urbano', exact: true }).click();
-  const on = { Servicios: true, Radar: true, 'Zonas inundables': true, Relieve: false };
-  for (const [name, checked] of Object.entries({ ...on, 'Cuadrícula MGRS': false })) {
-    await expect(layers.getByRole('switch', { name })).toHaveAttribute(
-      'aria-checked',
-      String(checked),
-    );
-  }
-  await layers.getByRole('button', { name: 'Cerrar' }).click();
-  await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - 150 } });
-  await expect(panel.getByText(/^\d+ m · \d{3}° [NSEO]{1,2} desde ti$/)).toBeVisible();
 });
 
 test('the map is decluttered and shown in full again', async ({ browser }) => {
@@ -98,4 +85,48 @@ test('the map is decluttered and shown in full again', async ({ browser }) => {
   await layers.getByRole('button', { name: 'Mostrar todo' }).click();
   await expect(declutter).toHaveAttribute('aria-pressed', 'false');
   await expect(layers).not.toContainText('Mapa despejado');
+});
+
+test('the urban map, chosen after the tactical one, shows its layers and degrees', async ({
+  browser,
+}) => {
+  // The relief, then the buildings raised in 3D, keep a software-drawn map busy long.
+  test.setTimeout(120_000);
+  const page = await device(browser, 'Ana');
+  await serveTopographicData(page);
+  await page
+    .getByRole('region', { name: 'Grupos' })
+    .getByRole('button', { name: 'Cerrar' })
+    .click();
+  await page.getByRole('button', { name: 'Capas del mapa' }).click();
+  const layers = page.getByRole('region', { name: 'Capas del mapa' });
+  await layers.getByRole('radio', { name: 'Táctico', exact: true }).click();
+  await layers.getByRole('radio', { name: 'Urbano', exact: true }).click();
+  // What it is chosen for (ADR-0160), whatever the tactical map had turned on.
+  const shown = {
+    Servicios: true,
+    Radar: true,
+    'Zonas inundables': true,
+    Relieve: false,
+    Pendientes: false,
+    'Cuadrícula MGRS': false,
+  };
+  for (const [name, checked] of Object.entries(shown)) {
+    await expect(layers.getByRole('switch', { name })).toHaveAttribute(
+      'aria-checked',
+      String(checked),
+    );
+  }
+  await layers.getByRole('button', { name: 'Cerrar' }).click();
+
+  // Bearings in degrees from true north again.
+  await page.getByRole('button', { name: 'Mostrar mi ubicación' }).click();
+  const canvas = page.locator('.maplibregl-canvas');
+  const box = await canvas.boundingBox();
+  if (box === null) throw new Error('no map');
+  // Raised in 3D, a software-drawn map is slow to draw each frame: tapped where it is, without
+  // waiting for it to hold still.
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2 - 150);
+  const panel = page.getByRole('region', { name: 'Punto del mapa' });
+  await expect(panel.getByText(/^\d+ m · \d{3}° [NSEO]{1,2} desde ti$/)).toBeVisible();
 });
