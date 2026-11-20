@@ -31,6 +31,8 @@ export interface ServerConfig {
   readonly statsKey: string | null;
   /** The time zone whose days usage is counted in. */
   readonly timeZone: string;
+  /** DB-IP's table of countries (countries.ts), gzipped, to count usage by country; or null. */
+  readonly countriesPath: string | null;
 }
 
 /** The usage page's password is long enough not to be guessed. */
@@ -56,6 +58,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     trustedProxies: list(env, 'TESEL_TRUSTED_PROXIES', 'loopback'),
     statsKey: statsKey(env),
     timeZone: timeZone(env),
+    countriesPath: setting(env, 'TESEL_COUNTRIES') ?? null,
   };
 }
 

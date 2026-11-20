@@ -94,7 +94,7 @@ export class Relay {
   /** Serves a client connection from `address`, which `admits` has let in. */
   accept(socket: WebSocket, address: string): void {
     this.#sockets.add(socket);
-    this.#usage?.connected();
+    this.#usage?.connected(address);
     const connection: Connection = {
       socket,
       address,

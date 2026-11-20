@@ -37,10 +37,13 @@ services:
       TESEL_MIN_FREE_DISK_MB: ${TESEL_MIN_FREE_DISK_MB:-}
       TESEL_STATS_KEY: ${TESEL_STATS_KEY:-}
       TESEL_TIME_ZONE: ${TESEL_TIME_ZONE:-}
+      # The table of countries that countries.sh downloads, mounted below (ADR-0162).
+      TESEL_COUNTRIES: /srv/geo/countries.csv.gz
       # Caddy, on the network below, names each client in X-Forwarded-For; nobody else is believed.
       TESEL_TRUSTED_PROXIES: ${TESEL_TRUSTED_PROXIES:-172.31.250.0/24}
     volumes:
       - tesel-data:/data
+      - ./geo:/srv/geo:ro
     # Locked down: read-only system, no Linux capabilities, no privilege escalation. The server
     # only needs to write its database and talk to Caddy on the proxy network.
     read_only: true

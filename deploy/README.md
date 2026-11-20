@@ -47,6 +47,7 @@ What [`vps/install.sh`](vps/install.sh) sets up:
 | Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                                                       |
 | Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                                                               |
 | Buildings  | [`vps/buildings.sh`](vps/buildings.sh) keeps the area's buildings from the latest Overture Maps release, served at `/maps/buildings.pmtiles`; rebuilt monthly, the first time by the installer (about an hour)    |
+| Countries  | [`vps/countries.sh`](vps/countries.sh) downloads DB-IP's free table of countries, by which the usage page counts visits and connections without keeping addresses; monthly                                        |
 | Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`, or off the host (below)                                                |
 | Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy, which the backups and the updates use; it also lists the largest groups and purges one                        |
 
@@ -86,7 +87,7 @@ A new version may upgrade the database's schema, which older versions cannot rea
 
 ### Alerts
 
-Failures of the update, base map and backup jobs go to the journal. To hear about them, give the installer a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service with `--alert-url` (kept in `.env` as `TESEL_ALERT_URL`, and on later runs): it pings it once, then each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
+Failures of the update, base map, buildings, countries and backup jobs go to the journal. To hear about them, give the installer a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service with `--alert-url` (kept in `.env` as `TESEL_ALERT_URL`, and on later runs): it pings it once, then each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
 
 ### Backups
 

@@ -180,6 +180,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - Many more buildings on every map, in Spain nearly all: Overture Maps' (OpenStreetMap's, IGN's and those found in aerial imagery), built each month on the server and downloaded with the map for offline use. A building's card tells its floors, its use and where its outline comes from; the next sunset in the margin shows its time alone ([ADR-0161](docs/decisions/0161-overture-buildings.md)).
 
+- The usage page shows from which countries the site is visited and the app connects, from DB-IP's free table, without keeping any address; the legal notice says so ([ADR-0162](docs/decisions/0162-usage-by-country.md)).
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.

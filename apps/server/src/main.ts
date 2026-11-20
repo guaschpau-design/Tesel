@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { buildApp } from './app.ts';
 import { readConfig } from './config.ts';
+import { CountryFile } from './countries.ts';
 import { DiskSpace } from './disk-space.ts';
 import { EnvelopeStore } from './envelope-store.ts';
 import { Relay } from './relay.ts';
@@ -18,6 +19,8 @@ const SWEEP_BATCH = 5000;
 /** Shutting down takes longer than this only if something hangs; the server stops anyway. */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 const MEGABYTE = 1024 * 1024;
+/** How often the table of countries is checked for a new month's (countries.ts). */
+const COUNTRIES_CHECK_MS = 60 * 60 * 1000;
 
 const config = readConfig();
 const inMemory = config.databasePath === ':memory:';
@@ -26,7 +29,18 @@ const store = new EnvelopeStore(config.databasePath);
 const disk = inMemory
   ? null
   : new DiskSpace(dirname(config.databasePath), config.minFreeDiskMegabytes * MEGABYTE);
-const usage = new Usage(store, { timeZone: config.timeZone });
+const countries = config.countriesPath === null ? null : new CountryFile(config.countriesPath);
+void countries?.refresh();
+const countriesChecker =
+  countries === null
+    ? undefined
+    : setInterval(() => {
+        void countries.refresh();
+      }, COUNTRIES_CHECK_MS);
+const usage = new Usage(store, {
+  timeZone: config.timeZone,
+  ...(countries === null ? {} : { countryOf: (address: string) => countries.of(address) }),
+});
 const relay = new Relay(store, {
   limits: config.limits,
   hasRoom: () => disk?.hasRoom() ?? true,
@@ -80,6 +94,7 @@ function shutdown(exitCode: number): void {
   }, SHUTDOWN_TIMEOUT_MS).unref();
   clearInterval(sweeper);
   clearInterval(usageFlusher);
+  clearInterval(countriesChecker);
   weather?.stop();
   app
     .close()

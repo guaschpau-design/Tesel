@@ -18,6 +18,7 @@ describe('configuration', () => {
       trustedProxies: ['loopback'],
       statsKey: null,
       timeZone: 'Europe/Madrid',
+      countriesPath: null,
     });
   });
 
@@ -43,17 +44,21 @@ describe('configuration', () => {
         'TESEL_TRUSTED_PROXIES',
         'TESEL_STATS_KEY',
         'TESEL_TIME_ZONE',
+        'TESEL_COUNTRIES',
       ].map((name) => [name, '']),
     );
     expect(readConfig(empty)).toEqual(readConfig({}));
     expect(readConfig({ TESEL_TRUSTED_PROXIES: 'none' }).trustedProxies).toEqual([]);
   });
 
-  it('reads the usage page’s password and the time zone of its days', () => {
+  it('reads the usage page’s password, the time zone of its days and the table of countries', () => {
     expect(readConfig({ TESEL_STATS_KEY: 'a-long-enough-key' }).statsKey).toBe('a-long-enough-key');
     expect(() => readConfig({ TESEL_STATS_KEY: 'short' })).toThrow(/TESEL_STATS_KEY/);
     expect(readConfig({ TESEL_TIME_ZONE: 'Atlantic/Canary' }).timeZone).toBe('Atlantic/Canary');
     expect(() => readConfig({ TESEL_TIME_ZONE: 'Mars/Olympus' })).toThrow(/TESEL_TIME_ZONE/);
+    expect(readConfig({ TESEL_COUNTRIES: '/srv/geo/countries.csv.gz' }).countriesPath).toBe(
+      '/srv/geo/countries.csv.gz',
+    );
   });
 
   it('reads the countries whose weather warnings it gathers', () => {

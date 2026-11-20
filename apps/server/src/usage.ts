@@ -1,9 +1,10 @@
 // How much the site and the relay are used, counted per day and nothing more (ADR-0117): page
 // views, visitors, which sites the visits come from (by name), connections to the relay, the
-// groups that used it and the envelopes it stored. No address, browser or group is ever written
-// down: visitors and groups are told apart in memory for one day, under a key drawn that day and
-// never kept, and only how many there were is stored. The figures wait in memory and are written
-// to the database every minute (`flush`).
+// groups that used it and the envelopes it stored; and visitors and connections by country
+// (ADR-0162). No address, browser or group is ever written down: visitors and groups are told
+// apart in memory for one day, under a key drawn that day and never kept, and only how many there
+// were is stored; an address's country is looked up and the address forgotten. The figures wait
+// in memory and are written to the database every minute (`flush`).
 
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -22,7 +23,8 @@ export interface UsageStore {
 
 /** What the relay tells (relay.ts). */
 export interface RelayUsage {
-  connected(): void;
+  /** A connection from `address`, whose country is counted, never the address. */
+  connected(address: string): void;
   disconnected(): void;
   joined(group: string): void;
   stored(bytes: number): void;
@@ -43,6 +45,11 @@ export interface UsageOptions {
   readonly now?: () => number;
   /** The time zone whose days the figures are counted in. */
   readonly timeZone?: string;
+  /**
+   * The country of an address (countries.ts): its code, null when it is in none or not known,
+   * undefined when there is nothing to tell countries by, and then none is counted.
+   */
+  readonly countryOf?: (address: string) => string | null | undefined;
 }
 
 /** The figures' names, as stored. */
@@ -53,6 +60,10 @@ export const METRICS = {
   from: 'from:',
   /** Different visitors that day. */
   visitors: 'visitors',
+  /** Visitors from a country, such as `country:ES`, or `country:unknown`. */
+  country: 'country:',
+  /** Connections to the relay from a country, such as `app-country:ES`. */
+  appCountry: 'app-country:',
   /** Page views by crawlers and scripts, counted apart from people's. */
   robots: 'robots',
   /** Connections to the relay that day, and the most open at once. */
@@ -65,6 +76,8 @@ export const METRICS = {
   bytes: 'bytes',
 } as const;
 
+/** The country of an address that is in none, or not known (`countryOf`). */
+export const UNKNOWN_COUNTRY = 'unknown';
 /** Figures are kept two years. */
 const KEPT_DAYS = 730;
 /** Different sites counted in a day; visits from more count as `from:other`. */
@@ -79,6 +92,7 @@ export class Usage implements RelayUsage {
   readonly #store: UsageStore;
   readonly #now: () => number;
   readonly #days: Intl.DateTimeFormat;
+  readonly #countryOf: (address: string) => string | null | undefined;
   #day: string;
   /** Drawn each day: what tells visitors apart cannot be matched across days. */
   #salt = randomBytes(16);
@@ -92,6 +106,7 @@ export class Usage implements RelayUsage {
   constructor(store: UsageStore, options: UsageOptions = {}) {
     this.#store = store;
     this.#now = options.now ?? Date.now;
+    this.#countryOf = options.countryOf ?? (() => undefined);
     // en-CA writes dates as YYYY-MM-DD.
     this.#days = new Intl.DateTimeFormat('en-CA', {
       timeZone: options.timeZone ?? 'Europe/Madrid',
@@ -120,7 +135,9 @@ export class Usage implements RelayUsage {
       .update(this.#salt)
       .update(`${page.address}\n${page.agent}`)
       .digest('base64url');
-    this.#tellApart(this.#visitors, visitor, METRICS.visitors);
+    if (this.#tellApart(this.#visitors, visitor, METRICS.visitors)) {
+      this.#addCountry(METRICS.country, page.address);
+    }
     const site = siteOf(page.referrer, page.host);
     if (site !== null) {
       if (this.#sites.size < MOST_SITES) this.#sites.add(site);
@@ -128,10 +145,11 @@ export class Usage implements RelayUsage {
     }
   }
 
-  connected(): void {
+  connected(address: string): void {
     this.#roll();
     this.#open++;
     this.#add(METRICS.connections, 1);
+    this.#addCountry(METRICS.appCountry, address);
     this.#raise(METRICS.peakConnections, this.#open);
   }
 
@@ -184,10 +202,19 @@ export class Usage implements RelayUsage {
     this.#highs = new Map();
   }
 
-  #tellApart(seen: Set<string>, key: string, metric: string): void {
-    if (seen.size >= MOST_TOLD_APART || seen.has(key)) return;
+  /** Counts `key` once a day; whether it was new. */
+  #tellApart(seen: Set<string>, key: string, metric: string): boolean {
+    if (seen.size >= MOST_TOLD_APART || seen.has(key)) return false;
     seen.add(key);
     this.#raise(metric, seen.size);
+    return true;
+  }
+
+  /** One more under the country of `address`; the address itself goes no further. */
+  #addCountry(prefix: string, address: string): void {
+    const country = this.#countryOf(address);
+    if (country === undefined) return;
+    this.#add(prefix + (country ?? UNKNOWN_COUNTRY), 1);
   }
 
   #add(metric: string, value: number): void {

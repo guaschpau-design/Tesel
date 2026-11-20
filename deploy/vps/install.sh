@@ -195,7 +195,7 @@ fetch() { curl -fsSL "$REPO_RAW/$REF/deploy/$1" -o "$INSTALL_DIR/$(basename "$1"
 for file in vps/compose.yaml vps/Caddyfile vps/headers.caddy; do
   fetch "$file"
 done
-for script in vps/maps.sh vps/buildings.sh vps/backup.sh vps/database.sh vps/notify.sh \
+for script in vps/maps.sh vps/buildings.sh vps/countries.sh vps/backup.sh vps/database.sh vps/notify.sh \
   vps/update.sh vps/install-cosign.sh; do
   fetch "$script"
   chmod 0755 "$INSTALL_DIR/$(basename "$script")"
@@ -295,6 +295,11 @@ write_job tesel-buildings "Rebuild the Tesel buildings from the latest Overture 
   "$INSTALL_DIR/buildings.sh $INSTALL_DIR/maps" \
   $'OnCalendar=*-*-02 05:00\nRandomizedDelaySec=1d\nPersistent=true' \
   "Rebuild the Tesel buildings every month" 6h
+# In the first days of the month, once DB-IP has published the month's table (ADR-0162).
+write_job tesel-countries "Download the Tesel table of countries from DB-IP" \
+  "$INSTALL_DIR/countries.sh $INSTALL_DIR/geo" \
+  $'OnCalendar=*-*-03 06:00\nRandomizedDelaySec=1d\nPersistent=true' \
+  "Download the Tesel table of countries every month" 15min
 # Before the automatic reboots at 04:00.
 write_job tesel-backup "Back up the Tesel server" \
   "$INSTALL_DIR/backup.sh $INSTALL_DIR" \
@@ -310,6 +315,13 @@ if [[ ! -f "$INSTALL_DIR/maps/basemap.pmtiles" ]]; then
 fi
 # Enabled only now, so its first run cannot overlap the build above.
 systemctl enable --now tesel-maps.timer >/dev/null
+# The server counts by country with it from its start (ADR-0162); a few seconds' download.
+if [[ ! -f "$INSTALL_DIR/geo/countries.csv.gz" ]]; then
+  step "Downloading the table of countries"
+  "$INSTALL_DIR/countries.sh" "$INSTALL_DIR/geo" ||
+    echo "The table of countries could not be downloaded now; tesel-countries.timer will try again."
+fi
+systemctl enable --now tesel-countries.timer >/dev/null
 
 step "Starting Tesel"
 cd "$INSTALL_DIR"

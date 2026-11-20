@@ -4,9 +4,11 @@
 // words are Spanish, as are those of the people who run tesel.eu.
 
 import type { StoredTotals, UsageRow } from './envelope-store.ts';
-import { METRICS } from './usage.ts';
+import { METRICS, UNKNOWN_COUNTRY } from './usage.ts';
 
 export const STATS_DAYS = 30;
+/** Countries named one by one; the rest are added up as others. */
+const MOST_COUNTRIES = 10;
 
 const PAGE_NAMES: Readonly<Record<string, string>> = {
   '/': 'Portada',
@@ -71,6 +73,7 @@ ${table(
   named(rows, METRICS.from, (site) => (site === 'other' ? 'Otros sitios' : site)),
 )}
 </section>
+${countries(rows)}
 <footer><p>Visitas de robots y buscadores, aparte: ${count(sumAll(rows, METRICS.robots))}. Los días van en hora de España. La app guardada en el móvil se abre sin pedir nada al servidor, así que las cargas de la app son menos que las veces que se usa.</p></footer>
 </main></body></html>
 `;
@@ -87,7 +90,7 @@ header p,footer p,.note{color:var(--muted);font-size:14px}section{margin-top:32p
 .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
 th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:14px}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-tr:last-child td{border-bottom:0}th{color:var(--muted);font-weight:600}`;
+tr:last-child td{border-bottom:0}th{color:var(--muted);font-weight:600}a{color:var(--deep)}`;
 
 function tile(label: string, values: Series, note: string): string {
   const last7 = values.slice(-7).reduce((a, b) => a + b, 0);
@@ -150,6 +153,42 @@ function table(title: string, unit: string, entries: readonly [string, number][]
           )
           .join('');
   return `<div><h2>${escape(title)}</h2><table><thead><tr><th>${escape(title === 'Páginas' ? 'Página' : 'Sitio')}</th><th class="n">${escape(unit)}</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+/** Visitors and connections by country (ADR-0162), the most first, the fewest added up. */
+function countries(rows: readonly UsageRow[]): string {
+  const web = new Map(named(rows, METRICS.country, (code) => code));
+  const app = new Map(named(rows, METRICS.appCountry, (code) => code));
+  const codes = [...new Set([...web.keys(), ...app.keys()])].filter(
+    (code) => code !== UNKNOWN_COUNTRY,
+  );
+  const total = (code: string) => (web.get(code) ?? 0) + (app.get(code) ?? 0);
+  codes.sort((a, b) => total(b) - total(a));
+  const shown = codes.slice(0, MOST_COUNTRIES);
+  const others = codes.slice(MOST_COUNTRIES);
+  const sum = (figures: ReadonlyMap<string, number>) =>
+    others.reduce((value, code) => value + (figures.get(code) ?? 0), 0);
+  const names = new Intl.DisplayNames(['es'], { type: 'region' });
+  const row = (name: string, visitors: number, connections: number) =>
+    `<tr><td>${escape(name)}</td><td class="n">${count(visitors)}</td><td class="n">${count(connections)}</td></tr>`;
+  const body = [
+    ...shown.map((code) =>
+      row(`${flag(code)} ${names.of(code) ?? code}`, web.get(code) ?? 0, app.get(code) ?? 0),
+    ),
+    ...(others.length > 0
+      ? [row(`Otros países (${String(others.length)})`, sum(web), sum(app))]
+      : []),
+    ...(web.has(UNKNOWN_COUNTRY) || app.has(UNKNOWN_COUNTRY)
+      ? [row('No se sabe', web.get(UNKNOWN_COUNTRY) ?? 0, app.get(UNKNOWN_COUNTRY) ?? 0)]
+      : []),
+  ];
+  return `<section><h2>Desde qué países</h2><table><thead><tr><th>País</th><th class="n">Visitantes web</th><th class="n">Conexiones app</th></tr></thead><tbody>${body.length === 0 ? '<tr><td colspan="3">Aún nada</td></tr>' : body.join('')}</tbody></table>
+<p class="note">El país se deduce en el momento de la dirección de internet, que no se guarda: solo se suma uno al país. Quien usa una VPN cuenta en el país de la VPN, y los grupos que solo usan radio no llegan al servidor. <a href="https://db-ip.com">IP Geolocation by DB-IP</a>.</p></section>`;
+}
+
+/** A country's flag: its code in regional indicator letters, which phones and computers draw as one. */
+function flag(code: string): string {
+  return String.fromCodePoint(0x1f1a5 + code.charCodeAt(0), 0x1f1a5 + code.charCodeAt(1));
 }
 
 function sumAll(rows: readonly UsageRow[], metric: string): number {

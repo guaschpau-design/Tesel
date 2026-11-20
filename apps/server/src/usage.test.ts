@@ -18,10 +18,10 @@ function page(overrides: Partial<PageRequest> = {}): PageRequest {
   };
 }
 
-function setup(start = NOON) {
+function setup(start = NOON, countryOf?: (address: string) => string | null | undefined) {
   const store = new EnvelopeStore(':memory:');
   let time = start;
-  const usage = new Usage(store, { now: () => time });
+  const usage = new Usage(store, { now: () => time, ...(countryOf ? { countryOf } : {}) });
   const figures = (day = '2026-11-06') =>
     Object.fromEntries(
       store
@@ -92,10 +92,10 @@ describe('usage', () => {
 
   it('counts connections, the most at once, groups once a day and stored envelopes', () => {
     const { usage, figures } = setup();
-    usage.connected();
-    usage.connected();
+    usage.connected('203.0.113.7');
+    usage.connected('203.0.113.7');
     usage.disconnected();
-    usage.connected();
+    usage.connected('203.0.113.7');
     usage.joined('group-a');
     usage.joined('group-a');
     usage.joined('group-b');
@@ -126,5 +126,40 @@ describe('usage', () => {
       { day: '2026-11-06', metric: `${METRICS.views}/`, value: 2 },
       { day: '2026-11-07', metric: `${METRICS.views}/`, value: 1 },
     ]);
+  });
+
+  it('counts visitors once a day and connections by country, keeping no address', () => {
+    const countries: Readonly<Record<string, string | null>> = {
+      '203.0.113.7': 'ES',
+      '198.51.100.9': 'PT',
+      '192.0.2.1': null,
+    };
+    const { usage, figures } = setup(NOON, (address) => countries[address]);
+    usage.pageView(page());
+    usage.pageView(page({ path: '/en/' }));
+    usage.pageView(page({ address: '198.51.100.9' }));
+    usage.pageView(page({ address: '192.0.2.1' }));
+    usage.pageView(page({ address: '198.51.100.9', agent: 'Googlebot/2.1' }));
+    usage.connected('203.0.113.7');
+    usage.connected('203.0.113.7');
+    usage.connected('192.0.2.1');
+    usage.flush();
+    const day = figures();
+    expect(day).toMatchObject({
+      [`${METRICS.country}ES`]: 1,
+      [`${METRICS.country}PT`]: 1,
+      [`${METRICS.country}unknown`]: 1,
+      [`${METRICS.appCountry}ES`]: 2,
+      [`${METRICS.appCountry}unknown`]: 1,
+    });
+    expect(JSON.stringify(day)).not.toMatch(/203\.0|198\.51|192\.0/);
+  });
+
+  it('counts no country without a table of them', () => {
+    const { usage, figures } = setup(NOON, () => undefined);
+    usage.pageView(page());
+    usage.connected('203.0.113.7');
+    usage.flush();
+    expect(Object.keys(figures()).filter((metric) => metric.includes('country'))).toEqual([]);
   });
 });
