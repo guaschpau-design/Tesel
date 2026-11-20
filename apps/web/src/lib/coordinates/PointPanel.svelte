@@ -7,6 +7,7 @@
   import type { Snippet } from 'svelte';
 
   import type { Locale, Translate } from '../i18n/index.ts';
+  import type { BaseMap } from '../map/style/style.ts';
   import FromHere from '../navigation/FromHere.svelte';
   import type { Preference } from '../settings/preference.svelte.ts';
   import type { Action } from '../ui/action.ts';
@@ -26,6 +27,8 @@
     title: string;
     at: LatLon;
     format: Preference<CoordinateFormat>;
+    /** The base map shown, for what the point's distance tells (navigation/FromHere.svelte). */
+    base: BaseMap;
     onnavigate: () => void;
     /** Present when the point can be marked for the group. */
     onmark: (() => void) | null;
@@ -36,7 +39,7 @@
     /** Present when what can be seen from the point can be worked out: shows or hides it. */
     onviewshed: (() => void) | null;
     onclose: () => void;
-    /** What else is known of the point, such as the weather warnings there. */
+    /** What else is known of the point, such as a building there or the weather warnings. */
     about?: Snippet;
   }
 
@@ -46,6 +49,7 @@
     title,
     at,
     format,
+    base,
     onnavigate,
     onmark,
     ontask,
@@ -64,7 +68,8 @@
 
 <Panel {title} closeLabel={t('close')} {onclose}>
   <div class="stack section">
-    <FromHere {t} {locale} {at} />
+    <FromHere {t} {locale} {at} {base} />
+    {@render about?.()}
     <Actions {actions} moreLabel={t('moreActions')} />
     <!-- Seldom wanted, so not among the actions, whose room goes to marking and tasks. -->
     {#if onviewshed && viewshed === 'off'}
@@ -89,7 +94,6 @@
         {/if}
       </p>
     {/if}
-    {@render about?.()}
     <CoordinateLine {t} {at} {format} />
   </div>
 </Panel>

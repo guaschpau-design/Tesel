@@ -1,7 +1,7 @@
 <!-- What a map object is, who last changed it, guidance there or along it, a task at it, changing
-     its label and kind, and deleting it for the whole group. A search area tells how its sweep
-     goes, and lets whoever coordinates plan one or remove it; a strip of a sweep, how far it is
-     swept. -->
+     its label and kind, and deleting it for the whole group. A route tells how long it takes on
+     foot while the relief is on (ADR-0156). A search area tells how its sweep goes, and lets
+     whoever coordinates plan one or remove it; a strip of a sweep, how far it is swept. -->
 <script lang="ts">
   import { areaSquareMeters, lanesLength, pathMeters, type GroupState } from '@tesel/core';
   import { eventRefKey, ShapeStyleCode, type Place } from '@tesel/protocol';
@@ -10,6 +10,7 @@
   import type { CoordinateFormat } from '../coordinates/coordinates.ts';
   import { formatArea, formatDistance, formatTime } from '../format.ts';
   import type { Locale, MessageKey, Translate } from '../i18n/index.ts';
+  import type { BaseMap } from '../map/style/style.ts';
   import { aliasOf } from '../members/alias.ts';
   import FromHere from '../navigation/FromHere.svelte';
   import { objectDestination } from '../navigation/target.ts';
@@ -20,6 +21,9 @@
   import Panel from '../ui/Panel.svelte';
   import { openPanel } from '../ui/panels.svelte.ts';
   import { attempt } from '../ui/submission.svelte.ts';
+  import { terrain } from '../terrain/terrain.svelte.ts';
+  import { walkDuration, walkingMinutes } from '../terrain/walking.ts';
+  import { WayClimb } from '../terrain/way-climb.svelte.ts';
   import { objectKind } from './catalog.ts';
   import { objectTitle } from './object-names.ts';
   import SweepProgress from './SweepProgress.svelte';
@@ -31,6 +35,8 @@
     groupState: GroupState;
     objectKey: string;
     format: Preference<CoordinateFormat>;
+    /** The base map shown, for what the distance tells (navigation/FromHere.svelte). */
+    base: BaseMap;
     /** This device coordinates: it plans sweeps. */
     coordinator: boolean;
     /** Guide this device there, or along it; the name says where to. */
@@ -53,6 +59,7 @@
     groupState,
     objectKey,
     format,
+    base,
     coordinator,
     onnavigate,
     ontask,
@@ -94,6 +101,15 @@
         ? 'taskOnRoute'
         : 'taskHere',
   );
+  /** A route's way, read for how long it takes on foot while the relief is on (ADR-0156). */
+  const route = new WayClimb(
+    () =>
+      record?.type === 'shape' && record.geometry.kind === 'polyline'
+        ? record.geometry.points
+        : null,
+    () => terrain.reader,
+  );
+
   /** What can be measured of a line, an area, a circle or the lanes of a strip. */
   const measure = $derived.by(() => {
     if (strip) {
@@ -106,8 +122,14 @@
     if (record?.type !== 'shape') return null;
     const { geometry } = record;
     switch (geometry.kind) {
-      case 'polyline':
-        return formatDistance(pathMeters(geometry.points), locale);
+      case 'polyline': {
+        const length = pathMeters(geometry.points);
+        const climb = route.current?.climb;
+        const distance = formatDistance(length, locale);
+        if (!climb) return distance;
+        const duration = walkDuration(t, walkingMinutes(length, climb));
+        return `${distance} · ${t('walkOnFoot', { duration })}`;
+      }
       case 'polygon':
         return formatArea(areaSquareMeters(geometry.points), locale);
       case 'circle':
@@ -196,7 +218,7 @@
       </p>
       {#if at}
         <CoordinateLine {t} {at} {format} />
-        <FromHere {t} {locale} {at} />
+        <FromHere {t} {locale} {at} {base} />
       {/if}
       {#if object.type === 'sweep'}
         <SweepProgress {t} {groupState} strips={[{ key: objectKey, sweep: object }]} />

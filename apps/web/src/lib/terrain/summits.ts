@@ -42,7 +42,7 @@ export function searchGrid(around: LatLon): LatLon[] {
   const points: LatLon[] = [];
   for (let north = -steps; north <= steps; north++) {
     for (let east = -steps; east <= steps; east++)
-      points.push(offsetMeters(around, east * STEP_M, north * STEP_M));
+      points.push(offsetMeters(around, north * STEP_M, east * STEP_M));
   }
   return points;
 }

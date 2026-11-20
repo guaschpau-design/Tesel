@@ -1,6 +1,7 @@
 <!-- While measuring: the length of the path tapped so far and, from three points, the area it
-     would enclose; once it has two points, how much it climbs and descends and, on asking, its
-     elevation profile (ADR-0135), as a point's panel shows that of the way to it. -->
+     would enclose; once it has two points, how much it climbs and descends, how long it takes on
+     foot (ADR-0156) and, on asking, its elevation profile (ADR-0135), as a point's panel shows
+     that of the way to it. -->
 <script lang="ts">
   import { areaSquareMeters, pathMeters } from '@tesel/core';
   import type { LatLon } from '@tesel/protocol';
@@ -10,6 +11,7 @@
   import { climbMetres } from '../terrain/climb.ts';
   import ClimbProfile from '../terrain/ClimbProfile.svelte';
   import { terrain } from '../terrain/terrain.svelte.ts';
+  import { walkDuration, walkingMinutes } from '../terrain/walking.ts';
   import { WayClimb } from '../terrain/way-climb.svelte.ts';
   import ToolButton from '../ui/ToolButton.svelte';
   import ToolCard from '../ui/ToolCard.svelte';
@@ -64,6 +66,9 @@
       <!-- The profile says it in full under the drawing. -->
       {#if climb && !profiled}
         · {t('climbShort', { up: climbMetres(climb.up), down: climbMetres(climb.down) })}
+      {/if}
+      {#if climb}
+        · {t('walkOnFoot', { duration: walkDuration(t, walkingMinutes(length, climb)) })}
       {/if}
     </p>
     {#if profiled}

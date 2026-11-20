@@ -1,11 +1,14 @@
-<!-- The panels about the map and this device, with or without a group: a point of the map, this
-     device's position and the map's layers. -->
+<!-- The panels about the map and this device, with or without a group: a point of the map or a
+     building, the light of the day, this device's position and the map's layers. -->
 <script lang="ts">
   import type { LatLon } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
+  import BuildingCard from '../buildings/BuildingCard.svelte';
+  import BuildingOutline from '../buildings/BuildingOutline.svelte';
   import PointLayer from '../coordinates/PointLayer.svelte';
   import PointPanel from '../coordinates/PointPanel.svelte';
+  import LightPanel from '../daylight/LightPanel.svelte';
   import type { Locale, Translate } from '../i18n/index.ts';
   import LayersPanel from '../map/LayersPanel.svelte';
   import { setGround } from '../map/ground.svelte.ts';
@@ -73,9 +76,13 @@
 </script>
 
 {#if panels.open?.name === 'point'}
-  {@const { at, title: name } = panels.open}
+  {@const { at, title: name, building } = panels.open}
   {@const here = weather ? warningsAt(weather.regions, at) : null}
-  <PointLayer {map} point={at} />
+  {#if building}
+    <BuildingOutline {map} {building} />
+  {:else}
+    <PointLayer {map} point={at} />
+  {/if}
   {#if viewshed !== 'off' && terrain.onDemand}
     <ViewshedLayer
       {map}
@@ -92,6 +99,7 @@
     title={name}
     {at}
     format={preferences.coordinateFormat}
+    base={preferences.baseMap.value}
     onnavigate={() => {
       navigateTo({ kind: 'point', at, name });
     }}
@@ -114,11 +122,16 @@
     onclose={closePanel}
   >
     {#snippet about()}
+      {#if building}
+        <BuildingCard {t} {locale} {building} />
+      {/if}
       {#if weather && here && here.warnings.length > 0}
         <WarningList {t} {locale} {here} source={weather.source} />
       {/if}
     {/snippet}
   </PointPanel>
+{:else if panels.open?.name === 'light'}
+  <LightPanel {t} {locale} at={panels.open.at} onclose={closePanel} />
 {:else if isOpen('me')}
   <MePanel
     {t}

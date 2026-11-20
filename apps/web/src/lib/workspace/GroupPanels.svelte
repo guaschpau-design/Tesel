@@ -57,6 +57,7 @@
     groupState={feed.state}
     objectKey={key}
     format={preferences.coordinateFormat}
+    base={preferences.baseMap.value}
     onnavigate={(name: string) => {
       navigateTo({ kind: 'object', key, name });
     }}
@@ -106,6 +107,7 @@
     heard={feed.heard}
     {id}
     format={preferences.coordinateFormat}
+    base={preferences.baseMap.value}
     onnavigate={(name: string) => {
       navigateTo({ kind: 'member', id, name });
     }}

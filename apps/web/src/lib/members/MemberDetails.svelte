@@ -12,6 +12,7 @@
   import type { Locale, Translate } from '../i18n/index.ts';
   import type { Heard } from '../links/heard.ts';
   import FromHere from '../navigation/FromHere.svelte';
+  import type { BaseMap } from '../map/style/style.ts';
   import type { Preference } from '../settings/preference.svelte.ts';
   import { pendingFor } from '../tasks/tasks.ts';
   import Actions from '../ui/Actions.svelte';
@@ -32,12 +33,15 @@
     heard: Heard;
     id: NodeId;
     format: Preference<CoordinateFormat>;
+    /** The base map shown, for what the distance tells (navigation/FromHere.svelte). */
+    base: BaseMap;
     /** Guide this device there; the name says where to. */
     onnavigate: (name: string) => void;
     onclose: () => void;
   }
 
-  let { t, locale, groupState, self, heard, id, format, onnavigate, onclose }: Props = $props();
+  let { t, locale, groupState, self, heard, id, format, base, onnavigate, onclose }: Props =
+    $props();
 
   /** What a member who has said nothing is taken to be. */
   const UNTOLD = {
@@ -74,7 +78,7 @@
   <div class="stack section">
     {#if role === 'coordinator'}<p class="hint">{t(ROLE_LABELS[role])}</p>{/if}
     {#if report?.type === 'position'}
-      <FromHere {t} {locale} at={{ lat: report.lat, lon: report.lon }} />
+      <FromHere {t} {locale} at={{ lat: report.lat, lon: report.lon }} {base} />
       <Actions
         actions={[
           {

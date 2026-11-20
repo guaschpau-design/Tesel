@@ -6,6 +6,7 @@
 
 import type { LatLon, NodeId } from '@tesel/protocol';
 
+import type { BuildingFacts } from '../buildings/building.ts';
 import type { ChatTab } from '../chat/chat-tabs.ts';
 import type { TaskEditing } from '../tasks/tasks.ts';
 
@@ -29,8 +30,18 @@ export type Panel =
   /** An object of the group, by its reference's key. */
   | { readonly name: 'object'; readonly key: string }
   | { readonly name: 'member'; readonly member: NodeId }
-  /** A point of the map, and what to call it: a service's name, or "map point". */
-  | { readonly name: 'point'; readonly at: LatLon; readonly title: string }
+  /**
+   * A point of the map, and what to call it: a service's name, or "map point"; a building tapped
+   * on the urban map, with what is known of it (ADR-0158).
+   */
+  | {
+      readonly name: 'point';
+      readonly at: LatLon;
+      readonly title: string;
+      readonly building?: BuildingFacts;
+    }
+  /** The light of the day at a place: the centre of the tactical map (ADR-0157). */
+  | { readonly name: 'light'; readonly at: LatLon }
   /** The chat, on one of its tabs. */
   | { readonly name: 'chat'; readonly tab: ChatTab }
   /** The task list, or the task being edited. */

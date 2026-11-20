@@ -172,6 +172,10 @@ The first version: a shared map for a group, over the internet and over MeshCore
 - «Qué se ve desde aquí» on a point of the map: the ground in sight within 2 km, shaded green, worked out on the device from the relief, offline too ([ADR-0152](docs/decisions/0152-what-is-seen-from-a-point.md)).
 - Raising the ground in 3D close up no longer hangs the map: the public services, put back after the new style, were drawn before the map had worked out their look, and drawing failed every frame after.
 - Three maps, three questions: a line under the base maps says what each is for, and choosing one turns on what it needs. The topographic map reads as a paper map, with greener woods, no house numbers, discreet street names and the heights of summits and passes; the urban map raises its buildings in 3D and shows schools close up; the tactical map adds «Pendientes» (amber from 30 %, red from 60 %), stronger woods and solid railways, and fewer street names ([ADR-0155](docs/decisions/0155-three-maps-three-questions.md)).
+- On foot: a point, a measured path and a route tell how long they take walking, from their length and climb ([ADR-0156](docs/decisions/0156-time-on-foot.md)).
+- Daylight: on the topographic and tactical maps a point tells when the sun sets or rises there, and warns when you would arrive with little light or in the dark; the tactical map's margin shows the next sunset and the moon, and opens «Luz de hoy» with first and last light and the moon's rise and set, offline ([ADR-0157](docs/decisions/0157-daylight-and-moon.md)).
+- On the urban map, a tap on a building tells about how many floors and how high it is, the ground it covers and its house numbers ([ADR-0158](docs/decisions/0158-what-a-building-is.md)).
+- On the tactical map, «Enlace de radio desde ti» tells whether a LoRa radio reaches a point, an object or a member over the ground, with its profile, the Fresnel zone and the antennas' height to choose ([ADR-0159](docs/decisions/0159-radio-link-over-the-ground.md)).
 
 ### Known limits
 

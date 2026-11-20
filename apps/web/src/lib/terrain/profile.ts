@@ -32,6 +32,8 @@ export interface ProfileDrawing {
   readonly bottom: number;
   /** How many times the heights are stretched against the distance (1 is true to scale). */
   readonly exaggeration: number;
+  /** Another line over the same points, such as a radio's line of sight (radio-link.ts). */
+  readonly path: (series: readonly number[]) => string;
 }
 
 /** A round step between levels: 1, 2 or 5 times a power of ten, giving two to four levels. */
@@ -44,11 +46,16 @@ export function levelStep(range: number): number {
 
 /**
  * The drawing of heights sampled evenly along a way `length` metres long. Every height must be
- * known, and there must be two at least.
+ * known, and there must be two at least. The plot also takes in the heights of `over`, to draw
+ * other lines over the ground.
  */
-export function profileDrawing(heights: readonly number[], length: number): ProfileDrawing {
-  const lowest = Math.min(...heights);
-  const highest = Math.max(...heights);
+export function profileDrawing(
+  heights: readonly number[],
+  length: number,
+  over: readonly number[] = [],
+): ProfileDrawing {
+  const lowest = Math.min(...heights, ...over);
+  const highest = Math.max(...heights, ...over);
   const middle = (lowest + highest) / 2;
   const half = Math.max(highest - lowest, LEAST_RANGE_M) / 2;
   const step = levelStep(half * 2);
@@ -59,8 +66,9 @@ export function profileDrawing(heights: readonly number[], length: number): Prof
   const bottom = PROFILE_HEIGHT - BOTTOM;
   const x = (index: number) => LEFT + ((right - LEFT) * index) / (heights.length - 1);
   const y = (metres: number) => bottom - ((bottom - TOP) * (metres - floor)) / (ceiling - floor);
-  const points = heights.map((metres, index) => `${round(x(index))} ${round(y(metres))}`);
-  const line = `M${points.join(' L')}`;
+  const path = (series: readonly number[]) =>
+    `M${series.map((metres, index) => `${round(x(index))} ${round(y(metres))}`).join(' L')}`;
+  const line = path(heights);
   const area = `${line} L${round(right)} ${bottom} L${LEFT} ${bottom} Z`;
   const levels: ProfileLevel[] = [];
   for (let metres = floor; metres <= ceiling; metres += step) {
@@ -76,6 +84,7 @@ export function profileDrawing(heights: readonly number[], length: number): Prof
     right,
     bottom,
     exaggeration: unitsPerMetreUp / unitsPerMetreAlong,
+    path,
   };
 }
 

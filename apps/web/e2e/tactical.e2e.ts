@@ -1,7 +1,8 @@
 // The tactical map comes read as a military map is (ADR-0141, ADR-0145): the MGRS grid, MGRS
 // coordinates, bearings in mils from magnetic north, the radar (ADR-0150) and the slopes
-// (ADR-0155), and in its margin the zone, the square and the declination. What a point sees
-// (ADR-0152), and the map decluttered (ADR-0151).
+// (ADR-0155), and in its margin the zone, the square, the declination and the light of the day
+// (ADR-0157). What a point sees (ADR-0152) and whether a radio reaches it (ADR-0159), and the map
+// decluttered (ADR-0151).
 
 import { device, expect, test } from './helpers.ts';
 import { serveTopographicData } from './terrain-ramp.ts';
@@ -50,6 +51,21 @@ test('the tactical map reads as a military map: MGRS, mils from magnetic north, 
   await expect(panel).toContainText('En verde, lo que se ve desde aquí hasta 2 km');
   await panel.getByRole('button', { name: 'Quitar' }).click();
   await expect(panel.getByRole('button', { name: 'Qué se ve desde aquí' })).toBeVisible();
+
+  // Whether a radio reaches it from here, over the ground (ADR-0159).
+  await panel.getByRole('button', { name: 'Enlace de radio desde ti' }).click();
+  const link = panel.getByRole('region', { name: 'Enlace de radio' });
+  await expect(link).toContainText(/visión directa|roza la señal|corta la señal/);
+  await link.getByText('Mástil 10 m').click();
+  await expect(link.getByRole('radio', { name: 'Mástil 10 m' })).toBeChecked();
+  await link.getByRole('button', { name: 'Quitar' }).click();
+  await panel.getByRole('button', { name: 'Cerrar' }).click();
+
+  // The light of the day, from the margin (ADR-0157).
+  await margin.getByRole('button', { name: /^Luz de hoy: el sol (se pone|sale) a las/ }).click();
+  const light = page.getByRole('region', { name: 'Luz de hoy' });
+  await expect(light).toContainText('Alba');
+  await expect(light).toContainText(/\d+ % · (creciente|menguante)/);
 });
 
 test('the map is decluttered and shown in full again', async ({ browser }) => {

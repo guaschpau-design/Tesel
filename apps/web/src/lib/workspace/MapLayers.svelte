@@ -1,14 +1,15 @@
 <!--
   The layers of the map: the cadastre, fires and flood zones, the heights of summits on the
-  topographic map, the MGRS grid, the radar, weather warnings and public services, then the active
-  group's trails, objects, tasks, reports, members and SOS calls. A tap on a service, an object or
-  a member opens its panel.
+  topographic map, a radio link asked for, the MGRS grid, the radar, weather warnings and public
+  services, then the active group's trails, objects, tasks, reports, members and SOS calls. A tap
+  on a service, an object, a member or, on the urban map, a building opens its panel.
 -->
 <script lang="ts">
   import type { GroupState } from '@tesel/core';
   import type { NodeId } from '@tesel/protocol';
   import type { Map as MapLibreMap } from 'maplibre-gl';
 
+  import BuildingTaps from '../buildings/BuildingTaps.svelte';
   import { CADASTRE_MIN_ZOOM, CADASTRES } from '../cadastre/cadastre.ts';
   import { defaultServerUrl } from '../config.ts';
   import { FIRES, FIRES_MIN_ZOOM, floodServices, FLOODS_MIN_ZOOM } from '../hazards/hazards.ts';
@@ -26,6 +27,8 @@
   import type { TappedService } from '../services/services.ts';
   import ServicesLayer from '../services/ServicesLayer.svelte';
   import type { Preferences } from '../settings/preferences.ts';
+  import { radioLinks } from '../terrain/radio-link.svelte.ts';
+  import RadioLinkLayer from '../terrain/RadioLinkLayer.svelte';
   import SummitLayer from '../terrain/SummitLayer.svelte';
   import { terrain } from '../terrain/terrain.svelte.ts';
   import MapTasks from '../tasks/MapTasks.svelte';
@@ -91,6 +94,9 @@
 {#if preferences.baseMap.value === 'topo' && terrain.onDemand}
   <SummitLayer {map} heights={terrain.onDemand} />
 {/if}
+{#if radioLinks.shown}
+  <RadioLinkLayer {map} shown={radioLinks.shown} />
+{/if}
 {#if preferences.grid.value}
   <MgrsGridLayer {map} edges={tactical} />
 {/if}
@@ -103,6 +109,9 @@
 {/if}
 {#if weather}
   <WeatherLayer {map} regions={weather.regions} visible={shown.weather} />
+{/if}
+{#if preferences.baseMap.value === 'urban'}
+  <BuildingTaps {t} {map} {taps} />
 {/if}
 <ServicesLayer
   {map}
