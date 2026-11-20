@@ -108,6 +108,6 @@ test('a point shows, on asking, the profile of the way there and how much it cli
   await fold.click();
   await expect(panel.getByText(/^↑ \d+ m · ↓ 0 m$/)).toBeVisible();
   // How long it takes on foot, and the light there, on the topographic map (ADR-0156, ADR-0157).
-  await expect(panel).toContainText(/A pie\s*unos? \d+ (min|h)/);
+  await expect(panel).toContainText(/A pie\s*un[oa]s? \d+ (min|h)/);
   await expect(panel).toContainText(/Luz\s*(el sol se pone|sale el sol) a las/);
 });
