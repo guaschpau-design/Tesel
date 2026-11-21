@@ -70,6 +70,12 @@ jobs:
           java-version: '21'
       # The Gradle wrapper in the repository is a binary: it must be one Gradle released.
       - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      # Gradle's downloads kept between runs, written from main: Maven Central and Gradle's own
+      # servers refuse or time out now and then (429, 504), which failed the build. The basic cache
+      # is open source; the action's default one is not.
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-provider: basic
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @tesel/mobile sync
         env:
