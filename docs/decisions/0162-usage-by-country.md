@@ -18,4 +18,4 @@ The usage page (ADR-0117) tells how many visit the site and use the app, but not
 
 - Counted from the day a server has the table; nothing before, as nothing was kept.
 - Someone behind a VPN counts in its country; groups that only use the mesh never reach the server.
-- Reading a month's table takes the server about two seconds, in steps of 20,000 lines, so it goes on answering meanwhile: about 30 MB of memory for some 730,000 ranges.
+- The table is read line by line as it is unzipped, twice (to count the ranges, then to keep them in arrays of that size): about two seconds, never holding the server more than a few milliseconds, some 10 MB kept and about 45 MB more while reading. Read whole at first, it took some 260 MB more at its peak in a server of 512 MB, and held it for a quarter of a second; the robustness review of 2026-11-21 found it.

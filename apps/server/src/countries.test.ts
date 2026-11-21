@@ -15,9 +15,9 @@ const CSV = `0.0.0.0,0.255.255.255,ZZ
 2a0c:5a80::,2a0c:5a87:ffff:ffff:ffff:ffff:ffff:ffff,ES
 `;
 
-describe('CountryTable', () => {
-  const table = CountryTable.parse(CSV);
+const table = await CountryTable.read(() => CSV.split('\n'));
 
+describe('CountryTable', () => {
   it('finds the country of an IPv4 address, plain or as IPv6 shows it', () => {
     expect(table.of('2.136.0.0')).toBe('ES');
     expect(table.of('2.140.12.34')).toBe('ES');
@@ -39,13 +39,14 @@ describe('CountryTable', () => {
     expect(table.of('nonsense')).toBeNull();
   });
 
-  it('takes DB-IP’s quoted fields too', () => {
-    expect(CountryTable.parse('"2.136.0.0","2.143.255.255","ES"\n').of('2.137.0.1')).toBe('ES');
+  it('takes DB-IP’s quoted fields too', async () => {
+    const quoted = await CountryTable.read(() => ['"2.136.0.0","2.143.255.255","ES"']);
+    expect(quoted.of('2.137.0.1')).toBe('ES');
   });
 
-  it('refuses what is not a table of countries', () => {
-    expect(() => CountryTable.parse('<html>Not found</html>')).toThrow(/Line 1/);
-    expect(() => CountryTable.parse('2.136.0.0,nonsense,ES')).toThrow(/Line 1/);
+  it('refuses what is not a table of countries', async () => {
+    await expect(CountryTable.read(() => ['<html>Not found</html>'])).rejects.toThrow(/Line 1/);
+    await expect(CountryTable.read(() => ['2.136.0.0,nonsense,ES'])).rejects.toThrow(/Line 1/);
   });
 });
 
@@ -71,14 +72,18 @@ describe('CountryFile', () => {
     await file.refresh();
     expect(file.of('2.136.0.1')).toBe('FR');
 
-    // A broken download keeps what it had.
+    // A broken download keeps what it had: not a table, or a zip cut short.
     writeFileSync(path, gzipSync('<html>Not found</html>'));
     utimesSync(path, new Date(), new Date(Date.now() + 120_000));
     await file.refresh();
     expect(file.of('2.136.0.1')).toBe('FR');
+    writeFileSync(path, gzipSync(CSV).subarray(0, 40));
+    utimesSync(path, new Date(), new Date(Date.now() + 180_000));
+    await file.refresh();
+    expect(file.of('2.136.0.1')).toBe('FR');
   });
 
-  it('reads a large table in steps', async () => {
+  it('reads a large table as it is unzipped, letting the server answer meanwhile', async () => {
     directory = mkdtempSync(join(tmpdir(), 'tesel-countries-'));
     const path = join(directory, 'countries.csv.gz');
     const lines = Array.from({ length: 50_000 }, (_, index) => {

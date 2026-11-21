@@ -49,7 +49,9 @@
    * from the feature as the tile has it, which MapLibre keeps with each feature it hands out.
    */
   function wholeInTile(feature: MapGeoJSONFeature): boolean {
-    const tile = feature._vectorTileFeature;
+    // MapLibre's own, not promised: a version without it leaves the ground covered untold.
+    const tile = feature._vectorTileFeature as MapGeoJSONFeature['_vectorTileFeature'] | undefined;
+    if (tile === undefined) return false;
     const { extent } = tile;
     return tile
       .loadGeometry()

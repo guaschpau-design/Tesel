@@ -2,17 +2,16 @@
 // country, which deploy/vps/countries.sh downloads every month. Used only to count visits and
 // connections by country (usage.ts): the address is looked up and forgotten.
 
-import { readFile, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { isIPv4, isIPv6 } from 'node:net';
-import { setImmediate } from 'node:timers/promises';
-import { promisify } from 'node:util';
-import { gunzip } from 'node:zlib';
+import { createInterface } from 'node:readline';
+import { pipeline } from 'node:stream';
+import { createGunzip } from 'node:zlib';
 
 /** DB-IP's code for addresses in no country: reserved, private or unassigned. */
 const NO_COUNTRY = 'ZZ';
 const COUNTRY_CODE = /^[A-Z]{2}$/;
-/** Lines read between pauses: a whole table takes a second or two, too long to hold the server. */
-const STEP_LINES = 20_000;
 
 /** Ranges of addresses, sorted, and the country of each. */
 interface Ranges<T extends number | bigint> {
@@ -35,34 +34,32 @@ export class CountryTable {
   }
 
   /**
-   * Reads DB-IP's CSV: a range a line, its first and last address and its country's code, sorted.
-   * Throws on anything else, so a broken download is not taken for a table.
+   * Reads DB-IP's CSV, given as its lines: a range a line, its first and last address and its
+   * country's code, sorted. Read twice, to count the ranges and then to keep them, so they go
+   * straight into arrays of their size and reading takes little more memory than the table
+   * itself. Throws on anything else, so a broken download is not taken for a table.
    */
-  static parse(csv: string): CountryTable {
-    const steps = CountryTable.parsing(csv);
-    let step = steps.next();
-    while (step.done !== true) step = steps.next();
-    return step.value;
-  }
-
-  /** As `parse`, pausing every few lines, so whoever reads it can do something else between. */
-  static *parsing(csv: string): Generator<undefined, CountryTable, undefined> {
+  static async read(lines: () => AsyncIterable<string> | Iterable<string>): Promise<CountryTable> {
+    const sizes = { v4: 0, v6: 0 };
+    for await (const text of lines()) {
+      if (text.trim() !== '') sizes[text.includes(':') ? 'v6' : 'v4']++;
+    }
+    const v4 = {
+      starts: new Uint32Array(sizes.v4),
+      ends: new Uint32Array(sizes.v4),
+      countries: new Uint16Array(sizes.v4),
+    };
+    const v6 = {
+      starts: new BigUint64Array(sizes.v6),
+      ends: new BigUint64Array(sizes.v6),
+      countries: new Uint16Array(sizes.v6),
+    };
     const codes: string[] = [];
     const index = new Map<string, number>();
-    const v4: { starts: number[]; ends: number[]; countries: number[] } = {
-      starts: [],
-      ends: [],
-      countries: [],
-    };
-    const v6: { starts: bigint[]; ends: bigint[]; countries: number[] } = {
-      starts: [],
-      ends: [],
-      countries: [],
-    };
+    const kept = { v4: 0, v6: 0 };
     let line = 0;
-    for (const text of csv.split('\n')) {
+    for await (const text of lines()) {
       line++;
-      if (line % STEP_LINES === 0) yield;
       if (text.trim() === '') continue;
       const [first = '', last = '', code = ''] = text
         .split(',')
@@ -73,31 +70,22 @@ export class CountryTable {
         country = codes.push(code) - 1;
         index.set(code, country);
       }
-      if (isIPv4(first) && isIPv4(last)) {
-        v4.starts.push(ipv4(first));
-        v4.ends.push(ipv4(last));
-        v4.countries.push(country);
-      } else if (isIPv6(first) && isIPv6(last)) {
-        v6.starts.push(ipv6Network(first));
-        v6.ends.push(ipv6Network(last));
-        v6.countries.push(country);
+      if (isIPv4(first) && isIPv4(last) && kept.v4 < sizes.v4) {
+        v4.starts[kept.v4] = ipv4(first);
+        v4.ends[kept.v4] = ipv4(last);
+        v4.countries[kept.v4++] = country;
+      } else if (isIPv6(first) && isIPv6(last) && kept.v6 < sizes.v6) {
+        v6.starts[kept.v6] = ipv6Network(first);
+        v6.ends[kept.v6] = ipv6Network(last);
+        v6.countries[kept.v6++] = country;
       } else {
         throw new Error(`Line ${String(line)}: not a range of addresses`);
       }
     }
-    return new CountryTable(
-      codes,
-      {
-        starts: Uint32Array.from(v4.starts),
-        ends: Uint32Array.from(v4.ends),
-        countries: Uint16Array.from(v4.countries),
-      },
-      {
-        starts: BigUint64Array.from(v6.starts),
-        ends: BigUint64Array.from(v6.ends),
-        countries: Uint16Array.from(v6.countries),
-      },
-    );
+    // A file replaced between the two readings.
+    if (kept.v4 !== sizes.v4 || kept.v6 !== sizes.v6)
+      throw new Error('The table changed as it was read');
+    return new CountryTable(codes, v4, v6);
   }
 
   /** The code of the country `address` is in, such as ES, or null when it is in none or unknown. */
@@ -165,14 +153,22 @@ export class CountryFile {
     this.#path = path;
   }
 
+  /** The file's lines as it is unzipped; a broken file or zip ends them with its error. */
+  #lines(): AsyncIterable<string> {
+    const unzipped = pipeline(createReadStream(this.#path), createGunzip(), () => {
+      // Its error reaches the lines read, which the reading throws.
+    });
+    return createInterface({ input: unzipped, crlfDelay: Infinity });
+  }
+
   /** The country of `address` (CountryTable.of); undefined while there is no table. */
   of(address: string): string | null | undefined {
     return this.#table === null ? undefined : this.#table.of(address);
   }
 
   /**
-   * Reads the file again if it changed since it was read, a few lines at a time so the server goes
-   * on answering. A broken file leaves the table as it was.
+   * Reads the file again if it changed since it was read, line by line as it is unzipped, so the
+   * server goes on answering and its memory hardly grows. A broken file leaves the table as it was.
    */
   async refresh(): Promise<void> {
     if (this.#reading) return;
@@ -181,14 +177,7 @@ export class CountryFile {
       const { mtimeMs } = await stat(this.#path);
       if (mtimeMs === this.#modified) return;
       this.#modified = mtimeMs;
-      const csv = (await promisify(gunzip)(await readFile(this.#path))).toString('utf8');
-      const steps = CountryTable.parsing(csv);
-      let step = steps.next();
-      while (step.done !== true) {
-        await setImmediate();
-        step = steps.next();
-      }
-      this.#table = step.value;
+      this.#table = await CountryTable.read(() => this.#lines());
     } catch (error) {
       // No file yet is no failure: the installer or its timer brings one.
       if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {

@@ -188,6 +188,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - «Qué se ve desde aquí» leaves the map in sight: the point's panel shrinks to its line, with «Quitar» and «Ver el punto», and the map frames the 2 km above it ([ADR-0164](docs/decisions/0164-view-from-a-point-in-sight.md)).
 
+- The server reads its table of countries line by line, taking some 45 MB more while reading instead of 260 MB, which in its 512 MB could have closed it under load; a tap on a building no longer depends on a part of MapLibre it does not promise.
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.
