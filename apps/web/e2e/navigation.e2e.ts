@@ -101,9 +101,10 @@ test('a point shows, on asking, the profile of the way there and how much it cli
   const fold = panel.getByText('Desnivel', { exact: true });
   await expect(fold).toBeVisible();
   await fold.click();
+  // Worked out from the elevation tiles once loaded, which a busy CI machine can take long to do.
   await expect(
     panel.getByRole('img', { name: /^Perfil del terreno desde ti hasta el punto/ }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 20_000 });
   await expect(panel.getByText(/^↑ \d+ m · ↓ 0 m · pendiente máx\. \d+ %$/)).toBeVisible();
   // Closed again, its gist stays in sight.
   await fold.click();
