@@ -58,7 +58,12 @@
 
   /** A service of the base map tapped: its point, under its name or its kind. */
   function inspectService(service: TappedService): void {
-    openPanel({ name: 'point', at: service.at, title: service.name ?? t(service.kind.label) });
+    openPanel({
+      name: 'point',
+      at: service.at,
+      title: service.name ?? t(service.kind.label),
+      ...(service.aid ? { aid: service.aid } : {}),
+    });
   }
 
   function select(key: string): void {

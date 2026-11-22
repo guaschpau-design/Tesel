@@ -66,6 +66,7 @@ export type TileReader = Pick<TileStore, 'getTile' | 'keepViewed'>;
 const NOTHING: Readonly<Record<TileSourceId, ArrayBuffer>> = {
   basemap: EMPTY_VECTOR_TILE,
   buildings: EMPTY_VECTOR_TILE,
+  'aid-points': EMPTY_VECTOR_TILE,
   'ign-names': EMPTY_VECTOR_TILE,
   ortho: EMPTY_RASTER_TILE,
   terrain: FLAT_TERRAIN_TILE,
@@ -75,11 +76,22 @@ export interface TileArchives extends Readonly<Record<TileSourceId, TileArchive>
   readonly basemap: PmtilesArchive;
 }
 
+/** The archives of the app's server, where each is: none for a build without them. */
+interface ServerArchives {
+  readonly buildings: string | null;
+  readonly 'aid-points': string | null;
+}
+
+/** An archive that has no tile anywhere: one a build has no address for. */
+const NO_ARCHIVE: TileArchive = { getTile: () => Promise.resolve(undefined) };
+
 /** Where each source's tiles come from when they are not downloaded. */
-export function tileArchives(urls: { basemap: string; buildings: string }): TileArchives {
+export function tileArchives(urls: { readonly basemap: string } & ServerArchives): TileArchives {
+  const server = (url: string | null) => (url === null ? NO_ARCHIVE : pmtilesArchive(url));
   return {
     basemap: pmtilesArchive(urls.basemap),
-    buildings: pmtilesArchive(urls.buildings),
+    buildings: server(urls.buildings),
+    'aid-points': server(urls['aid-points']),
     'ign-names': webArchive(namesTileUrl),
     // The satellite map and its country outlines, a quarter of a megabyte, load with its first tile.
     ortho: lazyArchive(async () => (await import('./ortho.ts')).orthoArchive()),

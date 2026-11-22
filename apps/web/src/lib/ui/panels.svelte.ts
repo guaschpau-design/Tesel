@@ -6,6 +6,7 @@
 
 import type { LatLon, NodeId } from '@tesel/protocol';
 
+import type { AidFacts } from '../services/services.ts';
 import type { BuildingFacts } from '../buildings/building.ts';
 import type { ChatTab } from '../chat/chat-tabs.ts';
 import type { TaskEditing } from '../tasks/tasks.ts';
@@ -39,6 +40,8 @@ export type Panel =
       readonly at: LatLon;
       readonly title: string;
       readonly building?: BuildingFacts;
+      /** An aid point tapped (ADR-0165): what is known of it. */
+      readonly aid?: AidFacts;
     }
   /** The light of the day at a place: the centre of the tactical map (ADR-0157). */
   | { readonly name: 'light'; readonly at: LatLon }

@@ -14,14 +14,8 @@ import { gzipSync } from 'node:zlib';
 
 import { FetchSource, PMTiles, TileType } from 'pmtiles';
 
-import {
-  BUILDINGS_MAX_ZOOM,
-  BUILDINGS_MIN_ZOOM,
-  parseBounds,
-  tilesOf,
-  type Bounds,
-  type TileRef,
-} from './buildings-area.ts';
+import { parseBounds, tilesOf, type Bounds, type TileRef } from './area.ts';
+import { attempt, inTurn } from './fetching.ts';
 import { PmtilesWriter } from './pmtiles-writer.ts';
 import { BUILDING_FIELDS, BUILDING_LAYER, slimBuildings } from './slim-buildings.ts';
 
@@ -33,9 +27,14 @@ function releaseArchive(release: string): string {
   return `https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/${release}/buildings.pmtiles`;
 }
 
-/** Tiles asked for at once, and how often one is tried before the build gives up. */
+/**
+ * The zooms the app reads buildings at (map/tiles/sources.ts): from a neighbourhood's, and to
+ * Overture's deepest, which MapLibre enlarges beyond.
+ */
+const BUILDINGS_MIN_ZOOM = 13;
+const BUILDINGS_MAX_ZOOM = 14;
+/** Tiles asked for at once. */
 const CONCURRENCY = 16;
-const ATTEMPTS = 4;
 
 const ATTRIBUTION =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> ' +
@@ -51,17 +50,6 @@ async function latestRelease(): Promise<string> {
   return latest;
 }
 
-async function attempt<T>(work: () => Promise<T>): Promise<T> {
-  for (let tried = 1; ; tried++) {
-    try {
-      return await work();
-    } catch (error) {
-      if (tried >= ATTEMPTS) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 2000 * tried));
-    }
-  }
-}
-
 /** The light tile of one of the area's, compressed; null where it has no buildings. */
 async function lightTile(archive: PMTiles, { z, x, y }: TileRef): Promise<Uint8Array | null> {
   const found = await attempt(() => archive.getZxy(z, x, y));
@@ -70,31 +58,12 @@ async function lightTile(archive: PMTiles, { z, x, y }: TileRef): Promise<Uint8A
   return light === null ? null : gzipSync(light);
 }
 
-/** Runs `work` on each item, `limit` at a time, and gives the results in the items' order. */
-async function inTurn<T, R>(
-  items: readonly T[],
-  limit: number,
-  work: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array<R>(items.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) {
-      const index = next++;
-      const item = items[index];
-      if (item !== undefined) results[index] = await work(item);
-    }
-  };
-  await Promise.all(Array.from({ length: limit }, worker));
-  return results;
-}
-
 async function build(bounds: Bounds, out: string, release: string): Promise<void> {
   const archive = new PMTiles(new FetchSource(releaseArchive(release)));
   if ((await archive.getHeader()).tileType !== TileType.Mvt) {
     throw new Error(`Overture's ${release} buildings are not vector tiles`);
   }
-  const tiles = tilesOf(bounds);
+  const tiles = tilesOf(bounds, BUILDINGS_MIN_ZOOM, BUILDINGS_MAX_ZOOM);
   const writer = await PmtilesWriter.create(out);
   process.stdout.write(
     `Overture ${release}: reading ${String(tiles.length)} tiles of ${bounds.join(',')}\n`,

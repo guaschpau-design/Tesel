@@ -25,6 +25,7 @@
   import { terrain } from '../terrain/terrain.svelte.ts';
   import { VIEW_RADIUS_M, type ViewshedState } from '../terrain/viewshed.ts';
   import ViewshedLayer from '../terrain/ViewshedLayer.svelte';
+  import AidCard from '../services/AidCard.svelte';
   import { closePanel, isOpen, panels } from '../ui/panels.svelte.ts';
   import WarningList from '../weather/WarningList.svelte';
   import type { WeatherFeed } from '../weather/weather-feed.svelte.ts';
@@ -81,7 +82,7 @@
 </script>
 
 {#if panels.open?.name === 'point'}
-  {@const { at, title: name, building } = panels.open}
+  {@const { at, title: name, building, aid } = panels.open}
   {@const here = weather ? warningsAt(weather.regions, at) : null}
   {#if building}
     <BuildingOutline {map} {building} />
@@ -135,6 +136,9 @@
     {#snippet about()}
       {#if building}
         <BuildingCard {t} {locale} {building} />
+      {/if}
+      {#if aid}
+        <AidCard {t} {aid} />
       {/if}
       {#if weather && here && here.warnings.length > 0}
         <WarningList {t} {locale} {here} source={weather.source} />

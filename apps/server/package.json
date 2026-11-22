@@ -16,6 +16,7 @@
     "@fastify/static": "10.1.7",
     "@fastify/websocket": "11.3.4",
     "@mapbox/vector-tile": "^3.0.0",
+    "@maplibre/geojson-vt": "^6.3.0",
     "@maplibre/vt-pbf": "^4.3.3",
     "@tesel/core": "workspace:*",
     "@tesel/protocol": "workspace:*",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@mapbox/point-geometry": "^1.1.0",
+    "@types/geojson": "^7946.0.16",
     "@types/ws": "^8.18.2"
   }
 }

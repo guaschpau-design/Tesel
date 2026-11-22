@@ -26,6 +26,7 @@ const everywhere = (archive: TileArchive): TileArchives => ({
     bounds: () => Promise.resolve({ west: -10, south: 36, east: 4, north: 44 }),
   },
   buildings: archive,
+  'aid-points': archive,
   'ign-names': archive,
   ortho: archive,
   terrain: archive,

@@ -45,6 +45,20 @@ export const GLYPHS = {
     'M14 9.5h1.5A1.5 1.5 0 0 1 17 11v5a1.5 1.5 0 0 0 3 0V8.5L17.5 6',
   ]),
   drop: glyph(['M12 3.5c3 4.2 6.2 7.1 6.2 10.6a6.2 6.2 0 0 1-12.4 0c0-3.5 3.2-6.4 6.2-10.6z']),
+  // A defibrillator's sign: a heart struck by a bolt.
+  defibrillator: glyph([
+    'M12 19.5s-7.5-4.4-7.5-9.9a4.1 4.1 0 0 1 7.5-2.3a4.1 4.1 0 0 1 7.5 2.3c0 5.5-7.5 9.9-7.5 9.9z',
+    'M12.9 8.6l-2.4 3.5h3l-2.4 3.5',
+  ]),
+  // A pillar fire hydrant: its cap, its outlets on either side and its foot.
+  hydrant: glyph([
+    'M12 4v2',
+    'M8.5 9a3.5 3 0 0 1 7 0',
+    'M7.5 9h9',
+    'M9 9v10M15 9v10',
+    'M5.5 12.5h3.5M15 12.5h3.5',
+    'M7 19.5h10',
+  ]),
   helipad: glyph([
     'M12 3.6a8.4 8.4 0 1 1 0 16.8a8.4 8.4 0 1 1 0-16.8z',
     'M9 8.2v7.6M15 8.2v7.6M9 12h6',

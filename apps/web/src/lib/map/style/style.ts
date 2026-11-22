@@ -60,6 +60,7 @@ import {
   urbanFlavor,
   urbanLayers,
 } from './urban.ts';
+import { AID_SOURCE, aidPointsSource } from '../../services/aid-points.ts';
 import { BUILDINGS_SOURCE, buildingsSource, withBuildings } from './buildings.ts';
 import { houseNumberLayer } from './house-numbers.ts';
 
@@ -137,6 +138,8 @@ export function buildStyle(choice: StyleChoice, assetsUrl: string): StyleSpecifi
     sprite: `${assetsUrl}sprites/${sprite}`,
     sources: {
       ...sources,
+      // On every map, as the services that read them (services/ServicesLayer.svelte).
+      [AID_SOURCE]: aidPointsSource(),
       ...(relief ? { [RELIEF_SOURCE]: relief.source } : {}),
       ...(raisedGround ? { [GROUND_SOURCE]: elevationSource() } : {}),
       ...(choice.slope ? { [SLOPE_SOURCE]: slopeSource() } : {}),

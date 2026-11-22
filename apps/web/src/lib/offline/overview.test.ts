@@ -24,6 +24,7 @@ function archivesFor(bounds: typeof IBERIA, asked: string[]): TileArchives {
   return {
     basemap: { ...archive, bounds: () => Promise.resolve(bounds) },
     buildings: archive,
+    'aid-points': archive,
     'ign-names': archive,
     ortho: archive,
     terrain: archive,

@@ -2,7 +2,7 @@
 
 ## What the server publishes
 
-Caddy serves the base map at `/maps/basemap.pmtiles` ([ADR-0007](../docs/decisions/0007-self-hosted-vector-maps.md)): Spain, Portugal and the islands by default; set `TESEL_MAP_BBOX` (west,south,east,north) in the environment of `maps.sh` for another area. It is OpenStreetMap data, © OpenStreetMap contributors, under the [Open Database License](https://www.openstreetmap.org/copyright); `/maps/README.txt`, written with every build, says so and where the extract came from. The buildings of the same area are served at `/maps/buildings.pmtiles` ([ADR-0161](../docs/decisions/0161-overture-buildings.md)): Overture Maps' (OpenStreetMap's, national mapping agencies' and those found in aerial imagery), under the same licence; `/maps/buildings.txt` says so.
+Caddy serves the base map at `/maps/basemap.pmtiles` ([ADR-0007](../docs/decisions/0007-self-hosted-vector-maps.md)): Spain, Portugal and the islands by default; set `TESEL_MAP_BBOX` (west,south,east,north) in the environment of `maps.sh` for another area. It is OpenStreetMap data, © OpenStreetMap contributors, under the [Open Database License](https://www.openstreetmap.org/copyright); `/maps/README.txt`, written with every build, says so and where the extract came from. The buildings of the same area are served at `/maps/buildings.pmtiles` ([ADR-0161](../docs/decisions/0161-overture-buildings.md)): Overture Maps' (OpenStreetMap's, national mapping agencies' and those found in aerial imagery), under the same licence; `/maps/buildings.txt` says so. So are, weekly, its aid points at `/maps/aid-points.pmtiles` (OpenStreetMap's defibrillators, hydrants and drinking water, ADR-0165); `/maps/aid-points.txt` says so.
 
 The server image carries the landing page ([`apps/site`](../apps/site)) at `/`, its English version at `/en/`, the web app at `/app/` and the relay at `/v1/ws` ([ADR-0017](../docs/decisions/0017-server-serves-site-and-app.md)). The app built into the image proposes its own server for new groups and uses the base map its server publishes. Whoever controls the image controls the app, so servers run only images signed by this repository's CI ([ADR-0049](../docs/decisions/0049-signed-images-and-checked-updates.md)).
 
@@ -36,20 +36,21 @@ curl -fsSL "https://raw.githubusercontent.com/guaschpau-design/Tesel/$REF/deploy
 
 What [`vps/install.sh`](vps/install.sh) sets up:
 
-| Layer      | What                                                                                                                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| System     | Updates, then automatic security updates with a nightly reboot when the kernel needs it                                                                                                                           |
-| Firewall   | `ufw`: only SSH (22) and the web (80, 443) are reachable                                                                                                                                                          |
-| SSH        | `fail2ban` bans repeated failed logins; password logins are turned off if an SSH key is installed                                                                                                                 |
-| Containers | Docker with [`vps/compose.yaml`](vps/compose.yaml): the server (read-only, no capabilities, unprivileged, given only its own settings) and Caddy, alone on a network of their own; memory limits and rotated logs |
-| HTTPS      | Caddy gets and renews a Let's Encrypt certificate ([`vps/Caddyfile`](vps/Caddyfile)) and sends security headers ([`vps/headers.caddy`](vps/headers.caddy)); no access logs                                        |
-| Old names  | With `--redirect-from`, domains the server used to have answer with a permanent redirect to the same address on the new one                                                                                       |
-| Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                                                       |
-| Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                                                               |
-| Buildings  | [`vps/buildings.sh`](vps/buildings.sh) keeps the area's buildings from the latest Overture Maps release, served at `/maps/buildings.pmtiles`; rebuilt monthly, the first time by the installer (about an hour)    |
-| Countries  | [`vps/countries.sh`](vps/countries.sh) downloads DB-IP's free table of countries, by which the usage page counts visits and connections without keeping addresses; monthly                                        |
-| Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`, or off the host (below)                                                |
-| Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy, which the backups and the updates use; it also lists the largest groups and purges one                        |
+| Layer      | What                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| System     | Updates, then automatic security updates with a nightly reboot when the kernel needs it                                                                                                                                           |
+| Firewall   | `ufw`: only SSH (22) and the web (80, 443) are reachable                                                                                                                                                                          |
+| SSH        | `fail2ban` bans repeated failed logins; password logins are turned off if an SSH key is installed                                                                                                                                 |
+| Containers | Docker with [`vps/compose.yaml`](vps/compose.yaml): the server (read-only, no capabilities, unprivileged, given only its own settings) and Caddy, alone on a network of their own; memory limits and rotated logs                 |
+| HTTPS      | Caddy gets and renews a Let's Encrypt certificate ([`vps/Caddyfile`](vps/Caddyfile)) and sends security headers ([`vps/headers.caddy`](vps/headers.caddy)); no access logs                                                        |
+| Old names  | With `--redirect-from`, domains the server used to have answer with a permanent redirect to the same address on the new one                                                                                                       |
+| Updates    | `tesel-update.timer`, every 15 minutes: [`vps/update.sh`](vps/update.sh) verifies, starts and checks the newest image, or goes back (below)                                                                                       |
+| Base map   | [`vps/maps.sh`](vps/maps.sh) extracts the area from the latest Protomaps build of OpenStreetMap, served at `/maps/basemap.pmtiles`; rebuilt monthly                                                                               |
+| Buildings  | [`vps/buildings.sh`](vps/buildings.sh) keeps the area's buildings from the latest Overture Maps release, served at `/maps/buildings.pmtiles`; rebuilt monthly, the first time by the installer (about an hour)                    |
+| Aid points | [`vps/aid-points.sh`](vps/aid-points.sh) builds OpenStreetMap's defibrillators, hydrants and drinking water of the area (ADR-0165), served at `/maps/aid-points.pmtiles`; weekly, the first time by the installer (a few minutes) |
+| Countries  | [`vps/countries.sh`](vps/countries.sh) downloads DB-IP's free table of countries, by which the usage page counts visits and connections without keeping addresses; monthly                                                        |
+| Backups    | `tesel-backup.timer`, nightly: [`vps/backup.sh`](vps/backup.sh) keeps 14 days of the database and of Caddy's data in `/opt/tesel/backups`, or off the host (below)                                                                |
+| Database   | [`vps/database.sh`](vps/database.sh) copies the database while the server runs and restores a copy, which the backups and the updates use; it also lists the largest groups and purges one                                        |
 
 Running the script again applies changes to the files of this folder and is otherwise harmless.
 
@@ -87,7 +88,7 @@ A new version may upgrade the database's schema, which older versions cannot rea
 
 ### Alerts
 
-Failures of the update, base map, buildings, countries and backup jobs go to the journal. To hear about them, give the installer a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service with `--alert-url` (kept in `.env` as `TESEL_ALERT_URL`, and on later runs): it pings it once, then each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
+Failures of the update, base map, buildings, aid points, countries and backup jobs go to the journal. To hear about them, give the installer a ping URL of [healthchecks.io](https://healthchecks.io) or a compatible service with `--alert-url` (kept in `.env` as `TESEL_ALERT_URL`, and on later runs): it pings it once, then each job pings it when it succeeds and pings it with `/fail` appended when it fails. Updates ping every 15 minutes, so a period of one hour also tells when the server stops reporting at all.
 
 ### Backups
 

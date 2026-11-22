@@ -7,7 +7,7 @@
 
 import { SvelteSet } from 'svelte/reactivity';
 
-import { basemapUrl, buildingsUrl, defaultServerUrl } from '../config.ts';
+import { basemapUrl, defaultServerUrl, serverArchiveUrl } from '../config.ts';
 import { alarmedSos } from '../incidents/alarmed-sos.ts';
 import { registerContourProtocol } from '../map/style/contours.ts';
 import { elevationTiles } from '../map/style/dem.ts';
@@ -43,7 +43,11 @@ export class Startup {
   /** Why the app cannot start, while it cannot. */
   failure: StartupFailure | null = $state(null);
 
-  readonly #archives = tileArchives({ basemap: basemapUrl(), buildings: buildingsUrl() });
+  readonly #archives = tileArchives({
+    basemap: basemapUrl(),
+    buildings: serverArchiveUrl('buildings'),
+    'aid-points': serverArchiveUrl('aid-points'),
+  });
   /** Whether this window must not stop now (`hold`). */
   #holding = false;
   /** Databases a newer window waits for, handed over once nothing holds this window. */

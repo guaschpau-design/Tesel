@@ -15,6 +15,7 @@ import type { TileArchives } from '../map/tiles/protocol.ts';
 import type { TileStore } from '../map/tiles/store.ts';
 import type { OfflineArea } from '../map/tiles/store-schema.ts';
 import {
+  AID_POINTS_MAX_ZOOM,
   BASEMAP_MAX_ZOOM,
   BUILDINGS_MAX_ZOOM,
   IGN_MAX_ZOOM,
@@ -43,11 +44,18 @@ export interface OfflineMaps {
 
 /**
  * What every download holds: the topographic map, Tesel's base map (ADR-0120), which the urban and
- * tactical maps share — the OpenStreetMap map, the buildings (ADR-0161), IGN's map of Spain (its
- * names of the terrain, the way streams flow and the house numbers, ADR-0139), and the elevation
- * its contour lines, the relief and the climbs are worked out from.
+ * tactical maps share — the OpenStreetMap map, the buildings (ADR-0161), the aid points
+ * (ADR-0165), IGN's map of Spain (its names of the terrain, the way
+ * streams flow and the house numbers, ADR-0139), and the elevation its contour lines, the relief
+ * and the climbs are worked out from.
  */
-const BASE_SOURCES: readonly TileSourceId[] = ['basemap', 'buildings', 'ign-names', 'terrain'];
+const BASE_SOURCES: readonly TileSourceId[] = [
+  'basemap',
+  'buildings',
+  'aid-points',
+  'ign-names',
+  'terrain',
+];
 
 /** What can be downloaded as well, each from its sources. */
 export const EXTRAS = ['aerial'] as const;
@@ -65,6 +73,7 @@ export const EXTRA_NAMES: Readonly<Record<Extra, MessageKey>> = {
 const SOURCE_NAMES: Readonly<Record<TileSourceId, MessageKey>> = {
   basemap: 'baseMapTopo',
   buildings: 'baseMapTopo',
+  'aid-points': 'baseMapTopo',
   'ign-names': 'baseMapTopo',
   terrain: 'baseMapTopo',
   ortho: EXTRA_NAMES.aerial,
@@ -79,6 +88,7 @@ export function areaContents(area: OfflineArea): MessageKey[] {
 const AVERAGE_TILE_BYTES: Readonly<Record<TileSourceId, number>> = {
   basemap: 25 * 1024,
   buildings: 30 * 1024,
+  'aid-points': 2 * 1024,
   'ign-names': 60 * 1024,
   ortho: 18 * 1024,
   terrain: 120 * 1024,
@@ -94,6 +104,7 @@ const AVERAGE_TILE_BYTES: Readonly<Record<TileSourceId, number>> = {
 const CONCURRENCY: Readonly<Record<TileSourceId, number>> = {
   basemap: 6,
   buildings: 6,
+  'aid-points': 6,
   'ign-names': 2,
   ortho: 2,
   terrain: 2,
@@ -107,6 +118,8 @@ function sourceMaxZoom(source: TileSourceId, maxZoom: number): number {
     // The buildings stop a zoom short of the base map: MapLibre enlarges their deepest tiles.
     case 'buildings':
       return Math.min(maxZoom, BUILDINGS_MAX_ZOOM);
+    case 'aid-points':
+      return Math.min(maxZoom, AID_POINTS_MAX_ZOOM);
     // IGN's map goes a zoom deeper, where its buildings and house numbers are (map/tiles/sources.ts).
     case 'ign-names':
       return maxZoom + IGN_MAX_ZOOM - BASEMAP_MAX_ZOOM;

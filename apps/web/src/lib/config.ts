@@ -11,18 +11,21 @@ export function basemapUrl(): string {
     .href;
 }
 
+/** The archives the app's server builds itself, each a PMTiles file in its maps folder. */
+export type ServerArchive = 'buildings' | 'aid-points';
+
 /**
- * Buildings in PMTiles format (ADR-0161), absolute or relative to the app. The server image uses
- * the archive its server builds from Overture Maps (deploy/vps/buildings.sh); without one,
- * development reads Overture's own archive of a release, heavier, meant for looking at.
+ * Where an archive of the app's server is (deploy/vps/buildings.sh, aid-points.sh): in VITE_MAPS_URL,
+ * the folder they are published in, absolute or relative to the app. Without it, development reads
+ * Overture's own archive of a release for the buildings (ADR-0161), heavier, meant for looking at,
+ * and has none of the others: null.
  */
-export function buildingsUrl(): string {
-  const configured = import.meta.env['VITE_BUILDINGS_URL'] as string | undefined;
-  return new URL(
-    configured ||
-      'https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/2026-11-18.0/buildings.pmtiles',
-    window.location.href,
-  ).href;
+export function serverArchiveUrl(archive: ServerArchive): string | null {
+  const folder = import.meta.env['VITE_MAPS_URL'] as string | undefined;
+  if (folder) return new URL(`${archive}.pmtiles`, new URL(folder, window.location.href)).href;
+  return archive === 'buildings'
+    ? 'https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/2026-11-18.0/buildings.pmtiles'
+    : null;
 }
 
 /** Absolute URL of the vendored glyphs and sprites (public/map-assets). */

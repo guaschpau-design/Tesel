@@ -72,6 +72,9 @@ importers:
       '@mapbox/vector-tile':
         specifier: ^3.0.0
         version: 3.0.0
+      '@maplibre/geojson-vt':
+        specifier: ^6.3.0
+        version: 6.3.0
       '@maplibre/vt-pbf':
         specifier: ^4.3.3
         version: 4.3.3
@@ -97,6 +100,9 @@ importers:
       '@mapbox/point-geometry':
         specifier: ^1.1.0
         version: 1.1.0
+      '@types/geojson':
+        specifier: ^7946.0.16
+        version: 7946.0.16
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2

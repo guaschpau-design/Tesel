@@ -190,6 +190,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - The server reads its table of countries line by line, taking some 45 MB more while reading instead of 260 MB, which in its 512 MB could have closed it under load; a tap on a building no longer depends on a part of MapLibre it does not promise.
 
+- «Servicios» shows defibrillators, with their name, where exactly they are and their hours, and, close up, drinking water and fire hydrants, OpenStreetMap's, built each week on the server and downloaded with each area ([ADR-0165](docs/decisions/0165-aid-points-among-the-services.md)).
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.
