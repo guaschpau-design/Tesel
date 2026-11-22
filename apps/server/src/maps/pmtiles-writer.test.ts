@@ -71,6 +71,7 @@ describe('a PMTiles archive written', () => {
     expect(await archive.getMetadata()).toEqual({ name: 'test' });
   });
 
+  // Fifty thousand tiles compressed one by one: some seconds on a busy CI machine.
   it('puts many tiles in leaf directories, the root still read first', async () => {
     const path = join(dir, 'many.pmtiles');
     const writer = await PmtilesWriter.create(path);
@@ -94,7 +95,7 @@ describe('a PMTiles archive written', () => {
       const found = await archive.getZxy(...tileIdToZxy(id));
       expect(new Uint8Array(found?.data ?? new ArrayBuffer(0))[0]).toBe(index % 251);
     }
-  });
+  }, 30_000);
 
   it('refuses a tile out of order', async () => {
     const writer = await PmtilesWriter.create(join(dir, 'bad.pmtiles'));
