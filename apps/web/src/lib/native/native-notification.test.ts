@@ -8,17 +8,36 @@ describe("Android's notifications as the browser's", () => {
       noticePermission: vi.fn(() => Promise.resolve({ state: 'default' as const })),
       requestNotices: vi.fn(() => Promise.resolve({ state: 'granted' as const })),
       alarm: vi.fn(() => Promise.resolve()),
+      notice: vi.fn(() => Promise.resolve()),
     };
     const Notice = await nativeNotification(device);
     expect(Notice.permission).toBe('default');
     expect(await Notice.requestPermission()).toBe('granted');
     expect(Notice.permission).toBe('granted');
-    new Notice('SOS · Berta', { body: 'Médica', tag: 'g/1' });
+    new Notice('SOS · Berta', { body: 'Médica', tag: 'g/1', requireInteraction: true });
     expect(device.alarm).toHaveBeenCalledWith({
       title: 'SOS · Berta',
       body: 'Médica',
       tag: 'g/1',
     });
+    expect(device.notice).not.toHaveBeenCalled();
+  });
+
+  it('shows what need not stay until tapped as any other notification', async () => {
+    const device = {
+      noticePermission: vi.fn(() => Promise.resolve({ state: 'granted' as const })),
+      requestNotices: vi.fn(() => Promise.resolve({ state: 'granted' as const })),
+      alarm: vi.fn(() => Promise.resolve()),
+      notice: vi.fn(() => Promise.resolve()),
+    };
+    const Notice = await nativeNotification(device);
+    new Notice('Grupo Norte', { body: 'Berta ha llegado', tag: 'g/news/2' });
+    expect(device.notice).toHaveBeenCalledWith({
+      title: 'Grupo Norte',
+      body: 'Berta ha llegado',
+      tag: 'g/news/2',
+    });
+    expect(device.alarm).not.toHaveBeenCalled();
   });
 
   it('starts all the same when Android cannot say whether it may notify', async () => {
@@ -26,6 +45,7 @@ describe("Android's notifications as the browser's", () => {
       noticePermission: vi.fn(() => Promise.reject(new Error('refused'))),
       requestNotices: vi.fn(() => Promise.resolve({ state: 'granted' as const })),
       alarm: vi.fn(() => Promise.resolve()),
+      notice: vi.fn(() => Promise.resolve()),
     };
     const Notice = await nativeNotification(device);
     expect(Notice.permission).toBe('default');

@@ -264,7 +264,7 @@ export function drawReports({ sheet, debrief, t, clock }: DebriefContext): void 
 /** The colour of a diary line's dot, by what kind of thing it tells. */
 function kindColor(type: JournalEvent['type']): Rgb {
   if (type === 'sos' || type === 'sos-cancel' || type === 'ack') return RED;
-  if (type === 'task') return BLUE;
+  if (type === 'task' || type === 'task-reached') return BLUE;
   if (type === 'report' || type === 'zone-crossing') return AMBER;
   if (type === 'chat') return INK;
   if (type === 'marker' || type === 'shape' || type === 'sweep' || type === 'object-delete') {

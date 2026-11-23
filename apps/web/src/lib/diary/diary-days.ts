@@ -31,6 +31,7 @@ export const LINE_SIGNS: Readonly<Record<JournalEvent['type'], GlyphName>> = {
   'zone-crossing': 'area',
   'object-delete': 'trash',
   task: 'task',
+  'task-reached': 'task',
   sos: 'warning',
   'sos-cancel': 'warning',
   alert: 'warning',

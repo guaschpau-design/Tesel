@@ -45,11 +45,13 @@
     tasks: readonly TaskRow[] | null;
     /** Where they are. */
     position: Snippet;
+    /** Under each task, how far they are with it (tasks/TaskProgress.svelte). */
+    taskNote?: Snippet<[TaskRow]>;
     /** Further parts (SheetPart), after the tasks. */
     more?: Snippet;
   }
 
-  let { t, state, team, edits, batteryNote, tasks, position, more }: Props = $props();
+  let { t, state, team, edits, batteryNote, tasks, taskNote, position, more }: Props = $props();
 
   /** At or under this, the battery is shown as running out. */
   const LOW_BATTERY = 20;
@@ -122,6 +124,7 @@
                   <span class="hint">{t('taskInProgress')}</span>
                 {/if}
               </button>
+              {@render taskNote?.(row)}
             </li>
           {/each}
         </ul>
@@ -207,7 +210,7 @@
 
   .tasks {
     display: grid;
-    gap: 0.3rem;
+    gap: 0.45rem;
     margin: 0;
     padding: 0;
     list-style: none;

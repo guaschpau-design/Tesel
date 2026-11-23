@@ -19,12 +19,15 @@ import {
 import { insideRing, toPosition } from '../map/geometry.ts';
 import { assignedTo } from '../tasks/tasks.ts';
 
-/** Fixes less sure than this, in metres, are left out. */
-const POOR_FIX_M = 30;
+/** Fixes less sure than this, in metres, are left out: of a crossing, and of a task reached. */
+export const POOR_FIX_M = 30;
 /** A fix closer to an edge than this, or than its accuracy, is on neither side. */
 const EDGE_M = 10;
-/** How long after the first fix on a new side the second must come, in milliseconds. */
-const BORNE_OUT_MS = 10_000;
+/**
+ * How long after the first fix on a new side the second must come, in milliseconds; and after the
+ * first at the place of a task, the second there (tasks/task-reach.ts).
+ */
+export const BORNE_OUT_MS = 10_000;
 /** The least time between two crossings told of one area, in milliseconds. */
 const RETELL_MS = 60_000;
 

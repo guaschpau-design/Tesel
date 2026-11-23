@@ -7,4 +7,5 @@
     <!-- The kinds of notification, as the phone's settings list them (Notices.java). -->
     <string name="channel_running">Tesel running</string>
     <string name="channel_alarms">Alerts (SOS)</string>
+    <string name="channel_news">Group news</string>
 </resources>

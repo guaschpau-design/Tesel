@@ -52,6 +52,7 @@ import {
   sosCancel,
   sweepStrip,
   task,
+  taskReached,
   team,
   zoneCrossing,
 } from './member-events.ts';
@@ -267,6 +268,11 @@ export class GroupFeed {
     fix: Pick<DeviceFix, 'at' | 'accuracy'>,
   ): Promise<void> {
     await this.#sync.publish(zoneCrossing(zone, crossing, kind, fix));
+  }
+
+  /** Tells the group this member reached the place of a task of theirs (protocol §3.19). */
+  async tellReached(reached: EventRef, fix: Pick<DeviceFix, 'at' | 'accuracy'>): Promise<void> {
+    await this.#sync.publish(taskReached(reached, fix));
   }
 
   async sendReport(fields: ReportFields): Promise<void> {

@@ -78,6 +78,7 @@ export const EventTypeCode = {
   REPORT: 0x11,
   CHECK_IN_TIMER: 0x12,
   ZONE_CROSSING: 0x13,
+  TASK_REACHED: 0x14,
 } as const;
 
 /** §3.13 A sweep's lanes run in a direction below this, in degrees: the other half are the same. */

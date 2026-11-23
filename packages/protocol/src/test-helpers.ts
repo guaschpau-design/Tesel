@@ -225,4 +225,14 @@ export const SAMPLE_EVENTS: readonly TeselEvent[] = [
     lon: -0.377,
     accuracy: 8,
   },
+  {
+    type: 'task-reached',
+    origin: ALICE,
+    seq: 15,
+    time: T0 + 23,
+    task: { origin: BOB, seq: 6 },
+    lat: 39.4712,
+    lon: -0.3764,
+    accuracy: null,
+  },
 ];

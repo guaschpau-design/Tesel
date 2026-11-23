@@ -1,6 +1,7 @@
 <!-- A member of the group: first how far they are and the way there, then what they tell the team
-     about themselves (MemberSheet): status, profile, battery, position, equipment and tasks, and
-     when something of theirs last reached this device, and how. -->
+     about themselves (MemberSheet): status, profile, battery, position, equipment and tasks, how
+     far they are with each task (TaskProgress), and when something of theirs last reached this
+     device, and how. -->
 <script lang="ts">
   import { teamOf, type GroupState } from '@tesel/core';
   import type { NodeId } from '@tesel/protocol';
@@ -14,7 +15,8 @@
   import FromHere from '../navigation/FromHere.svelte';
   import type { BaseMap } from '../map/style/style.ts';
   import type { Preference } from '../settings/preference.svelte.ts';
-  import { pendingFor } from '../tasks/tasks.ts';
+  import TaskProgress from '../tasks/TaskProgress.svelte';
+  import { pendingFor, type TaskRow } from '../tasks/tasks.ts';
   import Actions from '../ui/Actions.svelte';
   import { clockEvery } from '../ui/now.svelte.ts';
   import Panel from '../ui/Panel.svelte';
@@ -106,6 +108,9 @@
         {:else}
           <p class="hint">{t('memberNoPosition')}</p>
         {/if}
+      {/snippet}
+      {#snippet taskNote(row: TaskRow)}
+        <TaskProgress {t} {locale} {groupState} member={id} {row} />
       {/snippet}
       {#snippet more()}
         <SheetPart title={t('heardTitle')}>

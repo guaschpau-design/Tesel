@@ -306,6 +306,21 @@ export const PAYLOADS: { readonly [K in EventType]: PayloadCodec<EventOfType<K>>
       return { ...header, type: 'zone-crossing', zone, crossing, kind, ...point, accuracy };
     },
   },
+  // §3.19
+  'task-reached': {
+    code: EventTypeCode.TASK_REACHED,
+    write(writer, event) {
+      writeRef(writer, event.task);
+      writePoint(writer, event);
+      writeMeasurement(writer, event.accuracy, ACCURACY_SCALE);
+    },
+    read(reader, header) {
+      const task = readRef(reader);
+      const point = readPoint(reader);
+      const accuracy = readMeasurement(reader, ACCURACY_SCALE);
+      return { ...header, type: 'task-reached', task, ...point, accuracy };
+    },
+  },
   // §3.16
   report: {
     code: EventTypeCode.REPORT,

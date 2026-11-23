@@ -78,7 +78,10 @@ const PREFERENCES = {
   fullscreen: flag('fullscreen', HANDHELD),
   /** A tone for an SOS of someone else: on, since it must not be missed. */
   alarmSound: flag('alarmSound', true),
-  /** System notifications for them while the app is not on screen: off until the user allows them. */
+  /**
+   * System notifications while the app is not on screen, for an SOS of someone else and for what
+   * whoever coordinates is told (ADR-0166): off until the user allows them.
+   */
   notifications: flag('notifications', false),
   /** The interface's language: the browser's, until one is chosen in More. */
   language: choice('language', LANGUAGE_CHOICES, 'auto'),

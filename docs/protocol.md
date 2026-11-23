@@ -70,6 +70,7 @@ The payload follows, up to 139 bytes.
 | `0x11` | `REPORT`          | §3.16                                                  |
 | `0x12` | `CHECK_IN_TIMER`  | §3.17                                                  |
 | `0x13` | `ZONE_CROSSING`   | §3.18                                                  |
+| `0x14` | `TASK_REACHED`    | §3.19                                                  |
 
 Codes are never reused. New capabilities are added as new types; existing layouts never change within version 1.
 
@@ -323,6 +324,28 @@ Encoded size: 34 bytes.
 - A device SHOULD send a crossing only once it is borne out, so that a fix that wanders across an edge sends nothing: it SHOULD leave out fixes less accurate than 30 m, take a fix closer to the edge than its accuracy, or than 10 m, for neither inside nor outside, and wait for a second fix on the new side at least 10 seconds after the first.
 - A device SHOULD NOT send a crossing the group already has: the newest `ZONE_CROSSING` by `(time, origin, seq)` of its origin for that `zone` is where the group last saw the member, and a device sends only what differs from it, at most once a minute for each area.
 - Receivers keep crossings like reports, in `(time, origin, seq)` order; a newer crossing does not replace an older one. They SHOULD tell whoever coordinates of a danger area entered and of the area of a task left.
+
+### 3.19 `TASK_REACHED`
+
+A member's device saw them reach the place of a task of theirs, so that whoever coordinates knows without watching the map.
+
+| Size | Field      | Notes                                                  |
+| ---- | ---------- | ------------------------------------------------------ |
+| 8    | `task`     | Task reference (§3.11)                                 |
+| 4    | `lat`      | Coordinate: where the member was when it was borne out |
+| 4    | `lon`      | Coordinate                                             |
+| 2    | `accuracy` | `u16`, metres, `0xFFFF` unknown                        |
+
+Encoded size: 32 bytes.
+
+- A device sends it for its own member only, and only while its member shares their position (§3.4): it says where they are.
+- The task is open or in progress, for the member or their team (§3.15), and has a place (§3.11). The place is reached:
+  - for a point or a `MARKER`, within 15 m of it, or within the fix's accuracy;
+  - for a `SHAPE` polygon or circle, inside it, clear of its edge as a crossing tells it (§3.18);
+  - for a `SHAPE` polyline or a `SWEEP` strip (§3.13), at the end of the way it leads along, its points in order or the strip's lanes one after another, followed from wherever the member takes it up: a way that ends where it starts, or comes back the way it went, is reached once walked, not at its start.
+- A device SHOULD send it only once it is borne out, as a crossing is (§3.18): it SHOULD leave out fixes less accurate than 30 m and wait for a second fix still at the place at least 10 seconds after the first.
+- A device SHOULD send at most one for a task, and none for a task that its member, or someone in their team, has been seen to reach: a team's task is reached once, by whoever gets there first.
+- Receivers keep them like crossings, in `(time, origin, seq)` order. They SHOULD tell whoever coordinates.
 
 ## 4. Symbol and style codes
 

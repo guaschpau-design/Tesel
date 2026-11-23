@@ -33,6 +33,7 @@
   import { deviceLocation } from '../position/device-location.svelte.ts';
   import SharePrompt from '../position/SharePrompt.svelte';
   import TaskPlacePicker from '../tasks/TaskPlacePicker.svelte';
+  import TaskReaches from '../tasks/TaskReaches.svelte';
   import { saveTask } from '../tasks/task-actions.ts';
   import { fieldsOf } from '../tasks/tasks.ts';
   import Notices from '../ui/Notices.svelte';
@@ -182,6 +183,7 @@
     <DangerZoneAlert {t} groupState={group.feed.state} />
     {#key group.feed}
       <ZoneCrossings {t} feed={group.feed} self={group.self} sharing={group.sharing} />
+      <TaskReaches feed={group.feed} self={group.self} sharing={group.sharing} />
     {/key}
     {@const checkIn = group.feed.state.checkIn}
     {#if checkIn && checkIn.minutes > 0 && dutyActive}

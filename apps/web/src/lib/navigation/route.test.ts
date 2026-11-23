@@ -61,4 +61,19 @@ describe('following a route', () => {
     expect(back.stage === 'on-route' && back.next).toBe(2);
     expect(back.stage === 'on-route' && back.remaining).toBeCloseTo(300, -1);
   });
+
+  it('takes a route up wherever the position is on it, when asked to', () => {
+    const tracker = new RouteTracker(route, 'anywhere');
+    expect(tracker.update(at(200, 600), 5).stage).toBe('to-start');
+    const halfway = tracker.update(at(200, 405), 5);
+    expect(halfway.stage === 'on-route' && halfway.next).toBe(2);
+    expect(halfway.stage === 'on-route' && halfway.remaining).toBeCloseTo(200, -1);
+  });
+
+  it('takes a loop up at its start, not at its end, which is the same place', () => {
+    const loop = [START, at(0, 300), at(300, 300), START];
+    const tracker = new RouteTracker(loop, 'anywhere');
+    const first = tracker.update(at(2, 2), 5);
+    expect(first.stage === 'on-route' && first.remaining).toBeCloseTo(1024, -1);
+  });
 });

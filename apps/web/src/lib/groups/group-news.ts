@@ -1,7 +1,8 @@
 // What a coordinator is told without going to look: someone joins the group, another member sends
-// a situation report, starts or finishes a task, enters a danger area or leaves the area of their
-// task (protocol §3.18). Only what happened lately is news: what a
-// device catches up on after a while away is in the diary, not in a burst of notices.
+// a situation report, starts a task, reaches its place (protocol §3.19) or finishes it, enters a
+// danger area or leaves the area of their task (protocol §3.18). Only what happened lately is
+// news: what a device catches up on after a while away is in the diary, not in a burst of
+// notices.
 
 import type { GroupState } from '@tesel/core';
 import {
@@ -9,6 +10,7 @@ import {
   type NodeId,
   type ReportEvent,
   type TaskEvent,
+  type TaskReachedEvent,
   type ZoneCrossingEvent,
 } from '@tesel/protocol';
 
@@ -19,15 +21,19 @@ export type GroupNews =
   | { readonly kind: 'joined'; readonly who: NodeId }
   | { readonly kind: 'report'; readonly report: ReportEvent }
   | { readonly kind: 'task'; readonly task: TaskEvent }
+  | { readonly kind: 'reached'; readonly reach: TaskReachedEvent }
   | { readonly kind: 'crossing'; readonly crossing: ZoneCrossingEvent };
 
 /** The parts of the group's state that make news. */
-export type NewsState = Pick<GroupState, 'members' | 'reports' | 'tasks' | 'zoneCrossings'>;
+export type NewsState = Pick<
+  GroupState,
+  'members' | 'reports' | 'tasks' | 'taskReaches' | 'zoneCrossings'
+>;
 
 /**
  * What is new in `after` since `before`, by others than `self` and no older than `RECENT_S` at
- * `now` (seconds since the epoch): members who joined, reports, tasks started or finished, danger
- * areas entered and areas of tasks left.
+ * `now` (seconds since the epoch): members who joined, reports, tasks started or finished, places
+ * of tasks reached, danger areas entered and areas of tasks left.
  */
 export function groupNews(
   before: NewsState,
@@ -50,6 +56,10 @@ export function groupNews(
       return moved && before.tasks.get(key)?.status !== task.status && fresh(task);
     })
     .map(([, task]): GroupNews => ({ kind: 'task', task }));
+  const reachedBefore = new Set(before.taskReaches.map(eventRefKey));
+  const reaches = after.taskReaches
+    .filter((reach) => !reachedBefore.has(eventRefKey(reach)) && fresh(reach))
+    .map((reach): GroupNews => ({ kind: 'reached', reach }));
   const crossed = new Set(before.zoneCrossings.map(eventRefKey));
   const crossings = after.zoneCrossings
     .filter(
@@ -60,5 +70,5 @@ export function groupNews(
           (crossing.kind === 'assigned' && crossing.crossing === 'left')),
     )
     .map((crossing): GroupNews => ({ kind: 'crossing', crossing }));
-  return [...joined, ...reports, ...tasks, ...crossings];
+  return [...joined, ...reports, ...tasks, ...reaches, ...crossings];
 }

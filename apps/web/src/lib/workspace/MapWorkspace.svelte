@@ -216,7 +216,15 @@
   {@const { feed, self, role } = group}
   {#key feed}
     {#if role === 'coordinator'}
-      <GroupNews {t} {locale} state={slices} {self} />
+      <GroupNews
+        {t}
+        {locale}
+        state={slices}
+        {self}
+        groupId={feed.groupId}
+        groupName={feed.groupName}
+        notify={preferences.notifications.value}
+      />
     {/if}
     <ChatNotice {t} chat={slices.chat} members={slices.members} {self} open={isOpen('chat')} />
     <ImpersonationNotice {t} impersonated={feed.impersonated} members={slices.members} {self} />

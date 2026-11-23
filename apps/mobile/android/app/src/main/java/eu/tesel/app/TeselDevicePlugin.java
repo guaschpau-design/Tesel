@@ -22,7 +22,8 @@ import org.json.JSONObject;
 /**
  * What the web app asks of Android (apps/web/src/lib/native/tesel-device.ts, ADR-0125): the
  * location, which goes on with the screen off; keeping the app running meanwhile; the
- * notifications of an alarm; and Android's share menu, for what goes to another app.
+ * notifications of an alarm and of the group's news; and Android's share menu, for what goes to
+ * another app.
  *
  * Every method runs inside {@link #attempt}: Capacitor rethrows what a plugin method throws, and
  * that closes the whole app. A failure is told to the web app instead, which goes on without it.
@@ -144,6 +145,17 @@ public class TeselDevicePlugin extends Plugin {
         attempt(call, () -> {
             if (!getBridge().getApp().isActive()) {
                 Notices.alarm(getContext(), call.getString("title", ""), call.getString("body", ""), call.getString("tag", ""));
+            }
+            call.resolve();
+        });
+    }
+
+    /** A notification of the group's news, unless the app is on screen, where it shows already. */
+    @PluginMethod
+    public void notice(PluginCall call) {
+        attempt(call, () -> {
+            if (!getBridge().getApp().isActive()) {
+                Notices.news(getContext(), call.getString("title", ""), call.getString("body", ""), call.getString("tag", ""));
             }
             call.resolve();
         });

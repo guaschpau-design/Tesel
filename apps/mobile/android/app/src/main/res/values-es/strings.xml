@@ -2,4 +2,5 @@
 <resources>
     <string name="channel_running">Tesel activo</string>
     <string name="channel_alarms">Alertas (SOS)</string>
+    <string name="channel_news">Novedades del grupo</string>
 </resources>

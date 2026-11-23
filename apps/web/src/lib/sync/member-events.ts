@@ -165,3 +165,11 @@ export function zoneCrossing(
 ): EventBuilder {
   return (header) => ({ ...header, type: 'zone-crossing', zone, crossing, kind, ...at, accuracy });
 }
+
+/** This member reached the place of a task of theirs, at this fix (protocol §3.19). */
+export function taskReached(
+  task: EventRef,
+  { at, accuracy }: Pick<DeviceFix, 'at' | 'accuracy'>,
+): EventBuilder {
+  return (header) => ({ ...header, type: 'task-reached', task, ...at, accuracy });
+}

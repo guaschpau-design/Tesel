@@ -24,6 +24,7 @@ const JOURNAL_TYPES = [
   'report',
   'check-in-timer',
   'zone-crossing',
+  'task-reached',
 ] as const;
 
 export type JournalEvent = EventOfType<(typeof JOURNAL_TYPES)[number]>;

@@ -13,6 +13,7 @@ export const URGENCY: Readonly<Record<EventType, number>> = {
   'position-hidden': 3,
   report: 3,
   'zone-crossing': 3,
+  'task-reached': 3,
   ack: 4,
   chat: 5,
   task: 5,

@@ -112,4 +112,23 @@ describe('what is news to a coordinator', () => {
     expect(groupNews(crossed, crossed, ANA, NOW)).toEqual([]);
     expect(groupNews(EMPTY_STATE, crossed, BERTA, NOW)).toEqual([]);
   });
+
+  it('is the place of a task reached by another member, lately', () => {
+    const reached = (seq: number, time = NOW): TeselEvent => ({
+      type: 'task-reached',
+      origin: BERTA,
+      seq,
+      time,
+      task: { origin: ANA, seq: 2 },
+      lat: 39.47,
+      lon: -0.38,
+      accuracy: 6,
+    });
+    const there = after(EMPTY_STATE, reached(6), reached(7, NOW - RECENT_S - 1));
+    expect(groupNews(EMPTY_STATE, there, ANA, NOW)).toMatchObject([
+      { kind: 'reached', reach: { seq: 6 } },
+    ]);
+    expect(groupNews(there, there, ANA, NOW)).toEqual([]);
+    expect(groupNews(EMPTY_STATE, there, BERTA, NOW)).toEqual([]);
+  });
 });

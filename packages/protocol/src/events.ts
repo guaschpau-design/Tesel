@@ -219,6 +219,18 @@ export interface ZoneCrossingEvent extends EventHeader, LatLon {
   readonly accuracy: number | null;
 }
 
+/**
+ * §3.19 A member's device saw them reach the place of a task of theirs: inside its area, at its
+ * point, or at the end of its way. Where they were when it was borne out, as a POSITION says.
+ */
+export interface TaskReachedEvent extends EventHeader, LatLon {
+  readonly type: 'task-reached';
+  /** The reference of the event that created the task (§3.11). */
+  readonly task: EventRef;
+  /** Metres, or null if unknown. */
+  readonly accuracy: number | null;
+}
+
 /** §3.16 What a situation report is about. */
 export type IncidentType =
   | 'other'
@@ -342,6 +354,7 @@ export type TeselEvent =
   | TeamEvent
   | ReportEvent
   | CheckInTimerEvent
-  | ZoneCrossingEvent;
+  | ZoneCrossingEvent
+  | TaskReachedEvent;
 
 export type EventType = TeselEvent['type'];

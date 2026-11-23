@@ -45,6 +45,12 @@ export interface TeselDevicePlugin {
     readonly body: string;
     readonly tag: string;
   }): Promise<void>;
+  /** A notification as any other app's, unless the app is on screen. */
+  notice(options: {
+    readonly title: string;
+    readonly body: string;
+    readonly tag: string;
+  }): Promise<void>;
   /** Android's share menu with a text, to send by WhatsApp, SMS or any other app. */
   share(options: { readonly text: string }): Promise<void>;
   addListener(event: 'fix', listener: (fix: NativeFix) => void): Promise<PluginListenerHandle>;

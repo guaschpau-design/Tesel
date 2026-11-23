@@ -24,6 +24,7 @@ import { SOS_KINDS } from '../incidents/sos-kinds.ts';
 import { objectAnchor } from '../objects/object-anchor.ts';
 import { namedAfter, objectName } from '../objects/object-names.ts';
 import { reportLine } from '../reports/report-summary.ts';
+import { taskGoal } from '../tasks/task-reach.ts';
 import { placePoint } from '../tasks/tasks.ts';
 import { shownText } from '../text.ts';
 
@@ -142,6 +143,13 @@ export function diaryLines(state: GroupState, t: Translate): DiaryLine[] {
         tasks.set(key, event);
         return describeTask(before, event);
       }
+      case 'task-reached': {
+        const key = eventRefKey(event.task);
+        const task = tasks.get(key) ?? state.tasks.get(key);
+        if (task === undefined) return null;
+        const way = taskGoal(task.place, objects)?.kind === 'way';
+        return t(way ? 'diaryTaskReachedEnd' : 'diaryTaskReached', { text: task.text });
+      }
     }
   }
 
@@ -188,7 +196,9 @@ function placeOf(
     return objectAnchor(event, objects);
   }
   if (event.type === 'sos') return sosPlace(event);
-  if (event.type === 'zone-crossing') return { lat: event.lat, lon: event.lon };
+  if (event.type === 'zone-crossing' || event.type === 'task-reached') {
+    return { lat: event.lat, lon: event.lon };
+  }
   if (event.type === 'task' || event.type === 'report') return placePoint(event.place, objects);
   return null;
 }

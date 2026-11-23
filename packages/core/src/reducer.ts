@@ -17,6 +17,7 @@ import { positions } from './state/positions.ts';
 import { rollCall } from './state/roll-call.ts';
 import type { Slice } from './state/slice.ts';
 import { sos, sosCancels } from './state/sos.ts';
+import { taskReaches } from './state/task-reaches.ts';
 import { tasks } from './state/tasks.ts';
 import { teams } from './state/teams.ts';
 import { hasOutlived, outlivedPositions, trails } from './state/trails.ts';
@@ -44,6 +45,7 @@ const SLICES = {
   rollCall,
   checkIn,
   zoneCrossings,
+  taskReaches,
   journal,
 };
 

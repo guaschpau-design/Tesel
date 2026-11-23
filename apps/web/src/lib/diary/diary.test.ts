@@ -1,5 +1,5 @@
 import { stateOf } from '@tesel/core';
-import type { NodeId, TeselEvent } from '@tesel/protocol';
+import type { NodeId, TaskEvent, TeselEvent } from '@tesel/protocol';
 import { describe, expect, it } from 'vitest';
 
 import { translator } from '../i18n/index.ts';
@@ -226,5 +226,62 @@ describe('the operation diary', () => {
       'Entra en la zona «Derrumbe».',
     ]);
     expect(lines[0]?.at).toEqual({ lat: 39.47, lon: -0.37 });
+  });
+
+  it('tells where a member reached the place of a task, or the end of its way', () => {
+    const task = (seq: number, place: TaskEvent['place']): TeselEvent => ({
+      type: 'task',
+      origin: ANA,
+      seq,
+      time: T0 + 80 + seq,
+      task: { origin: ANA, seq },
+      status: 'open',
+      assignee: BERTA,
+      place,
+      text: seq === 20 ? 'Revisar el almacén' : 'Patrullar la orilla',
+    });
+    const reached = (seq: number, of: number): TeselEvent => ({
+      type: 'task-reached',
+      origin: BERTA,
+      seq,
+      time: T0 + 100 + seq,
+      task: { origin: ANA, seq: of },
+      lat: 39.48,
+      lon: -0.36,
+      accuracy: null,
+    });
+    const route: TeselEvent = {
+      type: 'shape',
+      origin: ANA,
+      seq: 19,
+      time: T0 + 90,
+      object: { origin: ANA, seq: 19 },
+      style: 0x0005,
+      geometry: {
+        kind: 'polyline',
+        points: [
+          { lat: 39.47, lon: -0.37 },
+          { lat: 39.48, lon: -0.36 },
+        ],
+      },
+      label: '',
+    };
+    const lines = diaryLines(
+      stateOf([
+        ...EVENTS,
+        route,
+        task(20, { kind: 'object', object }),
+        task(21, { kind: 'object', object: { origin: ANA, seq: 19 } }),
+        reached(30, 20),
+        reached(31, 21),
+        reached(32, 99),
+      ]),
+      translator('es'),
+    ).slice(-2);
+    expect(lines.map((line) => line.text)).toEqual([
+      'Llega al lugar de la tarea «Revisar el almacén».',
+      'Llega al final del recorrido de la tarea «Patrullar la orilla».',
+    ]);
+    expect(lines[0]?.at).toEqual({ lat: 39.48, lon: -0.36 });
   });
 });

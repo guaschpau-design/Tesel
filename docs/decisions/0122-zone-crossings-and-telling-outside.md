@@ -1,6 +1,6 @@
 # 0122. Tell the coordinator of zones crossed, and tell those without Tesel where someone is
 
-- Status: Accepted, amended by [0127](0127-pocket-mode-and-sos-outside.md) (telling outside Tesel moves to the SOS card, with 112 called)
+- Status: Accepted, amended by [0127](0127-pocket-mode-and-sos-outside.md) (telling outside Tesel moves to the SOS card, with 112 called) and [0166](0166-task-reached-and-time-left.md) (whoever coordinates is also told when a task's place is reached)
 - Date: 2026-11-08
 
 ## Context

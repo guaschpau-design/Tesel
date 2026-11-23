@@ -16,13 +16,16 @@ import androidx.core.app.NotificationManagerCompat;
 
 /**
  * The app's notifications (ADR-0125): the quiet, ongoing one while it keeps running with the
- * screen off, and an alarm's, which sounds as an alarm and vibrates. A tap on either opens the app.
+ * screen off; an alarm's, which sounds as an alarm and vibrates; and the group's news, as any
+ * other app's notification (ADR-0166). A tap on any of them opens the app.
  */
 final class Notices {
 
     private static final String RUNNING = "running";
     private static final String ALARMS = "alarms";
+    private static final String NEWS = "news";
     private static final int ALARM_ID = 2;
+    private static final int NEWS_ID = 3;
     private static final long[] VIBRATION_MS = { 0, 300, 150, 300, 150, 300 };
 
     private Notices() {}
@@ -48,8 +51,14 @@ final class Notices {
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build();
         alarms.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), alarm);
+        NotificationChannel news = new NotificationChannel(
+            NEWS,
+            context.getString(R.string.channel_news),
+            NotificationManager.IMPORTANCE_DEFAULT
+        );
         manager.createNotificationChannel(running);
         manager.createNotificationChannel(alarms);
+        manager.createNotificationChannel(news);
     }
 
     static Notification running(Context context, String title, String text) {
@@ -81,6 +90,24 @@ final class Notices {
             .setContentIntent(openApp(context))
             .build();
         manager.notify(tag, ALARM_ID, notification);
+    }
+
+    /** News of the group, one per tag, with the phone's usual sound for a notification. */
+    @SuppressLint("MissingPermission")
+    static void news(Context context, String title, String body, String tag) {
+        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+        if (!manager.areNotificationsEnabled()) return;
+        Notification notification = new NotificationCompat.Builder(context, NEWS)
+            .setSmallIcon(R.drawable.ic_stat_tesel)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(openApp(context))
+            .build();
+        manager.notify(tag, NEWS_ID, notification);
     }
 
     /** Brings the app back as it was. */

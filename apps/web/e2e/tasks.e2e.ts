@@ -1,6 +1,7 @@
-// Phase 2.4: a task handed from one member to another, started and finished.
+// Phase 2.4: a task handed from one member to another, started and finished; how far the member
+// is with it, and whoever coordinates told once they get there (ADR-0166).
 
-import { expect, tapMap, test, twoMembers } from './helpers.ts';
+import { expect, shareAs, tapMap, test, twoMembers } from './helpers.ts';
 
 const VIEW = '/#map=15/39.4699/-0.3763';
 
@@ -74,4 +75,49 @@ test('a common task, for anyone, is taken by whoever starts it', async ({ browse
     .filter({ hasText: 'Llevar material' });
   await task.getByRole('button', { name: 'Empezar' }).click();
   await expect(anaTasks.getByText('Para Berta')).toBeVisible();
+});
+
+test('a card tells how far a member is with a task, and whoever coordinates is told once there', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const { ana, berta } = await twoMembers(browser, VIEW);
+  // Berta is some 400 m north of the centre of the view, and shares where she is.
+  await berta.context().setGeolocation({ latitude: 39.4735, longitude: -0.3763, accuracy: 5 });
+  await shareAs(berta, 'Compartir');
+
+  // Ana leaves a task for her at the centre.
+  await ana.locator('.maplibregl-canvas').click();
+  await ana
+    .getByRole('region', { name: 'Punto del mapa' })
+    .getByRole('button', { name: 'Tarea aquí' })
+    .click();
+  const anaTasks = ana.getByRole('region', { name: 'Tareas' });
+  await anaTasks.getByLabel('Qué hay que hacer').fill('Revisar el almacén');
+  await anaTasks.getByLabel('Para').selectOption({ label: 'Berta' });
+  await anaTasks.getByRole('button', { name: 'Guardar' }).click();
+  await expect(anaTasks.getByText('Para Berta')).toBeVisible();
+
+  // Her card says how far she has to go.
+  await ana.getByRole('button', { name: /^Grupo:/ }).click();
+  await ana
+    .getByRole('region', { name: 'Grupos' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Berta' })
+    .click();
+  const card = ana.getByRole('region', { name: 'Berta' });
+  await expect(card.getByText(/A \d+ m en línea recta · unos \d+ min a pie/)).toBeVisible({
+    timeout: 15_000,
+  });
+
+  // She gets there: two fixes, 11 seconds apart.
+  await berta.context().setGeolocation({ latitude: 39.46991, longitude: -0.3763, accuracy: 5 });
+  await berta.waitForTimeout(11_000);
+  await berta.context().setGeolocation({ latitude: 39.4699, longitude: -0.37631, accuracy: 5 });
+  await expect(
+    ana
+      .getByRole('status')
+      .filter({ hasText: 'Berta ha llegado al lugar de «Revisar el almacén».' }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(card.getByText(/Ha llegado · \d/)).toBeVisible();
 });

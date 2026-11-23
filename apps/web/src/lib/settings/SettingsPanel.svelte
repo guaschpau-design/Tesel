@@ -4,7 +4,6 @@
 <script lang="ts">
   import { appVersion } from '../config.ts';
   import { COORDINATE_FORMATS, type CoordinateFormat } from '../coordinates/coordinates.ts';
-  import { allowNotifications, notificationsSupported } from '../incidents/alarm.ts';
   import {
     LOCALE_NAMES,
     nextLocale,
@@ -31,6 +30,7 @@
   import Pictogram from '../ui/Pictogram.svelte';
   import { screenWakeSupported } from '../ui/screen-awake.svelte.ts';
   import SwitchRow from '../ui/SwitchRow.svelte';
+  import { allowNotifications, notificationsSupported } from '../ui/system-notifications.ts';
   import { HANDHELD } from '../platform.ts';
   import type { Preferences } from './preferences.ts';
 

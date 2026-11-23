@@ -142,6 +142,24 @@ describe('event codec', () => {
     });
   });
 
+  it('matches the task reached test vector computed independently from the spec', () => {
+    const event: TeselEvent = {
+      type: 'task-reached',
+      origin: ALICE,
+      seq: 8,
+      time: T0,
+      task: { origin: BOB, seq: 6 },
+      lat: 41.3874,
+      lon: 2.1686,
+      accuracy: null,
+    };
+    const bytes = encodeOrFail(event);
+    expect(bytes.length).toBe(32);
+    expect(toHex(bytes)).toBe(
+      '0114a1b2c3d4080000000013fc68' + '0f1e2d3c06000000' + '5037ab18f0e64a01' + 'ffff',
+    );
+  });
+
   it('matches the position test vector computed independently from the spec', () => {
     const event: TeselEvent = {
       type: 'position',

@@ -1,6 +1,8 @@
 // Following a route, a line of the map, from its start to its end: where to head now, how much
 // is left, and whether this device has strayed from it. Progress only moves forwards, so a route
-// that comes back the way it went, or zigzags up a slope, is followed leg by leg.
+// that comes back the way it went, or zigzags up a slope, is followed leg by leg. Guidance takes
+// a route up at its start; reckoning how far along a member is (tasks/task-reach.ts) takes it up
+// wherever they are on it.
 
 import { distanceMeters, nearestOnSegment, pathMeters, type SegmentPoint } from '@tesel/core';
 import type { LatLon } from '@tesel/protocol';
@@ -29,21 +31,31 @@ export type RouteProgress =
       readonly stage: 'off-route';
       readonly to: LatLon;
       readonly leg: Leg;
+      /** The point of the route to head for once back on it, as when on the route. */
+      readonly next: number;
       readonly remaining: number;
     }
   /** At the end of the route. */
   | { readonly stage: 'arrived' };
 
+/**
+ * Where a route is taken up: at its start, where guidance leads first, or on whichever of its legs
+ * the position is near, the earliest of those about as near.
+ */
+export type RouteJoin = 'start' | 'anywhere';
+
 /** Where this device is along one route, from each position it takes. */
 export class RouteTracker {
   readonly #points: readonly LatLon[];
+  readonly #join: RouteJoin;
   /** The leg this device is on, from 0 for the one from the first point; -1 before the route. */
   #leg = -1;
   #arrived = false;
 
   /** `points` are those of the route, at least two. */
-  constructor(points: readonly LatLon[]) {
+  constructor(points: readonly LatLon[], join: RouteJoin = 'start') {
     this.#points = points;
+    this.#join = join;
   }
 
   /** The progress at a new position; `accuracy` is the GPS's, in metres. */
@@ -54,7 +66,7 @@ export class RouteTracker {
     if (this.#arrived) return { stage: 'arrived' };
     const limit = Math.max(OFF_ROUTE_M, accuracy ?? 0);
     if (this.#leg < 0) {
-      if (nearestOnSegment(at, start, this.#point(1)).meters > limit) {
+      if (this.#fromJoin(at) > limit) {
         return { stage: 'to-start', to: start, leg: legBetween(at, start, accuracy) };
       }
       this.#leg = 0;
@@ -72,10 +84,22 @@ export class RouteTracker {
     const next = this.#leg + 1;
     const remaining = distanceMeters(near.at, this.#point(next)) + pathMeters(points.slice(next));
     if (near.meters > limit) {
-      return { stage: 'off-route', to: near.at, leg: legBetween(at, near.at, accuracy), remaining };
+      const leg = legBetween(at, near.at, accuracy);
+      return { stage: 'off-route', to: near.at, leg, next, remaining };
     }
     const to = this.#point(next);
     return { stage: 'on-route', to, leg: legBetween(at, to, accuracy), next, remaining };
+  }
+
+  /** How far `at` is from where the route may be taken up: its first leg, or any. */
+  #fromJoin(at: LatLon): number {
+    const legs = this.#join === 'start' ? 1 : this.#points.length - 1;
+    let nearest = Infinity;
+    for (let index = 0; index < legs; index++) {
+      const leg = nearestOnSegment(at, this.#point(index), this.#point(index + 1));
+      nearest = Math.min(nearest, leg.meters);
+    }
+    return nearest;
   }
 
   /**

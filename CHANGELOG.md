@@ -192,6 +192,8 @@ The first version: a shared map for a group, over the internet and over MeshCore
 
 - «Servicios» shows defibrillators, with their name, where exactly they are and their hours, and, close up, drinking water and fire hydrants, OpenStreetMap's, built each week on the server and downloaded with each area ([ADR-0165](docs/decisions/0165-aid-points-among-the-services.md)).
 
+- Whoever coordinates is told when a member reaches the place of their task, or the end of its route, by radio too; the member's card says how much they have left of each task and how long it takes, and what whoever coordinates is told is also a phone notification while the app is not on screen ([ADR-0166](docs/decisions/0166-task-reached-and-time-left.md)).
+
 ### Known limits
 
 - Phones must keep the app open to share their position: no background position until the Android and iOS apps (ADR-0016). Alarm notifications reach a phone with the app in the background where the browser allows it.
