@@ -636,9 +636,10 @@ export const en = {
   sosKind: 'What is happening',
   sosGeneral: 'Emergency',
   sosMedical: 'Medical',
-  sosTrapped: 'Trapped',
+  sosRescue: 'Rescue',
   sosFire: 'Fire',
   sosSecurity: 'Security',
+  sosTraffic: 'Traffic accident',
   sosText: 'Details (optional)',
   sosWithoutPlace:
     'No position yet: the SOS goes out now without it, and your position follows as soon as the GPS has it.',

@@ -181,9 +181,10 @@ export const RoleCode = { member: 0, coordinator: 1 } as const satisfies Record<
 export const SosKindCode = {
   general: 0,
   medical: 1,
-  trapped: 2,
+  rescue: 2,
   fire: 3,
   security: 4,
+  traffic: 5,
 } as const satisfies Record<SosKind, number>;
 
 /** §3.9 ALERT.level. Default: warning. */

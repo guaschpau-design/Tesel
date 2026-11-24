@@ -136,7 +136,7 @@ describe('a group feed', () => {
         origin: other,
         seq: 1,
         time: T0,
-        kind: 'trapped',
+        kind: 'rescue',
         lat: 39.47,
         lon: -0.37,
         accuracy: 5,

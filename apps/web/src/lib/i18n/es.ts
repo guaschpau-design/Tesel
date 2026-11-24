@@ -638,9 +638,10 @@ export const es: Messages = {
   sosKind: 'Qué pasa',
   sosGeneral: 'Emergencia',
   sosMedical: 'Médica',
-  sosTrapped: 'Personas atrapadas',
+  sosRescue: 'Rescate',
   sosFire: 'Fuego',
   sosSecurity: 'Seguridad',
+  sosTraffic: 'Accidente de tráfico',
   sosText: 'Detalles (opcional)',
   sosWithoutPlace:
     'Aún no hay posición: el SOS sale ya sin ella, y tu posición se enviará en cuanto el GPS la tenga.',

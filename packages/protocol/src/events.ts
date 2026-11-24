@@ -86,7 +86,11 @@ export interface ObjectDeleteEvent extends EventHeader {
   readonly object: ObjectRef;
 }
 
-export type SosKind = 'general' | 'medical' | 'trapped' | 'fire' | 'security';
+/**
+ * §3.8 What help an SOS calls for, as the 112 sorts emergencies (ADR-0167): rescue takes in people
+ * trapped, lost or in the water.
+ */
+export type SosKind = 'general' | 'medical' | 'rescue' | 'fire' | 'security' | 'traffic';
 
 export interface SosEvent extends EventHeader, LatLon {
   readonly type: 'sos';
