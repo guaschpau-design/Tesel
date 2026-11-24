@@ -155,13 +155,13 @@ An event whose `radius` is 0 or above 1 000 000 m (1 000 km) is discarded. No op
 
 ### 3.8 `SOS`
 
-| Size  | Field      | Notes                                                                                                     |
-| ----- | ---------- | --------------------------------------------------------------------------------------------------------- |
-| 1     | `kind`     | `0` general, `1` medical, `2` trapped, `3` fire, `4` security; other values reserved and shown as general |
-| 4     | `lat`      | Coordinate                                                                                                |
-| 4     | `lon`      | Coordinate                                                                                                |
-| 2     | `accuracy` | `u16`, metres, `0xFFFF` unknown                                                                           |
-| 0–128 | `text`     | text-rest                                                                                                 |
+| Size  | Field      | Notes                                                                                                                                                                 |
+| ----- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | `kind`     | `0` general, `1` medical, `2` rescue (people trapped, lost or in the water), `3` fire, `4` security, `5` traffic accident; other values reserved and shown as general |
+| 4     | `lat`      | Coordinate                                                                                                                                                            |
+| 4     | `lon`      | Coordinate                                                                                                                                                            |
+| 2     | `accuracy` | `u16`, metres, `0xFFFF` unknown                                                                                                                                       |
+| 0–128 | `text`     | text-rest                                                                                                                                                             |
 
 A sender without a position MUST NOT hold the call back for one: it sends `lat` and `lon` `0` with `accuracy` `0xFFFF`, which receivers MUST read as "no place" and not as a point at 0°, 0°. Its `POSITION` follows as soon as it has one, whatever its sharing setting, and receivers SHOULD show it as where the caller is.
 

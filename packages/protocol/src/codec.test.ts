@@ -426,6 +426,23 @@ describe('event codec', () => {
       expect(decoded.ok && decoded.value.type === 'sos' && decoded.value.kind).toBe('general');
     });
 
+    it('writes a rescue as 2 and a traffic accident as 5', () => {
+      const sos = (kind: 'rescue' | 'traffic') =>
+        encodeOrFail({
+          type: 'sos',
+          origin: BOB,
+          seq: 1,
+          time: T0,
+          kind,
+          lat: 1,
+          lon: 1,
+          accuracy: null,
+          text: '',
+        })[14];
+      expect(sos('rescue')).toBe(2);
+      expect(sos('traffic')).toBe(5);
+    });
+
     it('never throws on random input', () => {
       const random = seededRandom(42);
       for (let i = 0; i < 5000; i++) {

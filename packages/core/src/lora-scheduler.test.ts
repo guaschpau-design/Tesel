@@ -141,7 +141,7 @@ describe('LoRa scheduler', () => {
     const open = packet({
       type: 'sos',
       origin: OTHER,
-      kind: 'trapped',
+      kind: 'rescue',
       ...VALENCIA,
       accuracy: 9,
       text: '',
@@ -158,7 +158,7 @@ describe('LoRa scheduler', () => {
     const cancelled = packet({
       type: 'sos',
       origin: OTHER,
-      kind: 'trapped',
+      kind: 'rescue',
       ...VALENCIA,
       accuracy: 9,
       text: '',

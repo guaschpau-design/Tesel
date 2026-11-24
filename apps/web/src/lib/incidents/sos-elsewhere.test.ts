@@ -13,7 +13,7 @@ const sos = (origin: NodeId, seq: number): SosEvent => ({
   origin,
   seq,
   time: 1,
-  kind: 'trapped',
+  kind: 'rescue',
   lat: 39.47,
   lon: -0.38,
   accuracy: null,

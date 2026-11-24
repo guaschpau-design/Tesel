@@ -146,7 +146,7 @@ describe('the radio path', () => {
     await bertaRadio.useFeed(bertaFeed);
 
     // Ana's radio is off when she calls for help.
-    await anaFeed.sendSos('trapped', { lat: 39.47, lon: -0.37 }, 10, 'Atrapada');
+    await anaFeed.sendSos('rescue', { lat: 39.47, lon: -0.37 }, 10, 'Atrapada');
     expect(anaFeed.undelivered.size).toBeGreaterThan(0);
     const anaRadio = new RadioSession(
       () => Promise.resolve(air.link()),
